@@ -135,7 +135,7 @@ export default function NfePage() {
             {hideValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             {hideValues ? "Mostrar valores" : "Ocultar valores"}
           </Button>
-          <Button 
+          {/*<Button 
             onClick={() => router.push("/nfe/produtos")} 
             variant="outline" 
             size="sm"
@@ -143,7 +143,7 @@ export default function NfePage() {
           >
             <Package className="mr-2 h-4 w-4" />
             Gerenciar Produtos
-          </Button>
+          </Button>*/}
         </div>
       </div>
 
@@ -277,7 +277,7 @@ export default function NfePage() {
           </div>
 
           {/* Gestão de Produtos */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          {/*<div className="bg-white rounded-2xl shadow-sm overflow-hidden">
             <div className="bg-gray-50 p-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <Package className="h-5 w-5 text-amber-500" />
@@ -310,7 +310,7 @@ export default function NfePage() {
                 </div>
               </div>
             </div>
-          </div>
+          </div>*/}
 
           {/* Estatísticas do Dia */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">

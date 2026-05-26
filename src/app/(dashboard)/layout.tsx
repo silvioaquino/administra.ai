@@ -48,13 +48,14 @@ export default function DashboardLayout({
     { icon: Users, label: "Clientes", href: "/simples" },
     /*{ icon: BarChart3, label: "Dashboard", href: "/relatorios" }*/
     { icon: Store, label: "Minha loja", href: "/config/loja" },
-  ]
-
-  const configItems = [
     { icon: Clock, label: "Planejamentos", href: "/planejamento" },
     { icon: CreditCard, label: "Fechamento Mensal", href: "/config/pagamento" },
     { icon: Truck, label: "Contas bancarias", href: "/config/entrega" },
     { icon: Ticket, label: "Fluxo de Caixa", href: "/config/cupons", badge: "Novo!" },
+  ]
+
+  const configItems = [
+    
     { icon: QrCode, label: "QR Code", href: "/config/qrcode" },
     { icon: Plug, label: "Integrações", href: "/config/integracoes" },
   ]
