@@ -1,7 +1,7 @@
 // src/app/(auth)/register/page.tsx
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { 
@@ -51,6 +51,9 @@ export default function RegisterPage() {
   const [segmentoOpen, setSegmentoOpen] = useState(false)
   const [segmentoSearch, setSegmentoSearch] = useState("")
   const [showAddress, setShowAddress] = useState(false)
+  const [buscandoCep, setBuscandoCep] = useState(false)
+  
+  const cepTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   const [formData, setFormData] = useState({
     name: "",
@@ -68,10 +71,63 @@ export default function RegisterPage() {
     state: ""
   })
 
+  // Limpar timeout quando o componente desmontar
+  useEffect(() => {
+    return () => {
+      if (cepTimeoutRef.current) {
+        clearTimeout(cepTimeoutRef.current)
+      }
+    }
+  }, [])
+
   // Filtrar segmentos
   const segmentosFiltrados = SEGMENTOS.filter(s => 
     s.toLowerCase().includes(segmentoSearch.toLowerCase())
   )
+
+  // Função para buscar CEP com debounce
+  const buscarCep = (cep: string) => {
+    const cepClean = cep.replace(/\D/g, '')
+    
+    // Limpa o timeout anterior
+    if (cepTimeoutRef.current) {
+      clearTimeout(cepTimeoutRef.current)
+    }
+    
+    // Só busca se tiver 8 dígitos
+    if (cepClean.length === 8) {
+      setBuscandoCep(true)
+      
+      // Adiciona um pequeno delay para evitar buscas desnecessárias
+      cepTimeoutRef.current = setTimeout(async () => {
+        try {
+          const response = await fetch(`https://viacep.com.br/ws/${cepClean}/json/`)
+          const data = await response.json()
+          
+          if (!data.erro) {
+            setFormData(prev => ({
+              ...prev,
+              address: data.logradouro || "",
+              district: data.bairro || "",
+              city: data.localidade || "",
+              state: data.uf || ""
+            }))
+          } else {
+            setError("CEP não encontrado")
+            setTimeout(() => setError(null), 3000)
+          }
+        } catch (error) {
+          console.error("Erro ao buscar CEP:", error)
+          setError("Erro ao buscar CEP. Tente novamente.")
+          setTimeout(() => setError(null), 3000)
+        } finally {
+          setBuscandoCep(false)
+        }
+      }, 500) // Aguarda 500ms após o usuário parar de digitar
+    } else {
+      setBuscandoCep(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -141,25 +197,6 @@ export default function RegisterPage() {
       setError("Erro ao criar conta. Tente novamente.")
     } finally {
       setLoading(false)
-    }
-  }
-
-  // Função para buscar CEP (simulada)
-  const buscarCep = async (cep: string) => {
-    const cepClean = cep.replace(/\D/g, '')
-    if (cepClean.length === 8) {
-      // Simulação - em produção, chamar API de CEP real
-      // const response = await fetch(`https://viacep.com.br/ws/${cepClean}/json/`)
-      // const data = await response.json()
-      // if (!data.erro) {
-      //   setFormData(prev => ({
-      //     ...prev,
-      //     address: data.logradouro,
-      //     district: data.bairro,
-      //     city: data.localidade,
-      //     state: data.uf
-      //   }))
-      // }
     }
   }
 
@@ -488,15 +525,23 @@ export default function RegisterPage() {
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-1">
                         <Label className="text-xs font-medium text-gray-600">CEP</Label>
-                        <Input
-                          placeholder="00000-000"
-                          className="rounded-lg border-gray-200"
-                          value={formData.cep}
-                          onChange={(e) => {
-                            setFormData({ ...formData, cep: e.target.value })
-                            buscarCep(e.target.value)
-                          }}
-                        />
+                        <div className="relative">
+                          <Input
+                            placeholder="00000-000"
+                            className="rounded-lg border-gray-200"
+                            value={formData.cep}
+                            onChange={(e) => {
+                              const newCep = e.target.value
+                              setFormData({ ...formData, cep: newCep })
+                              buscarCep(newCep)
+                            }}
+                          />
+                          {buscandoCep && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#de4838]"></div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs font-medium text-gray-600">Número</Label>

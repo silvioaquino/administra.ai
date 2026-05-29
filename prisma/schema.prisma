@@ -26,6 +26,7 @@ model User {
 
   // Relacionamentos
   subscription               Subscription?
+  empresa                    Empresa?
   notasFiscais               NotaFiscal[]
   produtos                   Produto[]
   pagamentos                 Pagamento[]
@@ -39,6 +40,12 @@ model User {
   despesasVariaveis          DespesaVariavel[]
   funcionarios               Funcionario[]
   taxasCartaoConfig          TaxasCartaoConfig?
+  contasFinanceiras          ContaFinanceira[]
+  metasFluxoCaixa            MetaFluxoCaixa[]      
+  fluxoCaixaDiario           FluxoCaixaDiario[]    
+  planoContas                PlanoContas[]         
+  fechamentoMensal           FechamentoMensal[]   
+  dreResultados              DreResultado[]
 
   @@map("users")
 }
@@ -71,6 +78,46 @@ model Plan {
   subscriptions Subscription[]
 
   @@map("plans")
+}
+
+model Empresa {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  nome         String?      // Nome da loja/empresa
+  whatsapp     String?      // WhatsApp da loja
+  segmento     String?      // Segmento (Restaurante, Pizzaria, etc.)
+  cep          String?      // CEP
+  logradouro   String?      // Endereço (Rua, Avenida)
+  numero       String?      // Número
+  complemento  String?      // Complemento
+  bairro       String?      // Bairro
+  cidade       String?      // Cidade
+  estado       String?      // Estado (UF)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("empresas")
+}
+
+// ============= CONTAS FINANCEIRAS =============
+
+model ContaFinanceira {
+  id            Int       @id @default(autoincrement())
+  userId        String    @map("user_id")
+  nome          String
+  tipo          String    // CONTA_CORRENTE, CARTEIRA, APLICACAO, CONTA_IFOOD
+  saldoInicial  Decimal   @default(0) @map("saldo_inicial") @db.Decimal(10, 2)
+  instituicao   String?   // Banco, Fintech, etc.
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([nome, userId])
+  @@index([userId])
+  @@map("contas_financeiras")
 }
 
 // ============= NOTAS FISCAIS =============
@@ -152,6 +199,7 @@ model LivroDiario {
   saida             Decimal  @default(0) @db.Decimal(10, 2)
   tipo              String   @default("VENDA")
   notaFiscalId      Int?     @map("nota_fiscal_id")
+  origemDestino     String?  @map("origem_destino")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
@@ -161,6 +209,7 @@ model LivroDiario {
   @@index([userId, data])
   @@index([userId, conta])
   @@index([userId, tipo])
+  @@index([userId, origemDestino])
   @@map("livro_diario")
 }
 
@@ -337,4 +386,99 @@ model ProvisaoFuncionario {
   @@unique([userId, ano, provisao, funcionarioNome])
   @@index([userId, ano, provisao])
   @@map("provisoes_funcionarios")
+}
+
+// ============= METAS E FLUXO DE CAIXA =============
+
+model MetaFluxoCaixa {
+  id                  Int      @id @default(autoincrement())
+  userId              String   @map("user_id")
+  ano                 Int
+  mes                 Int
+  metaFaturamentoDiaria Decimal @default(0) @map("meta_faturamento_diaria") @db.Decimal(10, 2)
+  metaDespesasDiaria  Decimal  @default(0) @map("meta_despesas_diaria") @db.Decimal(10, 2)
+  metaLucroPercentual Float    @default(20) @map("meta_lucro_percentual")
+  diasUteis           Int      @default(30) @map("dias_uteis")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, ano, mes])
+  @@index([userId, ano, mes])
+  @@map("metas_fluxo_caixa")
+}
+
+model FluxoCaixaDiario {
+  id                  Int      @id @default(autoincrement())
+  userId              String   @map("user_id")
+  data                DateTime
+  faturamentoRealizado Decimal @default(0) @map("faturamento_realizado") @db.Decimal(10, 2)
+  despesasRealizadas  Decimal  @default(0) @map("despesas_realizadas") @db.Decimal(10, 2)
+  lucroRealizado      Decimal  @default(0) @map("lucro_realizado") @db.Decimal(10, 2)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, data])
+  @@index([userId, data])
+  @@map("fluxo_caixa_diario")
+}
+
+// ============= PLANO DE CONTAS GERENCIAL =============
+
+model PlanoContas {
+  id          Int      @id @default(autoincrement())
+  userId      String   @map("user_id")
+  codigo      String   // Ex: 3.1.1, 4.1.1, etc.
+  nome        String
+  tipo        String   // RECEITA, CUSTO, DESPESA
+  grupo       String   // RECEITA_BRUTA, CMV, DESPESAS_OPERACIONAIS, RESULTADO
+  ordem       Int      @default(0)
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, codigo])
+  @@index([userId, tipo, grupo])
+  @@map("plano_contas")
+}
+
+model FechamentoMensal {
+  id          Int      @id @default(autoincrement())
+  userId      String   @map("user_id")
+  ano         Int
+  mes         Int
+  status      String   @default("ABERTO") // ABERTO, FECHADO, REABERTO
+  dataFechamento DateTime? @map("data_fechamento")
+  observacao  String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, ano, mes])
+  @@index([userId, ano, mes, status])
+  @@map("fechamento_mensal")
+}
+
+model DreResultado {
+  id          Int      @id @default(autoincrement())
+  userId      String   @map("user_id")
+  ano         Int
+  mes         Int
+  linha       String   // RECEITA_BRUTA, CMV, LUCRO_BRUTO, etc.
+  descricao   String
+  valor       Decimal  @db.Decimal(15, 2)
+  percentual  Float
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, ano, mes, linha])
+  @@index([userId, ano, mes])
+  @@map("dre_resultados")
 }
