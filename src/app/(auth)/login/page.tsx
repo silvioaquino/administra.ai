@@ -33,19 +33,29 @@ export default function LoginPage() {
     }
 
     try {
+      console.log("Tentando login com:", formData.email)
+      
       const result = await signIn("credentials", {
         email: formData.email,
         password: formData.password,
-        redirect: false
+        redirect: false,
+        callbackUrl: "/"
       })
 
+      console.log("Resultado do login:", result)
+
       if (result?.error) {
+        console.error("Erro no login:", result.error)
         setError("Email ou senha inválidos")
-      } else {
+      } else if (result?.ok) {
+        console.log("Login bem-sucedido, redirecionando...")
         router.push("/")
         router.refresh()
+      } else {
+        setError("Erro ao fazer login. Tente novamente.")
       }
     } catch (error) {
+      console.error("Erro inesperado:", error)
       setError("Erro ao fazer login. Tente novamente.")
     } finally {
       setLoading(false)
@@ -62,7 +72,7 @@ export default function LoginPage() {
               <Store className="h-8 w-8 text-white" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">Administra.Ai</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Emporio do Sabor</h1>
           <p className="text-sm text-gray-500 mt-2">
             Faça login para acessar o sistema
           </p>
@@ -73,9 +83,9 @@ export default function LoginPage() {
           <div className="p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-5">
               {error && (
-                <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-700 rounded-xl">
+                <Alert className="bg-red-50 border-red-200 rounded-xl">
                   <AlertCircle className="h-4 w-4 text-red-600" />
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="text-sm text-red-700">{error}</AlertDescription>
                 </Alert>
               )}
 
