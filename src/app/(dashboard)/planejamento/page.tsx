@@ -185,6 +185,12 @@ export default function PlanejamentoPage() {
     }
   }
 
+  // Funções de navegação
+  const navegarPara = (rota: string) => {
+    console.log(`Navegando para: ${rota}`)
+    router.push(rota)
+  }
+
   const cardsResumo = [
     {
       title: "Faturamento Mensal",
@@ -269,14 +275,12 @@ export default function PlanejamentoPage() {
 
       {/* Main Content */}
       <div className="container mx-auto p-6 max-w-7xl">
-        {/* Cards Resumo com gradientes - mesmo estilo do NFE */}
+        {/* Cards Resumo */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {cardsResumo.map((card, idx) => (
             <Card
               key={idx}
-              className={`relative overflow-hidden bg-gradient-to-r ${
-      card.gradient || "from-gray-500 to-gray-700"
-    } text-white hover:cursor-pointer hover:scale-105 transition-transform duration-200`}
+              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white hover:cursor-pointer hover:scale-105 transition-transform duration-200`}
             >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -288,7 +292,6 @@ export default function PlanejamentoPage() {
                 </div>
                 <p className="mt-1 text-xs opacity-80">{card.detail}</p>
               </CardContent>
-              {/* Ícone decorativo de fundo */}
               <div className="absolute -bottom-4 -right-4 opacity-10">
                 <card.icon className="h-20 w-20" />
               </div>
@@ -308,9 +311,8 @@ export default function PlanejamentoPage() {
           />
         </div>
 
-        {/* Tabs Almoço e Janta - Botões acima do card Despesas Variáveis */}
+        {/* Tabs Almoço e Janta */}
         <div className="mt-8">
-          {/* Botões das Tabs - Alinhados à esquerda */}
           <div className="flex gap-2 mb-6">
             <button
               onClick={() => setActiveTab("almoco")}
@@ -343,14 +345,14 @@ export default function PlanejamentoPage() {
                 despesas={despesasFixas}
                 percentual={0.73}
                 title="Despesas Fixas - Almoço (73%)"
-                onEdit={() => router.push("/planejamento/configuracoes?tab=fixas")}
+                onEdit={() => navegarPara("/planejamento/editar/despesas-fixas")}
               />
               <div className="space-y-6">
                 <DespesasVariaveisTable 
                   percentual={despesasVariaveisPct}
                   metaMensalTotal={resumo.metaMensalTotal}
                   title="Despesas Variáveis"
-                  onEdit={() => router.push("/planejamento/configuracoes?tab=variaveis")}
+                  onEdit={() => navegarPara("/planejamento/editar/despesas-variaveis")}
                 />
                 <GraficosDistribuicao 
                   tipo="almoco"
@@ -370,14 +372,14 @@ export default function PlanejamentoPage() {
                 despesas={despesasFixas}
                 percentual={0.27}
                 title="Despesas Fixas - Janta (27%)"
-                onEdit={() => router.push("/planejamento/configuracoes?tab=fixas")}
+                onEdit={() => navegarPara("/planejamento/editar/despesas-fixas")}
               />
               <div className="space-y-6">
                 <DespesasVariaveisTable 
                   percentual={despesasVariaveisPct}
                   metaMensalTotal={resumo.metaMensalTotal}
                   title="Despesas Variáveis"
-                  onEdit={() => router.push("/planejamento/configuracoes?tab=variaveis")}
+                  onEdit={() => navegarPara("/planejamento/editar/despesas-variaveis")}
                 />
                 <GraficosDistribuicao 
                   tipo="janta"
@@ -406,7 +408,7 @@ export default function PlanejamentoPage() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => router.push("/planejamento/configuracoes?tab=metas")}
+                  onClick={() => navegarPara("/planejamento/editar/metas-mensais")}
                   className="rounded-lg border-gray-200 hover:cursor-pointer hover:border-red-500 hover:border-2 transition-all"
                 >
                   <Settings className="mr-2 h-3 w-3" />
@@ -418,7 +420,7 @@ export default function PlanejamentoPage() {
               <TabelaMetasMensais 
                 metas={metasMensais}
                 acompanhamentos={acompanhamentos}
-                onEdit={() => router.push("/planejamento/configuracoes?tab=metas")}
+                onEdit={() => navegarPara("/planejamento/editar/metas-mensais")}
               />
             </div>
           </div>
@@ -437,7 +439,7 @@ export default function PlanejamentoPage() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => router.push("/planejamento/configuracoes?tab=funcionarios")}
+                    onClick={() => navegarPara("/planejamento/editar/funcionarios")}
                     className="rounded-lg border-gray-200 hover:cursor-pointer hover:border-red-500 hover:border-2 transition-all"
                   >
                     <Users className="mr-2 h-3 w-3" />
@@ -446,7 +448,7 @@ export default function PlanejamentoPage() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => router.push("/planejamento/configuracoes?tab=provisoes")}
+                    onClick={() => navegarPara("/planejamento/editar/provisoes")}
                     className="rounded-lg border-gray-200 hover:cursor-pointer hover:border-red-500 hover:border-2 transition-all"
                   >
                     <Calculator className="mr-2 h-3 w-3" />
@@ -458,8 +460,8 @@ export default function PlanejamentoPage() {
             <div className="p-0">
               <FolhaSalarialTable 
                 funcionarios={funcionarios}
-                onEdit={() => router.push("/planejamento/configuracoes?tab=funcionarios")}
-                onConfigProvisoes={() => router.push("/planejamento/configuracoes?tab=provisoes")}
+                onEdit={() => navegarPara("/planejamento/editar/funcionarios")}
+                onConfigProvisoes={() => navegarPara("/planejamento/editar/provisoes")}
               />
             </div>
           </div>
@@ -498,7 +500,7 @@ export default function PlanejamentoPage() {
 
       {/* Botão Ajuda */}
       <button
-        onClick={() => router.push("/planejamento/configuracoes?tab=ajuda")}
+        onClick={() => navegarPara("/planejamento/configuracoes?tab=ajuda")}
         className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-[#de4838] text-white shadow-lg transition-all hover:scale-110 hover:bg-[#c73d2e] hover:cursor-pointer hover:border-2 hover:border-red-500"
       >
         <HelpCircle className="h-6 w-6" />

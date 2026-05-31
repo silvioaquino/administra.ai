@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter, usePathname } from "next/navigation"
+import Link from "next/link"  // ✅ IMPORTANTE: Importar o Link
 import { cn } from "@/lib/utils"
 import { 
   Menu, 
@@ -103,45 +104,51 @@ export default function DashboardLayout({
   const trialEndsAt = session?.user?.trialEndsAt ? new Date(session.user.trialEndsAt) : null
   const daysLeft = trialEndsAt ? Math.ceil((trialEndsAt.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0
 
+  // Função para verificar se o link está ativo
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/"
+    return pathname?.startsWith(href)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar Desktop - Largura w-52 (208px) */}
       <aside className="fixed left-0 top-0 z-40 hidden h-screen w-52 flex-col bg-white shadow-sm lg:flex">
         {/* Logo */}
         <div className="flex h-12 items-center px-3 border-b border-gray-100">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-sm">
               <Store className="h-3.5 w-3.5 text-white" />
             </div>
             <span className="text-xs font-semibold text-gray-800 truncate max-w-[120px]">{empresaNome}</span>
-          </div>
+          </Link>
         </div>
 
-        {/* Menu Principal */}
+        {/* Menu Principal - USANDO Link DO Next.js */}
         <nav className="flex-1 overflow-y-auto px-2 py-3">
           <p className="mb-1.5 px-2 text-[9px] font-semibold uppercase tracking-wider text-gray-400">Menu</p>
           {menuItems.map((item, idx) => {
-            const isActive = pathname === item.href || pathname?.startsWith(item.href + "/")
+            const active = isActive(item.href)
             return (
-              <a
+              <Link
                 key={idx}
                 href={item.href}
                 className={cn(
                   "flex items-center justify-between rounded-lg px-2 py-1.5 text-[11px] transition-all mb-0.5",
-                  isActive 
+                  active 
                     ? "bg-[#de4838]/10 text-[#de4838] font-medium" 
                     : "text-gray-600 hover:bg-gray-100"
                 )}
               >
                 <div className="flex items-center gap-2">
-                  <item.icon className={cn("h-3.5 w-3.5", isActive ? "text-[#de4838]" : "text-gray-400")} />
+                  <item.icon className={cn("h-3.5 w-3.5", active ? "text-[#de4838]" : "text-gray-400")} />
                   <span className="truncate">{item.label}</span>
                 </div>
                 {item.badge && (
                   <Badge className="bg-amber-100 text-amber-700 text-[9px] px-1">{item.badge}</Badge>
                 )}
-                {isActive && <ChevronRight className="h-2.5 w-2.5 text-[#de4838]" />}
-              </a>
+                {active && <ChevronRight className="h-2.5 w-2.5 text-[#de4838]" />}
+              </Link>
             )
           })}
 
@@ -149,24 +156,24 @@ export default function DashboardLayout({
             Configurações
           </p>
           {configItems.map((item, idx) => {
-            const isActive = pathname === item.href || pathname?.startsWith(item.href + "/")
+            const active = isActive(item.href)
             return (
-              <a
+              <Link
                 key={idx}
                 href={item.href}
                 className={cn(
                   "flex items-center justify-between rounded-lg px-2 py-1.5 text-[11px] transition-all mb-0.5",
-                  isActive 
+                  active 
                     ? "bg-[#de4838]/10 text-[#de4838] font-medium" 
                     : "text-gray-600 hover:bg-gray-100"
                 )}
               >
                 <div className="flex items-center gap-2">
-                  <item.icon className={cn("h-3.5 w-3.5", isActive ? "text-[#de4838]" : "text-gray-400")} />
+                  <item.icon className={cn("h-3.5 w-3.5", active ? "text-[#de4838]" : "text-gray-400")} />
                   <span className="truncate">{item.label}</span>
                 </div>
-                {isActive && <ChevronRight className="h-2.5 w-2.5 text-[#de4838]" />}
-              </a>
+                {active && <ChevronRight className="h-2.5 w-2.5 text-[#de4838]" />}
+              </Link>
             )
           })}
         </nav>
@@ -197,7 +204,7 @@ export default function DashboardLayout({
         />
       )}
 
-      {/* Mobile Sidebar */}
+      {/* Mobile Sidebar - USANDO Link DO Next.js */}
       <div
         className={cn(
           "fixed left-0 top-0 z-50 h-full w-64 transform bg-white shadow-xl transition-transform duration-300 lg:hidden",
@@ -205,12 +212,12 @@ export default function DashboardLayout({
         )}
       >
         <div className="flex h-14 items-center justify-between border-b border-gray-100 px-3">
-          <div className="flex items-center gap-2">
+          <Link href="/" onClick={() => setSidebarOpen(false)} className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-md">
               <Store className="h-3.5 w-3.5 text-white" />
             </div>
             <span className="font-semibold text-gray-800 text-sm truncate max-w-[180px]">{empresaNome}</span>
-          </div>
+          </Link>
           <button 
             onClick={() => setSidebarOpen(false)}
             className="rounded-lg p-1 hover:bg-gray-100"
@@ -220,7 +227,7 @@ export default function DashboardLayout({
         </div>
         <div className="overflow-y-auto p-2">
           {menuItems.map((item, idx) => (
-            <a
+            <Link
               key={idx}
               href={item.href}
               className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-100"
@@ -228,11 +235,11 @@ export default function DashboardLayout({
             >
               <item.icon className="h-3.5 w-3.5 text-gray-400" />
               <span>{item.label}</span>
-            </a>
+            </Link>
           ))}
           <div className="my-2 border-t border-gray-100 pt-2">
             {configItems.map((item, idx) => (
-              <a
+              <Link
                 key={idx}
                 href={item.href}
                 className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-100"
@@ -240,7 +247,7 @@ export default function DashboardLayout({
               >
                 <item.icon className="h-3.5 w-3.5 text-gray-400" />
                 <span>{item.label}</span>
-              </a>
+              </Link>
             ))}
           </div>
           <div className="border-t border-gray-100 pt-2">
@@ -259,7 +266,6 @@ export default function DashboardLayout({
       <div className="lg:pl-52">
         {/* Topbar - Desktop e Mobile */}
         <header className="sticky top-0 z-30 flex h-12 items-center justify-between bg-white px-4 shadow-sm border-b border-gray-100">
-          {/* Botão Menu Mobile (visível apenas em mobile) */}
           <button
             onClick={() => setSidebarOpen(true)}
             className="rounded-lg p-1 hover:bg-gray-100 lg:hidden"
@@ -267,20 +273,18 @@ export default function DashboardLayout({
             <Menu className="h-4 w-4 text-gray-500" />
           </button>
           
-          {/* Espaço vazio para desktop manter o equilíbrio */}
           <div className="hidden lg:block w-10" />
           
-          {/* Logo centralizado - visível em desktop e mobile */}
+          {/* Logo centralizado - clicável e volta para dashboard sem refresh */}
           <div className="flex-1 flex justify-center lg:flex-none lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2">
-            <div className="flex items-center gap-1.5">
+            <Link href="/" className="flex items-center gap-1.5">
               <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-sm lg:hidden">
                 <Store className="h-3 w-3 text-white" />
               </div>
               <span className="text-sm font-semibold text-gray-800">Administra.ai</span>
-            </div>
+            </Link>
           </div>
           
-          {/* Avatar/Perfil (direita) - visível em desktop e mobile */}
           <div className="flex items-center gap-2">
             <button className="rounded-full p-1 hover:bg-gray-100 transition-colors">
               <HelpCircle className="h-4 w-4 text-gray-400" />
