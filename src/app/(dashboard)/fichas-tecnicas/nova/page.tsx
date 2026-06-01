@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Save, Plus, Trash2, Calculator, Package, BookOpen, Search } from "lucide-react"
+import { ArrowLeft, Save, Plus, Trash2, Calculator, Package, BookOpen, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,6 +16,7 @@ interface Produto {
   nome: string
   descricao: string
   precoVenda: number
+  preco_venda: number
   unidade: string
   quantidade: number
 }
@@ -56,10 +57,6 @@ export default function NovaFichaTecnicaPage() {
   const [selectedProdutoId, setSelectedProdutoId] = useState("")
   const [selectedFichaId, setSelectedFichaId] = useState("")
   const [quantidade, setQuantidade] = useState(1)
-  const [produtoOpen, setProdutoOpen] = useState(false)
-  const [fichaOpen, setFichaOpen] = useState(false)
-  const [produtoSearch, setProdutoSearch] = useState("")
-  const [fichaSearch, setFichaSearch] = useState("")
 
   const [despesasFixasPercentual, setDespesasFixasPercentual] = useState(25)
   const [despesasVariaveisPercentual, setDespesasVariaveisPercentual] = useState(10.87)
@@ -75,7 +72,11 @@ export default function NovaFichaTecnicaPage() {
       const response = await fetch("/api/produtos?limit=500")
       const data = await response.json()
       if (data.success) {
-        setProdutos(data.data)
+        const produtosFormatados = data.data.map((p: any) => ({
+          ...p,
+          precoVenda: p.precoVenda || p.preco_venda || 0
+        }))
+        setProdutos(produtosFormatados)
       }
     } catch (error) {
       console.error("Erro ao carregar produtos:", error)
@@ -108,14 +109,6 @@ export default function NovaFichaTecnicaPage() {
     }
   }
 
-  const produtosFiltrados = produtos.filter(p => 
-    (p.nome || p.descricao).toLowerCase().includes(produtoSearch.toLowerCase())
-  )
-
-  const fichasFiltradas = fichas.filter(f => 
-    f.nome.toLowerCase().includes(fichaSearch.toLowerCase())
-  )
-
   function adicionarIngrediente() {
     if (!selectedProdutoId) {
       alert("Selecione um produto")
@@ -129,7 +122,7 @@ export default function NovaFichaTecnicaPage() {
     const produto = produtos.find(p => p.id === parseInt(selectedProdutoId))
     if (!produto) return
 
-    const valorUnitario = produto.precoVenda || 0
+    const valorUnitario = produto.precoVenda || produto.preco_venda || 0
     const custo = quantidade * valorUnitario
 
     const novoIngrediente: Ingrediente = {
@@ -145,8 +138,6 @@ export default function NovaFichaTecnicaPage() {
 
     setIngredientes([...ingredientes, novoIngrediente])
     setSelectedProdutoId("")
-    setProdutoSearch("")
-    setProdutoOpen(false)
     setQuantidade(1)
   }
 
@@ -179,8 +170,6 @@ export default function NovaFichaTecnicaPage() {
 
     setIngredientes([...ingredientes, novoIngrediente])
     setSelectedFichaId("")
-    setFichaSearch("")
-    setFichaOpen(false)
     setQuantidade(1)
   }
 
@@ -214,6 +203,9 @@ export default function NovaFichaTecnicaPage() {
     setLoading(true)
 
     try {
+      // CORREÇÃO: Salvar ingredientes como string JSON, mas garantir que seja uma string válida
+      const ingredientesString = JSON.stringify(ingredientes)
+      
       const response = await fetch("/api/fichas-tecnicas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -225,7 +217,7 @@ export default function NovaFichaTecnicaPage() {
           custoPorPorcao: custoPorPorcao,
           margem: margem,
           rendimentoPorcoes: formData.rendimentoPorcoes,
-          ingredientes: JSON.stringify(ingredientes),
+          ingredientes: ingredientesString, // Envia como string JSON
           modoPreparo: formData.modoPreparo
         })
       })
@@ -244,6 +236,14 @@ export default function NovaFichaTecnicaPage() {
       setLoading(false)
     }
   }
+
+  const getPrecoProduto = (produto: Produto | undefined) => {
+    if (!produto) return 0
+    return produto.precoVenda || produto.preco_venda || 0
+  }
+
+  const produtoSelecionado = produtos.find(p => p.id === parseInt(selectedProdutoId))
+  const fichaSelecionada = fichas.find(f => f.id === selectedFichaId)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -275,262 +275,186 @@ export default function NovaFichaTecnicaPage() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto p-6 max-w-7xl">
+      <div className="container mx-auto p-6 max-w-4xl">
         <form id="ficha-form" onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Informações Básicas */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
-                <h3 className="font-semibold text-gray-800">Informações Básicas</h3>
+          {/* Informações Básicas */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <h3 className="font-semibold text-gray-800">Informações Básicas</h3>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  Nome do Prato <span className="text-[#de4838]">*</span>
+                </Label>
+                <Input
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  placeholder="Ex: Macarrão ao Molho, Frango Grelhado..."
+                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
+                  required
+                />
               </div>
-              <div className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Nome do Prato <span className="text-[#de4838]">*</span>
-                  </Label>
-                  <Input
-                    value={formData.nome}
-                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                    placeholder="Ex: Macarrão ao Molho, Frango Grelhado..."
-                    className="rounded-lg border-gray-200 focus:ring-[#de4838]"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Categoria</Label>
-                    <div className="relative">
-                      <select
-                        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
-                        value={formData.categoria}
-                        onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
-                      >
-                        <option value="Almoço">Almoço</option>
-                        <option value="Janta">Janta</option>
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                      </div>
+                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Categoria</Label>
+                  <div className="relative">
+                    <select
+                      className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                      value={formData.categoria}
+                      onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
+                    >
+                      <option value="Almoço">Almoço</option>
+                      <option value="Janta">Janta</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Rendimento (porções)</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={formData.rendimentoPorcoes}
-                      onChange={(e) => setFormData({ ...formData, rendimentoPorcoes: parseInt(e.target.value) })}
-                      className="rounded-lg border-gray-200 focus:ring-[#de4838]"
-                    />
-                  </div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Modo de Preparo</Label>
-                  <Textarea
-                    value={formData.modoPreparo}
-                    onChange={(e) => setFormData({ ...formData, modoPreparo: e.target.value })}
-                    rows={3}
-                    placeholder="Instruções de preparo..."
+                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Rendimento (porções)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={formData.rendimentoPorcoes}
+                    onChange={(e) => setFormData({ ...formData, rendimentoPorcoes: parseInt(e.target.value) })}
                     className="rounded-lg border-gray-200 focus:ring-[#de4838]"
                   />
                 </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Modo de Preparo</Label>
+                <Textarea
+                  value={formData.modoPreparo}
+                  onChange={(e) => setFormData({ ...formData, modoPreparo: e.target.value })}
+                  rows={3}
+                  placeholder="Instruções de preparo..."
+                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
+                />
               </div>
             </div>
+          </div>
 
-            {/* Ingredientes */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
-                <h3 className="font-semibold text-gray-800">Ingredientes</h3>
+          {/* Ingredientes */}
+          <div className="bg-white rounded-2xl shadow-sm">
+            <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <h3 className="font-semibold text-gray-800">Ingredientes</h3>
+            </div>
+            <div className="p-5 space-y-4">
+              {/* Adicionar Produto */}
+              <div className="rounded-xl border border-gray-200 overflow-hidden">
+                <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-4 w-4 text-[#de4838]" />
+                    <h4 className="text-sm font-medium text-gray-700">Adicionar Produto</h4>
+                  </div>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div className="relative">
+                    <select
+                      className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                      value={selectedProdutoId}
+                      onChange={(e) => setSelectedProdutoId(e.target.value)}
+                    >
+                      <option value="">Selecione um produto...</option>
+                      {produtos.map((prod) => (
+                        <option key={prod.id} value={prod.id}>
+                          {prod.nome || prod.descricao} - {formatCurrency(getPrecoProduto(prod))}/{prod.unidade || "UN"} (Estoque: {prod.quantidade || 0})
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      step="0.001"
+                      placeholder="Quantidade"
+                      value={quantidade}
+                      onChange={(e) => setQuantidade(parseFloat(e.target.value))}
+                      className="flex-1 rounded-lg border-gray-200 focus:ring-[#de4838]"
+                    />
+                    <Button 
+                      type="button" 
+                      onClick={adicionarIngrediente} 
+                      disabled={!selectedProdutoId}
+                      className="bg-[#de4838] hover:bg-[#c73d2e] rounded-lg"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Adicionar
+                    </Button>
+                  </div>
+                  {produtoSelecionado && (
+                    <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
+                      Preço unitário: {formatCurrency(getPrecoProduto(produtoSelecionado))}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="p-5 space-y-4">
-                {/* Adicionar Produto */}
-                <div className="rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
-                    <div className="flex items-center gap-2">
-                      <Package className="h-4 w-4 text-[#de4838]" />
-                      <h4 className="text-sm font-medium text-gray-700">Adicionar Produto</h4>
-                    </div>
-                  </div>
-                  <div className="p-4 space-y-3">
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setProdutoOpen(!produtoOpen)}
-                        className="w-full flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
-                      >
-                        <span className={selectedProdutoId ? "text-gray-800" : "text-gray-400"}>
-                          {selectedProdutoId 
-                            ? produtos.find(p => p.id === parseInt(selectedProdutoId))?.nome || "Produto selecionado"
-                            : "Selecione um produto..."}
-                        </span>
-                        <svg className={`h-4 w-4 text-gray-400 transition-transform ${produtoOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                      
-                      {produtoOpen && (
-                        <div className="absolute z-10 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-lg">
-                          <div className="p-2 border-b border-gray-100">
-                            <div className="relative">
-                              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                              <input
-                                type="text"
-                                placeholder="Pesquisar produto..."
-                                className="w-full rounded-lg border border-gray-200 pl-8 pr-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
-                                value={produtoSearch}
-                                onChange={(e) => setProdutoSearch(e.target.value)}
-                              />
-                            </div>
-                          </div>
-                          <div className="max-h-48 overflow-y-auto">
-                            {produtosFiltrados.map((p) => (
-                              <button
-                                key={p.id}
-                                type="button"
-                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex justify-between"
-                                onClick={() => {
-                                  setSelectedProdutoId(p.id.toString())
-                                  setProdutoSearch("")
-                                  setProdutoOpen(false)
-                                }}
-                              >
-                                <span>{p.nome || p.descricao}</span>
-                                <span className="text-gray-400 text-xs">{formatCurrency(p.precoVenda)}/{p.unidade}</span>
-                              </button>
-                            ))}
-                            {produtosFiltrados.length === 0 && (
-                              <div className="px-3 py-2 text-sm text-gray-400 text-center">
-                                Nenhum produto encontrado
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        step="0.001"
-                        placeholder="Quantidade"
-                        value={quantidade}
-                        onChange={(e) => setQuantidade(parseFloat(e.target.value))}
-                        className="flex-1 rounded-lg border-gray-200 focus:ring-[#de4838]"
-                      />
-                      <Button 
-                        type="button" 
-                        onClick={adicionarIngrediente} 
-                        disabled={!selectedProdutoId}
-                        className="bg-[#de4838] hover:bg-[#c73d2e] rounded-lg"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Adicionar
-                      </Button>
-                    </div>
-                    {selectedProdutoId && (
-                      <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
-                        Preço unitário: {formatCurrency(produtos.find(p => p.id === parseInt(selectedProdutoId))?.precoVenda || 0)}
-                      </div>
-                    )}
+
+              {/* Adicionar Produto Acabado */}
+              <div className="rounded-xl border border-gray-200 overflow-hidden">
+                <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-[#de4838]" />
+                    <h4 className="text-sm font-medium text-gray-700">Adicionar Produto Acabado (Ficha Técnica)</h4>
                   </div>
                 </div>
-
-                {/* Adicionar Produto Acabado */}
-                <div className="rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 text-[#de4838]" />
-                      <h4 className="text-sm font-medium text-gray-700">Adicionar Produto Acabado (Ficha Técnica)</h4>
+                <div className="p-4 space-y-3">
+                  <div className="relative">
+                    <select
+                      className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                      value={selectedFichaId}
+                      onChange={(e) => setSelectedFichaId(e.target.value)}
+                    >
+                      <option value="">Selecione uma ficha técnica...</option>
+                      {fichas.map((ficha) => (
+                        <option key={ficha.id} value={ficha.id}>
+                          {ficha.nome} - {formatCurrency(ficha.custoTotal || 0)}/UN
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </div>
                   </div>
-                  <div className="p-4 space-y-3">
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setFichaOpen(!fichaOpen)}
-                        className="w-full flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
-                      >
-                        <span className={selectedFichaId ? "text-gray-800" : "text-gray-400"}>
-                          {selectedFichaId 
-                            ? fichas.find(f => f.id === selectedFichaId)?.nome || "Ficha selecionada"
-                            : "Selecione uma ficha técnica..."}
-                        </span>
-                        <svg className={`h-4 w-4 text-gray-400 transition-transform ${fichaOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                      
-                      {fichaOpen && (
-                        <div className="absolute z-10 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-lg">
-                          <div className="p-2 border-b border-gray-100">
-                            <div className="relative">
-                              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                              <input
-                                type="text"
-                                placeholder="Pesquisar ficha..."
-                                className="w-full rounded-lg border border-gray-200 pl-8 pr-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
-                                value={fichaSearch}
-                                onChange={(e) => setFichaSearch(e.target.value)}
-                              />
-                            </div>
-                          </div>
-                          <div className="max-h-48 overflow-y-auto">
-                            {fichasFiltradas.map((f) => (
-                              <button
-                                key={f.id}
-                                type="button"
-                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex justify-between"
-                                onClick={() => {
-                                  setSelectedFichaId(f.id)
-                                  setFichaSearch("")
-                                  setFichaOpen(false)
-                                }}
-                              >
-                                <span>{f.nome}</span>
-                                <span className="text-gray-400 text-xs">{formatCurrency(f.custoTotal)}/UN</span>
-                              </button>
-                            ))}
-                            {fichasFiltradas.length === 0 && (
-                              <div className="px-3 py-2 text-sm text-gray-400 text-center">
-                                Nenhuma ficha técnica encontrada
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        step="0.001"
-                        placeholder="Quantidade"
-                        value={quantidade}
-                        onChange={(e) => setQuantidade(parseFloat(e.target.value))}
-                        className="flex-1 rounded-lg border-gray-200 focus:ring-[#de4838]"
-                      />
-                      <Button 
-                        type="button" 
-                        onClick={adicionarProdutoAcabado} 
-                        disabled={!selectedFichaId}
-                        className="bg-[#de4838] hover:bg-[#c73d2e] rounded-lg"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Adicionar
-                      </Button>
-                    </div>
-                    {selectedFichaId && (
-                      <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
-                        Custo unitário: {formatCurrency(fichas.find(f => f.id === selectedFichaId)?.custoTotal || 0)}
-                      </div>
-                    )}
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      step="0.001"
+                      placeholder="Quantidade"
+                      value={quantidade}
+                      onChange={(e) => setQuantidade(parseFloat(e.target.value))}
+                      className="flex-1 rounded-lg border-gray-200 focus:ring-[#de4838]"
+                    />
+                    <Button 
+                      type="button" 
+                      onClick={adicionarProdutoAcabado} 
+                      disabled={!selectedFichaId}
+                      className="bg-[#de4838] hover:bg-[#c73d2e] rounded-lg"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Adicionar
+                    </Button>
                   </div>
+                  {fichaSelecionada && (
+                    <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
+                      Custo unitário: {formatCurrency(fichaSelecionada.custoTotal || 0)}
+                    </div>
+                  )}
                 </div>
+              </div>
 
-                {/* Lista de Ingredientes */}
-                <div className="mt-4">
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Lista de Ingredientes</Label>
-                  <div className="max-h-64 overflow-y-auto rounded-xl border border-gray-200">
+              {/* Lista de Ingredientes */}
+              <div className="mt-4">
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">Lista de Ingredientes</Label>
+                <div className="border rounded-xl border-gray-200 overflow-hidden">
+                  <div className="max-h-64 overflow-y-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50 border-b border-gray-200">
+                      <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ingrediente</th>
                           <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Qtd</th>
@@ -585,7 +509,7 @@ export default function NovaFichaTecnicaPage() {
                           ))
                         )}
                       </tbody>
-                      <tfoot className="border-t-2 border-gray-200 bg-gray-50">
+                      <tfoot className="border-t-2 border-gray-200 bg-gray-50 sticky bottom-0">
                         <tr className="font-semibold">
                           <td colSpan={3} className="px-4 py-3 text-right text-gray-700">Custo Total:</td>
                           <td className="px-4 py-3 text-right text-[#de4838] text-lg">{formatCurrency(custoTotal)}</td>

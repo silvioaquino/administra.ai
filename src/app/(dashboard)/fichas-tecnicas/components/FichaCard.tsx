@@ -18,7 +18,7 @@ interface FichaTecnica {
   custoPorPorcao: number
   margem: number
   rendimentoPorcoes: number
-  ingredientes: string
+  ingredientes: string | any[] | object // CORREÇÃO: Aceitar diferentes tipos
   modoPreparo: string
   updatedAt: string
 }
@@ -40,17 +40,47 @@ export function FichaCard({ ficha, onEdit, onRefresh }: FichaCardProps) {
 
   const margemStatus = getMargemClass()
 
-  // Parse ingredientes para preview
-  let ingredientesPreview = ""
-  try {
-    const ingredientes = JSON.parse(ficha.ingredientes || "[]")
-    if (Array.isArray(ingredientes) && ingredientes.length > 0) {
-      ingredientesPreview = ingredientes.slice(0, 2).map((i: any) => i.nome).join(", ")
-      if (ingredientes.length > 2) ingredientesPreview += ` +${ingredientes.length - 2}`
+  // Função segura para obter o preview dos ingredientes
+  const getIngredientesPreview = () => {
+    if (!ficha.ingredientes) return ""
+    
+    // Se for string, tenta fazer parse
+    if (typeof ficha.ingredientes === 'string') {
+      try {
+        const ingredientes = JSON.parse(ficha.ingredientes)
+        if (Array.isArray(ingredientes) && ingredientes.length > 0) {
+          const preview = ingredientes.slice(0, 2).map((i: any) => i.nome).join(", ")
+          if (ingredientes.length > 2) return `${preview} +${ingredientes.length - 2}`
+          return preview
+        }
+        return ficha.ingredientes.substring(0, 60)
+      } catch (e) {
+        return ficha.ingredientes.substring(0, 60)
+      }
     }
-  } catch (e) {
-    ingredientesPreview = ficha.ingredientes?.substring(0, 60) || ""
+    
+    // Se for array
+    if (Array.isArray(ficha.ingredientes)) {
+      if (ficha.ingredientes.length === 0) return ""
+      const preview = ficha.ingredientes.slice(0, 2).map((i: any) => i.nome).join(", ")
+      if (ficha.ingredientes.length > 2) return `${preview} +${ficha.ingredientes.length - 2}`
+      return preview
+    }
+    
+    // Se for objeto
+    if (typeof ficha.ingredientes === 'object') {
+      try {
+        const str = JSON.stringify(ficha.ingredientes)
+        return str.substring(0, 60)
+      } catch {
+        return ""
+      }
+    }
+    
+    return ""
   }
+
+  const ingredientesPreview = getIngredientesPreview()
 
   const dataAtualizacao = new Date(ficha.updatedAt).toLocaleDateString("pt-BR")
 
