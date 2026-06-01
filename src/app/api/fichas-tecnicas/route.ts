@@ -33,24 +33,39 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const [fichas, total] = await Promise.all([
-      prisma.fichaTecnica.findMany({
-        where,
-        orderBy: { nome: "asc" },
-        skip,
-        take: limit
-      }),
-      prisma.fichaTecnica.count({ where })
-    ])
+    const fichas = await prisma.fichaTecnica.findMany({
+      where,
+      orderBy: { nome: "asc" },
+      skip,
+      take: limit,
+      include: {
+        fichaItems: {
+          include: {
+            produto: true
+          }
+        }
+      }
+    })
 
-    // Processar ingredientes (parse JSON)
+    const total = await prisma.fichaTecnica.count({ where })
+
+    // Processar os itens para o formato esperado pelo frontend
     const fichasProcessadas = fichas.map(ficha => ({
       ...ficha,
       precoVenda: Number(ficha.precoVenda),
       custoTotal: Number(ficha.custoTotal),
       custoPorPorcao: Number(ficha.custoPorPorcao),
       margem: Number(ficha.margem),
-      ingredientes: ficha.ingredientes ? JSON.parse(ficha.ingredientes) : []
+      ingredientes: ficha.fichaItems.map(item => ({
+        id: item.id,
+        produtoId: item.produtoId,
+        nome: item.produto.descricao,
+        quantidade: item.quantidade,
+        unidade: item.unidade,
+        valorUnitario: Number(item.valorUnitario),
+        custo: Number(item.custo),
+        isProdutoAcabado: item.isProdutoAcabado
+      }))
     }))
 
     return NextResponse.json({
@@ -112,7 +127,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!custoTotal || custoTotal < 0) {
+    if (custoTotal === undefined || custoTotal < 0) {
       return NextResponse.json(
         { error: "Custo total inválido" },
         { status: 400 }
@@ -144,7 +159,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Criar a ficha técnica
+    // Parse dos ingredientes (pode vir como string ou array)
+    let ingredientesArray = []
+    if (typeof ingredientes === 'string') {
+      ingredientesArray = JSON.parse(ingredientes)
+    } else if (Array.isArray(ingredientes)) {
+      ingredientesArray = ingredientes
+    }
+
+    // Criar a ficha técnica com os itens
     const ficha = await prisma.fichaTecnica.create({
       data: {
         userId: session.user.id,
@@ -155,8 +178,24 @@ export async function POST(request: NextRequest) {
         custoPorPorcao,
         margem,
         rendimentoPorcoes,
-        ingredientes: ingredientes || null,
-        modoPreparo: modoPreparo || null
+        modoPreparo: modoPreparo || null,
+        fichaItems: {
+          create: ingredientesArray.map((ing: any) => ({
+            produtoId: ing.produtoId,
+            quantidade: ing.quantidade,
+            unidade: ing.unidade,
+            valorUnitario: ing.valorUnitario,
+            custo: ing.custo,
+            isProdutoAcabado: ing.isProdutoAcabado || false
+          }))
+        }
+      },
+      include: {
+        fichaItems: {
+          include: {
+            produto: true
+          }
+        }
       }
     })
 
@@ -168,7 +207,16 @@ export async function POST(request: NextRequest) {
         custoTotal: Number(ficha.custoTotal),
         custoPorPorcao: Number(ficha.custoPorPorcao),
         margem: Number(ficha.margem),
-        ingredientes: ficha.ingredientes ? JSON.parse(ficha.ingredientes) : []
+        ingredientes: ficha.fichaItems.map(item => ({
+          id: item.id,
+          produtoId: item.produtoId,
+          nome: item.produto.descricao,
+          quantidade: item.quantidade,
+          unidade: item.unidade,
+          valorUnitario: Number(item.valorUnitario),
+          custo: Number(item.custo),
+          isProdutoAcabado: item.isProdutoAcabado
+        }))
       },
       message: "Ficha técnica criada com sucesso"
     })
@@ -176,161 +224,6 @@ export async function POST(request: NextRequest) {
     console.error("Erro ao criar ficha técnica:", error)
     return NextResponse.json(
       { error: "Erro ao criar ficha técnica" },
-      { status: 500 }
-    )
-  }
-}
-
-// PUT - Atualizar uma ficha técnica (por ID nos parâmetros)
-export async function PUT(request: NextRequest) {
-  const session = await getServerSession(authOptions)
-  if (!session) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
-  }
-
-  try {
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get("id")
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "ID da ficha é obrigatório" },
-        { status: 400 }
-      )
-    }
-
-    const body = await request.json()
-    const {
-      nome,
-      categoria,
-      precoVenda,
-      custoTotal,
-      custoPorPorcao,
-      margem,
-      rendimentoPorcoes,
-      ingredientes,
-      modoPreparo
-    } = body
-
-    // Verificar se a ficha existe e pertence ao usuário
-    const fichaExistente = await prisma.fichaTecnica.findFirst({
-      where: {
-        id,
-        userId: session.user.id
-      }
-    })
-
-    if (!fichaExistente) {
-      return NextResponse.json(
-        { error: "Ficha técnica não encontrada" },
-        { status: 404 }
-      )
-    }
-
-    // Verificar se o novo nome não conflita com outra ficha
-    if (nome && nome.trim() !== fichaExistente.nome) {
-      const nomeConflito = await prisma.fichaTecnica.findFirst({
-        where: {
-          userId: session.user.id,
-          nome: {
-            equals: nome.trim(),
-            mode: "insensitive"
-          },
-          id: { not: id }
-        }
-      })
-
-      if (nomeConflito) {
-        return NextResponse.json(
-          { error: "Já existe outra ficha técnica com este nome" },
-          { status: 400 }
-        )
-      }
-    }
-
-    // Atualizar a ficha
-    const ficha = await prisma.fichaTecnica.update({
-      where: { id },
-      data: {
-        nome: nome?.trim(),
-        categoria,
-        precoVenda,
-        custoTotal,
-        custoPorPorcao,
-        margem,
-        rendimentoPorcoes,
-        ingredientes: ingredientes || null,
-        modoPreparo: modoPreparo || null,
-        updatedAt: new Date()
-      }
-    })
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        ...ficha,
-        precoVenda: Number(ficha.precoVenda),
-        custoTotal: Number(ficha.custoTotal),
-        custoPorPorcao: Number(ficha.custoPorPorcao),
-        margem: Number(ficha.margem),
-        ingredientes: ficha.ingredientes ? JSON.parse(ficha.ingredientes) : []
-      },
-      message: "Ficha técnica atualizada com sucesso"
-    })
-  } catch (error) {
-    console.error("Erro ao atualizar ficha técnica:", error)
-    return NextResponse.json(
-      { error: "Erro ao atualizar ficha técnica" },
-      { status: 500 }
-    )
-  }
-}
-
-// DELETE - Remover uma ficha técnica (por ID nos parâmetros)
-export async function DELETE(request: NextRequest) {
-  const session = await getServerSession(authOptions)
-  if (!session) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
-  }
-
-  try {
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get("id")
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "ID da ficha é obrigatório" },
-        { status: 400 }
-      )
-    }
-
-    // Verificar se a ficha existe e pertence ao usuário
-    const fichaExistente = await prisma.fichaTecnica.findFirst({
-      where: {
-        id,
-        userId: session.user.id
-      }
-    })
-
-    if (!fichaExistente) {
-      return NextResponse.json(
-        { error: "Ficha técnica não encontrada" },
-        { status: 404 }
-      )
-    }
-
-    await prisma.fichaTecnica.delete({
-      where: { id }
-    })
-
-    return NextResponse.json({
-      success: true,
-      message: "Ficha técnica removida com sucesso"
-    })
-  } catch (error) {
-    console.error("Erro ao remover ficha técnica:", error)
-    return NextResponse.json(
-      { error: "Erro ao remover ficha técnica" },
       { status: 500 }
     )
   }

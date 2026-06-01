@@ -3,7 +3,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Upload, FileText, Save, AlertCircle, Package, CheckCircle, XCircle } from "lucide-react"
+import { ArrowLeft, Upload, FileText, Save, AlertCircle, Package, CheckCircle, XCircle, Building2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,12 +11,29 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatCurrency } from "@/lib/utils"
 
+interface ProdutoNota {
+  codigo: string
+  descricao: string
+  ncm: string
+  unidade: string
+  quantidade: number
+  valor_unitario: number
+  valor_total: number
+  selecionado: boolean
+}
+
 export default function NfeXmlPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [salvando, setSalvando] = useState(false)
   const [xmlFile, setXmlFile] = useState<File | null>(null)
   const [notaProcessada, setNotaProcessada] = useState<any>(null)
+  const [produtos, setProdutos] = useState<ProdutoNota[]>([])
   const [dragActive, setDragActive] = useState(false)
+  const [formData, setFormData] = useState({
+    contaDespesa: "3.2.1 Compras de Mercadorias",
+    dataCompra: new Date().toISOString().split("T")[0]
+  })
 
   async function processarXml() {
     if (!xmlFile) {
@@ -39,6 +56,11 @@ export default function NfeXmlPage() {
 
       if (data.success) {
         setNotaProcessada(data.data)
+        const produtosComSelecao = (data.data.produtos || []).map((p: any) => ({
+          ...p,
+          selecionado: true
+        }))
+        setProdutos(produtosComSelecao)
       } else {
         throw new Error(data.error || "Erro ao processar XML")
       }
@@ -47,6 +69,77 @@ export default function NfeXmlPage() {
       alert(error instanceof Error ? error.message : "Erro ao processar XML")
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function salvarCompra() {
+    const produtosSelecionados = produtos.filter(p => p.selecionado)
+    
+    if (produtosSelecionados.length === 0) {
+      alert("Selecione pelo menos um produto")
+      return
+    }
+
+    setSalvando(true)
+
+    try {
+      // Registrar compra no livro diário
+      const valorTotal = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
+      
+      const response = await fetch("/api/livro-diario", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          data: formData.dataCompra,
+          conta: formData.contaDespesa,
+          descricao: `NF-e Compra: ${notaProcessada?.nome_emitente || "Fornecedor"} - ${produtosSelecionados.length} itens`,
+          cliente_fornecedor: `${notaProcessada?.nome_emitente || ""} | ${notaProcessada?.cnpj_emitente || ""}`,
+          entrada: 0,
+          saida: valorTotal,
+          tipo: "COMPRA"
+        })
+      })
+
+      if (!response.ok) throw new Error("Erro ao registrar no livro diário")
+
+      // Salvar produtos no banco
+      const produtosParaSalvar = produtosSelecionados.map(p => ({
+        descricao: p.descricao,
+        unidade: p.unidade,
+        quantidade: p.quantidade,
+        valor_unitario: p.valor_unitario,
+        valor_total: p.valor_total,
+        codigo: p.codigo,
+        ncm: p.ncm,
+        fornecedor: notaProcessada?.nome_emitente || "",
+        data_compra: formData.dataCompra,
+        preco_venda: p.valor_unitario * 1.3 // Margem sugerida de 30%
+      }))
+
+      const batchResponse = await fetch("/api/produtos/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(produtosParaSalvar)
+      })
+
+      if (!batchResponse.ok) throw new Error("Erro ao salvar produtos")
+
+      alert(`✅ Compra registrada com sucesso!\n💰 Total: ${formatCurrency(valorTotal)}\n📦 Produtos: ${produtosSelecionados.length}`)
+      
+      // Resetar formulário
+      setXmlFile(null)
+      setNotaProcessada(null)
+      setProdutos([])
+      setFormData({
+        contaDespesa: "3.2.1 Compras de Mercadorias",
+        dataCompra: new Date().toISOString().split("T")[0]
+      })
+      
+    } catch (error) {
+      console.error("Erro:", error)
+      alert("Erro ao salvar compra")
+    } finally {
+      setSalvando(false)
     }
   }
 
@@ -80,7 +173,19 @@ export default function NfeXmlPage() {
     }
   }
 
-  const valorTotal = notaProcessada?.valor_total || 0
+  function toggleProduto(index: number) {
+    const novosProdutos = [...produtos]
+    novosProdutos[index].selecionado = !novosProdutos[index].selecionado
+    setProdutos(novosProdutos)
+  }
+
+  function toggleTodos() {
+    const todosSelecionados = produtos.every(p => p.selecionado)
+    setProdutos(produtos.map(p => ({ ...p, selecionado: !todosSelecionados })))
+  }
+
+  const produtosSelecionados = produtos.filter(p => p.selecionado)
+  const valorTotalCompra = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -100,13 +205,14 @@ export default function NfeXmlPage() {
             <p className="text-sm text-gray-500">Faça upload do arquivo XML da nota fiscal de compra</p>
           </div>
         </div>
-        {notaProcessada && (
+        {produtos.length > 0 && (
           <Button 
-            onClick={() => router.push("/nfe/compra")}
+            onClick={salvarCompra}
+            disabled={salvando || produtosSelecionados.length === 0}
             className="bg-[#de4838] hover:bg-[#c73d2e] text-white px-6 rounded-full shadow-sm"
           >
             <Save className="mr-2 h-4 w-4" />
-            Salvar Compra
+            {salvando ? "Salvando..." : `Salvar Compra (${formatCurrency(valorTotalCompra)})`}
           </Button>
         )}
       </div>
@@ -152,7 +258,11 @@ export default function NfeXmlPage() {
                       id="xml-upload"
                       type="file"
                       accept=".xml, .XML"
-                      onChange={(e) => setXmlFile(e.target.files?.[0] || null)}
+                      onChange={(e) => {
+                        setXmlFile(e.target.files?.[0] || null)
+                        setNotaProcessada(null)
+                        setProdutos([])
+                      }}
                       className="hidden"
                     />
                     
@@ -169,6 +279,8 @@ export default function NfeXmlPage() {
                           onClick={(e) => {
                             e.stopPropagation()
                             setXmlFile(null)
+                            setNotaProcessada(null)
+                            setProdutos([])
                           }}
                         >
                           <XCircle className="h-4 w-4 mr-1" />
@@ -211,6 +323,56 @@ export default function NfeXmlPage() {
                 </Button>
               </div>
             </div>
+
+            {/* Informações da Compra */}
+            {notaProcessada && (
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-gray-50 p-4 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-[#de4838]" />
+                    <h3 className="font-semibold text-gray-800">Informações da Compra</h3>
+                  </div>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div className="rounded-lg bg-gray-50 p-4">
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Fornecedor</p>
+                    <p className="text-sm font-medium text-gray-800 mt-1">{notaProcessada.nome_emitente || "Não informado"}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">CNPJ: {notaProcessada.cnpj_emitente || "Não informado"}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Conta de Despesa</Label>
+                      <div className="relative">
+                        <select
+                          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none"
+                          value={formData.contaDespesa}
+                          onChange={(e) => setFormData({ ...formData, contaDespesa: e.target.value })}
+                        >
+                          <option value="3.2.1 Compras de Mercadorias">📦 Compras de Mercadorias</option>
+                          <option value="3.2.2 Compras de Insumos">🥩 Compras de Insumos</option>
+                          <option value="3.2.3 Compras de Embalagens">📦 Compras de Embalagens</option>
+                          <option value="3.2.4 Compras de Equipamentos">🔧 Compras de Equipamentos</option>
+                          <option value="3.2.5 Compras de Material Limpeza">🧹 Compras de Material Limpeza</option>
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                          <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Data da Compra</Label>
+                      <Input
+                        type="date"
+                        value={formData.dataCompra}
+                        onChange={(e) => setFormData({ ...formData, dataCompra: e.target.value })}
+                        className="rounded-lg border-gray-300 focus:ring-[#de4838] focus:border-[#de4838]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column - Preview */}
@@ -218,77 +380,81 @@ export default function NfeXmlPage() {
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="bg-gray-50 p-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-[#de4838]" />
-                  <h3 className="font-semibold text-gray-800">Resumo da Nota</h3>
+                  <Package className="h-5 w-5 text-[#de4838]" />
+                  <h3 className="font-semibold text-gray-800">Resumo da Operação</h3>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Pré-visualização dos dados</p>
+                <p className="text-xs text-gray-500 mt-1">Pré-visualização da compra</p>
               </div>
               <div className="p-6 space-y-4">
-                {notaProcessada ? (
-                  <>
-                    <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-                      <span className="text-sm text-gray-500">Tipo:</span>
-                      <span className="text-sm font-medium px-2 py-1 rounded-full bg-orange-100 text-orange-700">
-                        Compra (Despesa)
-                      </span>
-                    </div>
-
-                    <div className="rounded-lg bg-gray-50 p-4">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Emitente</p>
-                      <p className="text-sm font-medium text-gray-800 mt-1">{notaProcessada.nome_emitente || "Não informado"}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">CNPJ: {notaProcessada.cnpj_emitente || "Não informado"}</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-xs text-gray-500">Número da Nota</p>
-                        <p className="text-sm font-medium text-gray-800">{notaProcessada.numero || "-"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Data de Emissão</p>
-                        <p className="text-sm font-medium text-gray-800">{formatDate(notaProcessada.data_emissao)}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Produtos:</span>
-                      <span className="font-medium text-gray-800">{notaProcessada.produtos?.length || 0} itens</span>
-                    </div>
-
-                    <div className="pt-4 mt-2 border-t border-dashed border-gray-200">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-semibold text-gray-700">Valor Total da Nota:</span>
-                        <span className="text-xl font-bold text-[#de4838]">{formatCurrency(valorTotal)}</span>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-8">
-                    <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-sm text-gray-500">Nenhuma nota processada</p>
-                    <p className="text-xs text-gray-400 mt-1">Faça upload de um arquivo XML para visualizar os dados</p>
+                <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                  <span className="text-sm text-gray-500">Tipo:</span>
+                  <span className="text-sm font-medium px-2 py-1 rounded-full bg-orange-100 text-orange-700">
+                    Compra (Saída)
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Fornecedor:</span>
+                  <span className="font-medium text-gray-800 text-right max-w-[200px] truncate">
+                    {notaProcessada?.nome_emitente || "Aguardando nota..."}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Produtos na nota:</span>
+                  <span className="font-medium text-gray-800">{produtos.length}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Produtos selecionados:</span>
+                  <span className="font-medium text-gray-800">{produtosSelecionados.length}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Conta de despesa:</span>
+                  <span className="font-medium text-gray-800 text-right max-w-[200px] truncate">
+                    {formData.contaDespesa.split(" ").slice(1).join(" ")}
+                  </span>
+                </div>
+                <div className="pt-4 mt-2 border-t border-dashed border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-semibold text-gray-700">Total a pagar:</span>
+                    <span className="text-xl font-bold text-[#de4838]">{formatCurrency(valorTotalCompra)}</span>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Lista de Produtos - Full width */}
-        {notaProcessada?.produtos && notaProcessada.produtos.length > 0 && (
+        {/* Lista de Produtos - Full width with checkboxes */}
+        {produtos.length > 0 && (
           <div className="mt-8">
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="bg-gray-50 p-4 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  <Package className="h-5 w-5 text-[#de4838]" />
-                  <h3 className="font-semibold text-gray-800">Produtos da Nota</h3>
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-5 w-5 text-[#de4838]" />
+                    <h3 className="font-semibold text-gray-800">Produtos da Nota</h3>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 text-sm text-gray-600">
+                      <input
+                        type="checkbox"
+                        checked={produtos.length > 0 && produtos.every(p => p.selecionado)}
+                        onChange={toggleTodos}
+                        className="rounded border-gray-300 text-[#de4838] focus:ring-[#de4838]"
+                      />
+                      Selecionar todos
+                    </label>
+                    <span className="text-sm text-gray-500">
+                      {produtosSelecionados.length} de {produtos.length} selecionados
+                    </span>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Itens processados a partir do XML</p>
+                <p className="text-xs text-gray-500 mt-1">Selecione os itens que deseja registrar na compra</p>
               </div>
               <div className="p-0 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
+                      <th className="px-4 py-3 text-left w-10"></th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
                       <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">NCM</th>
@@ -298,8 +464,16 @@ export default function NfeXmlPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {notaProcessada.produtos.map((produto: any, index: number) => (
+                    {produtos.map((produto, index) => (
                       <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={produto.selecionado}
+                            onChange={() => toggleProduto(index)}
+                            className="rounded border-gray-300 text-[#de4838] focus:ring-[#de4838]"
+                          />
+                        </td>
                         <td className="px-4 py-3 font-mono text-xs text-gray-600">{produto.codigo || "-"}</td>
                         <td className="px-4 py-3 text-gray-800">{produto.descricao}</td>
                         <td className="px-4 py-3 text-center font-mono text-xs text-gray-500">{produto.ncm || "-"}</td>
@@ -315,24 +489,15 @@ export default function NfeXmlPage() {
                   </tbody>
                   <tfoot className="bg-gray-50 border-t border-gray-200">
                     <tr>
-                      <td colSpan={5} className="px-4 py-4 text-right font-semibold text-gray-700">
-                        Total da Nota:
+                      <td colSpan={6} className="px-4 py-4 text-right font-semibold text-gray-700">
+                        Total da Compra:
                       </td>
                       <td className="px-4 py-4 text-right text-xl font-bold text-[#de4838]">
-                        {formatCurrency(valorTotal)}
+                        {formatCurrency(valorTotalCompra)}
                       </td>
                     </tr>
                   </tfoot>
                 </table>
-              </div>
-              <div className="p-4 border-t border-gray-100 bg-gray-50">
-                <Button 
-                  onClick={() => router.push("/nfe/compra")}
-                  className="w-full bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg"
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  Continuar para registro da compra
-                </Button>
               </div>
             </div>
           </div>
