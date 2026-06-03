@@ -5,7 +5,8 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
 import Link from "next/link"
-import { Store, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight } from "lucide-react"
+import Image from "next/image"
+import { Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -68,11 +69,18 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[#de4838] to-[#de4838]/80 flex items-center justify-center shadow-lg">
-              <Store className="h-8 w-8 text-white" />
+            <div className="h-22 w-22 rounded-2xl bg-gradient-to-br  flex items-center justify-center shadow-lg overflow-hidden">
+              <Image
+                src="/logo1.png"
+                alt="Logo KaiUp.ai"
+                width={80}
+                height={80}
+                className="object-contain rounded-2xl"
+                priority
+              />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">Emporio do Sabor</h1>
+          <h1 className="text-2xl font-bold text-gray-800">KaiUp-Administrator.ai</h1>
           <p className="text-sm text-gray-500 mt-2">
             Faça login para acessar o sistema
           </p>
@@ -105,7 +113,15 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Senha</Label>
+                <div className="flex justify-between items-center">
+                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Senha</Label>
+                  <Link 
+                    href="/forgot-password" 
+                    className="text-xs text-[#de4838] hover:text-[#c73d2e] transition-colors"
+                  >
+                    Esqueceu a senha?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   <Input

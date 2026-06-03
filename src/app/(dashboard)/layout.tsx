@@ -119,20 +119,20 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar Desktop - Largura w-52 (208px) */}
-      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-52 flex-col bg-white shadow-sm lg:flex">
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-58 flex-col bg-white shadow-sm lg:flex">
         {/* Logo */}
-        <div className="flex h-12 items-center px-3 border-b border-gray-100">
+        <div className="flex h-16 items-center px-3 border-b border-gray-100">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-sm">
-              <Store className="h-3.5 w-3.5 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-sm">
+              <Store className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xs font-semibold text-gray-800 truncate max-w-[120px]">{empresaNome}</span>
+            <span className="text-base font-semibold text-gray-800 truncate max-w-[200px]">{empresaNome}</span>
           </Link>
         </div>
 
         {/* Menu Principal - USANDO Link DO Next.js */}
         <nav className="flex-1 overflow-y-auto px-2 py-3">
-          <p className="mb-1.5 px-2 text-[9px] font-semibold uppercase tracking-wider text-gray-400">Menu</p>
+          <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Menu</p>
           {menuItems.map((item, idx) => {
             const active = isActive(item.href)
             return (
@@ -140,7 +140,7 @@ export default function DashboardLayout({
                 key={idx}
                 href={item.href}
                 className={cn(
-                  "flex items-center justify-between rounded-lg px-2 py-1.5 text-[11px] transition-all mb-0.5",
+                  "flex items-center justify-between rounded-lg px-2 py-1.5 text-[15px] transition-all mb-0.5",
                   active 
                     ? "bg-[#de4838]/10 text-[#de4838] font-medium" 
                     : "text-gray-600 hover:bg-gray-100"
@@ -158,7 +158,7 @@ export default function DashboardLayout({
             )
           })}
 
-          <p className="mb-1.5 mt-4 px-2 text-[9px] font-semibold uppercase tracking-wider text-gray-400">
+          <p className="mb-1.5 mt-4 px-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
             Configurações
           </p>
           {configItems.map((item, idx) => {
@@ -168,7 +168,7 @@ export default function DashboardLayout({
                 key={idx}
                 href={item.href}
                 className={cn(
-                  "flex items-center justify-between rounded-lg px-2 py-1.5 text-[11px] transition-all mb-0.5",
+                  "flex items-center justify-between rounded-lg px-2 py-1.5 text-[14px] transition-all mb-0.5",
                   active 
                     ? "bg-[#de4838]/10 text-[#de4838] font-medium" 
                     : "text-gray-600 hover:bg-gray-100"
@@ -185,18 +185,18 @@ export default function DashboardLayout({
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-gray-100 p-2">
+        <div className="border-t border-gray-200 p-2">
           {isInTrial && (
             <div className="mb-2 rounded-lg bg-orange-50 p-1.5 text-center">
-              <p className="text-[10px] font-medium text-orange-700">Teste grátis</p>
-              <p className="text-[8px] text-orange-600">{daysLeft} dias</p>
+              <p className="text-[12px] font-medium text-orange-700">Teste grátis</p>
+              <p className="text-[10px] text-orange-600">{daysLeft} dias</p>
             </div>
           )}
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] text-gray-600 transition-all hover:bg-gray-100"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[15px] text-gray-600 transition-all hover:bg-gray-100"
           >
-            <LogOut className="h-3 w-3 text-gray-400" />
+            <LogOut className="h-5 w-5 text-gray-400" />
             Sair
           </button>
         </div>
@@ -271,7 +271,7 @@ export default function DashboardLayout({
       {/* Main Content */}
       <div className="lg:pl-52">
         {/* Topbar - Desktop e Mobile */}
-        <header className="sticky top-0 z-30 flex h-12 items-center justify-between bg-white px-4 shadow-sm border-b border-gray-100">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-white px-4 shadow-sm border-b border-gray-100">
           <button
             onClick={() => setSidebarOpen(true)}
             className="rounded-lg p-1 hover:bg-gray-100 lg:hidden"
@@ -287,7 +287,7 @@ export default function DashboardLayout({
               <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-sm lg:hidden">
                 <Store className="h-3 w-3 text-white" />
               </div>
-              <span className="text-sm font-semibold text-gray-800">Administra.ai</span>
+              <span className="text-base font-semibold text-gray-800">KaiUp-Administrator.ai</span>
             </Link>
           </div>
           
@@ -297,18 +297,18 @@ export default function DashboardLayout({
               className="rounded-full p-1 hover:bg-gray-100 transition-colors"
               title="Abrir guia de configuração"
             >
-              <HelpCircle className="h-4 w-4 text-gray-400" />
+              <HelpCircle className="h-5 w-5 text-gray-400" />
             </button>
             <div className="flex items-center gap-1.5">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#de4838] to-[#de4838]/80 text-white text-[10px] font-medium shadow-sm">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#de4838] to-[#de4838]/80 text-white text-[15px] font-medium shadow-sm">
                 {session.user?.name?.charAt(0).toUpperCase() || session.user?.email?.charAt(0).toUpperCase() || "U"}
               </div>
               <div className="hidden sm:block">
-                <p className="text-[11px] font-medium text-gray-700">
+                <p className="text-[15px] font-medium text-gray-700">
                   {session.user?.name || session.user?.email?.split("@")[0]}
                 </p>
                 {isInTrial && (
-                  <p className="text-[9px] text-orange-500">{daysLeft} dias</p>
+                  <p className="text-[11px] text-orange-500">{daysLeft} dias</p>
                 )}
               </div>
             </div>

@@ -25,6 +25,53 @@ export function IndicadoresCard({
   const totalFixas = despesasFixas.reduce((s, d) => s + d.valor, 0)
   const pctFixas = metaMensalTotal > 0 ? (totalFixas / metaMensalTotal) * 100 : 0
 
+  const getStatusType = (valor: number, min: number, max: number): 'ideal' | 'abaixo' | 'acima' => {
+    if (valor >= min && valor <= max) return 'ideal'
+    if (valor < min) return 'abaixo'
+    return 'acima'
+  }
+
+  const getStatusColor = (status: 'ideal' | 'abaixo' | 'acima') => {
+    switch (status) {
+      case 'ideal':
+        return {
+          bg: 'bg-emerald-50',
+          border: 'border-emerald-200',
+          text: 'text-emerald-700',
+          progressBg: 'bg-emerald-100',
+          progressFill: 'bg-emerald-500',
+          iconBg: 'bg-emerald-100',
+          iconColor: 'text-emerald-600',
+          statusText: 'Ideal ✓',
+          statusColor: 'text-emerald-600'
+        }
+      case 'abaixo':
+        return {
+          bg: 'bg-amber-50',
+          border: 'border-amber-200',
+          text: 'text-amber-700',
+          progressBg: 'bg-amber-100',
+          progressFill: 'bg-amber-500',
+          iconBg: 'bg-amber-100',
+          iconColor: 'text-amber-600',
+          statusText: 'Abaixo da faixa ↓',
+          statusColor: 'text-amber-600'
+        }
+      case 'acima':
+        return {
+          bg: 'bg-rose-50',
+          border: 'border-rose-200',
+          text: 'text-rose-700',
+          progressBg: 'bg-rose-100',
+          progressFill: 'bg-rose-500',
+          iconBg: 'bg-rose-100',
+          iconColor: 'text-rose-600',
+          statusText: 'Acima da faixa ↑',
+          statusColor: 'text-rose-600'
+        }
+    }
+  }
+
   const indicadores = [
     {
       nome: "Mark-up",
@@ -34,7 +81,8 @@ export function IndicadoresCard({
       unidade: "x",
       min: 2.0,
       max: 3.5,
-      getStatus: (v: number) => v >= 2.0 && v <= 3.5 ? "Ideal" : "Fora da faixa",
+      tooltip: "Ideal: entre 2.0x e 3.5x",
+      getStatus: (v: number) => getStatusType(v, 2.0, 3.5),
       isIdeal: (v: number) => v >= 2.0 && v <= 3.5
     },
     {
@@ -45,7 +93,8 @@ export function IndicadoresCard({
       unidade: "%",
       min: 30,
       max: 45,
-      getStatus: (v: number) => v >= 30 && v <= 45 ? "Ideal" : "Fora da faixa",
+      tooltip: "Ideal: entre 30% e 45% do faturamento",
+      getStatus: (v: number) => getStatusType(v, 30, 45),
       isIdeal: (v: number) => v >= 30 && v <= 45
     },
     {
@@ -56,7 +105,8 @@ export function IndicadoresCard({
       unidade: "%",
       min: 5,
       max: 15,
-      getStatus: (v: number) => v >= 5 && v <= 15 ? "Ideal" : "Fora da faixa",
+      tooltip: "Ideal: entre 5% e 15% do faturamento",
+      getStatus: (v: number) => getStatusType(v, 5, 15),
       isIdeal: (v: number) => v >= 5 && v <= 15
     },
     {
@@ -67,7 +117,8 @@ export function IndicadoresCard({
       unidade: "%",
       min: 35,
       max: 45,
-      getStatus: (v: number) => v >= 35 && v <= 45 ? "Ideal" : "Fora da faixa",
+      tooltip: "Ideal: entre 35% e 45% do faturamento",
+      getStatus: (v: number) => getStatusType(v, 35, 45),
       isIdeal: (v: number) => v >= 35 && v <= 45
     },
     {
@@ -78,7 +129,8 @@ export function IndicadoresCard({
       unidade: "%",
       min: 10,
       max: 20,
-      getStatus: (v: number) => v >= 10 && v <= 20 ? "Ideal" : "Fora da faixa",
+      tooltip: "Ideal: entre 10% e 20% de lucro",
+      getStatus: (v: number) => getStatusType(v, 10, 20),
       isIdeal: (v: number) => v >= 10 && v <= 20
     }
   ]
@@ -105,33 +157,57 @@ export function IndicadoresCard({
       <div className="p-5">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {indicadores.map((ind) => {
-            const percentual = Math.min(100, Math.max(0, ((ind.valor - ind.min) / (ind.max - ind.min)) * 100))
             const status = ind.getStatus(ind.valor)
-            const isIdeal = ind.isIdeal(ind.valor)
+            const colors = getStatusColor(status)
             const Icon = ind.icone
+            const isIdeal = status === 'ideal'
+            
+            // Calcula percentual para a barra de progresso
+            let percentual = 0
+            if (ind.valor < ind.min) {
+              percentual = (ind.valor / ind.min) * 50
+            } else if (ind.valor > ind.max) {
+              percentual = 50 + ((ind.valor - ind.max) / (ind.max * 2)) * 50
+              percentual = Math.min(100, percentual)
+            } else {
+              percentual = ((ind.valor - ind.min) / (ind.max - ind.min)) * 100
+            }
+            percentual = Math.min(100, Math.max(0, percentual))
             
             return (
-              <div key={ind.nome} className="rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-shadow">
+              <div 
+                key={ind.nome} 
+                className={`rounded-xl border ${colors.border} ${colors.bg} p-4 shadow-sm hover:shadow-md transition-all cursor-help`}
+                title={ind.tooltip}
+              >
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className={`p-1.5 rounded-lg ${isIdeal ? 'bg-emerald-100' : 'bg-amber-100'}`}>
-                      <Icon className={`h-4 w-4 ${isIdeal ? 'text-emerald-600' : 'text-amber-600'}`} />
+                    <div className={`p-1.5 rounded-lg ${colors.iconBg}`}>
+                      <Icon className={`h-4 w-4 ${colors.iconColor}`} />
                     </div>
                     <h6 className="font-semibold text-gray-800">{ind.nome}</h6>
                   </div>
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${isIdeal ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${colors.iconBg} ${colors.text}`}>
                     Ideal: {ind.min}{ind.unidade} - {ind.max}{ind.unidade}
                   </span>
                 </div>
                 <div className="my-3 text-center">
-                  <span className="text-3xl font-bold text-gray-800">{ind.valor.toFixed(1)}</span>
+                  <span className={`text-3xl font-bold ${colors.text}`}>{ind.valor.toFixed(1)}</span>
                   <span className="text-gray-500 ml-0.5">{ind.unidade}</span>
                 </div>
-                <Progress value={percentual} className="h-2" />
+                
+                {/* Custom Progress Bar */}
+                <div className={`w-full ${colors.progressBg} rounded-full h-2 overflow-hidden`}>
+                  <div 
+                    className={`${colors.progressFill} h-full rounded-full transition-all duration-300`}
+                    style={{ width: `${percentual}%` }}
+                  />
+                </div>
+                
                 <div className="mt-2 flex justify-between text-xs">
                   <span className="text-gray-500">Min: {ind.min}{ind.unidade}</span>
-                  <span className={`font-medium ${isIdeal ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {status}
+                  <span className={`font-medium ${colors.statusColor}`}>
+                    {colors.statusText}
                   </span>
                   <span className="text-gray-500">Max: {ind.max}{ind.unidade}</span>
                 </div>
@@ -152,6 +228,22 @@ export function IndicadoresCard({
                 {indicadoresIdeais}/5 indicadores ideais
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Legenda */}
+        <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-3 justify-center text-xs">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-emerald-100 border border-emerald-200"></div>
+            <span className="text-gray-600">Ideal</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-amber-100 border border-amber-200"></div>
+            <span className="text-gray-600">Abaixo da faixa</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-rose-100 border border-rose-200"></div>
+            <span className="text-gray-600">Acima da faixa</span>
           </div>
         </div>
       </div>

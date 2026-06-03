@@ -120,7 +120,7 @@ export default function NfePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-10 ml-6 mr-6 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div>
           <h1 className="text-xl font-semibold text-gray-800">Notas Fiscais</h1>
           <p className="text-sm text-gray-500">Registro de vendas, compras e processamento de NFC-e</p>

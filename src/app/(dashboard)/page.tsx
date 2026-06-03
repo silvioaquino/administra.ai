@@ -1,4 +1,5 @@
 // src/app/(dashboard)/dashboard/page.tsx
+
 "use client"
 
 import { useSession } from "next-auth/react"
@@ -14,7 +15,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { formatCurrency } from "@/lib/utils"
 import {
   LineChart,
@@ -46,6 +46,12 @@ interface UltimoLancamento {
   saida: number
 }
 
+interface FichaTecnica {
+  id: string
+  nome: string
+  margem: number
+}
+
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -72,6 +78,7 @@ export default function DashboardPage() {
   })
   const [ultimosLancamentos, setUltimosLancamentos] = useState<UltimoLancamento[]>([])
   const [alertas, setAlertas] = useState<Array<{ type: string; message: string }>>([])
+  const [fichasMargemBaixa, setFichasMargemBaixa] = useState<FichaTecnica[]>([])
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -81,7 +88,22 @@ export default function DashboardPage() {
 
   useEffect(() => {
     carregarDadosMockados()
+    carregarFichasTecnicas()
   }, [periodo, dataEspecifica])
+
+  async function carregarFichasTecnicas() {
+    try {
+      const response = await fetch("/api/fichas-tecnicas")
+      const data = await response.json()
+      if (data.success) {
+        const fichas = data.data as FichaTecnica[]
+        const margemBaixa = fichas.filter((f: FichaTecnica) => f.margem < 30)
+        setFichasMargemBaixa(margemBaixa)
+      }
+    } catch (error) {
+      console.error("Erro ao carregar fichas técnicas:", error)
+    }
+  }
 
   function carregarDadosMockados() {
     setLoading(true)
@@ -218,9 +240,16 @@ export default function DashboardPage() {
 
       const metaDespesaDiaria = 1700
       const metaDespesaPeriodo = metaDespesaDiaria * diasNoPeriodo
-      const pctFaturamento = Math.min(100, (receitasMock / metaFaturamento) * 100)
-      const pctDespesa = Math.min(100, (despesasMock / metaDespesaPeriodo) * 100)
-      const pctLucro = Math.min(100, (margemMock / 15) * 100)
+
+      const pctFaturamento = metaFaturamento > 0 
+        ? Math.min(100, Math.max(0, (receitasMock / metaFaturamento) * 100)) 
+        : 0
+      const pctDespesa = metaDespesaPeriodo > 0 
+        ? Math.min(100, Math.max(0, (despesasMock / metaDespesaPeriodo) * 100)) 
+        : 0
+      const pctLucro = 15 > 0 
+        ? Math.min(100, Math.max(0, (margemMock / 15) * 100)) 
+        : 0
 
       setMetas({
         faturamento: { atual: receitasMock, meta: metaFaturamento, percentual: pctFaturamento },
@@ -237,35 +266,59 @@ export default function DashboardPage() {
       ]
       setUltimosLancamentos(lancamentosMock)
 
-      const alertasMock = []
-      if (saldoMock < 0) {
-        alertasMock.push({ type: "danger", message: `Situação crítica! Despesas superam receitas em ${formatCurrency(Math.abs(saldoMock))}` })
-      } else if (margemMock < 10) {
-        alertasMock.push({ type: "warning", message: `Margem de lucro está baixa (${margemMock.toFixed(1)}%). Reveja seus custos!` })
-      } else if (margemMock >= 15) {
-        alertasMock.push({ type: "success", message: `Margem de lucro excelente! (${margemMock.toFixed(1)}%)` })
-      } else {
-        alertasMock.push({ type: "info", message: "Tudo dentro do esperado! Continue assim!" })
-      }
-      setAlertas(alertasMock)
+      setAlertas(prev => {
+        const novosAlertas = prev.filter(a => 
+          !a.message.includes("Despesas superam receitas") &&
+          !a.message.includes("Margem de lucro está baixa") &&
+          !a.message.includes("Margem de lucro excelente") &&
+          !a.message.includes("Tudo dentro do esperado")
+        )
+        
+        if (saldoMock < 0) {
+          novosAlertas.push({ type: "danger", message: `Situação crítica! Despesas superam receitas em ${formatCurrency(Math.abs(saldoMock))}` })
+        } else if (margemMock < 10) {
+          novosAlertas.push({ type: "warning", message: `Margem de lucro está baixa (${margemMock.toFixed(1)}%). Reveja seus custos!` })
+        } else if (margemMock >= 15) {
+          novosAlertas.push({ type: "success", message: `Margem de lucro excelente! (${margemMock.toFixed(1)}%)` })
+        } else {
+          novosAlertas.push({ type: "info", message: "Tudo dentro do esperado! Continue assim!" })
+        }
+        
+        return novosAlertas
+      })
 
-      if (periodo === "hoje") {
-        setPeriodoTexto(new Date().toLocaleDateString("pt-BR"))
-      } else if (periodo === "mes") {
-        setPeriodoTexto(new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" }))
-      } else if (periodo === "ano") {
-        setPeriodoTexto(new Date().getFullYear().toString())
-      } else if (periodo === "especifico" && dataEspecifica) {
-        const data = new Date(dataEspecifica)
-        setPeriodoTexto(data.toLocaleDateString("pt-BR"))
-      } else if (periodo === "especifico" && !dataEspecifica) {
-        setPeriodoTexto("Selecione uma data")
+      if (periodoTexto === "Março 2025") {
+        if (periodo === "hoje") {
+          setPeriodoTexto(new Date().toLocaleDateString("pt-BR"))
+        } else if (periodo === "mes") {
+          setPeriodoTexto(new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" }))
+        } else if (periodo === "ano") {
+          setPeriodoTexto(new Date().getFullYear().toString())
+        } else if (periodo === "especifico" && dataEspecifica) {
+          const data = new Date(dataEspecifica)
+          setPeriodoTexto(data.toLocaleDateString("pt-BR"))
+        }
       }
 
       setLoading(false)
       setChartLoading(false)
     }, 300)
   }
+
+  useEffect(() => {
+    if (fichasMargemBaixa.length > 0) {
+      const hasMargemBaixaAlert = alertas.some(a => a.message.includes("ficha(s) técnica(s) com margem abaixo de 30%"))
+      
+      if (!hasMargemBaixaAlert) {
+        const nomesFichas = fichasMargemBaixa.map(f => f.nome).join(", ")
+        const alertaMessage = fichasMargemBaixa.length === 1
+          ? `⚠️ Ficha técnica "${fichasMargemBaixa[0].nome}" tem margem de lucro abaixo de 30% (${fichasMargemBaixa[0].margem.toFixed(1)}%). Revise os custos ou preço de venda.`
+          : `⚠️ ${fichasMargemBaixa.length} ficha(s) técnica(s) com margem abaixo de 30%: ${nomesFichas}. Revise os custos ou preços de venda.`
+        
+        setAlertas(prev => [...prev, { type: "warning", message: alertaMessage }])
+      }
+    }
+  }, [fichasMargemBaixa, alertas])
 
   const formatTooltipValue = (value: number | string | undefined): string => {
     if (typeof value === 'number') {
@@ -407,7 +460,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div className="sticky top-0 z-10 ml-1 mb-5 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-gray-800">Dashboard</h1>
             <p className="text-sm text-gray-500">
@@ -509,50 +562,119 @@ export default function DashboardPage() {
             </div>
           </div>
           <CardContent className="py-4 px-5">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-3">
               {/* Meta Faturamento */}
-              <div>
-                <div className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl py-3 px-4 text-white">
-                  <div className="flex justify-between items-center mb-1">
-                    <small className="text-xs">🎯 Meta Faturamento</small>
-                    <small className="text-[10px] opacity-80">
-                      {formatCurrency(metas.faturamento.atual)} / {formatCurrency(metas.faturamento.meta)}
-                    </small>
+              <div className="space-y-2 bg-gradient-to-r from-blue-200 to-blue-500 rounded-xl py-3 px-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                    <span className="text-xs font-medium text-gray-700">🎯 Meta Faturamento</span>
                   </div>
-                  <div className="text-xl font-bold">{metas.faturamento.percentual.toFixed(0)}%</div>
-                  <Progress value={metas.faturamento.percentual} className="h-1.5 mt-1 bg-white/30" />
+                  <span className="text-xs font-bold text-gray-700">
+                    {formatCurrency(metas.faturamento.atual)} / {formatCurrency(metas.faturamento.meta)}
+                  </span>
+                </div>
+                
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-blue-600 to-blue-500 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.max(0, metas.faturamento.percentual))}%` }}
+                  />
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-500">Progresso</span>
+                  <span className="text-xs font-semibold text-gray-600">
+                    {Math.min(100, Math.max(0, metas.faturamento.percentual)).toFixed(0)}%
+                  </span>
                 </div>
               </div>
 
               {/* Meta Despesa */}
-              <div>
-                <div className={`rounded-xl py-3 px-4 text-white ${
-                  metas.despesa.percentual >= 100 ? "bg-red-500" : metas.despesa.percentual > 80 ? "bg-amber-500" : "bg-emerald-500"
-                }`}>
-                  <div className="flex justify-between items-center mb-1">
-                    <small className="text-xs">💰 Meta Despesa</small>
-                    <small className="text-[10px] opacity-80">
-                      {formatCurrency(metas.despesa.atual)} / {formatCurrency(metas.despesa.meta)}
-                    </small>
+              <div className="space-y-2 bg-gradient-to-r from-yellow-200 to-yellow-500 rounded-xl py-3 px-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-red-500"></div>
+                    <span className="text-xs font-medium text-gray-700">💰 Meta Despesa</span>
                   </div>
-                  <div className="text-xl font-bold">{metas.despesa.percentual.toFixed(0)}%</div>
-                  <Progress value={metas.despesa.percentual} className="h-1.5 mt-1 bg-white/30" />
+                  <span className="text-xs font-bold text-gray-700">
+                    {formatCurrency(metas.despesa.atual)} / {formatCurrency(metas.despesa.meta)}
+                  </span>
+                </div>
+                
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      metas.despesa.percentual >= 100 
+                        ? "bg-gradient-to-r from-red-600 to-red-500" 
+                        : metas.despesa.percentual > 80 
+                          ? "bg-gradient-to-r from-blue-500 to-blue-600" 
+                          : "bg-gradient-to-r from-orange-500 to-orange-600"
+                    }`}
+                    style={{ width: `${Math.min(100, Math.max(0, metas.despesa.percentual))}%` }}
+                  />
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-500">Utilizado</span>
+                  <span className={`text-xs font-semibold ${
+                    metas.despesa.percentual >= 100 
+                      ? "text-red-600" 
+                      : metas.despesa.percentual > 80 
+                        ? "text-gray-600" 
+                        : "text-gray-700"
+                  }`}>
+                    {Math.min(100, Math.max(0, metas.despesa.percentual)).toFixed(0)}%
+                  </span>
+                </div>
+                
+                <div className="mt-1 flex justify-between text-[10px] text-gray-800">
+                  <span>Meta: {formatCurrency(metas.despesa.meta)}</span>
+                  <span>Diário: R$ 1.700</span>
                 </div>
               </div>
 
               {/* Meta Lucro */}
-              <div>
-                <div className={`rounded-xl py-3 px-4 text-white ${
-                  metas.lucro.percentual >= 100 ? "bg-emerald-500" : metas.lucro.percentual >= 70 ? "bg-blue-500" : "bg-amber-500"
-                }`}>
-                  <div className="flex justify-between items-center mb-1">
-                    <small className="text-xs">📈 Meta Lucro</small>
-                    <small className="text-[10px] opacity-80">
-                      {metas.lucro.atual.toFixed(1)}% / {metas.lucro.meta}%
-                    </small>
+              <div className="space-y-2 bg-gradient-to-r from-emerald-200 to-emerald-500 rounded-xl py-3 px-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
+                    <span className="text-xs font-medium text-gray-700">📈 Meta Lucro</span>
                   </div>
-                  <div className="text-xl font-bold">{metas.lucro.percentual.toFixed(0)}%</div>
-                  <Progress value={metas.lucro.percentual} className="h-1.5 mt-1 bg-white/30" />
+                  <span className="text-xs font-bold text-gray-700">
+                    {metas.lucro.atual.toFixed(1)}% / {metas.lucro.meta}%
+                  </span>
+                </div>
+                
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      metas.lucro.percentual >= 100 
+                        ? "bg-gradient-to-r from-emerald-600 to-emerald-500" 
+                        : metas.lucro.percentual >= 70 
+                          ? "bg-gradient-to-r from-blue-500 to-blue-600" 
+                          : "bg-gradient-to-r from-amber-500 to-amber-600"
+                    }`}
+                    style={{ width: `${Math.min(100, Math.max(0, metas.lucro.percentual))}%` }}
+                  />
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-600">Alcance</span>
+                  <span className={`text-xs font-semibold ${
+                    metas.lucro.percentual >= 100 
+                      ? "text-gray-600" 
+                      : metas.lucro.percentual >= 70 
+                        ? "text-gray-600" 
+                        : "text-gray-600"
+                  }`}>
+                    {Math.min(100, Math.max(0, metas.lucro.percentual)).toFixed(0)}%
+                  </span>
+                </div>
+                
+                <div className="mt-1 flex justify-between text-[10px] text-gray-800">
+                  <span>Mínimo ideal: 15%</span>
+                  <span>Excelente: &gt;20%</span>
                 </div>
               </div>
             </div>
@@ -723,14 +845,21 @@ export default function DashboardPage() {
             </div>
             <CardContent className="p-5">
               <div className="space-y-3">
-                {alertas.map((alerta, idx) => (
-                  <div key={idx} className={`rounded-xl p-3 ${getAlertBg(alerta.type)} border`}>
-                    <div className="flex items-start gap-2">
-                      {getAlertIcon(alerta.type)}
-                      <p className={`text-sm ${getAlertText(alerta.type)}`}>{alerta.message}</p>
+                {alertas.length > 0 ? (
+                  alertas.map((alerta, idx) => (
+                    <div key={idx} className={`rounded-xl p-3 ${getAlertBg(alerta.type)} border`}>
+                      <div className="flex items-start gap-2">
+                        {getAlertIcon(alerta.type)}
+                        <p className={`text-sm ${getAlertText(alerta.type)}`}>{alerta.message}</p>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center text-gray-500 py-8">
+                    <CheckCircle className="h-8 w-8 mx-auto mb-2 text-emerald-500" />
+                    <p className="text-sm">Tudo certo! Nenhum alerta no momento.</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </div>

@@ -1,7 +1,7 @@
 // src/app/(dashboard)/planejamento/components/FolhaSalarialTable.tsx
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, Fragment } from "react"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { formatCurrency } from "@/lib/utils"
@@ -323,9 +323,9 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
                 const isExpanded = expandedRow === func.nome
                 
                 return (
-                  <>
+                  <React.Fragment key={func.nome}>
                     {/* Linha principal */}
-                    <tr key={func.nome} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
                         <button
                           onClick={() => toggleRow(func.nome)}
@@ -408,7 +408,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
 
                     {/* Linha expandida com detalhes das provisões */}
                     {isExpanded && (
-                      <tr className="bg-gray-50">
+                      <tr key={`${func.nome}-expanded`} className="bg-gray-50">
                         <td colSpan={7} className="px-4 py-3">
                           <div className="space-y-3">
                             <div className="flex items-center gap-2 mb-2">
@@ -448,7 +448,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 )
               })}
             </tbody>

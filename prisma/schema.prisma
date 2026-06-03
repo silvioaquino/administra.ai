@@ -24,6 +24,10 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  // NOVOS CAMPOS PARA RESET DE SENHA
+  resetToken        String?   @unique
+  resetTokenExpiry  DateTime?
+
   // Relacionamentos
   subscription               Subscription?
   empresa                    Empresa?
