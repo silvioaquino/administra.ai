@@ -135,6 +135,25 @@ Na Vercel:
 - **Analytics**: Performance do app
 - **Logs**: Debug em tempo real
 
+## 📊 Status Atual do Repositório
+
+| Branch | Status | Deploy URL |
+|--------|--------|------------|
+| `feature/SilvioAquino` | ✅ Commitado, aguardando PR | Preview |
+| `develop` | ✅ Criada, PR pendente | Staging |
+| `main` | ⬜ Pendente | Production |
+
+## 🔄 Workflow de Deploy
+
+```
+feature/SilvioAquino → PR → develop (staging) → PR → main (produção)
+```
+
+### Para abrir o PR manualmente:
+1. Acesse: https://github.com/silvioaquino/administra.ai/pull/new/feature/SilvioAquino
+2. Base: `develop`
+3. Crie o PR e aguarde review
+
 ## Equipe de Desenvolvimento
 
 | Membro | Responsabilidade | Branch Principal |
