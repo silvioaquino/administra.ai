@@ -1,13 +1,20 @@
 // app/api/vendas/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params  // Aguardar a Promise
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
+    const { id } = await params
     console.log('📥 Recebendo atualização para venda:', id)
 
     // Verificar se o ID foi fornecido
@@ -68,7 +75,7 @@ export async function PUT(
     // Atualizar a venda no banco de dados
     const vendaAtualizada = await prisma.venda.update({
       where: { id },
-      data: { 
+      data: {
         tipoPagamento: tipo_pagamento,
         updatedAt: new Date()
       }
@@ -95,7 +102,7 @@ export async function PUT(
 
   } catch (error: any) {
     console.error('❌ Erro ao atualizar venda:', error)
-    
+
     if (error.code === 'P2025') {
       return NextResponse.json(
         { success: false, error: 'Venda não encontrada' },
@@ -115,7 +122,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params  // Aguardar a Promise
+    const { id } = await params
 
     const venda = await prisma.venda.findUnique({
       where: { id }
@@ -147,7 +154,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params  // Aguardar a Promise
+    const { id } = await params
     console.log('🗑️ Recebendo solicitação de exclusão para venda:', id)
 
     if (!id) {
@@ -198,7 +205,7 @@ export async function DELETE(
 
   } catch (error: any) {
     console.error('❌ Erro ao excluir venda:', error)
-    
+
     if (error.code === 'P2025') {
       return NextResponse.json(
         { success: false, error: 'Venda não encontrada' },
