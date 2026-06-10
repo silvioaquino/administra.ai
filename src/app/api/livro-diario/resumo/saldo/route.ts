@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
     })
     
     // Calcular totais
-    const total_entradas = lancamentos.reduce((sum, l) => sum + (l.entrada || 0), 0)
-    const total_saidas = lancamentos.reduce((sum, l) => sum + (l.saida || 0), 0)
+    const total_entradas = lancamentos.reduce((sum, l) => sum + Number(l.entrada ?? 0), 0)
+    const total_saidas = lancamentos.reduce((sum, l) => sum + Number(l.saida ?? 0), 0)
     const saldo_atual = total_entradas - total_saidas
     
     return NextResponse.json({

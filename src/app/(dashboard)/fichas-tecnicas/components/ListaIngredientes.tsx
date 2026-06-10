@@ -68,8 +68,8 @@ export function ListaIngredientes({ ingredientes, onRemove, readOnly = false }: 
               <td className="px-4 py-3 text-right font-mono text-gray-600">
                 {ing.quantidade.toFixed(3)} {ing.unidade}
               </td>
-              <td className="px-4 py-3 text-right font-mono text-gray-600">{formatCurrency(ing.valorUnitario)}<\/td>
-              <td className="px-4 py-3 text-right font-mono font-medium text-gray-800">{formatCurrency(ing.custo)}<\/td>
+              <td className="px-4 py-3 text-right font-mono text-gray-600">{formatCurrency(ing.valorUnitario)}</td>
+              <td className="px-4 py-3 text-right font-mono font-medium text-gray-800">{formatCurrency(ing.custo)}</td>
               {!readOnly && (
                 <td className="px-4 py-3 text-center">
                   <Button
@@ -89,8 +89,8 @@ export function ListaIngredientes({ ingredientes, onRemove, readOnly = false }: 
         <tfoot className="border-t-2 border-gray-200 bg-gray-50">
           <tr className="font-semibold">
             <td colSpan={3} className="px-4 py-3 text-right text-gray-700">Custo Total:</td>
-            <td className="px-4 py-3 text-right text-[#de4838] text-lg">{formatCurrency(custoTotal)}<\/td>
-            {!readOnly && <td className="px-4 py-3"><\/td>}
+            <td className="px-4 py-3 text-right text-[#de4838] text-lg">{formatCurrency(custoTotal)}</td>
+            {!readOnly && <td className="px-4 py-3"></td>}
           </tr>
         </tfoot>
       </table>

@@ -168,7 +168,7 @@ export function ProvisoesConfig({
                           {formatCurrency(valorMensal)}
                         </span>
                       </td>
-                    </table>
+                    </tr>
                   )
                 })
               ))}

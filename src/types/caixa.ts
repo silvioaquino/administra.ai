@@ -63,7 +63,7 @@ export interface CaixaFechamento {
   dataFechamento?: Date | string
   valorAbertura?: number
   totalVendas?: number
-  retiradas?: number
+  totalRetiradas?: number
   saldoFinal?: number
   observacoes?: string
   caixaAberturaId?: string
@@ -92,8 +92,6 @@ export interface CaixaFechamento {
     observacao?: string
   }>
   //dataFechamento?: string
-  observacao?: string
-  status?: string
   fechamento?: {
     data_fechamento: string
     valor_abertura: number

@@ -20,7 +20,8 @@ export async function PUT(
     }
 
     // Buscar o boleto com o lançamento relacionado
-    const boleto = await prisma.boleto.findUnique({
+    const client = prisma as any
+    const boleto = await client.boleto.findUnique({
       where: { id: parseInt(id) },
       include: { lancamento: true }
     })
@@ -43,7 +44,7 @@ export async function PUT(
     dataPagamentoDate.setHours(12, 0, 0, 0) // Meio-dia para evitar problemas de timezone
 
     // Usar transação para atualizar boleto e lançamento
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await client.$transaction(async (tx: any) => {
       // 1. Atualizar o boleto
       const boletoAtualizado = await tx.boleto.update({
         where: { id: parseInt(id) },

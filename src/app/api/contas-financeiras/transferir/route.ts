@@ -65,8 +65,8 @@ export async function POST(request: NextRequest) {
 
     const saldoOrigem =
       Number(contaOrigem.saldoInicial) +
-      (movimentacoesOrigem._sum.entrada || 0) -
-      (movimentacoesOrigem._sum.saida || 0);
+      Number(movimentacoesOrigem._sum.entrada ?? 0) -
+      Number(movimentacoesOrigem._sum.saida ?? 0);
 
     if (saldoOrigem < valor) {
       return NextResponse.json(

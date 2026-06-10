@@ -9,7 +9,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const boleto = await prisma.boleto.findUnique({
+    const client = prisma as any
+    const boleto = await client.boleto.findUnique({
       where: { id: parseInt(id) },
       include: { lancamento: true }
     })

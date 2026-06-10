@@ -320,10 +320,17 @@ export default function DashboardPage() {
     }
   }, [fichasMargemBaixa, alertas])
 
-  const formatTooltipValue = (value: number | string | undefined): string => {
-    if (typeof value === 'number') {
+  const formatTooltipValue = (value: number | string | readonly (string | number)[] | undefined): string => {
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => (typeof item === "number" ? formatCurrency(item) : formatCurrency(0)))
+        .join(", ")
+    }
+
+    if (typeof value === "number") {
       return formatCurrency(value)
     }
+
     return formatCurrency(0)
   }
 

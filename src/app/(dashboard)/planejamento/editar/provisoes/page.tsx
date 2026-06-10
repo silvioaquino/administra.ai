@@ -1,6 +1,7 @@
 // src/app/(dashboard)/planejamento/editar/provisoes/page.tsx
 "use client"
 
+import React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Save, Shield, Users } from "lucide-react"

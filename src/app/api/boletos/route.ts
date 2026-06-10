@@ -34,7 +34,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const boletos = await prisma.boleto.findMany({
+    const client = prisma as any
+    const boletos = await client.boleto.findMany({
       where,
       include: {
         lancamento: true
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
     const hoje = new Date()
     hoje.setHours(0, 0, 0, 0)
 
-    const boletosComStatusAtualizado = boletos.map(boleto => {
+    const boletosComStatusAtualizado = boletos.map((boleto: any) => {
       if (boleto.dataPagamento) {
         return { ...boleto, status: "PAGO" }
       }
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       const lancamento = await tx.livroDiario.create({
         data: {
           data: new Date(dataVencimento),
@@ -175,7 +176,8 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const boletoExistente = await prisma.boleto.findUnique({
+    const client = prisma as any
+    const boletoExistente = await client.boleto.findUnique({
       where: { id: parseInt(id.toString()) },
       include: { lancamento: true }
     })
@@ -194,7 +196,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       const boleto = await tx.boleto.update({
         where: { id: parseInt(id.toString()) },
         data: {
@@ -246,7 +248,8 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const boletoExistente = await prisma.boleto.findUnique({
+    const client = prisma as any
+    const boletoExistente = await client.boleto.findUnique({
       where: { id: parseInt(id) },
       include: { lancamento: true }
     })
@@ -265,7 +268,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    await prisma.$transaction(async (tx) => {
+    await client.$transaction(async (tx: any) => {
       if (boletoExistente.lancamento) {
         await tx.livroDiario.delete({
           where: { id: boletoExistente.lancamento.id }

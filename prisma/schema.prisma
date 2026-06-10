@@ -50,6 +50,7 @@ model User {
   planoContas                PlanoContas[]         
   fechamentoMensal           FechamentoMensal[]   
   dreResultados              DreResultado[]
+  boletos                    Boleto[]
 
   @@map("users")
 }
@@ -209,6 +210,7 @@ model LivroDiario {
 
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   notaFiscal NotaFiscal? @relation(fields: [notaFiscalId], references: [id], onDelete: SetNull)
+  boletos                    Boleto[]
 
   @@index([userId, data])
   @@index([userId, conta])
@@ -602,4 +604,29 @@ model CaixaFechamento {
   updatedAt       DateTime @updatedAt
 
   @@map("caixa_fechamento")
+}
+
+model Boleto {
+  id             Int       @id @default(autoincrement())
+  userId         String    @map("user_id")
+  lancamentoId   Int?      @map("lancamento_id")
+  codigoBarras   String    @map("codigo_barras")
+  numeroDocumento String   @map("numero_documento")
+  valor          Decimal   @db.Decimal(10, 2)
+  dataVencimento DateTime  @map("data_vencimento")
+  dataPagamento  DateTime? @map("data_pagamento")
+  status         String    @default("PENDENTE") // PENDENTE, PAGO, VENCIDO, CANCELADO
+  observacao     String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lancamento LivroDiario? @relation(fields: [lancamentoId], references: [id])
+
+  @@unique([userId, numeroDocumento])
+  @@index([userId, status])
+  @@index([dataVencimento])
+  @@index([lancamentoId])
+  @@map("boletos")
 }
