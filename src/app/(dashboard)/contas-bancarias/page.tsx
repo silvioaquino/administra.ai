@@ -219,7 +219,7 @@ export default function ContasBancariasPage() {
                       <td className="px-4 py-3 text-right font-bold text-gray-800">{formatCurrency(conta.saldoAtual)}</td>
                       <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                          <DropdownMenuTrigger>
                             <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>

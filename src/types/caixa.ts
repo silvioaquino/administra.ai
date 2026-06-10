@@ -60,13 +60,13 @@ export interface Retirada {
 
 export interface CaixaFechamento {
   id: string
-  dataFechamento: Date | string
-  valorAbertura: number
-  totalVendas: number
-  retiradas: number
-  saldoFinal: number
+  dataFechamento?: Date | string
+  valorAbertura?: number
+  totalVendas?: number
+  retiradas?: number
+  saldoFinal?: number
   observacoes?: string
-  caixaAberturaId: string
+  caixaAberturaId?: string
   // Campos para consulta
   valor_abertura?: number
   vendas_dinheiro?: number
@@ -74,7 +74,23 @@ export interface CaixaFechamento {
   total_retiradas?: number
   saldo_final?: number
   vendas_por_forma_pagamento?: { [key: string]: number }
-  dataAbertura?: string
+  dataAbertura?: string | Date
+  data_abertura?: string
+  data_fechamento?: string
+  observacao?: string
+  status?: string
+  // Array de retiradas para consulta detalhada
+  retiradasList?: Array<{
+    data: Date | string
+    valor: number
+    observacao?: string
+  }>
+  // Alias para array no modal
+  retiradas?: Array<{
+    data: Date | string
+    valor: number
+    observacao?: string
+  }>
   //dataFechamento?: string
   observacao?: string
   status?: string

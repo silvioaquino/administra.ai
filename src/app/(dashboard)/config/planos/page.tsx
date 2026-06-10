@@ -36,9 +36,11 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 type PlanWithDetails = Plan & {
-  features: string[];
+  features: string[] | Json;
   popular?: boolean;
 };
+
+type Json = string | number | boolean | null | Json[] | { [key: string]: Json }
 
 // Dados mockados para desenvolvimento (substituir pela API real)
 const mockPlans: PlanWithDetails[] = [
@@ -346,14 +348,14 @@ export default function PlanosPage() {
                 {/* Features */}
                 <div className="flex-1 p-5">
                   <ul className="space-y-2">
-                    {plan.features.slice(0, 8).map((feature, idx) => (
+                    {(plan.features as string[]).slice(0, 8).map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-sm">
                         <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
                         <span className="text-gray-600">{feature}</span>
                       </li>
                     ))}
-                    {plan.features.length > 8 && (
-                      <li className="text-xs text-gray-400 pt-2">+{plan.features.length - 8} outros recursos</li>
+                    {(plan.features as string[]).length > 8 && (
+                      <li className="text-xs text-gray-400 pt-2">+{(plan.features as string[]).length - 8} outros recursos</li>
                     )}
                   </ul>
                 </div>
@@ -399,7 +401,7 @@ export default function PlanosPage() {
                 </div>
                 <p className="text-sm text-gray-500 mt-1">Cadastre seu cartão para pagamentos recorrentes. Cancele quando quiser.</p>
               </div>
-              {subscription?.stripePaymentMethodId && (
+              {false && (
                 <div className="p-5">
                   <div className="rounded-xl bg-gray-50 p-3">
                     <p className="text-sm font-medium text-gray-800">**** **** **** 4242</p>

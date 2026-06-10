@@ -40,9 +40,6 @@ import {
   Percent,
   Calendar,
   MessageCircle,
-  Facebook,
-  Instagram,
-  Youtube,
   AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -626,7 +623,7 @@ export default function ConfigLojaPage() {
                         </Label>
                         <Select
                           value={empresa.segmento}
-                          onValueChange={(value) => setEmpresa({ ...empresa, segmento: value })}
+                          onValueChange={(value) => setEmpresa({ ...empresa, segmento: value || '' })}
                         >
                           <SelectTrigger className="rounded-lg">
                             <SelectValue placeholder="Selecione o segmento" />
@@ -1232,7 +1229,7 @@ export default function ConfigLojaPage() {
                     <Label className="text-xs font-medium text-gray-600">Categoria</Label>
                     <Select
                       value={novaBandeiraForm.tipo}
-                      onValueChange={(value) => setNovaBandeiraForm({ ...novaBandeiraForm, tipo: value })}
+                      onValueChange={(value) => setNovaBandeiraForm({ ...novaBandeiraForm, tipo: value || "CARTAO_CREDITO" })}
                     >
                       <SelectTrigger className="rounded-lg">
                         <SelectValue />
@@ -1425,7 +1422,7 @@ export default function ConfigLojaPage() {
                     <Label className="text-xs font-medium text-gray-600">Perfil</Label>
                     <Select
                       value={novoUsuarioForm.perfil}
-                      onValueChange={(value) => setNovoUsuarioForm({ ...novoUsuarioForm, perfil: value })}
+                      onValueChange={(value) => setNovoUsuarioForm({ ...novoUsuarioForm, perfil: value || "OPERADOR" })}
                     >
                       <SelectTrigger className="rounded-lg">
                         <SelectValue />

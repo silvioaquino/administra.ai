@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma"
 // GET - Obter produto específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions)
   if (!session) {
@@ -14,9 +14,10 @@ export async function GET(
   }
 
   try {
+    const { id } = await params
     const produto = await prisma.produto.findFirst({
       where: {
-        id: parseInt(params.id),
+        id: parseInt(id),
         userId: session.user.id
       }
     })
@@ -25,7 +26,6 @@ export async function GET(
       return NextResponse.json({ error: "Produto não encontrado" }, { status: 404 })
     }
 
-    // Converter para snake_case
     const produtoResponse = {
       id: produto.id,
       descricao: produto.descricao,
@@ -52,7 +52,7 @@ export async function GET(
 // PUT - Atualizar produto
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions)
   if (!session) {
@@ -60,12 +60,12 @@ export async function PUT(
   }
 
   try {
+    const { id } = await params
     const body = await request.json()
-    
-    // Verificar se o produto existe e pertence ao usuário
+
     const existingProduto = await prisma.produto.findFirst({
       where: {
-        id: parseInt(params.id),
+        id: parseInt(id),
         userId: session.user.id
       }
     })
@@ -74,14 +74,13 @@ export async function PUT(
       return NextResponse.json({ error: "Produto não encontrado" }, { status: 404 })
     }
 
-    // Converter valores
     const quantidade = body.quantidade !== undefined ? Number(body.quantidade) : existingProduto.quantidade
     const precoVenda = body.preco_venda !== undefined ? Number(body.preco_venda) : existingProduto.precoVenda
     const valorUnitario = body.valor_unitario !== undefined ? Number(body.valor_unitario) : existingProduto.valorUnitario
     const valorTotal = body.valor_total !== undefined ? Number(body.valor_total) : (quantidade * precoVenda)
 
     const produto = await prisma.produto.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: {
         descricao: body.descricao !== undefined ? body.descricao : existingProduto.descricao,
         unidade: body.unidade !== undefined ? body.unidade : existingProduto.unidade,
@@ -121,7 +120,7 @@ export async function PUT(
 // DELETE - Remover produto
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions)
   if (!session) {
@@ -129,9 +128,10 @@ export async function DELETE(
   }
 
   try {
+    const { id } = await params
     const result = await prisma.produto.deleteMany({
       where: {
-        id: parseInt(params.id),
+        id: parseInt(id),
         userId: session.user.id
       }
     })

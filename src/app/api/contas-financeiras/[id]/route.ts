@@ -5,19 +5,20 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const id = parseInt(params.id);
-
   try {
+    const { id } = await params;
+    const idNum = parseInt(id);
+
     const conta = await prisma.contaFinanceira.findFirst({
       where: {
-        id,
+        id: idNum,
         userId: session.user.id,
       },
     });
@@ -26,7 +27,6 @@ export async function GET(
       return NextResponse.json({ error: "Conta não encontrada" }, { status: 404 });
     }
 
-    // Calcular saldo atual
     const movimentacoes = await prisma.livroDiario.aggregate({
       where: {
         userId: session.user.id,
@@ -58,34 +58,33 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const id = parseInt(params.id);
-  const body = await request.json();
-  const { nome, tipo, instituicao } = body;
-
   try {
-    // Verificar se a conta existe
+    const { id } = await params;
+    const idNum = parseInt(id);
+    const body = await request.json();
+    const { nome, tipo, instituicao } = body;
+
     const contaExistente = await prisma.contaFinanceira.findFirst({
-      where: { id, userId: session.user.id },
+      where: { id: idNum, userId: session.user.id },
     });
 
     if (!contaExistente) {
       return NextResponse.json({ error: "Conta não encontrada" }, { status: 404 });
     }
 
-    // Verificar se o novo nome não conflita
     if (nome && nome !== contaExistente.nome) {
       const conflito = await prisma.contaFinanceira.findFirst({
         where: {
           userId: session.user.id,
           nome: { equals: nome.trim(), mode: "insensitive" },
-          id: { not: id },
+          id: { not: idNum },
         },
       });
       if (conflito) {
@@ -94,7 +93,7 @@ export async function PUT(
     }
 
     const contaAtualizada = await prisma.contaFinanceira.update({
-      where: { id },
+      where: { id: idNum },
       data: {
         nome: nome?.trim() || contaExistente.nome,
         tipo: tipo || contaExistente.tipo,
@@ -115,26 +114,25 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  const id = parseInt(params.id);
-
   try {
-    // Verificar se a conta existe
+    const { id } = await params;
+    const idNum = parseInt(id);
+
     const conta = await prisma.contaFinanceira.findFirst({
-      where: { id, userId: session.user.id },
+      where: { id: idNum, userId: session.user.id },
     });
 
     if (!conta) {
       return NextResponse.json({ error: "Conta não encontrada" }, { status: 404 });
     }
 
-    // Verificar se existem movimentações vinculadas a esta conta
     const movimentacoes = await prisma.livroDiario.count({
       where: {
         userId: session.user.id,
@@ -149,7 +147,7 @@ export async function DELETE(
       );
     }
 
-    await prisma.contaFinanceira.delete({ where: { id } });
+    await prisma.contaFinanceira.delete({ where: { id: idNum } });
 
     return NextResponse.json({
       success: true,

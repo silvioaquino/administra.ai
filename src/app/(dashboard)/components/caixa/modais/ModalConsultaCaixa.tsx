@@ -30,7 +30,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
   const getValor = () => {
     if (!dadosCaixa) return {}
     return {
-      valorAbertura: dadosCaixa.valorAbertura || dadosCaixa.valor_abertura || dadosCaixa.valor_inicial || 0,
+      valorAbertura: dadosCaixa.valorAbertura || dadosCaixa.valor_abertura || 0,
       totalVendas: dadosCaixa.totalVendas || dadosCaixa.total_vendas || 0,
       saldoFinal: dadosCaixa.saldoFinal || dadosCaixa.saldo_final || 0,
       totalRetiradas: dadosCaixa.total_retiradas || 0,
@@ -193,7 +193,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
                   </h6>
                 </div>
                 <div className="p-4">
-                  {dadosCaixa.retiradas && dadosCaixa.retiradas.length > 0 ? (
+                  {Array.isArray(dadosCaixa?.retiradas) && dadosCaixa.retiradas.length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50">
