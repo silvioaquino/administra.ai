@@ -16,25 +16,23 @@ export async function GET(request: Request) {
 
   try {
     // Buscar despesas fixas
-    const despesasFixas = await prisma.despesasFixas.findMany({
+    const despesasFixas = await prisma.despesaFixa.findMany({
       where: {
-        userId,
-        ano: anoAtual
+        userId
       }
     })
 
     // Buscar despesas variáveis
-    const despesasVariaveis = await prisma.despesasVariaveis.findMany({
+    const despesasVariaveis = await prisma.despesaVariavel.findMany({
       where: {
-        userId,
-        ano: anoAtual
+        userId
       }
     })
-    const despesasVariaveisPct = despesasVariaveis.reduce((sum, item) => sum + (item.percentual || 0), 0)
+    const despesasVariaveisPct = despesasVariaveis.reduce((sum, item) => sum + Number(item.percentual ?? 0), 0)
 
     // Buscar metas do mês atual
     const mesAtual = new Date().getMonth() + 1
-    const metaAtual = await prisma.metasMensais.findFirst({
+    const metaAtual = await prisma.planejamentoFaturamento.findFirst({
       where: {
         userId,
         ano: anoAtual,
@@ -52,13 +50,13 @@ export async function GET(request: Request) {
     const metaMensalTotal = metaMensalAlmoco + metaMensalJanta
 
     // Calcular CMV
-    const totalFixas = despesasFixas.reduce((sum, d) => sum + d.valor, 0)
+    const totalFixas = despesasFixas.reduce((sum, d) => sum + Number(d.valor ?? 0), 0)
     const pctFixas = metaMensalTotal > 0 ? (totalFixas / metaMensalTotal) * 100 : 0
     const cmv = 100 - (pctFixas + despesasVariaveisPct + lucroDesejado)
 
     return NextResponse.json({
       success: true,
-      despesasFixas: despesasFixas.map(d => ({ nome: d.nome, valor: d.valor })),
+      despesasFixas: despesasFixas.map(d => ({ nome: d.nome, valor: Number(d.valor) })),
       despesasVariaveisPct,
       metaMensalTotal,
       cmv: Math.max(0, cmv)

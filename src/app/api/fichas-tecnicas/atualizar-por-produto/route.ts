@@ -1,8 +1,29 @@
 // src/app/api/fichas-tecnicas/atualizar-por-produto/route.ts
-import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+
+// Tipos para evitar implicit any
+type FichaItemUpdate = {
+  id: string
+  fichaId: string
+  produtoId: number
+  quantidade: number
+  unidade: string
+  valorUnitario: number
+  custo: number
+  isProdutoAcabado: boolean
+}
+
+type FichaDetalhe = {
+  id: string
+  nome: string
+  custoAntigo: number
+  custoNovo: number
+  margemAntiga: number
+  margemNova: number
+}
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -71,32 +92,54 @@ export async function POST(request: NextRequest) {
     })
 
     let fichasAtualizadas = 0
-    const fichasDetalhes = []
+    const fichasDetalhes: FichaDetalhe[] = []
 
     for (const ficha of fichas) {
       let ingredientesModificados = false
-      const itensAtualizados = []
+      const itensAtualizados: FichaItemUpdate[] = []
 
       for (const item of ficha.fichaItems) {
         // Verificar se o item corresponde ao produto (não atualizar produtos acabados)
         if (!item.isProdutoAcabado && item.produtoId === produtoMaisRecente.id) {
           const precoAntigo = Number(item.valorUnitario)
-          
+
           if (Math.abs(precoAntigo - novoPreco) > 0.01) {
             console.log(`Atualizando ficha "${ficha.nome}": ${item.produtoId} - R$ ${precoAntigo} -> R$ ${novoPreco}`)
-            
+
             itensAtualizados.push({
-              ...item,
+              id: item.id,
+              fichaId: item.fichaId,
+              produtoId: item.produtoId,
+              quantidade: item.quantidade,
+              unidade: novaUnidade,
               valorUnitario: novoPreco,
               custo: item.quantidade * novoPreco,
-              unidade: novaUnidade
+              isProdutoAcabado: item.isProdutoAcabado
             })
             ingredientesModificados = true
           } else {
-            itensAtualizados.push(item)
+            itensAtualizados.push({
+              id: item.id,
+              fichaId: item.fichaId,
+              produtoId: item.produtoId,
+              quantidade: item.quantidade,
+              unidade: item.unidade || novaUnidade,
+              valorUnitario: Number(item.valorUnitario),
+              custo: Number(item.custo || 0),
+              isProdutoAcabado: item.isProdutoAcabado
+            })
           }
         } else {
-          itensAtualizados.push(item)
+          itensAtualizados.push({
+            id: item.id,
+            fichaId: item.fichaId,
+            produtoId: item.produtoId,
+            quantidade: item.quantidade,
+            unidade: item.unidade || novaUnidade,
+            valorUnitario: Number(item.valorUnitario || 0),
+            custo: Number(item.custo || 0),
+            isProdutoAcabado: item.isProdutoAcabado
+          })
         }
       }
 

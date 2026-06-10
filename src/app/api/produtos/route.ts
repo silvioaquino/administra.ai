@@ -179,10 +179,10 @@ export async function PUT(request: NextRequest) {
     }
 
     // Converter valores
-    const quantidade = updateData.quantidade ? Number(updateData.quantidade) : existingProduto.quantidade
-    const precoVenda = updateData.precoVenda ? Number(updateData.precoVenda) : existingProduto.precoVenda
-    const valorUnitario = updateData.valorUnitario ? Number(updateData.valorUnitario) : existingProduto.valorUnitario
-    const valorTotal = updateData.valorTotal ? Number(updateData.valorTotal) : (quantidade * precoVenda)
+    const quantidade = updateData.quantidade !== undefined ? Number(updateData.quantidade) : Number(existingProduto.quantidade)
+    const precoVenda = updateData.precoVenda !== undefined ? Number(updateData.precoVenda) : Number(existingProduto.precoVenda)
+    const valorUnitario = updateData.valorUnitario !== undefined ? Number(updateData.valorUnitario) : Number(existingProduto.valorUnitario)
+    const valorTotal = updateData.valorTotal !== undefined ? Number(updateData.valorTotal) : (quantidade * precoVenda)
 
     const produto = await prisma.produto.update({
       where: { id: parseInt(id) },

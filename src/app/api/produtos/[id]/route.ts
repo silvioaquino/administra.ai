@@ -74,9 +74,9 @@ export async function PUT(
       return NextResponse.json({ error: "Produto não encontrado" }, { status: 404 })
     }
 
-    const quantidade = body.quantidade !== undefined ? Number(body.quantidade) : existingProduto.quantidade
-    const precoVenda = body.preco_venda !== undefined ? Number(body.preco_venda) : existingProduto.precoVenda
-    const valorUnitario = body.valor_unitario !== undefined ? Number(body.valor_unitario) : existingProduto.valorUnitario
+    const quantidade = body.quantidade !== undefined ? Number(body.quantidade) : Number(existingProduto.quantidade)
+    const precoVenda = body.preco_venda !== undefined ? Number(body.preco_venda) : Number(existingProduto.precoVenda)
+    const valorUnitario = body.valor_unitario !== undefined ? Number(body.valor_unitario) : Number(existingProduto.valorUnitario)
     const valorTotal = body.valor_total !== undefined ? Number(body.valor_total) : (quantidade * precoVenda)
 
     const produto = await prisma.produto.update({
