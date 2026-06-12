@@ -282,11 +282,11 @@ export default function FluxoCaixaPage() {
         </div>
 
         {/* Cards de Resumo */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {cardsResumo.map((card, idx) => (
             <Card
               key={idx}
-              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white`}
+              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white h-full min-h-[132px] sm:min-h-[150px]`}
             >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">

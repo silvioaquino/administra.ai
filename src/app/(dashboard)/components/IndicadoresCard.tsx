@@ -1,7 +1,6 @@
 // src/app/(dashboard)/dashboard/components/IndicadoresCard.tsx
 "use client"
 
-import { Progress } from "@/components/ui/progress"
 import { Home, TrendingDown, Factory, Activity } from "lucide-react"
 
 interface IndicadoresCardProps {
@@ -120,7 +119,7 @@ export function IndicadoresCard({
         </div>
       </div>
       <div className="p-3">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-2 lg:grid-cols-4">
           {indicadores.map((ind) => {
             const status = ind.getStatus(ind.valor)
             const colors = getStatusColor(status)
@@ -130,7 +129,7 @@ export function IndicadoresCard({
             return (
               <div 
                 key={ind.nome} 
-                className={`rounded-lg border ${colors.border} ${colors.bg} p-2.5 shadow-sm hover:shadow-md transition-all cursor-help`}
+                className={`rounded-lg border ${colors.border} ${colors.bg} p-2 shadow-sm hover:shadow-md transition-all cursor-help min-h-[112px]`}
                 title={ind.tooltip}
               >
                 <div className="mb-2 flex items-center justify-between">
@@ -138,12 +137,12 @@ export function IndicadoresCard({
                     <div className={`p-1 rounded-md ${colors.iconBg}`}>
                       <Icon className={`h-3 w-3 ${colors.iconColor}`} />
                     </div>
-                    <h6 className="font-semibold text-gray-800 text-xs">{ind.nome}</h6>
+                    <h6 className="font-semibold text-gray-800 text-[10px] sm:text-xs leading-tight">{ind.nome}</h6>
                   </div>
                 </div>
                 <div className="my-2 text-center">
-                  <span className={`text-2xl font-bold ${colors.text}`}>{ind.valor.toFixed(1)}</span>
-                  <span className="text-gray-500 ml-0.5 text-xs">{ind.unidade}</span>
+                  <span className={`text-xl sm:text-2xl font-bold ${colors.text}`}>{ind.valor.toFixed(1)}</span>
+                  <span className="text-gray-500 ml-0.5 text-[10px] sm:text-xs">{ind.unidade}</span>
                 </div>
                 
                 {/* Custom Progress Bar */}
@@ -166,7 +165,7 @@ export function IndicadoresCard({
           })}
 
           {/* Resumo da Saúde Financeira */}
-          <div className={`rounded-lg ${saude.bg} p-2.5 shadow-sm`}>
+          <div className={`rounded-lg ${saude.bg} p-2 shadow-sm min-h-[112px]`}>
             <h6 className="mb-2 font-semibold text-gray-800 flex items-center gap-1.5 text-xs">
               <Activity className="h-3 w-3" />
               Resumo

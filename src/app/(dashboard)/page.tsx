@@ -6,8 +6,8 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { 
-  Store, Users, Package, DollarSign, TrendingUp, AlertCircle, Zap, 
-  ArrowRight, Calendar, Clock, Search, PieChart, Trophy, 
+  Store, DollarSign, TrendingUp, AlertCircle, Zap,
+  ArrowRight, Calendar, Clock, PieChart, Trophy,
   AlertTriangle, CheckCircle, Info, ArrowUpCircle, ArrowDownCircle,
   Filter, CalendarRange
 } from "lucide-react"
@@ -52,11 +52,44 @@ interface FichaTecnica {
   margem: number
 }
 
+interface IndicadoresFinanceiros {
+  despesasFixas: Array<{ nome: string; valor: number }>
+  despesasVariaveisPct: number
+  metaMensalTotal: number
+  cmv: number
+}
+
+interface MetaItem {
+  atual: number
+  meta: number
+  percentual: number
+}
+
+interface MetaDespesa extends MetaItem {
+  diaria: number
+}
+
+interface DashboardData {
+  stats: {
+    totalReceitas: number
+    totalDespesas: number
+    saldo: number
+    margem: number
+  }
+  chartData: ChartData[]
+  metas: {
+    faturamento: MetaItem
+    despesa: MetaDespesa
+    lucro: MetaItem
+  }
+  ultimosLancamentos: UltimoLancamento[]
+  periodoTexto: string
+}
+
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   
-  const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState({
     totalProdutos: 0,
     totalFichas: 0,
@@ -70,15 +103,24 @@ export default function DashboardPage() {
   const [chartLoading, setChartLoading] = useState(false)
   const [periodo, setPeriodo] = useState<PeriodoType>("mes")
   const [dataEspecifica, setDataEspecifica] = useState<string>("")
-  const [periodoTexto, setPeriodoTexto] = useState<string>("Março 2025")
-  const [metas, setMetas] = useState({
-    faturamento: { atual: 0, meta: 60000, percentual: 0 },
-    despesa: { atual: 0, meta: 0, percentual: 0 },
+  const [periodoTexto, setPeriodoTexto] = useState<string>("Carregando período...")
+  const [metas, setMetas] = useState<{
+    faturamento: MetaItem
+    despesa: MetaDespesa
+    lucro: MetaItem
+  }>({
+    faturamento: { atual: 0, meta: 0, percentual: 0 },
+    despesa: { atual: 0, meta: 0, diaria: 0, percentual: 0 },
     lucro: { atual: 0, meta: 15, percentual: 0 }
   })
   const [ultimosLancamentos, setUltimosLancamentos] = useState<UltimoLancamento[]>([])
   const [alertas, setAlertas] = useState<Array<{ type: string; message: string }>>([])
-  const [fichasMargemBaixa, setFichasMargemBaixa] = useState<FichaTecnica[]>([])
+  const [indicadores, setIndicadores] = useState<IndicadoresFinanceiros>({
+    despesasFixas: [],
+    despesasVariaveisPct: 0,
+    metaMensalTotal: 0,
+    cmv: 0
+  })
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -86,239 +128,150 @@ export default function DashboardPage() {
     }
   }, [status, router])
 
-  useEffect(() => {
-    carregarDadosMockados()
-    carregarFichasTecnicas()
-  }, [periodo, dataEspecifica])
+  async function carregarDadosDashboard() {
+    setChartLoading(true)
+
+    try {
+      const params = new URLSearchParams({
+        periodo,
+        ano: String(new Date().getFullYear()),
+        mes: String(new Date().getMonth() + 1)
+      })
+
+      if (periodo === "especifico" && dataEspecifica) {
+        params.set("data", dataEspecifica)
+      }
+
+      const response = await fetch(`/api/dashboard?${params.toString()}`)
+      const json = await response.json()
+
+      if (!response.ok || !json.success) {
+        throw new Error(json.error || "Erro ao carregar dados do dashboard")
+      }
+
+      const data = json.data as DashboardData
+
+      setStats(prev => ({
+        ...prev,
+        totalReceitas: data.stats.totalReceitas,
+        totalDespesas: data.stats.totalDespesas,
+        saldo: data.stats.saldo,
+        margem: data.stats.margem
+      }))
+      setChartData(data.chartData)
+      setMetas(data.metas)
+      setUltimosLancamentos(data.ultimosLancamentos)
+      setPeriodoTexto(data.periodoTexto)
+      setAlertas(criarAlertasFinanceiros(data.stats.saldo, data.stats.margem))
+    } catch (error) {
+      console.error("Erro ao carregar dashboard:", error)
+      setStats(prev => ({
+        ...prev,
+        totalReceitas: 0,
+        totalDespesas: 0,
+        saldo: 0,
+        margem: 0
+      }))
+      setChartData([])
+      setMetas({
+        faturamento: { atual: 0, meta: 0, percentual: 0 },
+        despesa: { atual: 0, meta: 0, diaria: 0, percentual: 0 },
+        lucro: { atual: 0, meta: 15, percentual: 0 }
+      })
+      setUltimosLancamentos([])
+      setAlertas([{ type: "danger", message: "Não foi possível carregar os dados do dashboard" }])
+    } finally {
+      setChartLoading(false)
+    }
+  }
 
   async function carregarFichasTecnicas() {
     try {
-      const response = await fetch("/api/fichas-tecnicas")
+      const response = await fetch("/api/fichas-tecnicas?limit=100&skip=0")
       const data = await response.json()
+
       if (data.success) {
         const fichas = data.data as FichaTecnica[]
         const margemBaixa = fichas.filter((f: FichaTecnica) => f.margem < 30)
-        setFichasMargemBaixa(margemBaixa)
+        setAlertas(prev => mesclarAlertaFichasMargemBaixa(prev, margemBaixa))
       }
     } catch (error) {
       console.error("Erro ao carregar fichas técnicas:", error)
     }
   }
 
-  function carregarDadosMockados() {
-    setLoading(true)
-    setChartLoading(true)
-    
-    setTimeout(() => {
-      let receitasMock = 0
-      let despesasMock = 0
-      let metaFaturamento = 60000
-      let diasNoPeriodo = 1
-      
-      switch(periodo) {
-        case "hoje":
-          receitasMock = 2450
-          despesasMock = 1890
-          diasNoPeriodo = 1
-          metaFaturamento = 2450
-          break
-        case "mes":
-          receitasMock = 45890
-          despesasMock = 32150
-          diasNoPeriodo = 30
-          metaFaturamento = 60000
-          break
-        case "ano":
-          receitasMock = 548760
-          despesasMock = 385200
-          diasNoPeriodo = 365
-          metaFaturamento = 600000
-          break
-        case "especifico":
-          if (dataEspecifica) {
-            receitasMock = 2850
-            despesasMock = 2100
-            diasNoPeriodo = 1
-            metaFaturamento = 2850
-          } else {
-            receitasMock = 45890
-            despesasMock = 32150
-            diasNoPeriodo = 30
-            metaFaturamento = 60000
-          }
-          break
+  async function carregarProdutos() {
+    try {
+      const response = await fetch("/api/produtos?limit=1&skip=0")
+      const data = await response.json()
+
+      if (data.success) {
+        setStats(prev => ({
+          ...prev,
+          totalProdutos: data.total ?? 0
+        }))
       }
-      
-      const saldoMock = receitasMock - despesasMock
-      const margemMock = receitasMock > 0 ? (saldoMock / receitasMock) * 100 : 0
+    } catch (error) {
+      console.error("Erro ao carregar produtos:", error)
+    }
+  }
 
-      setStats({
-        totalProdutos: 156,
-        totalFichas: 48,
-        totalReceitas: receitasMock,
-        totalDespesas: despesasMock,
-        saldo: saldoMock,
-        margem: margemMock
-      })
+  async function carregarIndicadoresFinanceiros() {
+    try {
+      const response = await fetch("/api/planejamento/indicadores-resumo")
+      const data = await response.json()
 
-      const mockChartData: ChartData[] = []
-      const hoje = new Date()
-      
-      switch(periodo) {
-        case "hoje":
-          for (let i = 0; i < 24; i++) {
-            const valorBase = receitasMock / 24
-            const variacao = Math.sin(i * Math.PI / 12) * 50
-            mockChartData.push({
-              periodo: `${i.toString().padStart(2, '0')}:00`,
-              receitas: Math.max(0, valorBase + variacao + (Math.random() * 40 - 20)),
-              despesas: Math.max(0, (valorBase * 0.75) + variacao * 0.7 + (Math.random() * 30 - 15)),
-              lucro: 0
-            })
-          }
-          break
-          
-        case "mes":
-          const diasNoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate()
-          for (let i = 1; i <= diasNoMes; i++) {
-            const date = new Date(hoje.getFullYear(), hoje.getMonth(), i)
-            const diaSemana = date.getDay()
-            const isWeekend = diaSemana === 0 || diaSemana === 6
-            const fatorFimSemana = isWeekend ? 1.5 : 1
-            const valorBase = receitasMock / diasNoMes
-            const receitas = valorBase * fatorFimSemana + (Math.random() * valorBase * 0.3)
-            const despesas = receitas * 0.68 + (Math.random() * receitas * 0.15)
-            mockChartData.push({
-              periodo: i.toString(),
-              receitas: receitas,
-              despesas: despesas,
-              lucro: 0
-            })
-          }
-          break
-          
-        case "ano":
-          const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
-          for (let i = 0; i < meses.length; i++) {
-            const mesIndex = i
-            const fatorSazonal = 1 + Math.sin((mesIndex - 5) * Math.PI / 6) * 0.3
-            const receitas = (receitasMock / 12) * fatorSazonal + (Math.random() * (receitasMock / 12) * 0.1)
-            const despesas = receitas * 0.68 + (Math.random() * receitas * 0.1)
-            mockChartData.push({
-              periodo: meses[i],
-              receitas: receitas,
-              despesas: despesas,
-              lucro: 0
-            })
-          }
-          break
-          
-        case "especifico":
-          if (dataEspecifica) {
-            for (let i = 0; i < 24; i++) {
-              const valorBase = receitasMock / 24
-              mockChartData.push({
-                periodo: `${i.toString().padStart(2, '0')}:00`,
-                receitas: valorBase + (Math.random() * 80 - 40),
-                despesas: (valorBase * 0.7) + (Math.random() * 60 - 30),
-                lucro: 0
-              })
-            }
-          } else {
-            setChartData([])
-            setChartLoading(false)
-            setLoading(false)
-            return
-          }
-          break
+      if (data.success) {
+        setIndicadores({
+          despesasFixas: data.despesasFixas ?? [],
+          despesasVariaveisPct: data.despesasVariaveisPct ?? 0,
+          metaMensalTotal: data.metaMensalTotal ?? 0,
+          cmv: data.cmv ?? 0
+        })
       }
-      
-      mockChartData.forEach(item => {
-        item.lucro = item.receitas - item.despesas
-      })
-      setChartData(mockChartData)
+    } catch (error) {
+      console.error("Erro ao carregar indicadores financeiros:", error)
+    }
+  }
 
-      const metaDespesaDiaria = 1700
-      const metaDespesaPeriodo = metaDespesaDiaria * diasNoPeriodo
+  function criarAlertasFinanceiros(saldo: number, margem: number) {
+    if (saldo < 0) {
+      return [{ type: "danger", message: `Situação crítica! Despesas superam receitas em ${formatCurrency(Math.abs(saldo))}` }]
+    }
 
-      const pctFaturamento = metaFaturamento > 0 
-        ? Math.min(100, Math.max(0, (receitasMock / metaFaturamento) * 100)) 
-        : 0
-      const pctDespesa = metaDespesaPeriodo > 0 
-        ? Math.min(100, Math.max(0, (despesasMock / metaDespesaPeriodo) * 100)) 
-        : 0
-      const pctLucro = 15 > 0 
-        ? Math.min(100, Math.max(0, (margemMock / 15) * 100)) 
-        : 0
+    if (margem < 10) {
+      return [{ type: "warning", message: `Margem de lucro está baixa (${margem.toFixed(1)}%). Reveja seus custos!` }]
+    }
 
-      setMetas({
-        faturamento: { atual: receitasMock, meta: metaFaturamento, percentual: pctFaturamento },
-        despesa: { atual: despesasMock, meta: metaDespesaPeriodo, percentual: pctDespesa },
-        lucro: { atual: margemMock, meta: 15, percentual: pctLucro }
-      })
+    if (margem >= 15) {
+      return [{ type: "success", message: `Margem de lucro excelente! (${margem.toFixed(1)}%)` }]
+    }
 
-      const lancamentosMock: UltimoLancamento[] = [
-        { id: 1, data: new Date().toISOString().split("T")[0], descricao: "Venda - Cliente 001", cliente_fornecedor: "João Silva", entrada: 350, saida: 0 },
-        { id: 2, data: new Date(Date.now() - 86400000).toISOString().split("T")[0], descricao: "Compra de Mercadorias", cliente_fornecedor: "Fornecedor XYZ", entrada: 0, saida: 1250 },
-        { id: 3, data: new Date(Date.now() - 172800000).toISOString().split("T")[0], descricao: "Venda - Cliente 002", cliente_fornecedor: "Maria Santos", entrada: 890, saida: 0 },
-        { id: 4, data: new Date(Date.now() - 259200000).toISOString().split("T")[0], descricao: "Pagamento de Contas", cliente_fornecedor: "Contabilidade", entrada: 0, saida: 450 },
-        { id: 5, data: new Date(Date.now() - 345600000).toISOString().split("T")[0], descricao: "Venda - Cliente 003", cliente_fornecedor: "Pedro Oliveira", entrada: 1200, saida: 0 }
-      ]
-      setUltimosLancamentos(lancamentosMock)
+    return [{ type: "info", message: "Tudo dentro do esperado! Continue assim!" }]
+  }
 
-      setAlertas(prev => {
-        const novosAlertas = prev.filter(a => 
-          !a.message.includes("Despesas superam receitas") &&
-          !a.message.includes("Margem de lucro está baixa") &&
-          !a.message.includes("Margem de lucro excelente") &&
-          !a.message.includes("Tudo dentro do esperado")
-        )
-        
-        if (saldoMock < 0) {
-          novosAlertas.push({ type: "danger", message: `Situação crítica! Despesas superam receitas em ${formatCurrency(Math.abs(saldoMock))}` })
-        } else if (margemMock < 10) {
-          novosAlertas.push({ type: "warning", message: `Margem de lucro está baixa (${margemMock.toFixed(1)}%). Reveja seus custos!` })
-        } else if (margemMock >= 15) {
-          novosAlertas.push({ type: "success", message: `Margem de lucro excelente! (${margemMock.toFixed(1)}%)` })
-        } else {
-          novosAlertas.push({ type: "info", message: "Tudo dentro do esperado! Continue assim!" })
-        }
-        
-        return novosAlertas
-      })
+  function mesclarAlertaFichasMargemBaixa(alertasAtuais: Array<{ type: string; message: string }>, fichas: FichaTecnica[]) {
+    if (fichas.length === 0) return alertasAtuais
 
-      if (periodoTexto === "Março 2025") {
-        if (periodo === "hoje") {
-          setPeriodoTexto(new Date().toLocaleDateString("pt-BR"))
-        } else if (periodo === "mes") {
-          setPeriodoTexto(new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" }))
-        } else if (periodo === "ano") {
-          setPeriodoTexto(new Date().getFullYear().toString())
-        } else if (periodo === "especifico" && dataEspecifica) {
-          const data = new Date(dataEspecifica)
-          setPeriodoTexto(data.toLocaleDateString("pt-BR"))
-        }
-      }
+    const alertasSemFicha = alertasAtuais.filter(a => !a.message.includes("ficha(s) técnica(s) com margem abaixo de 30%"))
+    const nomesFichas = fichas.map(f => f.nome).join(", ")
+    const alertaMessage = fichas.length === 1
+      ? `⚠️ Ficha técnica "${fichas[0].nome}" tem margem de lucro abaixo de 30% (${fichas[0].margem.toFixed(1)}%). Revise os custos ou preço de venda.`
+      : `⚠️ ${fichas.length} ficha(s) técnica(s) com margem abaixo de 30%: ${nomesFichas}. Revise os custos ou preços de venda.`
 
-      setLoading(false)
-      setChartLoading(false)
-    }, 300)
+    return [...alertasSemFicha, { type: "warning", message: alertaMessage }]
   }
 
   useEffect(() => {
-    if (fichasMargemBaixa.length > 0) {
-      const hasMargemBaixaAlert = alertas.some(a => a.message.includes("ficha(s) técnica(s) com margem abaixo de 30%"))
-      
-      if (!hasMargemBaixaAlert) {
-        const nomesFichas = fichasMargemBaixa.map(f => f.nome).join(", ")
-        const alertaMessage = fichasMargemBaixa.length === 1
-          ? `⚠️ Ficha técnica "${fichasMargemBaixa[0].nome}" tem margem de lucro abaixo de 30% (${fichasMargemBaixa[0].margem.toFixed(1)}%). Revise os custos ou preço de venda.`
-          : `⚠️ ${fichasMargemBaixa.length} ficha(s) técnica(s) com margem abaixo de 30%: ${nomesFichas}. Revise os custos ou preços de venda.`
-        
-        setAlertas(prev => [...prev, { type: "warning", message: alertaMessage }])
-      }
-    }
-  }, [fichasMargemBaixa, alertas])
+    const timeout = window.setTimeout(() => {
+      carregarDadosDashboard()
+      carregarFichasTecnicas()
+      carregarProdutos()
+      carregarIndicadoresFinanceiros()
+    }, 0)
+
+    return () => window.clearTimeout(timeout)
+  }, [periodo, dataEspecifica])
 
   const formatTooltipValue = (value: number | string | readonly (string | number)[] | undefined): string => {
     if (Array.isArray(value)) {
@@ -334,12 +287,12 @@ export default function DashboardPage() {
     return formatCurrency(0)
   }
 
-  const getTipoClass = (entrada: number, saida: number) => {
+  const getTipoClass = (entrada: number) => {
     if (entrada > 0) return "text-emerald-600"
     return "text-red-600"
   }
 
-  const getTipoIcon = (entrada: number, saida: number) => {
+  const getTipoIcon = (entrada: number) => {
     if (entrada > 0) return <ArrowUpCircle className="h-4 w-4 text-emerald-600" />
     return <ArrowDownCircle className="h-4 w-4 text-red-600" />
   }
@@ -398,8 +351,11 @@ export default function DashboardPage() {
     )
   }
 
-  const isInTrial = true
-  const daysLeft = 15
+  const trialEndsAt = session?.user?.trialEndsAt
+  const isInTrial = Boolean(session?.user?.isInTrial)
+  const daysLeft = trialEndsAt
+    ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - new Date().setHours(0, 0, 0, 0)) / 86400000))
+    : 0
 
   const statsCards = [
     {
@@ -445,19 +401,6 @@ export default function DashboardPage() {
     { value: "especifico", label: "Data Específica" }
   ]
 
-  const indicadoresDataMock = {
-    despesasFixas: [
-      { nome: "ALUGUEL", valor: 1200 },
-      { nome: "ENERGIA", valor: 700 },
-      { nome: "ÁGUA", valor: 310 },
-      { nome: "TELEFONE", valor: 112 },
-      { nome: "INTERNET", valor: 70 },
-      { nome: "CONTABILIDADE", valor: 350 }
-    ],
-    despesasVariaveisPct: 12.5,
-    metaMensalTotal: stats.totalReceitas,
-    cmv: 38.2
-  }
 
   const totalReceitasChart = chartData.reduce((sum, item) => sum + item.receitas, 0)
   const totalDespesasChart = chartData.reduce((sum, item) => sum + item.despesas, 0)
@@ -471,7 +414,7 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-gray-800">Dashboard</h1>
             <p className="text-sm text-gray-500">
-              Bem-vindo, {session?.user?.name || "Usuário Teste"}!
+              Bem-vindo, {session?.user?.name || "Usuário"}!
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -537,21 +480,21 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
           {statsCards.map((card, idx) => (
             <Card
               key={idx}
-              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white border-0 hover:scale-105 transition-transform duration-200 cursor-pointer`}
+              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white border-0 hover:scale-105 transition-transform duration-200 cursor-pointer h-full min-h-[132px] sm:min-h-[150px]`}
             >
-              <CardContent className="p-5">
+              <CardContent className="p-3 sm:p-5">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium opacity-90">{card.title}</p>
-                  <card.icon className="h-5 w-5 opacity-80" />
+                  <p className="text-[11px] sm:text-sm font-medium opacity-90 leading-tight">{card.title}</p>
+                  <card.icon className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
                 </div>
-                <div className="mt-2 text-2xl font-bold">
+                <div className="mt-2 text-lg sm:text-2xl font-bold leading-tight">
                   {card.value}
                 </div>
-                <p className="mt-1 text-xs opacity-80">{card.detail}</p>
+                <p className="mt-1 text-[10px] sm:text-xs opacity-80">{card.detail}</p>
               </CardContent>
               <div className="absolute -bottom-4 -right-4 opacity-10">
                 <card.icon className="h-20 w-20" />
@@ -637,7 +580,7 @@ export default function DashboardPage() {
                 
                 <div className="mt-1 flex justify-between text-[10px] text-gray-800">
                   <span>Meta: {formatCurrency(metas.despesa.meta)}</span>
-                  <span>Diário: R$ 1.700</span>
+                  <span>Diário: {formatCurrency(metas.despesa.diaria)}</span>
                 </div>
               </div>
 
@@ -691,10 +634,10 @@ export default function DashboardPage() {
         {/* Indicadores Financeiros */}
         <div className="mb-6">
           <IndicadoresCard 
-            despesasFixas={indicadoresDataMock.despesasFixas}
-            despesasVariaveisPct={indicadoresDataMock.despesasVariaveisPct}
-            metaMensalTotal={stats.totalReceitas}
-            cmv={indicadoresDataMock.cmv}
+            despesasFixas={indicadores.despesasFixas}
+            despesasVariaveisPct={indicadores.despesasVariaveisPct}
+            metaMensalTotal={indicadores.metaMensalTotal}
+            cmv={indicadores.cmv}
           />
         </div>
 
@@ -716,32 +659,32 @@ export default function DashboardPage() {
               </div>
             ) : chartData.length > 0 ? (
               <>
-                <div className="mb-5 grid grid-cols-3 gap-4 pb-4 border-b border-gray-100">
-                  <div className="text-center">
-                    <p className="text-xs text-gray-500">Total Receitas</p>
-                    <p className="text-xl font-bold text-blue-600">
+                <div className="mb-4 grid grid-cols-3 gap-2 pb-3 border-b border-gray-100">
+                  <div className="rounded-lg bg-blue-50 p-2 text-center">
+                    <p className="text-[10px] text-gray-500 leading-tight">Total Receitas</p>
+                    <p className="mt-1 text-xs sm:text-lg font-bold text-blue-600 leading-tight">
                       {formatCurrency(totalReceitasChart)}
                     </p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-xs text-gray-500">Total Despesas</p>
-                    <p className="text-xl font-bold text-red-600">
+                  <div className="rounded-lg bg-red-50 p-2 text-center">
+                    <p className="text-[10px] text-gray-500 leading-tight">Total Despesas</p>
+                    <p className="mt-1 text-xs sm:text-lg font-bold text-red-600 leading-tight">
                       {formatCurrency(totalDespesasChart)}
                     </p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-xs text-gray-500">Lucro Líquido</p>
-                    <p className={`text-xl font-bold ${lucroTotal >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                  <div className="rounded-lg bg-emerald-50 p-2 text-center">
+                    <p className="text-[10px] text-gray-500 leading-tight">Lucro Líquido</p>
+                    <p className={`mt-1 text-xs sm:text-lg font-bold leading-tight ${lucroTotal >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                       {formatCurrency(lucroTotal)}
                     </p>
                   </div>
                 </div>
-                <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 20 }}>
+                <ResponsiveContainer width="100%" height={320} >
+                  <LineChart data={chartData} margin={{ top: 5, right: 12, left: 4, bottom: 28 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                     <XAxis 
                       dataKey="periodo" 
-                      tick={{ fontSize: periodo === "ano" ? 11 : periodo === "mes" ? 10 : 11 }}
+                      tick={{ fontSize: periodo === "ano" ? 10 : periodo === "mes" ? 9 : 10 }}
                       interval={getXAxisInterval()}
                       angle={getXAxisAngle()}
                       textAnchor={getXAxisAngle() !== 0 ? "end" : "middle"}
@@ -761,7 +704,7 @@ export default function DashboardPage() {
                       }}
                       contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
                     />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: "11px" }} />
                     <Line 
                       type="monotone" 
                       dataKey="receitas" 
@@ -820,7 +763,7 @@ export default function DashboardPage() {
                   ultimosLancamentos.map((lanc) => (
                     <div key={lanc.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
                       <div className="flex items-center gap-3">
-                        {getTipoIcon(lanc.entrada, lanc.saida)}
+                        {getTipoIcon(lanc.entrada)}
                         <div>
                           <p className="font-medium text-gray-800 text-sm">{lanc.descricao}</p>
                           <p className="text-xs text-gray-500">
@@ -828,7 +771,7 @@ export default function DashboardPage() {
                           </p>
                         </div>
                       </div>
-                      <div className={`font-bold text-sm ${getTipoClass(lanc.entrada, lanc.saida)}`}>
+                      <div className={`font-bold text-sm ${getTipoClass(lanc.entrada)}`}>
                         {formatCurrency(lanc.entrada > 0 ? lanc.entrada : lanc.saida)}
                       </div>
                     </div>
@@ -908,13 +851,13 @@ export default function DashboardPage() {
             <div className="p-5 space-y-3">
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="text-sm text-gray-500">Status da assinatura:</span>
-                <Badge className="bg-blue-100 text-blue-700 rounded-full">
-                  Período de teste
+                <Badge className={isInTrial ? "bg-blue-100 text-blue-700 rounded-full" : "bg-emerald-100 text-emerald-700 rounded-full"}>
+                  {isInTrial ? "Período de teste" : session?.user?.subscriptionStatus === "active" ? "Ativa" : "Não ativa"}
                 </Badge>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="text-sm text-gray-500">Fim do teste:</span>
-                <span className="font-medium text-gray-700">15/04/2025</span>
+                <span className="font-medium text-gray-700">{trialEndsAt ? new Date(trialEndsAt).toLocaleDateString("pt-BR") : "-"}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="text-sm text-gray-500">Total de Produtos:</span>

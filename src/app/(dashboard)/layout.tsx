@@ -338,7 +338,7 @@ export default function DashboardLayout({
       {/* Botão flutuante para abrir sidebar no mobile */}
       <button
         onClick={() => setSidebarOpen(true)}
-        className="fixed bottom-4 right-4 z-30 rounded-full bg-[#de4838] p-3 shadow-lg hover:bg-[#de4838]/90 transition-all lg:hidden"
+        className="fixed top-5 left-6 z-30 rounded-full bg-[#de4838] p-3 shadow-lg hover:bg-[#de4838]/90 transition-all lg:hidden"
       >
         <Menu className="h-5 w-5 text-white" />
       </button>
