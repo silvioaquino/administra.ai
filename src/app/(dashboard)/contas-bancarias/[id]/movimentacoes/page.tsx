@@ -139,29 +139,29 @@ export default function MovimentacoesContaPage() {
 
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Cards de Resumo */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white h-full min-h-[132px] sm:min-h-[150px]">
             <CardContent className="p-6">
               <p className="text-sm opacity-90">Saldo Atual</p>
               <p className="text-2xl font-bold mt-2">{formatCurrency(conta.saldoAtual)}</p>
               <p className="text-xs opacity-80 mt-1">na conta</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white">
+          <Card className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white h-full min-h-[132px] sm:min-h-[150px]">
             <CardContent className="p-6">
               <p className="text-sm opacity-90">Total Entradas</p>
               <p className="text-2xl font-bold mt-2">{formatCurrency(totalEntradas)}</p>
               <p className="text-xs opacity-80 mt-1">no período</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-r from-red-600 to-red-700 text-white">
+          <Card className="bg-gradient-to-r from-red-600 to-red-700 text-white h-full min-h-[132px] sm:min-h-[150px]">
             <CardContent className="p-6">
               <p className="text-sm opacity-90">Total Saídas</p>
               <p className="text-2xl font-bold mt-2">{formatCurrency(totalSaidas)}</p>
               <p className="text-xs opacity-80 mt-1">no período</p>
             </CardContent>
           </Card>
-          <Card className={`bg-gradient-to-r ${saldoPeriodo >= 0 ? 'from-purple-600 to-purple-700' : 'from-orange-600 to-orange-700'} text-white`}>
+          <Card className={`bg-gradient-to-r ${saldoPeriodo >= 0 ? 'from-purple-600 to-purple-700' : 'from-orange-600 to-orange-700'} text-white h-full min-h-[132px] sm:min-h-[150px]`}>
             <CardContent className="p-6">
               <p className="text-sm opacity-90">Saldo no Período</p>
               <p className="text-2xl font-bold mt-2">{formatCurrency(saldoPeriodo)}</p>

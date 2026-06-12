@@ -233,17 +233,17 @@ export default function PlanejamentoPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="sticky top-0 z-10 ml-6 mr-6 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-10 ml-3 mr-3 sm:ml-6 sm:mr-6 bg-white border-b border-gray-200 px-3 py-3 sm:px-6 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
         <div>
           <h1 className="text-xl font-semibold text-gray-800">Planejamento Financeiro</h1>
           <p className="text-sm text-gray-500">
             Base: Almoço (73%) | Janta (27%)
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <div className="relative">
             <select
-              className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8 cursor-pointer hover:border-red-500 transition-colors"
+              className="rounded-full border border-gray-200 bg-white px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8 cursor-pointer hover:border-red-500 transition-colors"
               value={anoAtual}
               onChange={(e) => setAnoAtual(parseInt(e.target.value))}
             >
@@ -258,14 +258,14 @@ export default function PlanejamentoPage() {
           <Button 
             variant="outline" 
             onClick={sincronizarDadosReais}
-            className="rounded-full border-gray-200 hover:bg-gray-100 hover:border-red-500 hover:cursor-pointer transition-all"
+            className="rounded-full border-gray-200 hover:bg-gray-100 hover:border-red-500 hover:cursor-pointer transition-all whitespace-nowrap text-xs sm:text-sm"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Sincronizar
           </Button>
           <Button 
             onClick={salvarTodasConfiguracoes}
-            className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-5 hover:cursor-pointer hover:border-red-500 hover:border-2 transition-all"
+            className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-4 py-2 hover:cursor-pointer hover:border-red-500 hover:border-2 transition-all whitespace-nowrap text-xs sm:text-sm"
           >
             <Save className="mr-2 h-4 w-4" />
             Salvar Tudo
@@ -276,11 +276,11 @@ export default function PlanejamentoPage() {
       {/* Main Content */}
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Cards Resumo */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {cardsResumo.map((card, idx) => (
             <Card
               key={idx}
-              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white hover:cursor-pointer hover:scale-105 transition-transform duration-200`}
+              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white hover:cursor-pointer hover:scale-105 transition-transform duration-200 h-full min-h-[132px] sm:min-h-[150px]`}
             >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">

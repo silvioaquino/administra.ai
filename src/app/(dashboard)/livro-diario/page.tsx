@@ -510,7 +510,8 @@ export default function LivroDiarioPage() {
         fetch(`/api/livro-diario/resumo/saldo${filtros.dataInicio ? `?data_inicio=${filtros.dataInicio}` : ""}${filtros.dataFim ? `&data_fim=${filtros.dataFim}` : ""}`)
       ])
 
-      let lancamentosData = await lancamentosRes.json()
+      const lancamentosJson = await lancamentosRes.json()
+      let lancamentosData: Lancamento[] = Array.isArray(lancamentosJson.data) ? lancamentosJson.data : []
       const resumoData = await resumoRes.json()
 
       // Adicionar dados mocados de exemplo
@@ -1030,11 +1031,11 @@ export default function LivroDiarioPage() {
       {/* Main Content */}
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Cards de Resumo */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {cardsResumo.map((card, idx) => (
             <Card
               key={idx}
-              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white border-0`}
+              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white border-0 h-full min-h-[132px] sm:min-h-[150px]`}
             >
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">

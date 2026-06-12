@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Building2, Wallet, TrendingUp, TrendingDown, Edit2, Trash2, MoreHorizontal, ArrowRightLeft } from "lucide-react";
+import { Plus, Building2, Wallet, TrendingUp, Edit2, Trash2, MoreHorizontal, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,10 +32,6 @@ export default function ContasBancariasPage() {
   const [loading, setLoading] = useState(true);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
 
-  useEffect(() => {
-    carregarContas();
-  }, []);
-
   const carregarContas = async () => {
     setLoading(true);
     try {
@@ -52,6 +48,14 @@ export default function ContasBancariasPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      carregarContas();
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   const handleDelete = async (id: number) => {
     if (confirm("Tem certeza que deseja excluir esta conta?\n\nApenas contas sem movimentações podem ser excluídas.")) {
@@ -122,22 +126,22 @@ export default function ContasBancariasPage() {
 
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Cards de Resumo */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white h-full min-h-[132px] sm:min-h-[150px]">
             <CardContent className="p-6">
               <p className="text-sm opacity-90">Saldo Total</p>
               <p className="text-2xl font-bold mt-2">{formatCurrency(saldoTotal)}</p>
               <p className="text-xs opacity-80 mt-1">em todas as contas</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white">
+          <Card className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white h-full min-h-[132px] sm:min-h-[150px]">
             <CardContent className="p-6">
               <p className="text-sm opacity-90">Total de Contas</p>
               <p className="text-2xl font-bold mt-2">{contas.length}</p>
               <p className="text-xs opacity-80 mt-1">cadastradas</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-r from-purple-600 to-purple-700 text-white">
+          <Card className="bg-gradient-to-r from-purple-600 to-purple-700 text-white h-full min-h-[132px] sm:min-h-[150px]">
             <CardContent className="p-6">
               <p className="text-sm opacity-90">Maior Saldo</p>
               {contas.length > 0 ? (
@@ -150,7 +154,7 @@ export default function ContasBancariasPage() {
               )}
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-r from-orange-600 to-orange-700 text-white">
+          <Card className="bg-gradient-to-r from-orange-600 to-orange-700 text-white h-full min-h-[132px] sm:min-h-[150px]">
             <CardContent className="p-6">
               <p className="text-sm opacity-90">Média por Conta</p>
               <p className="text-2xl font-bold mt-2">{formatCurrency(contas.length > 0 ? saldoTotal / contas.length : 0)}</p>
@@ -219,10 +223,8 @@ export default function ContasBancariasPage() {
                       <td className="px-4 py-3 text-right font-bold text-gray-800">{formatCurrency(conta.saldoAtual)}</td>
                       <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
-                          <DropdownMenuTrigger>
-                            <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                          <DropdownMenuTrigger className="h-8 w-8 p-0 rounded-full bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900">
+                            <MoreHorizontal className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => router.push(`/contas-bancarias/${conta.id}/editar`)}>

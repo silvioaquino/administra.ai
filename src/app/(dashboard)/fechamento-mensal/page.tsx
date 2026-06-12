@@ -363,8 +363,8 @@ export default function FechamentoMensalPage() {
         </div>
 
         {/* Cards de Resumo */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          <Card className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+          <Card className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white h-full min-h-[132px] sm:min-h-[150px]">
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <p className="text-sm opacity-90">Receita Bruta</p>
@@ -376,7 +376,7 @@ export default function FechamentoMensalPage() {
               <p className="text-xs opacity-80 mt-1">Total de vendas no período</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-r from-red-600 to-red-700 text-white">
+          <Card className="bg-gradient-to-r from-red-600 to-red-700 text-white h-full min-h-[132px] sm:min-h-[150px]">
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <p className="text-sm opacity-90">CMV</p>
@@ -388,7 +388,7 @@ export default function FechamentoMensalPage() {
               <p className="text-xs opacity-80 mt-1">Custo da Mercadoria Vendida</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+          <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white h-full min-h-[132px] sm:min-h-[150px]">
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <p className="text-sm opacity-90">Despesas Operacionais</p>
@@ -400,7 +400,7 @@ export default function FechamentoMensalPage() {
               <p className="text-xs opacity-80 mt-1">Despesas administrativas e financeiras</p>
             </CardContent>
           </Card>
-          <Card className={`bg-gradient-to-r ${lucroLiquido >= 0 ? "from-purple-600 to-purple-700" : "from-orange-600 to-orange-700"} text-white`}>
+          <Card className={`bg-gradient-to-r ${lucroLiquido >= 0 ? "from-purple-600 to-purple-700" : "from-orange-600 to-orange-700"} text-white h-full min-h-[132px] sm:min-h-[150px]`}>
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <p className="text-sm opacity-90">Lucro Líquido</p>
