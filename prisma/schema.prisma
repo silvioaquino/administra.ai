@@ -171,7 +171,6 @@ model Produto {
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   notaFiscal NotaFiscal? @relation(fields: [notaFiscalId], references: [id], onDelete: SetNull)
   itensFicha FichaItem[]
-  // fichaItems FichaItem[]  // Relação inversa com FichaItem
 
   @@index([userId, descricao])
   @@map("produtos")

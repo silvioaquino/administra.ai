@@ -91,6 +91,15 @@ interface Lancamento {
   updatedAt: string
 }
 
+const obterDataHoje = () => {
+  const hoje = new Date()
+  const ano = hoje.getFullYear()
+  const mes = String(hoje.getMonth() + 1).padStart(2, "0")
+  const dia = String(hoje.getDate()).padStart(2, "0")
+
+  return `${ano}-${mes}-${dia}`
+}
+
 // Dados mocados de exemplo (IDs 9991-10000)
 const lancamentosExemploMocados: Lancamento[] = [
   {
@@ -294,11 +303,11 @@ const getRowStyleForBoleto = (statusBoleto: string | null, dataVencimento: strin
 
   const diffDays = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
 
-  if (vencimento < hoje) return "bg-red-50/50"
-  if (diffDays === 0) return "bg-amber-50/50"
-  if (diffDays <= 3) return "bg-emerald-50/30"
-  if (diffDays <= 5) return "bg-blue-50/20"
-  return ""
+  if (vencimento < hoje) return "bg-red-100 border-l-4 border-red-500"
+  if (diffDays === 0) return "bg-amber-100 border-l-4 border-amber-500"
+  if (diffDays <= 3) return "bg-amber-50 border-l-4 border-amber-400"
+  if (diffDays <= 5) return "bg-blue-50 border-l-4 border-blue-400"
+  return "bg-blue-50/60 border-l-4 border-blue-300"
 }
 
 // Função para obter o ícone de status do boleto
@@ -348,8 +357,8 @@ export default function LivroDiarioPage() {
 
   // Filtros
   const [filtros, setFiltros] = useState({
-    dataInicio: "",
-    dataFim: "",
+    dataInicio: obterDataHoje(),
+    dataFim: obterDataHoje(),
     conta: "",
     tipo: "",
     statusBoleto: ""
@@ -399,6 +408,11 @@ export default function LivroDiarioPage() {
     return lancamento.boletoId !== null || lancamento.statusBoleto !== null
   }
 
+  // Verificar se pode expandir (nota fiscal ou boleto)
+  const canExpand = (lancamento: Lancamento) => {
+    return isNotaFiscal(lancamento) || isBoleto(lancamento)
+  }
+
   // Verificar se é folha de pagamento
   const isFolhaPagamento = (lancamento: Lancamento) => {
     return lancamento.descricao.toLowerCase().includes("folha de pagamento") ||
@@ -438,10 +452,22 @@ export default function LivroDiarioPage() {
   const buscarNotaFiscal = async (lancamento: Lancamento) => {
     const id = lancamento.id
 
+    // Sempre alternar a expansão ao clicar
+    const isCurrentlyExpanded = expandedRows.has(id)
+
+    if (isCurrentlyExpanded) {
+      toggleRowExpand(id)
+      return
+    }
+
+    // Se já está em cache, apenas expandir
     if (notasCache.has(id)) {
       toggleRowExpand(id)
       return
     }
+
+    // Se já está carregando, não fazer nada
+    if (loadingNotas.has(id)) return
 
     setLoadingNotas(prev => new Set(prev).add(id))
 
@@ -455,7 +481,8 @@ export default function LivroDiarioPage() {
         }
       } else {
         const response = await fetch("/api/notas?limit=100")
-        const notas = await response.json()
+        const notasResponse = await response.json()
+        const notas = Array.isArray(notasResponse.data) ? notasResponse.data : notasResponse
         const nota = notas.find((n: any) =>
           lancamento.descricao.includes(n.chaveAcesso?.substring(0, 10)) ||
           lancamento.descricao.includes(n.numero?.toString())
@@ -468,10 +495,13 @@ export default function LivroDiarioPage() {
 
       if (notaData) {
         setNotasCache(prev => new Map(prev).set(lancamento.id, notaData))
-        toggleRowExpand(id)
       }
+      // Sempre expandir a linha, mesmo que não encontre a nota
+      toggleRowExpand(id)
     } catch (error) {
       console.error("Erro ao buscar nota fiscal:", error)
+      // Ainda assim expande para mostrar o estado de erro
+      toggleRowExpand(id)
     } finally {
       setLoadingNotas(prev => {
         const newSet = new Set(prev)
@@ -498,16 +528,24 @@ export default function LivroDiarioPage() {
   const carregarDados = useCallback(async () => {
     setLoading(true)
     try {
-      let url = "/api/livro-diario?limit=500"
-      if (filtros.dataInicio) url += `&data_inicio=${filtros.dataInicio}`
-      if (filtros.dataFim) url += `&data_fim=${filtros.dataFim}`
-      if (filtros.conta) url += `&conta=${encodeURIComponent(filtros.conta)}`
-      if (filtros.tipo) url += `&tipo=${filtros.tipo}`
-      if (filtros.statusBoleto) url += `&status_boleto=${filtros.statusBoleto}`
+      const params = new URLSearchParams()
+      params.set("limit", "500")
+      if (filtros.dataInicio) params.set("data_inicio", filtros.dataInicio)
+      if (filtros.dataFim) params.set("data_fim", filtros.dataFim)
+      if (filtros.conta) params.set("conta", filtros.conta)
+      if (filtros.tipo) params.set("tipo", filtros.tipo)
+      if (filtros.statusBoleto) params.set("status_boleto", filtros.statusBoleto)
+
+      const resumoParams = new URLSearchParams()
+      if (filtros.dataInicio) resumoParams.set("data_inicio", filtros.dataInicio)
+      if (filtros.dataFim) resumoParams.set("data_fim", filtros.dataFim)
+      const resumoUrl = resumoParams.toString()
+        ? `/api/livro-diario/resumo/saldo?${resumoParams.toString()}`
+        : "/api/livro-diario/resumo/saldo"
 
       const [lancamentosRes, resumoRes] = await Promise.all([
-        fetch(url),
-        fetch(`/api/livro-diario/resumo/saldo${filtros.dataInicio ? `?data_inicio=${filtros.dataInicio}` : ""}${filtros.dataFim ? `&data_fim=${filtros.dataFim}` : ""}`)
+        fetch(`/api/livro-diario?${params.toString()}`),
+        fetch(resumoUrl)
       ])
 
       const lancamentosJson = await lancamentosRes.json()
@@ -826,8 +864,8 @@ export default function LivroDiarioPage() {
 
   const limparFiltros = () => {
     setFiltros({
-      dataInicio: "",
-      dataFim: "",
+      dataInicio: obterDataHoje(),
+      dataFim: obterDataHoje(),
       conta: "",
       tipo: "",
       statusBoleto: ""
@@ -849,6 +887,7 @@ export default function LivroDiarioPage() {
   const ExpandedRowContent = ({ lancamento }: { lancamento: Lancamento }) => {
     const nota = notasCache.get(lancamento.id)
     const isLoading = loadingNotas.has(lancamento.id)
+    const isNota = isNotaFiscal(lancamento)
 
     if (isLoading) {
       return (
@@ -856,99 +895,159 @@ export default function LivroDiarioPage() {
           <td colSpan={11} className="px-4 py-4">
             <div className="flex justify-center items-center gap-2">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#de4838] border-t-transparent" />
-              <span className="text-sm text-gray-500">Carregando nota fiscal...</span>
+              <span className="text-sm text-gray-500">Carregando detalhes...</span>
             </div>
           </td>
         </tr>
       )
     }
 
-    if (!nota) {
+    // Se é uma nota fiscal e temos os dados
+    if (isNota && nota) {
       return (
-        <tr className="bg-gray-50">
-          <td colSpan={11} className="px-4 py-4 text-center text-gray-500">
-            Não foi possível carregar os detalhes da nota fiscal
-          </td>
-        </tr>
-      )
-    }
-
-    return (
-      <>
-        <tr className="bg-blue-50">
-          <td colSpan={11} className="px-4 py-3">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-blue-600" />
-                <span className="font-semibold text-blue-800">Detalhes da Nota Fiscal</span>
-                <Badge variant="outline" className="ml-2">NFe {nota.numero}</Badge>
-              </div>
-              <div className="grid gap-2 md:grid-cols-4 text-sm">
-                <div>
-                  <span className="text-gray-500">Emitente:</span>
-                  <p className="font-medium">{nota.nomeEmitente}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">CNPJ:</span>
-                  <p className="font-mono text-xs">{nota.cnpjEmitente}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Data Emissão:</span>
-                  <p>{formatDate(nota.dataEmissao)}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Chave Acesso:</span>
-                  <p className="font-mono text-xs break-all">{nota.chaveAcesso}</p>
-                </div>
-              </div>
-            </div>
-          </td>
-        </tr>
-
-        {nota.produtos && nota.produtos.length > 0 && (
-          <>
-            {nota.produtos.map((produto, idx) => (
-              <tr key={`prod-${idx}`} className="bg-blue-50/50 hover:bg-blue-100/50">
-                <td className="px-4 py-2 text-gray-500 text-xs">{idx === 0 ? "Produtos:" : ""}</td>
-                <td className="px-4 py-2" colSpan={1}>
-                  <div className="flex items-center gap-2">
-                    <Package className="h-3 w-3 text-blue-500" />
-                    <span className="text-sm">{produto.descricao}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-2 text-sm text-gray-500">{produto.codigo || "-"}</td>
-                <td className="px-4 py-2 text-sm">{produto.quantidade} {produto.unidade}</td>
-                <td className="px-4 py-2 text-right text-sm">{formatCurrency(produto.valorUnitario)}</td>
-                <td className="px-4 py-2 text-right text-sm font-medium">{formatCurrency(produto.valorTotal)}</td>
-                <td className="px-4 py-2" colSpan={5} />
-              </tr>
-            ))}
-
-            <tr className="bg-blue-100">
-              <td className="px-4 py-2" />
-              <td className="px-4 py-2" colSpan={4} />
-              <td className="px-4 py-2 text-right font-semibold">Total Produtos:</td>
-              <td className="px-4 py-2 text-right font-bold text-[#de4838]">{formatCurrency(nota.valorTotal)}</td>
-              <td className="px-4 py-2" colSpan={4} />
-            </tr>
-          </>
-        )}
-
-        {nota.pagamentos && nota.pagamentos.length > 0 && (
+        <>
           <tr className="bg-blue-50">
-            <td colSpan={11} className="px-4 py-2">
-              <div className="mt-2 pt-2 border-t border-blue-200">
-                <span className="text-sm font-medium">Formas de Pagamento:</span>
-                <div className="flex flex-wrap gap-3 mt-1">
-                  {nota.pagamentos.map((pg, idx) => (
-                    <span key={idx} className="text-sm">{pg.formaPagamento}: {formatCurrency(pg.valor)}</span>
-                  ))}
+            <td colSpan={11} className="px-4 py-3">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-blue-600" />
+                  <span className="font-semibold text-blue-800">Detalhes da Nota Fiscal</span>
+                  <Badge variant="outline" className="ml-2">NFe {nota.numero}</Badge>
+                </div>
+                <div className="grid gap-2 md:grid-cols-4 text-sm">
+                  <div>
+                    <span className="text-gray-500">Emitente:</span>
+                    <p className="font-medium">{nota.nomeEmitente}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">CNPJ:</span>
+                    <p className="font-mono text-xs">{nota.cnpjEmitente}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Data Emissão:</span>
+                    <p>{formatDate(nota.dataEmissao)}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Chave Acesso:</span>
+                    <p className="font-mono text-xs break-all">{nota.chaveAcesso}</p>
+                  </div>
                 </div>
               </div>
             </td>
           </tr>
-        )}
-      </>
+
+          {nota.produtos && nota.produtos.length > 0 && (
+            <>
+              {nota.produtos.map((produto, idx) => (
+                <tr key={`prod-${idx}`} className="bg-blue-50/50 hover:bg-blue-100/50">
+                  <td className="px-4 py-2 text-gray-500 text-xs">{idx === 0 ? "Produtos:" : ""}</td>
+                  <td className="px-4 py-2" colSpan={1}>
+                    <div className="flex items-center gap-2">
+                      <Package className="h-3 w-3 text-blue-500" />
+                      <span className="text-sm">{produto.descricao}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500">{produto.codigo || "-"}</td>
+                  <td className="px-4 py-2 text-sm">{produto.quantidade} {produto.unidade}</td>
+                  <td className="px-4 py-2 text-right text-sm">{formatCurrency(produto.valorUnitario)}</td>
+                  <td className="px-4 py-2 text-right text-sm font-medium">{formatCurrency(produto.valorTotal)}</td>
+                  <td className="px-4 py-2" colSpan={5} />
+                </tr>
+              ))}
+
+              <tr className="bg-blue-100">
+                <td className="px-4 py-2" />
+                <td className="px-4 py-2" colSpan={4} />
+                <td className="px-4 py-2 text-right font-semibold">Total Produtos:</td>
+                <td className="px-4 py-2 text-right font-bold text-[#de4838]">{formatCurrency(nota.valorTotal)}</td>
+                <td className="px-4 py-2" colSpan={4} />
+              </tr>
+            </>
+          )}
+
+          {nota.pagamentos && nota.pagamentos.length > 0 && (
+            <tr className="bg-blue-50">
+              <td colSpan={11} className="px-4 py-2">
+                <div className="mt-2 pt-2 border-t border-blue-200">
+                  <span className="text-sm font-medium">Formas de Pagamento:</span>
+                  <div className="flex flex-wrap gap-3 mt-1">
+                    {nota.pagamentos.map((pg, idx) => (
+                      <span key={idx} className="text-sm">{pg.formaPagamento}: {formatCurrency(pg.valor)}</span>
+                    ))}
+                  </div>
+                </div>
+              </td>
+            </tr>
+          )}
+        </>
+      )
+    }
+
+    // Se é um boleto, mostrar detalhes do boleto
+    if (isBoleto(lancamento)) {
+      return (
+        <tr className="bg-purple-50">
+          <td colSpan={11} className="px-4 py-3">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Barcode className="h-4 w-4 text-purple-600" />
+                <span className="font-semibold text-purple-800">Detalhes do Boleto</span>
+              </div>
+              <div className="grid gap-2 md:grid-cols-3 text-sm">
+                <div>
+                  <span className="text-gray-500">Valor:</span>
+                  <p className="font-medium text-red-600">{formatCurrency(lancamento.saida)}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Vencimento:</span>
+                  <p>{lancamento.dataVencimento ? formatDate(lancamento.dataVencimento) : "-"}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Status:</span>
+                  <p>{getBoletoStatusBadge(lancamento.statusBoleto, lancamento.dataPagamento)}</p>
+                </div>
+              </div>
+              {lancamento.clienteFornecedor && (
+                <p className="text-sm text-gray-600">Fornecedor: {lancamento.clienteFornecedor}</p>
+              )}
+            </div>
+          </td>
+        </tr>
+      )
+    }
+
+    // Para outros tipos de lançamento, mostrar informações básicas
+    return (
+      <tr className="bg-gray-50">
+        <td colSpan={11} className="px-4 py-3">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-gray-600" />
+              <span className="font-semibold text-gray-800">Detalhes do Lançamento</span>
+            </div>
+            <div className="grid gap-2 md:grid-cols-3 text-sm">
+              <div>
+                <span className="text-gray-500">Tipo:</span>
+                <p>{getTipoBadge(lancamento.tipo).label}</p>
+              </div>
+              <div>
+                <span className="text-gray-500">Data:</span>
+                <p>{formatDate(lancamento.data)}</p>
+              </div>
+              <div>
+                <span className="text-gray-500">Valor:</span>
+                <p className={lancamento.entrada > 0 ? "text-emerald-600 font-medium" : "text-red-500 font-medium"}>
+                  {lancamento.entrada > 0 ? formatCurrency(lancamento.entrada) : formatCurrency(lancamento.saida)}
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600">Descrição: {lancamento.descricao}</p>
+            {lancamento.clienteFornecedor && (
+              <p className="text-sm text-gray-600">Cliente/Fornecedor: {lancamento.clienteFornecedor}</p>
+            )}
+          </div>
+        </td>
+      </tr>
     )
   }
 
@@ -1199,6 +1298,7 @@ export default function LivroDiarioPage() {
                   lancamentos.map((lanc) => {
                     const tipoBadge = getTipoBadge(lanc.tipo)
                     const isNota = isNotaFiscal(lanc)
+                    const canExpandRow = canExpand(lanc)
                     const isBoletoLanc = isBoleto(lanc)
                     const isFolhaLanc = isFolhaPagamento(lanc)
                     const isExpanded = expandedRows.has(lanc.id)
@@ -1209,11 +1309,23 @@ export default function LivroDiarioPage() {
                     return (
                       <React.Fragment key={lanc.id}>
                         <tr
-                          className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${rowStyle} ${isNota ? "cursor-pointer" : ""}`}
-                          onClick={isNota ? () => buscarNotaFiscal(lanc) : undefined}
+                          className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${rowStyle} ${canExpandRow ? "cursor-pointer" : ""}`}
+                          role={canExpandRow ? "button" : undefined}
+                          tabIndex={canExpandRow ? 0 : undefined}
+                          aria-expanded={canExpandRow ? isExpanded : undefined}
+                          aria-label={canExpandRow ? `Expandir detalhes de ${lanc.descricao}` : undefined}
+                          onClick={canExpandRow ? () => buscarNotaFiscal(lanc) : undefined}
+                          onKeyDown={(e) => {
+                            if (!canExpandRow) return
+                            if ((e.target as HTMLElement).closest("button")) return
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault()
+                              buscarNotaFiscal(lanc)
+                            }
+                          }}
                         >
                           <td className="px-4 py-3">
-                            {isNota && (
+                            {canExpandRow && (
                               <button className="text-[#de4838]">
                                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                               </button>

@@ -3,10 +3,20 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+const parseDateStart = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const parseDateEnd = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day, 23, 59, 59, 999);
+};
+
 // GET - Listar lançamentos do livro diário
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
@@ -16,6 +26,7 @@ export async function GET(request: NextRequest) {
   const conta = searchParams.get("conta");
   const tipo = searchParams.get("tipo");
   const origem_destino = searchParams.get("origem_destino");
+  const status_boleto = searchParams.get("status_boleto");
   const limit = parseInt(searchParams.get("limit") || "100");
   const skip = parseInt(searchParams.get("skip") || "0");
 
@@ -25,10 +36,10 @@ export async function GET(request: NextRequest) {
     };
 
     if (data_inicio) {
-      where.data = { gte: new Date(data_inicio) };
+      where.data = { gte: parseDateStart(data_inicio) };
     }
     if (data_fim) {
-      where.data = { ...where.data, lte: new Date(data_fim) };
+      where.data = { ...where.data, lte: parseDateEnd(data_fim) };
     }
     if (conta) {
       where.conta = { contains: conta, mode: "insensitive" };
@@ -38,6 +49,16 @@ export async function GET(request: NextRequest) {
     }
     if (origem_destino) {
       where.origemDestino = origem_destino;
+    }
+    if (status_boleto) {
+      const boletoFilter =
+        status_boleto === "PENDENTE"
+          ? { OR: [{ statusBoleto: null }, { statusBoleto: "PENDENTE" }], dataPagamento: null }
+          : status_boleto === "PAGO"
+            ? { dataPagamento: { not: null } }
+            : { status_boleto };
+
+      where.OR = [boletoFilter];
     }
 
     const [lancamentos, total] = await Promise.all([
@@ -76,7 +97,7 @@ export async function GET(request: NextRequest) {
 // POST - Criar um novo lançamento no livro diário
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
@@ -91,6 +112,7 @@ export async function POST(request: NextRequest) {
       saida,
       tipo,
       origemDestino, // NOVO CAMPO
+      notaFiscalId, // ID da nota fiscal relacionada
     } = body;
 
     // Validações
@@ -125,9 +147,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Corrigir a data para não usar UTC (que pode voltar o dia)
+    const [year, month, day] = data.split('-').map(Number)
+    const dataLancamento = new Date(year, month - 1, day)
+
     const novoLancamento = await prisma.livroDiario.create({
       data: {
-        data: new Date(data),
+        data: dataLancamento,
         conta: conta.trim(),
         descricao: descricao.trim(),
         clienteFornecedor: cliente_fornecedor || null,
@@ -135,6 +161,7 @@ export async function POST(request: NextRequest) {
         saida: saida || 0,
         tipo: tipo || (entrada > 0 ? "RECEITA" : "DESPESA"),
         origemDestino: origemDestino || null, // NOVO CAMPO
+        notaFiscalId: notaFiscalId || null,
         userId: session.user.id,
       },
     });
@@ -160,7 +187,7 @@ export async function POST(request: NextRequest) {
 // PUT - Atualizar um lançamento
 export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
@@ -202,10 +229,17 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Corrigir a data para não usar UTC
+    let dataConvertida: Date | undefined
+    if (data) {
+      const [year, month, day] = data.split('-').map(Number)
+      dataConvertida = new Date(year, month - 1, day)
+    }
+
     const lancamentoAtualizado = await prisma.livroDiario.update({
       where: { id: parseInt(id) },
       data: {
-        data: data ? new Date(data) : undefined,
+        data: dataConvertida,
         conta: conta?.trim(),
         descricao: descricao?.trim(),
         clienteFornecedor: cliente_fornecedor,
@@ -237,7 +271,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Remover um lançamento
 export async function DELETE(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 

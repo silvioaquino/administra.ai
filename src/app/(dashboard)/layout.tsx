@@ -77,7 +77,7 @@ export default function DashboardLayout({
     { icon: Calculator, label: "Fichas Técnicas", href: "/fichas-tecnicas", badge: null },
     { icon: TrendingUp, label: "Planejamento", href: "/planejamento", badge: null },
     { icon: Receipt, label: "Livro Diário", href: "/livro-diario", badge: null },
-    { icon: Ticket, label: "Fluxo de Caixa", href: "/fluxo-caixa", badge: null },
+    { icon: Ticket, label: "Fluxo de Caixa / DRE", href: "/fluxo-caixa", badge: null },
     { icon: Truck, label: "Contas bancárias", href: "/contas-bancarias", badge: null },
     { icon: CreditCard, label: "Fechamento Mensal", href: "/fechamento-mensal", badge: null },
     { icon: CreditCard, label: "Abrir/Fechar Caixa Diário", href: "/caixa", badge: null },
@@ -129,7 +129,7 @@ export default function DashboardLayout({
             </div>
             {/* Nome do sistema */}
             <span className="text-[9px] font-medium text-gray-400 uppercase tracking-wider">
-              KaiUp-Administrator.ai
+              SeuGerente.ai
             </span>
             {/* Nome da empresa */}
             <span className="text-xs font-semibold text-white truncate max-w-[180px] mt-0.5">
@@ -254,7 +254,7 @@ export default function DashboardLayout({
               <Store className="h-4 w-4 text-white" />
             </div>
             <span className="text-[8px] font-medium text-gray-400 uppercase tracking-wider">
-              KaiUp-Administrator.ai
+              SeuGerente.ai
             </span>
             <span className="text-[11px] font-semibold text-white truncate max-w-[180px]">
               {empresaNome}

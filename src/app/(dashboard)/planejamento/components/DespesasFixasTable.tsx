@@ -29,9 +29,9 @@ export function DespesasFixasTable({ despesas, percentual, title, onEdit }: Desp
             <span className="text-lg">💰</span>
             <h3 className="font-semibold text-gray-800">{title}</h3>
           </div>
-          <Button 
+          <Button
             variant="outline"
-            size="sm" 
+            size="sm"
             onClick={onEdit}
             className="rounded-lg border-gray-200 hover:border-[#de4838] hover:cursor-pointer transition-all"
           >
@@ -46,26 +46,33 @@ export function DespesasFixasTable({ despesas, percentual, title, onEdit }: Desp
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Despesa</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Real</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Real (100%)</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {percentual === 0.73 ? "Almoço (73%)" : "Janta (27%)"}
                 </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">% da Fatia</th>
               </tr>
             </thead>
             <tbody>
-              {despesas.map((desp, idx) => (
-                <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 text-gray-700">{desp.nome}</td>
-                  <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(desp.valor)}</td>
-                  <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(desp.valor * percentual)}</td>
-                </tr>
-              ))}
+              {despesas.map((desp, idx) => {
+                const valorRateado = desp.valor * percentual
+                const pctDaFatia = totalRateado > 0 ? (valorRateado / totalRateado) * 100 : 0
+                return (
+                  <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 text-gray-700">{desp.nome}</td>
+                    <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(desp.valor)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(valorRateado)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-gray-500">{pctDaFatia.toFixed(1)}%</td>
+                  </tr>
+                )
+              })}
             </tbody>
             <tfoot className="border-t border-gray-200 bg-gray-50">
               <tr className="font-semibold">
                 <td className="px-4 py-3 text-gray-800">TOTAL</td>
                 <td className="px-4 py-3 text-right text-gray-800">{formatCurrency(totalReal)}</td>
                 <td className="px-4 py-3 text-right text-[#de4838] font-bold">{formatCurrency(totalRateado)}</td>
+                <td className="px-4 py-3 text-right text-[#de4838] font-bold">100%</td>
               </tr>
             </tfoot>
           </table>

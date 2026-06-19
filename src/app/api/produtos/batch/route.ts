@@ -12,9 +12,16 @@ export async function POST(request: NextRequest) {
 
   try {
     const produtos = await request.json()
-    
+
     const created = []
     for (const prod of produtos) {
+      // Corrigir data para não usar UTC
+      let dataCompraDate: Date | null = null
+      if (prod.data_compra) {
+        const [year, month, day] = prod.data_compra.split('-').map(Number)
+        dataCompraDate = new Date(year, month - 1, day)
+      }
+
       const produto = await prisma.produto.create({
         data: {
           userId: session.user.id,
@@ -23,13 +30,13 @@ export async function POST(request: NextRequest) {
           precoVenda: prod.preco_venda || prod.precoVenda || 0,
           quantidade: prod.quantidade || 0,
           fornecedor: prod.fornecedor || null,
-          dataCompra: prod.data_compra ? new Date(prod.data_compra) : null,
+          dataCompra: dataCompraDate,
           codigo: prod.codigo || null,
           valorUnitario: prod.valor_unitario || prod.valorUnitario || 0,
-          valorTotal: prod.valor_total || prod.valorTotal || 0
+          valorTotal: prod.valor_total || prod.valorTotal || 0,
         }
       })
-      created.push({ id: produto.id, descricao: produto.descricao })
+      created.push({ id: produto.id, descricao: produto.descricao, categoria: 'INSUMOS' })
     }
 
     return NextResponse.json({

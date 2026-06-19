@@ -43,11 +43,15 @@ export function GraficosDistribuicao({
         options: {
           responsive: true,
           maintainAspectRatio: true,
+          cutout: "60%",
           plugins: {
             legend: {
               position: "bottom",
               labels: { font: { size: 10 }, boxWidth: 10 }
             }
+          },
+          layout: {
+            padding: 10
           }
         }
       })
@@ -69,7 +73,9 @@ export function GraficosDistribuicao({
         </div>
       </div>
       <div className="p-5">
-        <canvas ref={chartRef} height="180" />
+        <div className="relative aspect-square max-w-md mx-auto">
+          <canvas ref={chartRef} />
+        </div>
         <div className="mt-5 space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">📊 Despesas Fixas:</span>

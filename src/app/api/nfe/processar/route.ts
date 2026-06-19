@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 
 // REMOVENDO A VERIFICAÇÃO DE AUTENTICAÇÃO TEMPORARIAMENTE
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { success: false, error: "Usuário não autenticado" },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json()
     const { xmlContent, url } = body
+    const userId = session.user.id
 
     let xmlString = ""
 
@@ -15,11 +27,11 @@ export async function POST(request: NextRequest) {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       })
-      
+
       if (!response.ok) {
         throw new Error(`Erro ao buscar URL: ${response.status}`)
       }
-      
+
       xmlString = await response.text()
     } else if (xmlContent) {
       xmlString = xmlContent
@@ -37,6 +49,53 @@ export async function POST(request: NextRequest) {
 
     // Extrair dados do XML
     const dados = extrairDadosDoXML(xmlString)
+
+    // Salvar nota fiscal no banco
+    const notaFiscalExistente = await prisma.notaFiscal.findUnique({
+      where: { chaveAcesso: dados.chave_acesso }
+    })
+
+    if (!notaFiscalExistente) {
+      // Corrigir a data para não usar UTC (que pode voltar o dia)
+      const [year, month, day] = dados.data_emissao.split('-').map(Number)
+      const dataEmissao = new Date(year, month - 1, day)
+
+      const notaFiscal = await prisma.notaFiscal.create({
+        data: {
+          userId: userId,
+          chaveAcesso: dados.chave_acesso,
+          numero: parseInt(dados.numero) || 0,
+          serie: parseInt(dados.serie) || 1,
+          dataEmissao: dataEmissao,
+          cnpjEmitente: dados.cnpj_emitente,
+          nomeEmitente: dados.nome_emitente,
+          valorTotal: dados.valor_total,
+          produtos: {
+            create: (dados.produtos || []).map((p: any) => ({
+              userId: userId,
+              codigo: p.codigo || "",
+              descricao: p.descricao,
+              unidade: p.unidade || "",
+              quantidade: p.quantidade || 0,
+              valorUnitario: p.valor_unitario || 0,
+              valorTotal: p.valor_total || 0,
+            }))
+          },
+          pagamentos: {
+            create: [{
+              userId: userId,
+              formaPagamento: "À vista",
+              valor: dados.valor_total
+            }]
+          }
+        }
+      })
+
+      // Atualizar os dados com o ID da nota fiscal criada
+      ;(dados as any).notaFiscalId = notaFiscal.id
+    } else {
+      ;(dados as any).notaFiscalId = notaFiscalExistente.id
+    }
 
     return NextResponse.json({
       success: true,
@@ -77,7 +136,9 @@ function extrairDadosDoXML(xml: string) {
   // Extrair dados da nota (IDE)
   const ideSection = extractTag(xml, 'ide')
   const numero = extractTag(ideSection, 'nNF') || "Não informado"
-  
+  const serie = extractTag(ideSection, 'serie') || "1"
+  const chaveAcesso = extractTag(xml, 'chave') || extractTag(ideSection, 'cNF') || ""
+
   let dataEmissao = extractTag(ideSection, 'dEmi')
   if (!dataEmissao) {
     const dhEmi = extractTag(ideSection, 'dhEmi')
@@ -127,8 +188,10 @@ function extrairDadosDoXML(xml: string) {
     nome_emitente: nomeEmitente,
     cnpj_emitente: cnpjEmitente,
     numero,
+    serie,
+    chave_acesso: chaveAcesso,
     data_emissao: dataEmissao,
     valor_total: valorTotal,
     produtos,
-  }
+  } as any
 }

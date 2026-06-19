@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
       codigo: prod.codigo,
       valor_unitario: prod.valorUnitario ? Number(prod.valorUnitario) : 0,
       valor_total: prod.valorTotal ? Number(prod.valorTotal) : 0,
+      categoria: 'INSUMOS',
       createdAt: prod.createdAt,
     }))
 
@@ -90,6 +91,16 @@ export async function POST(request: NextRequest) {
     const valorUnitario = body.valorUnitario ? Number(body.valorUnitario) : precoVenda
     const valorTotal = body.valorTotal ? Number(body.valorTotal) : (quantidade * precoVenda)
 
+    // Corrigir data para não usar UTC
+    let dataCompraDate: Date
+    if (body.dataCompra) {
+      const [year, month, day] = body.dataCompra.split('-').map(Number)
+      dataCompraDate = new Date(year, month - 1, day)
+    } else {
+      const hoje = new Date()
+      dataCompraDate = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
+    }
+
     // Preparar dados para o Prisma
     const produtoData = {
       userId: session.user.id,
@@ -98,7 +109,7 @@ export async function POST(request: NextRequest) {
       precoVenda: precoVenda,
       quantidade: quantidade,
       fornecedor: body.fornecedor?.trim() || null,
-      dataCompra: body.dataCompra ? new Date(body.dataCompra) : new Date(),
+      dataCompra: dataCompraDate,
       codigo: body.codigo?.trim() || null,
       valorUnitario: valorUnitario,
       valorTotal: valorTotal,
@@ -122,6 +133,7 @@ export async function POST(request: NextRequest) {
       codigo: produto.codigo,
       valor_unitario: produto.valorUnitario ? Number(produto.valorUnitario) : 0,
       valor_total: produto.valorTotal ? Number(produto.valorTotal) : 0,
+      categoria: 'INSUMOS',
     }
 
     console.log("Produto criado:", produtoResponse)
@@ -184,6 +196,17 @@ export async function PUT(request: NextRequest) {
     const valorUnitario = updateData.valorUnitario !== undefined ? Number(updateData.valorUnitario) : Number(existingProduto.valorUnitario)
     const valorTotal = updateData.valorTotal !== undefined ? Number(updateData.valorTotal) : (quantidade * precoVenda)
 
+    // Corrigir data se fornecida
+    let dataCompraUpdate: Date | undefined
+    if (updateData.dataCompra !== undefined) {
+      if (updateData.dataCompra) {
+        const [year, month, day] = updateData.dataCompra.split('-').map(Number)
+        dataCompraUpdate = new Date(year, month - 1, day)
+      } else {
+        dataCompraUpdate = existingProduto.dataCompra || undefined
+      }
+    }
+
     const produto = await prisma.produto.update({
       where: { id: parseInt(id) },
       data: {
@@ -192,7 +215,7 @@ export async function PUT(request: NextRequest) {
         precoVenda: precoVenda,
         quantidade: quantidade,
         fornecedor: updateData.fornecedor !== undefined ? updateData.fornecedor : existingProduto.fornecedor,
-        dataCompra: updateData.dataCompra ? new Date(updateData.dataCompra) : existingProduto.dataCompra,
+        dataCompra: dataCompraUpdate !== undefined ? dataCompraUpdate : existingProduto.dataCompra,
         codigo: updateData.codigo !== undefined ? updateData.codigo : existingProduto.codigo,
         valorUnitario: valorUnitario,
         valorTotal: valorTotal,
@@ -210,10 +233,11 @@ export async function PUT(request: NextRequest) {
       codigo: produto.codigo,
       valor_unitario: produto.valorUnitario ? Number(produto.valorUnitario) : 0,
       valor_total: produto.valorTotal ? Number(produto.valorTotal) : 0,
+      categoria: 'INSUMOS',
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       data: produtoResponse,
       message: "Produto atualizado com sucesso"
     })

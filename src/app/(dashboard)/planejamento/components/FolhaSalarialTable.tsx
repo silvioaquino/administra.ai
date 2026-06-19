@@ -27,35 +27,69 @@ interface FolhaSalarialTableProps {
 
 // Configuração das provisões
 const PROVISOES_CONFIG = {
-  decimo_terceiro: { 
-    nome: "13º Salário", 
+  decimo_terceiro: {
+    nome: "13º Salário",
     percentual: 1/12,
     descricao: "Provisão mensal do 13º salário (salário / 12)"
   },
-  ferias: { 
-    nome: "Férias + 1/3", 
+  ferias: {
+    nome: "Férias + 1/3",
     percentual: 1.3333/12,
     descricao: "Provisão mensal de férias acrescidas de 1/3 constitucional"
   },
-  fgts: { 
-    nome: "FGTS (8%)", 
+  fgts: {
+    nome: "FGTS (8%)",
     percentual: 0.08,
     descricao: "Fundo de Garantia por Tempo de Serviço - 8% sobre o salário"
   },
-  inss_patronal: { 
-    nome: "INSS Patronal (20%)", 
+  inss_patronal: {
+    nome: "INSS Patronal (20%)",
     percentual: 0.20,
     descricao: "Contribuição patronal do INSS - 20% sobre o salário"
+  },
+  inss: {
+    nome: "INSS",
+    percentual: 0,
+    descricao: "Contribuição do INSS do funcionário (progressiva por faixa salarial)"
   }
 }
 
+// Tabela progressiva do INSS 2024
+const INSS_FAIXAS = [
+  { limite: 1621.00, aliquota: 0.075 },
+  { limite: 2902.84, aliquota: 0.09 },
+  { limite: 4354.27, aliquota: 0.12 },
+  { limite: 8475.55, aliquota: 0.14 }
+]
+
+function calcularINSS(salario: number): number {
+  let inss = 0
+  let baseAnterior = 0
+
+  for (const faixa of INSS_FAIXAS) {
+    if (salario <= faixa.limite) {
+      inss += (salario - baseAnterior) * faixa.aliquota
+      break
+    } else {
+      inss += (faixa.limite - baseAnterior) * faixa.aliquota
+      baseAnterior = faixa.limite
+    }
+  }
+
+  return inss
+}
+
+// Valores padrão para provisões ativas (sempre true por padrão)
+const DEFAULT_PROVISOES_ATIVAS = {
+  decimo_terceiro: true,
+  ferias: true,
+  fgts: true,
+  inss_patronal: true,
+  inss: true
+}
+
 export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: FolhaSalarialTableProps) {
-  const [provisoesAtivas, setProvisoesAtivas] = useState({
-    decimo_terceiro: true,
-    ferias: true,
-    fgts: true,
-    inss_patronal: true
-  })
+  const [provisoesAtivas, setProvisoesAtivas] = useState(DEFAULT_PROVISOES_ATIVAS)
   const [provisoesFuncionarios, setProvisoesFuncionarios] = useState<ProvisaoFuncionario[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -86,10 +120,22 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-        setProvisoesAtivas(prev => ({ ...prev, ...parsed }))
+        // Mescla com os valores padrão para garantir que todas as chaves existam
+        setProvisoesAtivas(prev => ({ ...DEFAULT_PROVISOES_ATIVAS, ...prev, ...parsed }))
       } catch (e) {
         console.error("Erro ao carregar provisões ativas:", e)
+        // Em caso de erro, usa os valores padrão
+        setProvisoesAtivas(DEFAULT_PROVISOES_ATIVAS)
       }
+    }
+  }
+
+  function salvarProvisoesAtivas(novasProvisoesAtivas: typeof DEFAULT_PROVISOES_ATIVAS) {
+    setProvisoesAtivas(novasProvisoesAtivas)
+    try {
+      localStorage.setItem("provisoesAtivas", JSON.stringify(novasProvisoesAtivas))
+    } catch (e) {
+      console.error("Erro ao salvar provisões ativas:", e)
     }
   }
 
@@ -176,10 +222,11 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
     let totalFerias = 0
     let totalFgts = 0
     let totalInss = 0
+    let totalInssPatronal = 0
 
     for (const func of funcionarios) {
       totalSalarios += func.salario
-      
+
       if (provisoesAtivas.decimo_terceiro && getProvisaoStatus(func.nome, "decimo_terceiro")) {
         totalDecimo += func.salario / 12
       }
@@ -190,27 +237,31 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
         totalFgts += func.salario * 0.08
       }
       if (provisoesAtivas.inss_patronal && getProvisaoStatus(func.nome, "inss_patronal")) {
-        totalInss += func.salario * 0.20
+        totalInssPatronal += func.salario * 0.20
+      }
+      if (provisoesAtivas.inss && getProvisaoStatus(func.nome, "inss")) {
+        totalInss += calcularINSS(func.salario)
       }
     }
 
-    return { totalSalarios, totalDecimo, totalFerias, totalFgts, totalInss }
+    return { totalSalarios, totalDecimo, totalFerias, totalFgts, totalInss, totalInssPatronal }
   }
 
   function calcularTotaisPorFuncionario(funcionarioNome: string) {
     const func = funcionarios.find(f => f.nome === funcionarioNome)
-    if (!func) return { decimo: 0, ferias: 0, fgts: 0, inss: 0 }
-    
+    if (!func) return { decimo: 0, ferias: 0, fgts: 0, inss: 0, inssPatronal: 0 }
+
     return {
       decimo: provisoesAtivas.decimo_terceiro && getProvisaoStatus(funcionarioNome, "decimo_terceiro") ? func.salario / 12 : 0,
       ferias: provisoesAtivas.ferias && getProvisaoStatus(funcionarioNome, "ferias") ? (func.salario * 1.3333) / 12 : 0,
       fgts: provisoesAtivas.fgts && getProvisaoStatus(funcionarioNome, "fgts") ? func.salario * 0.08 : 0,
-      inss: provisoesAtivas.inss_patronal && getProvisaoStatus(funcionarioNome, "inss_patronal") ? func.salario * 0.20 : 0
+      inss: provisoesAtivas.inss && getProvisaoStatus(funcionarioNome, "inss") ? calcularINSS(func.salario) : 0,
+      inssPatronal: provisoesAtivas.inss_patronal && getProvisaoStatus(funcionarioNome, "inss_patronal") ? func.salario * 0.20 : 0
     }
   }
 
   const totais = calcularTotais()
-  const totalMensal = totais.totalSalarios + totais.totalDecimo + totais.totalFerias + totais.totalFgts + totais.totalInss
+  const totalMensal = totais.totalSalarios + totais.totalDecimo + totais.totalFerias + totais.totalFgts + totais.totalInss + totais.totalInssPatronal
 
   const toggleRow = (funcionarioNome: string) => {
     setExpandedRow(expandedRow === funcionarioNome ? null : funcionarioNome)
@@ -236,27 +287,27 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
             <h3 className="font-semibold text-gray-800">Folha Salarial & Provisões</h3>
           </div>
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={onEdit}
               className="rounded-lg border-gray-200 hover:border-[#de4838]"
             >
               <Settings className="mr-1 h-3 w-3" />
               Editar Funcionários
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={onConfigProvisoes}
               className="rounded-lg border-gray-200 hover:border-[#de4838]"
             >
               <Calculator className="mr-1 h-3 w-3" />
               Configurar Provisões
             </Button>
-            <Button 
-              variant="default" 
-              size="sm" 
+            <Button
+              variant="default"
+              size="sm"
               onClick={salvarTodasProvisoes}
               disabled={saving}
               className="bg-[#de4838] hover:bg-[#c73d2e]"
@@ -297,6 +348,11 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
                     INSS Patronal (20%)
                   </th>
                 )}
+                {provisoesAtivas.inss && (
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    INSS
+                  </th>
+                )}
               </tr>
               {/* Sub-header para indicar valor + switch */}
               <tr className="border-b border-gray-200 bg-gray-100">
@@ -313,6 +369,9 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
                   <td className="px-4 py-2 text-center text-xs text-gray-500">Valor / Status</td>
                 )}
                 {provisoesAtivas.inss_patronal && (
+                  <td className="px-4 py-2 text-center text-xs text-gray-500">Valor / Status</td>
+                )}
+                {provisoesAtivas.inss && (
                   <td className="px-4 py-2 text-center text-xs text-gray-500">Valor / Status</td>
                 )}
               </tr>
@@ -351,7 +410,8 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
                             <Switch
                               checked={getProvisaoStatus(func.nome, "decimo_terceiro")}
                               onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "decimo_terceiro", checked)}
-                              className="scale-75"
+                              size="xs"
+                              className="data-checked:bg-emerald-500 data-checked:border-emerald-500 border-gray-300 dark:border-gray-600"
                             />
                           </div>
                         </td>
@@ -367,12 +427,13 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
                             <Switch
                               checked={getProvisaoStatus(func.nome, "ferias")}
                               onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "ferias", checked)}
-                              className="scale-75"
+                              size="xs"
+                              className="data-checked:bg-emerald-500 data-checked:border-emerald-500 border-gray-300 dark:border-gray-600"
                             />
                           </div>
                         </td>
                       )}
-                      
+
                       {/* FGTS */}
                       {provisoesAtivas.fgts && (
                         <td className="px-4 py-3">
@@ -383,23 +444,42 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
                             <Switch
                               checked={getProvisaoStatus(func.nome, "fgts")}
                               onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "fgts", checked)}
-                              className="scale-75"
+                              size="xs"
+                              className="data-checked:bg-emerald-500 data-checked:border-emerald-500 border-gray-300 dark:border-gray-600"
                             />
                           </div>
                         </td>
                       )}
-                      
+
                       {/* INSS Patronal */}
                       {provisoesAtivas.inss_patronal && (
                         <td className="px-4 py-3">
                           <div className="flex flex-col items-center gap-2">
                             <span className={`font-mono text-sm ${getProvisaoStatus(func.nome, "inss_patronal") ? 'text-green-600' : 'text-gray-400 line-through'}`}>
-                              {formatCurrency(valores.inss)}
+                              {formatCurrency(valores.inssPatronal)}
                             </span>
                             <Switch
                               checked={getProvisaoStatus(func.nome, "inss_patronal")}
                               onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "inss_patronal", checked)}
-                              className="scale-75"
+                              size="xs"
+                              className="data-checked:bg-emerald-500 data-checked:border-emerald-500 border-gray-300 dark:border-gray-600"
+                            />
+                          </div>
+                        </td>
+                      )}
+
+                      {/* INSS */}
+                      {provisoesAtivas.inss && (
+                        <td className="px-4 py-3">
+                          <div className="flex flex-col items-center gap-2">
+                            <span className={`font-mono text-sm ${getProvisaoStatus(func.nome, "inss") ? 'text-green-600' : 'text-gray-400 line-through'}`}>
+                              {formatCurrency(valores.inss)}
+                            </span>
+                            <Switch
+                              checked={getProvisaoStatus(func.nome, "inss")}
+                              onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "inss", checked)}
+                              size="xs"
+                              className="data-checked:bg-emerald-500 data-checked:border-emerald-500 border-gray-300 dark:border-gray-600"
                             />
                           </div>
                         </td>
@@ -418,8 +498,19 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                               {Object.entries(PROVISOES_CONFIG).map(([key, config]) => {
                                 const isAtivo = getProvisaoStatus(func.nome, key)
-                                const valor = isAtivo ? func.salario * config.percentual : 0
-                                
+                                let valor = 0
+                                let percentualTexto = ""
+
+                                if (key === "inss") {
+                                  valor = isAtivo ? calcularINSS(func.salario) : 0
+                                  // Calcular percentual efetivo para exibição
+                                  const aliquotaEfetiva = valor > 0 ? (valor / func.salario) * 100 : 0
+                                  percentualTexto = `Efetivo: ${aliquotaEfetiva.toFixed(1)}%`
+                                } else {
+                                  valor = isAtivo ? func.salario * config.percentual : 0
+                                  percentualTexto = `Percentual: ${(config.percentual * 100).toFixed(1)}%`
+                                }
+
                                 return (
                                   <div key={key} className="bg-white rounded-lg p-3 border border-gray-100">
                                     <div className="flex justify-between items-start mb-2">
@@ -427,7 +518,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
                                       <Switch
                                         checked={isAtivo}
                                         onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, key, checked)}
-                                        className="scale-75"
+                                        className="data-checked:bg-emerald-500 data-checked:border-emerald-500 border-gray-300 dark:border-gray-600"
                                       />
                                     </div>
                                     <p className={`text-lg font-bold ${isAtivo ? 'text-green-600' : 'text-gray-400 line-through'}`}>
@@ -435,14 +526,14 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
                                     </p>
                                     <p className="text-xs text-gray-400 mt-1">{config.descricao}</p>
                                     <p className="text-xs text-gray-400 mt-1">
-                                      Percentual: {(config.percentual * 100).toFixed(1)}%
+                                      {percentualTexto}
                                     </p>
                                   </div>
                                 )
                               })}
                             </div>
                             <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
-                              <span className="font-medium">Total de encargos mensais:</span> {formatCurrency(valores.decimo + valores.ferias + valores.fgts + valores.inss)}
+                              <span className="font-medium">Total de encargos mensais:</span> {formatCurrency(valores.decimo + valores.ferias + valores.fgts + valores.inss + valores.inssPatronal)}
                             </div>
                           </div>
                         </td>
@@ -467,12 +558,15 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
                   <td className="px-4 py-3 text-center text-gray-800">{formatCurrency(totais.totalFgts)}</td>
                 )}
                 {provisoesAtivas.inss_patronal && (
+                  <td className="px-4 py-3 text-center text-gray-800">{formatCurrency(totais.totalInssPatronal)}</td>
+                )}
+                {provisoesAtivas.inss && (
                   <td className="px-4 py-3 text-center text-gray-800">{formatCurrency(totais.totalInss)}</td>
                 )}
               </tr>
               <tr className="bg-yellow-50">
                 <td className="px-4 py-3"></td>
-                <td colSpan={5} className="px-4 py-3 font-bold text-gray-700">TOTAL Folha + Encargos Mensal</td>
+                <td colSpan={6} className="px-4 py-3 font-bold text-gray-700">TOTAL Folha + Encargos Mensal</td>
                 <td className="px-4 py-3 text-right font-bold text-[#de4838] text-lg">{formatCurrency(totalMensal)}</td>
               </tr>
             </tfoot>

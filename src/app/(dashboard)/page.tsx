@@ -30,6 +30,14 @@ import { IndicadoresCard } from "./components/IndicadoresCard"
 
 type PeriodoType = "hoje" | "mes" | "ano" | "especifico"
 
+interface MetaPlanejamento {
+  mes: number
+  metaDiariaAlmoco: number
+  metaDiariaJanta: number
+  diasTrabalhados: number
+  lucroDesejado: number
+}
+
 interface ChartData {
   periodo: string
   receitas: number
@@ -102,7 +110,8 @@ export default function DashboardPage() {
   const [chartData, setChartData] = useState<ChartData[]>([])
   const [chartLoading, setChartLoading] = useState(false)
   const [periodo, setPeriodo] = useState<PeriodoType>("mes")
-  const [dataEspecifica, setDataEspecifica] = useState<string>("")
+  const [dataInicio, setDataInicio] = useState<string>("")
+  const [dataFim, setDataFim] = useState<string>("")
   const [periodoTexto, setPeriodoTexto] = useState<string>("Carregando período...")
   const [metas, setMetas] = useState<{
     faturamento: MetaItem
@@ -138,8 +147,9 @@ export default function DashboardPage() {
         mes: String(new Date().getMonth() + 1)
       })
 
-      if (periodo === "especifico" && dataEspecifica) {
-        params.set("data", dataEspecifica)
+      if (periodo === "especifico") {
+        if (dataInicio) params.set("dataInicio", dataInicio)
+        if (dataFim) params.set("dataFim", dataFim)
       }
 
       const response = await fetch(`/api/dashboard?${params.toString()}`)
@@ -218,7 +228,8 @@ export default function DashboardPage() {
 
   async function carregarIndicadoresFinanceiros() {
     try {
-      const response = await fetch("/api/planejamento/indicadores-resumo")
+      const anoAtual = new Date().getFullYear()
+      const response = await fetch(`/api/planejamento/indicadores-resumo?ano=${anoAtual}`)
       const data = await response.json()
 
       if (data.success) {
@@ -231,6 +242,51 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error("Erro ao carregar indicadores financeiros:", error)
+    }
+  }
+
+  async function carregarMetasPlanejamento() {
+    try {
+      const anoAtual = new Date().getFullYear()
+      const response = await fetch(`/api/planejamento/metas?ano=${anoAtual}`)
+      const data = await response.json()
+
+      if (data.success && data.metas) {
+        const mesAtual = new Date().getMonth() + 1
+        const metaAtual: MetaPlanejamento | undefined = data.metas.find((m: MetaPlanejamento) => m.mes === mesAtual)
+
+        if (metaAtual) {
+          const metaMensalAlmoco = metaAtual.metaDiariaAlmoco * metaAtual.diasTrabalhados
+          const metaMensalJanta = metaAtual.metaDiariaJanta * metaAtual.diasTrabalhados
+          const metaTotal = metaMensalAlmoco + metaMensalJanta
+
+          // Buscar dados atuais do dashboard para calcular o progresso
+          const totalReceitas = stats.totalReceitas
+          const totalDespesas = stats.totalDespesas
+          const margem = stats.margem
+
+          setMetas({
+            faturamento: {
+              atual: totalReceitas,
+              meta: metaTotal,
+              percentual: metaTotal > 0 ? Math.min(100, Math.max(0, (totalReceitas / metaTotal) * 100)) : 0
+            },
+            despesa: {
+              atual: totalDespesas,
+              meta: metaTotal * 0.7, // Estimativa de despesa baseada na meta de faturamento
+              diaria: metaTotal * 0.7 / metaAtual.diasTrabalhados,
+              percentual: metaTotal > 0 ? Math.min(100, Math.max(0, (totalDespesas / (metaTotal * 0.7)) * 100)) : 0
+            },
+            lucro: {
+              atual: margem,
+              meta: metaAtual.lucroDesejado,
+              percentual: metaAtual.lucroDesejado > 0 ? Math.min(100, Math.max(0, (margem / metaAtual.lucroDesejado) * 100)) : 0
+            }
+          })
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao carregar metas do planejamento:", error)
     }
   }
 
@@ -271,7 +327,14 @@ export default function DashboardPage() {
     }, 0)
 
     return () => window.clearTimeout(timeout)
-  }, [periodo, dataEspecifica])
+  }, [periodo, dataInicio, dataFim])
+
+  // Carregar metas do planejamento após carregar dados do dashboard
+  useEffect(() => {
+    if (stats.totalReceitas > 0 || stats.totalDespesas > 0) {
+      carregarMetasPlanejamento()
+    }
+  }, [stats.totalReceitas, stats.totalDespesas])
 
   const formatTooltipValue = (value: number | string | readonly (string | number)[] | undefined): string => {
     if (Array.isArray(value)) {
@@ -462,12 +525,23 @@ export default function DashboardPage() {
                 </div>
 
                 {periodo === "especifico" && (
-                  <input
-                    type="date"
-                    value={dataEspecifica}
-                    onChange={(e) => setDataEspecifica(e.target.value)}
-                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={dataInicio}
+                      onChange={(e) => setDataInicio(e.target.value)}
+                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                      placeholder="Início"
+                    />
+                    <span className="text-gray-400">até</span>
+                    <input
+                      type="date"
+                      value={dataFim}
+                      onChange={(e) => setDataFim(e.target.value)}
+                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                      placeholder="Fim"
+                    />
+                  </div>
                 )}
 
                 <div className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700">
@@ -738,8 +812,8 @@ export default function DashboardPage() {
             ) : (
               <div className="flex h-80 items-center justify-center">
                 <p className="text-gray-500">
-                  {periodo === "especifico" && !dataEspecifica 
-                    ? "Selecione uma data específica para visualizar o gráfico" 
+                  {periodo === "especifico" && (!dataInicio || !dataFim)
+                    ? "Selecione o período (data inicial e final) para visualizar o gráfico"
                     : "Nenhum dado disponível para o período selecionado"}
                 </p>
               </div>

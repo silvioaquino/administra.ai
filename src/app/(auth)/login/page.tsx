@@ -80,7 +80,7 @@ export default function LoginPage() {
               />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">KaiUp-Administrator.ai</h1>
+          <h1 className="text-2xl font-bold text-gray-800">SeuGerente.ai</h1>
           <p className="text-sm text-gray-500 mt-2">
             Faça login para acessar o sistema
           </p>
@@ -169,7 +169,7 @@ export default function LoginPage() {
 
               <div className="bg-orange-50 rounded-xl p-3 text-center">
                 <p className="text-xs text-orange-700">
-                  🎉 Teste grátis por 7 dias. Não exige cartão de crédito.
+                  🎉 Teste grátis por 20 dias. Não exige cartão de crédito.
                 </p>
               </div>
             </form>

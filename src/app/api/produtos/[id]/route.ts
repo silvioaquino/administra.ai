@@ -79,6 +79,13 @@ export async function PUT(
     const valorUnitario = body.valor_unitario !== undefined ? Number(body.valor_unitario) : Number(existingProduto.valorUnitario)
     const valorTotal = body.valor_total !== undefined ? Number(body.valor_total) : (quantidade * precoVenda)
 
+    // Corrigir data para não usar UTC
+    let dataCompraDate: Date | undefined
+    if (body.data_compra) {
+      const [year, month, day] = body.data_compra.split('-').map(Number)
+      dataCompraDate = new Date(year, month - 1, day)
+    }
+
     const produto = await prisma.produto.update({
       where: { id: parseInt(id) },
       data: {
@@ -87,7 +94,7 @@ export async function PUT(
         precoVenda: precoVenda,
         quantidade: quantidade,
         fornecedor: body.fornecedor !== undefined ? body.fornecedor : existingProduto.fornecedor,
-        dataCompra: body.data_compra ? new Date(body.data_compra) : existingProduto.dataCompra,
+        dataCompra: dataCompraDate !== undefined ? dataCompraDate : existingProduto.dataCompra,
         codigo: body.codigo !== undefined ? body.codigo : existingProduto.codigo,
         valorUnitario: valorUnitario,
         valorTotal: valorTotal,

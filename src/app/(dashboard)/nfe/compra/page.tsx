@@ -76,7 +76,7 @@ export default function CompraNfePage() {
 
   async function salvarCompra() {
     const produtosSelecionados = produtos.filter(p => p.selecionado)
-    
+
     if (produtosSelecionados.length === 0) {
       alert("Selecione pelo menos um produto")
       return
@@ -87,7 +87,7 @@ export default function CompraNfePage() {
     try {
       // Registrar compra no livro diário
       const valorTotal = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
-      
+
       const response = await fetch("/api/livro-diario", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -98,7 +98,8 @@ export default function CompraNfePage() {
           cliente_fornecedor: `${notaProcessada?.nome_emitente || ""} | ${notaProcessada?.cnpj_emitente || ""}`,
           entrada: 0,
           saida: valorTotal,
-          tipo: "COMPRA"
+          tipo: "COMPRA",
+          notaFiscalId: notaProcessada?.notaFiscalId
         })
       })
 

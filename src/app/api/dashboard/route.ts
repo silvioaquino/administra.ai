@@ -21,9 +21,40 @@ function toNumber(value: unknown): number {
   return 0
 }
 
+// Função para parsear data no formato DD/MM/YYYY ou YYYY-MM-DD
+function parseDate(dateStr: string): Date | null {
+  if (!dateStr) return null
+
+  // Tenta formato DD/MM/YYYY
+  if (dateStr.includes("/")) {
+    const parts = dateStr.split("/")
+    if (parts.length === 3) {
+      const dia = parseInt(parts[0])
+      const mes = parseInt(parts[1]) - 1
+      const ano = parseInt(parts[2])
+      return new Date(ano, mes, dia)
+    }
+  }
+
+  // Tenta formato YYYY-MM-DD - corrigir para não usar UTC
+  if (dateStr.includes("-")) {
+    const parts = dateStr.split("-")
+    if (parts.length === 3) {
+      const ano = parseInt(parts[0])
+      const mes = parseInt(parts[1]) - 1
+      const dia = parseInt(parts[2])
+      return new Date(ano, mes, dia)
+    }
+  }
+
+  return null
+}
+
 function getPeriodoRange(
   periodo: PeriodoDashboard,
   dataEspecifica: string | null,
+  dataInicio: string | null,
+  dataFim: string | null,
   anoParam: string | null,
   mesParam: string | null
 ): PeriodoRange {
@@ -61,14 +92,40 @@ function getPeriodoRange(
     }
   }
 
-  if (dataEspecifica) {
-    const data = new Date(`${dataEspecifica}T00:00:00`)
-    const fim = new Date(`${dataEspecifica}T23:59:59.999`)
+  if (periodo === "especifico") {
+    const parsedInicio = dataInicio ? parseDate(dataInicio) : null
+    const parsedFim = dataFim ? parseDate(dataFim) : null
+    const parsedEspecifica = dataEspecifica ? parseDate(dataEspecifica) : null
 
-    return {
-      inicio: data,
-      fim,
-      label: data.toLocaleDateString("pt-BR")
+    if (parsedInicio && parsedFim) {
+      const inicio = new Date(parsedInicio.getFullYear(), parsedInicio.getMonth(), parsedInicio.getDate())
+      const fim = new Date(parsedFim.getFullYear(), parsedFim.getMonth(), parsedFim.getDate(), 23, 59, 59, 999)
+
+      return {
+        inicio,
+        fim,
+        label: `${inicio.toLocaleDateString("pt-BR")} a ${fim.toLocaleDateString("pt-BR")}`
+      }
+    }
+    if (parsedInicio) {
+      const inicio = new Date(parsedInicio.getFullYear(), parsedInicio.getMonth(), parsedInicio.getDate())
+      const fim = new Date(parsedInicio.getFullYear(), parsedInicio.getMonth(), parsedInicio.getDate(), 23, 59, 59, 999)
+
+      return {
+        inicio,
+        fim,
+        label: inicio.toLocaleDateString("pt-BR")
+      }
+    }
+    if (parsedEspecifica) {
+      const inicio = new Date(parsedEspecifica.getFullYear(), parsedEspecifica.getMonth(), parsedEspecifica.getDate())
+      const fim = new Date(parsedEspecifica.getFullYear(), parsedEspecifica.getMonth(), parsedEspecifica.getDate(), 23, 59, 59, 999)
+
+      return {
+        inicio,
+        fim,
+        label: inicio.toLocaleDateString("pt-BR")
+      }
     }
   }
 
@@ -91,10 +148,6 @@ function getPeriodoLabel(item: { data: Date }, periodo: PeriodoDashboard): strin
   return item.data.toLocaleDateString("pt-BR")
 }
 
-function diasUteis(meta: { diasUteis: number }): number {
-  return meta.diasUteis > 0 ? meta.diasUteis : 26
-}
-
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
 
@@ -105,12 +158,21 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const periodo = (searchParams.get("periodo") || "mes") as PeriodoDashboard
   const dataEspecifica = searchParams.get("data")
+  const dataInicio = searchParams.get("dataInicio")
+  const dataFim = searchParams.get("dataFim")
   const anoParam = searchParams.get("ano")
   const mesParam = searchParams.get("mes")
 
   try {
-    const range = getPeriodoRange(periodo, dataEspecifica, anoParam, mesParam)
-    const fluxoDiario = await prisma.fluxoCaixaDiario.findMany({
+    const range = getPeriodoRange(periodo, dataEspecifica, dataInicio, dataFim, anoParam, mesParam)
+
+    // Buscar dados reais do período (livroDiario)
+    let totalReceitas = 0
+    let totalDespesas = 0
+    let chartData: Array<{ periodo: string; receitas: number; despesas: number; lucro: number }> = []
+
+    // Para todos os períodos, usar livroDiario
+    const lancamentos = await prisma.livroDiario.findMany({
       where: {
         userId: session.user.id,
         data: {
@@ -118,41 +180,37 @@ export async function GET(request: NextRequest) {
           lte: range.fim
         }
       },
-      orderBy: {
-        data: "asc"
-      }
+      orderBy: { data: "asc" }
     })
 
-    const chartData = fluxoDiario.map(item => {
-      const receitas = toNumber(item.faturamentoRealizado)
-      const despesas = toNumber(item.despesasRealizadas)
-      const lucro = toNumber(item.lucroRealizado)
+    // Agrupar por data
+    const dadosPorData = new Map<string, { receitas: number; despesas: number }>()
+    for (const lanc of lancamentos) {
+      const dataKey = lanc.data.toISOString().split("T")[0]
+      const existing = dadosPorData.get(dataKey) || { receitas: 0, despesas: 0 }
+      existing.receitas += Number(lanc.entrada)
+      existing.despesas += Number(lanc.saida)
+      dadosPorData.set(dataKey, existing)
+    }
 
-      return {
-        periodo: getPeriodoLabel(item, periodo),
-        receitas,
-        despesas,
-        lucro
-      }
-    })
+    chartData = Array.from(dadosPorData.entries()).map(([data, vals]) => ({
+      periodo: new Date(data).toLocaleDateString("pt-BR"),
+      receitas: vals.receitas,
+      despesas: vals.despesas,
+      lucro: vals.receitas - vals.despesas
+    }))
 
-    const totalReceitas = chartData.reduce((total, item) => total + item.receitas, 0)
-    const totalDespesas = chartData.reduce((total, item) => total + item.despesas, 0)
+    totalReceitas = chartData.reduce((sum, d) => sum + d.receitas, 0)
+    totalDespesas = chartData.reduce((sum, d) => sum + d.despesas, 0)
+
     const saldo = totalReceitas - totalDespesas
     const margem = totalReceitas > 0 ? (saldo / totalReceitas) * 100 : 0
 
+    // Buscar METAS do PLANEJAMENTO (planejamentoFaturamento) - mesmo lugar do Planejamento
     const anoMeta = range.inicio.getFullYear()
     const mesMeta = range.inicio.getMonth() + 1
-    const metas = periodo === "ano"
-      ? await prisma.metaFluxoCaixa.findMany({
-          where: {
-            userId: session.user.id,
-            ano: anoMeta
-          }
-        })
-      : []
 
-    const meta = metas[0] ?? await prisma.metaFluxoCaixa.findFirst({
+    const metaPlanejamento = await prisma.planejamentoFaturamento.findFirst({
       where: {
         userId: session.user.id,
         ano: anoMeta,
@@ -160,21 +218,21 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const diasPeriodo = Math.max(1, Math.ceil((range.fim.getTime() - range.inicio.getTime()) / 86400000) + 1)
-    const metaFaturamento = metas.length > 0
-      ? metas.reduce((total, item) => total + Number(item.metaFaturamentoDiaria) * diasUteis(item), 0)
-      : meta
-        ? Number(meta.metaFaturamentoDiaria) * diasPeriodo
-        : 2500 * diasPeriodo
-    const metaDespesaDiaria = meta ? Number(meta.metaDespesasDiaria) : 1700
-    const metaDespesa = metas.length > 0
-      ? metas.reduce((total, item) => total + Number(item.metaDespesasDiaria) * diasUteis(item), 0)
-      : metaDespesaDiaria * diasPeriodo
-    const metaLucro = metas.length > 0
-      ? metas.reduce((total, item) => total + Number(item.metaLucroPercentual), 0) / metas.length
-      : meta
-        ? Number(meta.metaLucroPercentual)
-        : 20
+    // Calcular metas baseado no planejamentoFaturamento (mesmo cálculo da página Planejamento)
+    const diasTrabalhados = metaPlanejamento?.diasTrabalhados || 26
+    const metaDiariaAlmoco = metaPlanejamento?.metaDiariaAlmoco || 0
+    const metaDiariaJanta = metaPlanejamento?.metaDiariaJanta || 0
+    const lucroDesejado = metaPlanejamento?.lucroDesejado || 15
+
+    const metaMensalAlmoco = metaDiariaAlmoco * diasTrabalhados
+    const metaMensalJanta = metaDiariaJanta * diasTrabalhados
+    const metaFaturamento = metaMensalAlmoco + metaMensalJanta
+    const metaLucro = lucroDesejado
+
+    // Para meta de despesa, estima baseado no faturamento meta (assumindo 70% de despesa)
+    // Ou busca das despesas fixas + variáveis do planejamento
+    const metaDespesa = metaFaturamento * 0.7
+    const metaDespesaDiaria = metaDespesa / diasTrabalhados
 
     const ultimosLancamentos = await prisma.livroDiario.findMany({
       where: {

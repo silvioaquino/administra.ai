@@ -27,10 +27,12 @@ export async function GET(request: NextRequest) {
     if (dataInicio || dataFim) {
       where.dataVencimento = {}
       if (dataInicio) {
-        where.dataVencimento.gte = new Date(dataInicio)
+        const [year, month, day] = dataInicio.split('-').map(Number)
+        where.dataVencimento.gte = new Date(year, month - 1, day)
       }
       if (dataFim) {
-        where.dataVencimento.lte = new Date(dataFim)
+        const [year, month, day] = dataFim.split('-').map(Number)
+        where.dataVencimento.lte = new Date(year, month - 1, day, 23, 59, 59, 999)
       }
     }
 
@@ -116,10 +118,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Corrigir data para não usar UTC
+    const [yearVenc, monthVenc, dayVenc] = dataVencimento.split('-').map(Number)
+    const dataVencimentoDate = new Date(yearVenc, monthVenc - 1, dayVenc)
+
     const result = await prisma.$transaction(async (tx: any) => {
       const lancamento = await tx.livroDiario.create({
         data: {
-          data: new Date(dataVencimento),
+          data: dataVencimentoDate,
           conta: conta || "4.1.1 Despesas Operacionais",
           descricao: `Boleto: ${descricao}`,
           clienteFornecedor: clienteFornecedor || null,
@@ -128,7 +134,7 @@ export async function POST(request: NextRequest) {
           tipo: "DESPESA",
           userId: userId,
           statusBoleto: "PENDENTE",
-          dataVencimento: new Date(dataVencimento)
+          dataVencimento: dataVencimentoDate
         }
       })
 
@@ -136,7 +142,7 @@ export async function POST(request: NextRequest) {
         data: {
           descricao: descricao.trim(),
           valor,
-          dataVencimento: new Date(dataVencimento),
+          dataVencimento: dataVencimentoDate,
           clienteFornecedor: clienteFornecedor || null,
           conta: conta || null,
           userId,
@@ -196,13 +202,20 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    // Corrigir data se fornecida
+    let dataVencimentoDate: Date | undefined
+    if (dataVencimento) {
+      const [yearVenc, monthVenc, dayVenc] = dataVencimento.split('-').map(Number)
+      dataVencimentoDate = new Date(yearVenc, monthVenc - 1, dayVenc)
+    }
+
     const result = await prisma.$transaction(async (tx: any) => {
       const boleto = await tx.boleto.update({
         where: { id: parseInt(id.toString()) },
         data: {
           descricao: descricao || boletoExistente.descricao,
           valor: valor || boletoExistente.valor,
-          dataVencimento: dataVencimento ? new Date(dataVencimento) : boletoExistente.dataVencimento,
+          dataVencimento: dataVencimentoDate || boletoExistente.dataVencimento,
           clienteFornecedor: clienteFornecedor !== undefined ? clienteFornecedor : boletoExistente.clienteFornecedor,
           conta: conta !== undefined ? conta : boletoExistente.conta
         }
@@ -212,12 +225,12 @@ export async function PUT(request: NextRequest) {
         await tx.livroDiario.update({
           where: { id: boletoExistente.lancamento.id },
           data: {
-            data: dataVencimento ? new Date(dataVencimento) : boletoExistente.dataVencimento,
+            data: dataVencimentoDate || boletoExistente.dataVencimento,
             conta: conta || boletoExistente.conta || "4.1.1 Despesas Operacionais",
             descricao: `Boleto: ${descricao || boletoExistente.descricao}`,
             clienteFornecedor: clienteFornecedor !== undefined ? clienteFornecedor : boletoExistente.clienteFornecedor,
             saida: valor || boletoExistente.valor,
-            dataVencimento: dataVencimento ? new Date(dataVencimento) : boletoExistente.dataVencimento
+            dataVencimento: dataVencimentoDate || boletoExistente.dataVencimento
           }
         })
       }

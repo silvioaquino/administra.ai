@@ -1,18 +1,15 @@
 // src/app/(dashboard)/planejamento/page.tsx
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { 
-  Target, TrendingUp, DollarSign, Users, CreditCard,
+  Target, TrendingUp, DollarSign, Users,
   BarChart3, Settings, Percent, Calculator, Save, RefreshCw,
-  Sun, Moon, HelpCircle, Zap
+  Sun, Moon, HelpCircle
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Progress } from "@/components/ui/progress"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
 
@@ -52,6 +49,91 @@ interface Funcionario {
   salario: number
 }
 
+interface TaxasCartaoConfig {
+  distribuicaoVendas: { debito: number; credito: number; voucher: number }
+  distribuicaoMaquininhas: { infinitepay: number; stone: number; caixa: number }
+  taxas: {
+    debito: { infinitepay: number; stone: number; caixa: number }
+    credito: { infinitepay: number; stone: number; caixa: number }
+    voucher: number
+  }
+  aluguelMaquininhas: { stone1: number; stone2: number }
+  manutencao: number
+  simplesNacional: number
+}
+
+interface ResultadosDespesasVariaveis {
+  debitoMedia: number
+  creditoMedia: number
+  taxaMediaGeral: number
+  aluguelTotal: number
+  percentualAluguel: number
+  totalDespesasVariaveis: number
+}
+
+// Configuração padrão para taxas de cartão (fallback quando API falha)
+const TAXAS_CARTAO_DEFAULT: TaxasCartaoConfig = {
+  distribuicaoVendas: { debito: 40, credito: 50, voucher: 10 },
+  distribuicaoMaquininhas: { infinitepay: 50, stone: 30, caixa: 20 },
+  taxas: {
+    debito: { infinitepay: 1.37, stone: 2.34, caixa: 4.48 },
+    credito: { infinitepay: 3.15, stone: 6.44, caixa: 5.78 },
+    voucher: 7.0
+  },
+  aluguelMaquininhas: { stone1: 59.90, stone2: 19.90 },
+  manutencao: 1.0,
+  simplesNacional: 8.0
+}
+
+const calcularDespesasVariaveis = (config: TaxasCartaoConfig, faturamentoBase: number): ResultadosDespesasVariaveis => {
+  let debitoMedia = 0
+  for (const [maquina, percentual] of Object.entries(config.distribuicaoMaquininhas)) {
+    debitoMedia += config.taxas.debito[maquina as keyof typeof config.taxas.debito] * (percentual / 100)
+  }
+
+  let creditoMedia = 0
+  for (const [maquina, percentual] of Object.entries(config.distribuicaoMaquininhas)) {
+    creditoMedia += config.taxas.credito[maquina as keyof typeof config.taxas.credito] * (percentual / 100)
+  }
+
+  const percDebito = config.distribuicaoVendas.debito / 100
+  const percCredito = config.distribuicaoVendas.credito / 100
+  const percVoucher = config.distribuicaoVendas.voucher / 100
+  const taxaMediaGeral = (debitoMedia * percDebito) + (creditoMedia * percCredito) + (config.taxas.voucher * percVoucher)
+  const aluguelTotal = config.aluguelMaquininhas.stone1 + config.aluguelMaquininhas.stone2
+  const percentualAluguel = (aluguelTotal / faturamentoBase) * 100
+  const totalDespesasVariaveis = config.simplesNacional + taxaMediaGeral + config.manutencao + percentualAluguel
+
+  return {
+    debitoMedia,
+    creditoMedia,
+    taxaMediaGeral,
+    aluguelTotal,
+    percentualAluguel,
+    totalDespesasVariaveis
+  }
+}
+
+// Função auxiliar para fetch seguro com tratamento de erro
+async function safeFetch<T>(url: string, fallback: T): Promise<T> {
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      console.warn(`API ${url} retornou status ${response.status}, usando fallback`)
+      return fallback
+    }
+    const data = await response.json()
+    if (!data.success) {
+      console.warn(`API ${url} retornou success: false, usando fallback`)
+      return fallback
+    }
+    return data
+  } catch (error) {
+    console.warn(`Erro ao buscar ${url}:`, error, '- usando fallback')
+    return fallback
+  }
+}
+
 export default function PlanejamentoPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -71,19 +153,15 @@ export default function PlanejamentoPage() {
     cmvMaximo: 0
   })
 
-  useEffect(() => {
-    carregarDados()
-  }, [anoAtual])
-
-  async function carregarDados() {
+  const carregarDados = useCallback(() => {
+    async function load() {
     setLoading(true)
     try {
       // 1. Carregar metas mensais
       const metasResponse = await fetch(`/api/planejamento/metas?ano=${anoAtual}`)
       const metasData = await metasResponse.json()
-      if (metasData.success) {
-        setMetasMensais(metasData.metas || [])
-      }
+      const metasMensaisCarregadas: MetaMensal[] = metasData.success ? metasData.metas || [] : []
+      setMetasMensais(metasMensaisCarregadas)
 
       // 2. Carregar acompanhamento real
       const acompResponse = await fetch(`/api/planejamento/acompanhamento?ano=${anoAtual}`)
@@ -95,9 +173,8 @@ export default function PlanejamentoPage() {
       // 3. Carregar despesas fixas
       const fixasResponse = await fetch(`/api/planejamento/despesas-fixas?ano=${anoAtual}`)
       const fixasData = await fixasResponse.json()
-      if (fixasData.success && fixasData.dados) {
-        setDespesasFixas(fixasData.dados)
-      }
+      const despesasFixasCarregadas: DespesaFixa[] = fixasData.success && fixasData.dados ? fixasData.dados : []
+      setDespesasFixas(despesasFixasCarregadas)
 
       // 4. Carregar funcionários
       const funcResponse = await fetch(`/api/planejamento/funcionarios?ano=${anoAtual}`)
@@ -107,30 +184,30 @@ export default function PlanejamentoPage() {
       }
 
       // 5. Carregar despesas variáveis e calcular total
-      const variaveisResponse = await fetch(`/api/planejamento/despesas-variaveis?ano=${anoAtual}`)
-      const variaveisData = await variaveisResponse.json()
-      if (variaveisData.success && variaveisData.dados) {
-        const total = variaveisData.dados.reduce((sum: number, item: any) => sum + (item.percentual || 0), 0)
-        setDespesasVariaveisPct(total)
-      }
+      const taxasResponse = await fetch("/api/planejamento/taxas-cartao")
+      const taxasData = await taxasResponse.json()
+      const faturamentoBase = Number(localStorage.getItem("faturamentoBase")) || 30000
+      const despesasVariaveisCarregadas = calcularDespesasVariaveis(taxasData.config, faturamentoBase)
+      setDespesasVariaveisPct(despesasVariaveisCarregadas.totalDespesasVariaveis)
 
       // 6. Calcular resumo do mês atual
       const mesAtual = new Date().getMonth() + 1
-      const metaAtual = metasMensais.find(m => m.mes === mesAtual) || {
+      const metaAtual: MetaMensal = metasMensaisCarregadas.find(m => m.mes === mesAtual) || {
+        mes: mesAtual,
         metaDiariaAlmoco: 0,
         metaDiariaJanta: 0,
         diasTrabalhados: 26,
         lucroDesejado: 15
       }
-      
+
       const metaMensalAlmoco = metaAtual.metaDiariaAlmoco * metaAtual.diasTrabalhados
       const metaMensalJanta = metaAtual.metaDiariaJanta * metaAtual.diasTrabalhados
       const metaTotal = metaMensalAlmoco + metaMensalJanta
-      
+
       // Calcular Mark-Up e CMV
-      const totalFixas = despesasFixas.reduce((sum, d) => sum + d.valor, 0)
+      const totalFixas = despesasFixasCarregadas.reduce((sum, d) => sum + d.valor, 0)
       const pctFixas = metaTotal > 0 ? (totalFixas / metaTotal) * 100 : 0
-      const cmvCalculado = 100 - (pctFixas + despesasVariaveisPct + metaAtual.lucroDesejado)
+      const cmvCalculado = 100 - (pctFixas + despesasVariaveisCarregadas.totalDespesasVariaveis + metaAtual.lucroDesejado)
       const markUpCalculado = cmvCalculado > 0 ? 100 / cmvCalculado : 0
 
       setResumo({
@@ -147,7 +224,18 @@ export default function PlanejamentoPage() {
     } finally {
       setLoading(false)
     }
-  }
+    }
+
+    return load()
+  }, [anoAtual])
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      carregarDados()
+    }, 0)
+
+    return () => clearTimeout(timeoutId)
+  }, [carregarDados])
 
   async function sincronizarDadosReais() {
     try {
