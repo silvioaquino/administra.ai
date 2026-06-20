@@ -42,6 +42,8 @@ export interface DreItem {
   ah: number; // Análise Horizontal (%)
   isBold?: boolean;
   isSubtotal?: boolean;
+  isHeader?: boolean;
+  isCalcRow?: boolean;
 }
 
 export interface DreResponse {

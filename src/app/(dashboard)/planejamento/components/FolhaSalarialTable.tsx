@@ -1,7 +1,7 @@
 // src/app/(dashboard)/planejamento/components/FolhaSalarialTable.tsx
 "use client"
 
-import React, { useState, useEffect, Fragment } from "react"
+import React, { useState, useEffect, Fragment, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { formatCurrency } from "@/lib/utils"
@@ -23,6 +23,7 @@ interface FolhaSalarialTableProps {
   funcionarios: Funcionario[]
   onEdit: () => void
   onConfigProvisoes: () => void
+  onTotalsChange: (salariosTotal: number, provisoes: Array<{nome: string, valor: number}>) => void
 }
 
 // Configuração das provisões
@@ -88,7 +89,7 @@ const DEFAULT_PROVISOES_ATIVAS = {
   inss: true
 }
 
-export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: FolhaSalarialTableProps) {
+export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, onTotalsChange }: FolhaSalarialTableProps) {
   const [provisoesAtivas, setProvisoesAtivas] = useState(DEFAULT_PROVISOES_ATIVAS)
   const [provisoesFuncionarios, setProvisoesFuncionarios] = useState<ProvisaoFuncionario[]>([])
   const [loading, setLoading] = useState(true)
@@ -262,6 +263,33 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes }: 
 
   const totais = calcularTotais()
   const totalMensal = totais.totalSalarios + totais.totalDecimo + totais.totalFerias + totais.totalFgts + totais.totalInss + totais.totalInssPatronal
+
+  // Calcular provisões individuais (cada uma em linha separada)
+  const provisoesArray = useMemo(() => {
+    const arr: Array<{nome: string, valor: number}> = []
+    if (provisoesAtivas.decimo_terceiro) {
+      arr.push({ nome: "13º Salário", valor: totais.totalDecimo })
+    }
+    if (provisoesAtivas.ferias) {
+      arr.push({ nome: "Férias + 1/3", valor: totais.totalFerias })
+    }
+    if (provisoesAtivas.fgts) {
+      arr.push({ nome: "FGTS (8%)", valor: totais.totalFgts })
+    }
+    if (provisoesAtivas.inss_patronal) {
+      arr.push({ nome: "INSS Patronal (20%)", valor: totais.totalInssPatronal })
+    }
+    if (provisoesAtivas.inss) {
+      arr.push({ nome: "INSS", valor: totais.totalInss })
+    }
+    return arr
+  }, [totais.totalDecimo, totais.totalFerias, totais.totalFgts, totais.totalInssPatronal, totais.totalInss, provisoesAtivas])
+
+  // Notificar parent component sobre os totais (apenas quando houver mudança real)
+  const salariosMemo = useMemo(() => totais.totalSalarios, [totais.totalSalarios])
+  useEffect(() => {
+    onTotalsChange(salariosMemo, provisoesArray)
+  }, [salariosMemo, provisoesArray, onTotalsChange])
 
   const toggleRow = (funcionarioNome: string) => {
     setExpandedRow(expandedRow === funcionarioNome ? null : funcionarioNome)

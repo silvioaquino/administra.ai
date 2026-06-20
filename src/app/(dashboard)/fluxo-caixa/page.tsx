@@ -47,6 +47,15 @@ interface MetaMensal {
   diasUteis: number;
 }
 
+// Interface para nova categoria
+interface NovaCategoria {
+  nome: string;
+  nivel: number;
+  tipo: 'receita' | 'despesa';
+  isHeader?: boolean;
+  parentId?: string;
+}
+
 interface DreMensal {
   mes: number;
   nome: string;
@@ -67,90 +76,149 @@ interface ProdutoInsumo {
   valoresPorMes: Record<number, number>;
 }
 
-// Categorias do DRE (simplificadas - apenas CUSTOS COM PRODUTOS/INSUMOS)
+// Categorias do DRE
 const CATEGORIAS_DESPESAS = [
   // RECEITA
   { codigo: '3.1', nome: 'RECEITA / FATURAMENTO', grupo: 'RECEITA', isHeader: true, nivel: 0 },
-  { codigo: '3.1', nome: 'Receita de Vendas', grupo: 'RECEITA', nivel: 1 },
-  { codigo: '3.1.1', nome: 'Receita com Cash - Diaria', grupo: 'RECEITA_DETALHE', nivel: 2 },
-  { codigo: '3.1.2', nome: 'Receita com Cartão (Caixa)', grupo: 'RECEITA_DETALHE', nivel: 2 },
-  { codigo: '3.1.3', nome: 'Receita Ifood', grupo: 'RECEITA_DETALHE', nivel: 2 },
-  { codigo: '3.1.4', nome: 'Receita com Cartão - (Infinity Emp)', grupo: 'RECEITA_DETALHE', nivel: 2 },
-  { codigo: '3.1.5', nome: 'Receita com Cartão - (Infinity Sil)', grupo: 'RECEITA_DETALHE', nivel: 2 },
-  { codigo: '3.1.10', nome: 'Acerto', grupo: 'RECEITA_DETALHE', nivel: 2 },
+  { codigo: '3.1.1', nome: 'Receitas de Vendas', grupo: 'RECEITA', nivel: 1 },
+  { codigo: '3.1.2', nome: 'Vendas em Dinheiro', grupo: 'RECEITA_DETALHE', nivel: 2 },
+  { codigo: '3.1.3', nome: 'Maquineta Stone', grupo: 'RECEITA_DETALHE', nivel: 3 },
+  { codigo: '3.1.4', nome: 'Maquineta Caixa', grupo: 'RECEITA_DETALHE', nivel: 3 },
+  { codigo: '3.1.5', nome: 'Maquineta Infinity', grupo: 'RECEITA_DETALHE', nivel: 3 },
+  { codigo: '3.1.6', nome: 'Vendas em Cartão Débito', grupo: 'RECEITA_DETALHE', nivel: 2 },
+  { codigo: '3.1.7', nome: 'Maquineta Stone', grupo: 'RECEITA_DETALHE', nivel: 3 },
+  { codigo: '3.1.8', nome: 'Maquineta Caixa', grupo: 'RECEITA_DETALHE', nivel: 3 },
+  { codigo: '3.1.9', nome: 'Maquineta Infinity', grupo: 'RECEITA_DETALHE', nivel: 3 },
+  { codigo: '3.1.10', nome: 'Vendas em Cartão Crédito', grupo: 'RECEITA_DETALHE', nivel: 2 },
+  { codigo: '3.1.11', nome: 'Maquineta Stone', grupo: 'RECEITA_DETALHE', nivel: 3 },
+  { codigo: '3.1.12', nome: 'Maquineta Caixa', grupo: 'RECEITA_DETALHE', nivel: 3 },
+  { codigo: '3.1.13', nome: 'Maquineta Infinity', grupo: 'RECEITA_DETALHE', nivel: 3 },
+  { codigo: '3.1.14', nome: 'Vendas em Plataformas Digitais (Ifood/99)', grupo: 'RECEITA_DETALHE', nivel: 2 },
+  { codigo: '3.1.15', nome: 'Acertos', grupo: 'RECEITA_DETALHE', nivel: 2 },
 
   // CUSTOS VARIÁVEIS
   { codigo: '4.1', nome: 'DESPESAS/CUSTOS VARIÁVEIS', grupo: 'DESPESA', isHeader: true, nivel: 0 },
-  { codigo: '4.1.1', nome: 'Simples Federal', grupo: 'DESPESA_DETALHE', nivel: 1 },
+  { codigo: '4.1.1', nome: 'Simples Nacional', grupo: 'DESPESA_DETALHE', nivel: 1 },
   { codigo: '4.1.2', nome: 'Mercantil', grupo: 'DESPESA_DETALHE', nivel: 1 },
   { codigo: '4.1.3', nome: 'IPTU', grupo: 'DESPESA_DETALHE', nivel: 1 },
-  { codigo: '4.1.4', nome: 'FGTS', grupo: 'DESPESA_DETALHE', nivel: 1 },
-  { codigo: '4.1.5', nome: 'INSS', grupo: 'DESPESA_DETALHE', nivel: 1 },
-  { codigo: '4.1.6', nome: 'Parcelamento Imposto', grupo: 'DESPESA_DETALHE', nivel: 1 },
+  { codigo: '4.1.4', nome: 'Parcelamento Impostos', grupo: 'DESPESA_DETALHE', nivel: 1 },
+  { codigo: '4.1.5', nome: 'Imposto Bombeiros', grupo: 'DESPESA_DETALHE', nivel: 1 },
+  { codigo: '4.1.6', nome: 'Devoluções de Vendas', grupo: 'DESPESA_DETALHE', nivel: 1 },
+  { codigo: '4.1.7', nome: 'Abatimentos sobre Vendas', grupo: 'DESPESA_DETALHE', nivel: 1 },
 
-  // INSUMOS (única categoria de produtos)
-  { codigo: '4.2', nome: 'CUSTOS COM PRODUTOS/INSUMOS', grupo: 'DESPESA', isHeader: true, nivel: 0 },
+  // RECEITA LÍQUIDA
+  { codigo: '4.2', nome: 'RECEITA LÍQUIDA', grupo: 'CALCULO', isHeader: true, nivel: 0 },
 
-  { codigo: 'ACERTO_DESP', nome: 'ACERTO DESPESAS', grupo: 'DESPESA', isHeader: true, nivel: 0 },
+  // CUSTOS COM PRODUTOS/INSUMOS
+  { codigo: '4.3', nome: 'CUSTOS COM PRODUTOS/INSUMOS', grupo: 'DESPESA', isHeader: true, nivel: 0 },
+  { codigo: '4.3.1', nome: 'Produtos/Insumos', grupo: 'DESPESA_DETALHE', nivel: 1 },
+  { codigo: '4.3.2', nome: 'Acerto Despesas', grupo: 'DESPESA_DETALHE', nivel: 1 },
+
+  // LUCRO BRUTO
+  { codigo: '4.4', nome: 'LUCRO BRUTO', grupo: 'CALCULO', isHeader: true, nivel: 0 },
 
   // DESPESAS FIXAS
   { codigo: '5.1', nome: 'DESPESAS FIXAS', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
+
+  // Tarifas Bancárias
   { codigo: '5.1.1', nome: 'Tarifas Bancárias', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.1.2', nome: 'Aluguel e tarifas Operadora Cartão', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.1.5', nome: 'Emprestimos', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.1.6', nome: 'Imposto Bombeiros', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+
+  // Aluguel de Maquinetas
+  { codigo: '5.1.2', nome: 'Aluguel de Maquinetas', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+
+  // Empréstimos
+  { codigo: '5.1.3', nome: 'Empréstimos', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+
+  // Despesas Administrativas
   { codigo: '5.2', nome: 'Despesas Administrativas', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
-  { codigo: '5.2.1', nome: 'Telefones', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.2', nome: 'Celular', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.3', nome: 'Energia Elétrica (CELPE)', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.4', nome: 'Aluguel', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.5', nome: 'Água(COMPESA)', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.6', nome: 'Gasolina / Estacionamento / Táxi', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.7', nome: 'Taxa Antecipação Ifood', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.9', nome: 'Carro', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.10', nome: 'Outras despesas administrativas', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.11', nome: 'Internet', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.12', nome: 'IPVA', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.13', nome: 'Botijão de gás', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.2.1', nome: 'Aluguel Imóvel', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.2.2', nome: 'Energia (Celpe)', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.2.3', nome: 'Água (Compesa)', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.2.4', nome: 'Internet', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.2.5', nome: 'Telefone', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.2.6', nome: 'Celular', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.2.7', nome: 'Gasolina/Estacionamento/Táxi', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.2.8', nome: 'Financiamento Carro', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.2.9', nome: 'IPVA', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.2.10', nome: 'Botijão de Gás', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.2.11', nome: 'Outras Despesas', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.2.12', nome: 'Acertos', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+
+  // Despesas com Pessoal
   { codigo: '5.3', nome: 'Despesas com Pessoal', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
-  { codigo: '5.3.1', nome: 'Salário de Funcionários', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.3.2', nome: 'Bolsa de Estágio', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.3.3', nome: 'Vale Transporte (Passagem)', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.3.4', nome: 'Rescisão', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.3.5', nome: 'Pro-Labores', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.3.6', nome: 'Adiantamento Salarios', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.3.7', nome: 'Outras despesas com pessoal', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.3.1', nome: 'Salários de Funcionários', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.3.2', nome: 'Adiantamento de Salários', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.3.3', nome: 'Pro-Labore', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.3.4', nome: 'Bolsa de Estágio', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.3.5', nome: 'Vale Transporte', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.3.6', nome: 'Rescisão', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.3.7', nome: 'Outras Despesas', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
   { codigo: '5.3.8', nome: 'Ferias Funcionarios', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.4', nome: 'Despesas com Serviços de Terceiros', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
-  { codigo: '5.4.1', nome: 'Contador', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.4.2', nome: 'TI', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.4.3', nome: 'Outras Despesas', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.5', nome: 'Despesas com Materiais e Equipamentos', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
-  { codigo: '5.5.1', nome: 'Manutenção Equipamentos Informática', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.5.2', nome: 'Softwares', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.5.3', nome: 'Materiais de Expediente/Manutenção/Limpeza', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.5.4', nome: 'Manutenção Veículo', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.6', nome: 'OUTROS FORNECEDORES', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
-  { codigo: '5.6.1', nome: 'Karne Keijo', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.6.2', nome: 'Natto', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.6.3', nome: 'Coca-Cola', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
 
-  { codigo: 'LUCRO_ANTE', nome: 'LUCRO OPERACIONAL ANTES DOS INVESTIMENTOS', grupo: 'CALCULO', isHeader: true, nivel: 0 },
+  // PROVISÕES
+  { codigo: '5.4', nome: 'PROVISÕES', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
+  { codigo: '5.4.1', nome: 'Férias de Funcionários', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.4.2', nome: '1/3 Férias', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.4.3', nome: 'FGTS', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.4.4', nome: 'INSS', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.4.5', nome: '13º Salário', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.4.6', nome: 'INSS Patronal', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
 
-  { codigo: '6.1', nome: 'INVESTIMENTOS', grupo: 'INVESTIMENTO', isHeader: true, nivel: 0 },
-  { codigo: '6.1.1', nome: 'Investimentos em Marketing', grupo: 'INVESTIMENTO_DETALHE', nivel: 1 },
-  { codigo: '6.2', nome: 'Investimentos em Bens Materiais', grupo: 'INVESTIMENTO_DETALHE', nivel: 1 },
-  { codigo: '6.3', nome: 'Investimentos em Desenvolvimento Empresarial', grupo: 'INVESTIMENTO_DETALHE', nivel: 1 },
-  { codigo: '6.4', nome: 'Outros', grupo: 'INVESTIMENTO_DETALHE', nivel: 1 },
+  // Despesas com Serviços de Terceiros
+  { codigo: '5.5', nome: 'Despesas com Serviços de Terceiros', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
+  { codigo: '5.5.1', nome: 'Contador', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.5.2', nome: 'TI', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.5.3', nome: 'Outras Despesas', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
 
-  { codigo: 'DESP_ANT', nome: 'DESPESA OPERACIONAL TOTAL', grupo: 'CALCULO', isHeader: true, nivel: 0 },
+  // Despesas com Materiais e Equipamentos
+  { codigo: '5.6', nome: 'Despesas com Materiais e Equipamentos', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
+  { codigo: '5.6.1', nome: 'Manutenção de Equipamentos', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.6.2', nome: 'Softwares', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.6.3', nome: 'Materiais de Expediente/Manutenção/Limpeza', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.6.4', nome: 'Manutenção de Veículos', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
 
-  { codigo: 'LUCRO_OP', nome: 'LUCRO OPERACIONAL', grupo: 'CALCULO', isHeader: true, nivel: 0 },
+  // Fornecedores
+  { codigo: '5.7', nome: 'Fornecedores', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
+  { codigo: '5.7.1', nome: 'Karne Keijo', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.7.2', nome: 'Natto', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.7.3', nome: 'Coca-Cola', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '5.7.4', nome: 'Outros', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
 
+  // LUCRO OPERACIONAL ANTES DOS INVESTIMENTOS
+  { codigo: '6.1', nome: 'LUCRO OPERACIONAL ANTES DOS INVESTIMENTOS', grupo: 'CALCULO', isHeader: true, nivel: 0 },
+
+  // INVESTIMENTOS
+  { codigo: '6.2', nome: 'INVESTIMENTOS', grupo: 'INVESTIMENTO', isHeader: true, nivel: 0 },
+  { codigo: '6.2.1', nome: 'Investimento em Marketing', grupo: 'INVESTIMENTO_DETALHE', nivel: 1 },
+  { codigo: '6.2.2', nome: 'Investimento em Bens Materiais', grupo: 'INVESTIMENTO_DETALHE', nivel: 1 },
+  { codigo: '6.2.3', nome: 'Investimento em Desenvolvimento Empresarial', grupo: 'INVESTIMENTO_DETALHE', nivel: 1 },
+  { codigo: '6.2.4', nome: 'Outros', grupo: 'INVESTIMENTO_DETALHE', nivel: 1 },
+
+  // TOTAL DESPESA OPERACIONAL
+  { codigo: '6.3', nome: 'TOTAL DESPESA OPERACIONAL', grupo: 'CALCULO', isHeader: true, nivel: 0 },
+
+  // LUCRO OPERACIONAL
+  { codigo: '6.4', nome: 'LUCRO OPERACIONAL', grupo: 'CALCULO', isHeader: true, nivel: 0 },
+
+  // ENTRADAS E SAÍDAS NÃO OPERACIONAIS
   { codigo: '7.1', nome: 'ENTRADAS E SAÍDAS NÃO OPERACIONAIS', grupo: 'NAO_OPERACIONAL', isHeader: true, nivel: 0 },
   { codigo: '7.2', nome: 'Saídas não operacionais', grupo: 'NAO_OPERACIONAL_DETALHE', nivel: 1 },
 
-  { codigo: 'RESULTADO', nome: 'RESULTADO LÍQUIDO', grupo: 'CALCULO', isHeader: true, nivel: 0 },
+  // LUCRO ANTES DOS JUROS E IMPOSTOS
+  { codigo: '8.1', nome: 'LUCRO ANTES DOS JUROS E IMPOSTOS', grupo: 'CALCULO', isHeader: true, nivel: 0 },
+
+  // Despesas Financeiras
+  { codigo: '8.2', nome: 'Despesas Financeiras', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+
+  // LUCRO ANTES DOS IMPOSTOS
+  { codigo: '9.1', nome: 'LUCRO ANTES DOS IMPOSTOS', grupo: 'CALCULO', isHeader: true, nivel: 0 },
+
+  // CSLL e IR
+  { codigo: '9.2', nome: 'Despesa Contribuição Social sobre Lucros (CSLL)', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+  { codigo: '9.3', nome: 'Despesa com Imposto de Renda', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
+
+  // LUCRO LÍQUIDO
+  { codigo: 'RESULTADO', nome: 'LUCRO LÍQUIDO', grupo: 'CALCULO', isHeader: true, nivel: 0 },
 ];
 
 // Ícone Percent não existe no lucide-react
@@ -164,6 +232,8 @@ export default function FluxoCaixaPage() {
   const [mesAtual, setMesAtual] = useState(new Date().getMonth() + 1);
   const [dreData, setDREData] = useState<DreItem[]>([]);
   const [editing, setEditing] = useState<EditingState | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [novaCat, setNovaCat] = useState<NovaCategoria>({ nome: '', nivel: 1, tipo: 'despesa', isHeader: false });
 
   const [meta, setMeta] = useState<MetaMensal | null>(null);
   const [dreMensal, setDreMensal] = useState<DreMensal[]>([]);
@@ -312,6 +382,27 @@ export default function FluxoCaixaPage() {
     link.click();
   };
 
+  // Salvar nova categoria
+  const salvarCategoria = () => {
+    if (!novaCat.nome.trim()) return;
+
+    const novaItem: DreItem = {
+      id: `nova-${Date.now()}`,
+      nome: novaCat.nome,
+      nivel: novaCat.nivel,
+      tipo: novaCat.tipo,
+      previsao: 0,
+      meses: meses.reduce((acc) => ({ ...acc, janeiro: 0, fevereiro: 0, marco: 0, abril: 0, maio: 0, junho: 0, julho: 0, agosto: 0, setembro: 0, outubro: 0, novembro: 0, dezembro: 0 }), {} as DreMeses),
+      av: 0,
+      ah: 0,
+      isHeader: novaCat.isHeader,
+    };
+
+    setDREData([...dreData, novaItem]);
+    setShowModal(false);
+    setNovaCat({ nome: '', nivel: 1, tipo: 'despesa', isHeader: false, parentId: undefined });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -349,12 +440,20 @@ export default function FluxoCaixaPage() {
             Exportar
           </Button>
           <Button
+            variant="outline"
+            onClick={() => setShowModal(true)}
+            className="rounded-full border-gray-200"
+          >
+            <Settings className="mr-2 h-4 w-4" />
+            Adicionar Categoria
+          </Button>
+          {/*<Button
             onClick={() => router.push('/fluxo-caixa/configuracoes')}
             className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full"
           >
             <Settings className="mr-2 h-4 w-4" />
             Configurar Metas
-          </Button>
+          </Button>*/}
         </div>
       </div>
 
@@ -448,17 +547,17 @@ export default function FluxoCaixaPage() {
 
           <ScrollArea className="h-[700px]">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+              <thead className="bg-emerald-200 border-b border-gray-200 sticky top-0 z-10">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-[280px]">DESPESAS</th>
-                  <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">PREVISÃO</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-800 uppercase w-[280px]">DESPESAS</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase">PREVISÃO</th>
                   {meses.map((mes, idx) => (
-                    <th key={idx} className={`px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase ${idx === mesAtual - 1 ? 'bg-[#de4838]/10 text-[#de4838]' : ''}`}>
+                    <th key={idx} className={`px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase ${idx === mesAtual - 1 ? 'bg-red-200' : ''}`}>
                       {mes.substring(0, 3)}
                     </th>
                   ))}
-                  <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">A.V.%</th>
-                  <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase">A.H.%</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase">A.V.%</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase">A.H.%</th>
                 </tr>
               </thead>
               <tbody>
@@ -474,19 +573,27 @@ export default function FluxoCaixaPage() {
                 ) : (
                   dreData.map((item) => {
                     const isHeader = item.nivel === 0 && (item.tipo === 'receita' || item.tipo === 'despesa');
+                    const isCategoryHeader = item.isHeader === true;
+                    const isCalcRow = item.isCalcRow === true;
                     const isSubtotal = item.isSubtotal;
                     const isTotal = item.tipo === 'total';
 
                     // Cores baseadas no tipo
                     const rowClass = isTotal
                       ? 'bg-gray-900 text-white border-b border-gray-200'
-                      : isSubtotal
-                        ? 'bg-blue-50 font-semibold border-b border-gray-200 hover:bg-blue-100'
-                        : item.tipo === 'receita'
-                          ? 'bg-green-50/50 border-b border-gray-100 hover:bg-gray-100'
-                          : item.tipo === 'despesa'
-                            ? 'bg-red-50/50 border-b border-gray-100 hover:bg-gray-100'
-                            : 'border-b border-gray-100 hover:bg-gray-100';
+                      : isCalcRow
+                        ? 'bg-yellow-100 border-b border-gray-200 hover:bg-yellow-200'
+                        : isSubtotal
+                          ? 'bg-blue-50 font-semibold border-b border-gray-200 hover:bg-blue-100'
+                          : isHeader
+                            ? item.tipo === 'receita'
+                              ? 'bg-emerald-200 border-b border-gray-200 hover:bg-emerald-300'
+                              : 'bg-blue-200 border-b border-gray-200 hover:bg-blue-300'
+                            : item.tipo === 'receita'
+                              ? 'bg-green-50/50 border-b border-gray-100 hover:bg-gray-100'
+                              : item.tipo === 'despesa'
+                                ? 'bg-red-50/50 border-b border-gray-100 hover:bg-gray-100'
+                                : 'border-b border-gray-100 hover:bg-gray-100';
 
                     // Handler para edição
                     const handleDoubleClick = (id: string) => {
@@ -502,11 +609,11 @@ export default function FluxoCaixaPage() {
                     return (
                       <tr key={item.id} className={`${rowClass} transition-colors cursor-pointer`}>
                         <td className="px-4 py-2 text-sm">
-                          <span className={isHeader || isSubtotal ? 'font-semibold' : 'font-medium'}>
+                          <span className={isHeader || isCategoryHeader || isSubtotal ? 'font-bold' : 'font-medium'}>
                             {item.nome}
                           </span>
                         </td>
-                        <td className="px-2 py-2 text-sm text-center">
+                        <td className={`px-2 py-2 text-sm text-center ${isCalcRow ? 'font-semibold' : ''}`}>
                           {isTotal ? (
                             <span className="font-bold">R$ 0,00</span>
                           ) : editing?.itemId === item.id ? (
@@ -521,7 +628,7 @@ export default function FluxoCaixaPage() {
                           ) : (
                             <span
                               onDoubleClick={() => handleDoubleClick(item.id)}
-                              className="cursor-pointer hover:bg-gray-200/50 rounded px-1"
+                              className={`cursor-pointer hover:bg-gray-200/50 rounded px-1 ${isCalcRow ? 'font-semibold' : ''}`}
                             >
                               {formatCurrency(item.previsao)}
                             </span>
@@ -544,9 +651,9 @@ export default function FluxoCaixaPage() {
                           const isMesAtual = idx === mesAtual - 1;
 
                           return (
-                            <td key={idx} className={`px-2 py-2 text-sm text-center ${isMesAtual ? 'bg-red-50' : ''}`}>
+                            <td key={idx} className={`px-2 py-2 text-sm text-center min-w-[120px] ${isMesAtual ? 'bg-red-200 text-gray-800' : ''} ${isCalcRow ? 'font-semibold' : ''}`}>
                               {isTotal ? (
-                                <span className="font-bold text-white">R$ 0,00</span>
+                                <span className={`font-bold ${isMesAtual ? 'text-gray-800' : 'text-white'}`}>R$ 0,00</span>
                               ) : hideValues ? (
                                 <span>••••••</span>
                               ) : (
@@ -588,7 +695,92 @@ export default function FluxoCaixaPage() {
             </div>
           </div>
         </div>
-      </div>
+
+      {/* Modal Adicionar Categoria */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h3 className="text-lg font-bold mb-4">Adicionar Categoria/Sub-Categoria</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Nome</label>
+                <Input
+                  value={novaCat.nome}
+                  onChange={(e) => setNovaCat({ ...novaCat, nome: e.target.value })}
+                  placeholder="Digite o nome..."
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Nível</label>
+                <Select
+                  value={novaCat.nivel.toString()}
+                  onValueChange={(v) => v && setNovaCat({ ...novaCat, nivel: parseInt(v) })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o nível" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Nível 0 (Header)</SelectItem>
+                    <SelectItem value="1">Nível 1 (Categoria)</SelectItem>
+                    <SelectItem value="2">Nível 2 (Sub-Categoria)</SelectItem>
+                    <SelectItem value="3">Nível 3 (Item)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Tipo</label>
+                <Select
+                  value={novaCat.tipo}
+                  onValueChange={(v) => v && setNovaCat({ ...novaCat, tipo: v as 'receita' | 'despesa' })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="receita">Receita</SelectItem>
+                    <SelectItem value="despesa">Despesa</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Categoria Pai (opcional)</label>
+                <Select
+                  value={novaCat.parentId || ''}
+                  onValueChange={(v) => setNovaCat({ ...novaCat, parentId: v || undefined })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione uma categoria pai" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dreData.filter(item => item.nivel === 0 || item.isHeader).map((item) => (
+                      <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isHeader"
+                  checked={novaCat.isHeader || false}
+                  onChange={(e) => setNovaCat({ ...novaCat, isHeader: e.target.checked })}
+                />
+                <label htmlFor="isHeader" className="text-sm">É um header (categoria)</label>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-6">
+              <Button variant="outline" onClick={() => setShowModal(false)} className="flex-1">
+                Cancelar
+              </Button>
+              <Button onClick={salvarCategoria} className="flex-1 bg-[#de4838] hover:bg-[#c73d2e]">
+                Salvar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
     </div>
   );
 }

@@ -10,16 +10,26 @@ interface DespesaFixa {
   valor: number
 }
 
+interface ProvisaoItem {
+  nome: string
+  valor: number
+}
+
 interface DespesasFixasTableProps {
   despesas: DespesaFixa[]
   percentual: number
   title: string
   onEdit: () => void
+  salariosTotal?: number
+  provisoes?: ProvisaoItem[]
 }
 
-export function DespesasFixasTable({ despesas, percentual, title, onEdit }: DespesasFixasTableProps) {
+export function DespesasFixasTable({ despesas, percentual, title, onEdit, salariosTotal = 0, provisoes = [] }: DespesasFixasTableProps) {
   const totalReal = despesas.reduce((sum, d) => sum + d.valor, 0)
-  const totalRateado = totalReal * percentual
+  const provisoesTotal = provisoes.reduce((sum, p) => sum + p.valor, 0)
+  const folhaTotal = salariosTotal + provisoesTotal
+  const totalComFolha = totalReal + folhaTotal
+  const totalRateado = totalComFolha * percentual
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden h-full">
@@ -62,7 +72,29 @@ export function DespesasFixasTable({ despesas, percentual, title, onEdit }: Desp
                     <td className="px-4 py-3 text-gray-700">{desp.nome}</td>
                     <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(desp.valor)}</td>
                     <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(valorRateado)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-gray-500">{pctDaFatia.toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-right font-mono text-gray-500">{pctDaFatia.toFixed(2)}%</td>
+                  </tr>
+                )
+              })}
+              {/* Linha de salários */}
+              {salariosTotal > 0 && (
+                <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3 text-gray-700 font-medium">Salários Funcionários</td>
+                  <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(salariosTotal)}</td>
+                  <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(salariosTotal * percentual)}</td>
+                  <td className="px-4 py-3 text-right font-mono text-gray-500">{((salariosTotal / totalComFolha) * 100).toFixed(2)}%</td>
+                </tr>
+              )}
+              {/* Cada provisão em linha separada */}
+              {provisoes.map((prov, idx) => {
+                const valorRateado = prov.valor * percentual
+                const pctDaFatia = totalComFolha > 0 ? (prov.valor / totalComFolha) * 100 : 0
+                return (
+                  <tr key={`prov-${idx}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 text-gray-700 font-medium pl-6">{prov.nome}</td>
+                    <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(prov.valor)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(valorRateado)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-gray-500">{pctDaFatia.toFixed(2)}%</td>
                   </tr>
                 )
               })}
@@ -70,7 +102,7 @@ export function DespesasFixasTable({ despesas, percentual, title, onEdit }: Desp
             <tfoot className="border-t border-gray-200 bg-gray-50">
               <tr className="font-semibold">
                 <td className="px-4 py-3 text-gray-800">TOTAL</td>
-                <td className="px-4 py-3 text-right text-gray-800">{formatCurrency(totalReal)}</td>
+                <td className="px-4 py-3 text-right text-gray-800">{formatCurrency(totalComFolha)}</td>
                 <td className="px-4 py-3 text-right text-[#de4838] font-bold">{formatCurrency(totalRateado)}</td>
                 <td className="px-4 py-3 text-right text-[#de4838] font-bold">100%</td>
               </tr>

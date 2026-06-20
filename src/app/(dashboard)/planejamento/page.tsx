@@ -152,6 +152,13 @@ export default function PlanejamentoPage() {
     markUp: 0,
     cmvMaximo: 0
   })
+  const [salariosTotal, setSalariosTotal] = useState(0)
+  const [provisoesDetalhadas, setProvisoesDetalhadas] = useState<Array<{nome: string, valor: number}>>([])
+
+  const handleTotalsChange = (salarios: number, provisoes: Array<{nome: string, valor: number}>) => {
+    setSalariosTotal(salarios)
+    setProvisoesDetalhadas(provisoes)
+  }
 
   const carregarDados = useCallback(() => {
     async function load() {
@@ -181,7 +188,14 @@ export default function PlanejamentoPage() {
       const funcData = await funcResponse.json()
       if (funcData.success && funcData.dados) {
         setFuncionarios(funcData.dados)
+        // Calcular total de salários
+        const totalSalarios = funcData.dados.reduce((sum: number, f: Funcionario) => sum + (f.salario || 0), 0)
+        setSalariosTotal(totalSalarios)
       }
+
+      // 4.5. Carregar provisões (buscar dados, mas os totais são calculados pelo FolhaSalarialTable)
+      const provisoesResponse = await fetch(`/api/planejamento/provisoes-funcionarios?ano=${anoAtual}`)
+      // Os valores de provisões são calculados dinamicamente pelo componente FolhaSalarialTable
 
       // 5. Carregar despesas variáveis e calcular total
       const taxasResponse = await fetch("/api/planejamento/taxas-cartao")
@@ -429,11 +443,13 @@ export default function PlanejamentoPage() {
           {/* Conteúdo do Almoço */}
           {activeTab === "almoco" && (
             <div className="grid gap-6 lg:grid-cols-2">
-              <DespesasFixasTable 
+              <DespesasFixasTable
                 despesas={despesasFixas}
                 percentual={0.73}
                 title="Despesas Fixas - Almoço (73%)"
                 onEdit={() => navegarPara("/planejamento/editar/despesas-fixas")}
+                salariosTotal={salariosTotal}
+                provisoes={provisoesDetalhadas}
               />
               <div className="space-y-6">
                 <DespesasVariaveisTable 
@@ -456,11 +472,13 @@ export default function PlanejamentoPage() {
           {/* Conteúdo da Janta */}
           {activeTab === "janta" && (
             <div className="grid gap-6 lg:grid-cols-2">
-              <DespesasFixasTable 
+              <DespesasFixasTable
                 despesas={despesasFixas}
                 percentual={0.27}
                 title="Despesas Fixas - Janta (27%)"
                 onEdit={() => navegarPara("/planejamento/editar/despesas-fixas")}
+                salariosTotal={salariosTotal}
+                provisoes={provisoesDetalhadas}
               />
               <div className="space-y-6">
                 <DespesasVariaveisTable 
@@ -546,10 +564,11 @@ export default function PlanejamentoPage() {
               </div>
             </div>
             <div className="p-0">
-              <FolhaSalarialTable 
+              <FolhaSalarialTable
                 funcionarios={funcionarios}
                 onEdit={() => navegarPara("/planejamento/editar/funcionarios")}
                 onConfigProvisoes={() => navegarPara("/planejamento/editar/provisoes")}
+                onTotalsChange={handleTotalsChange}
               />
             </div>
           </div>
