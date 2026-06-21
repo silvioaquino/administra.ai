@@ -698,8 +698,8 @@ export default function FluxoCaixaPage() {
 
       {/* Modal Adicionar Categoria */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg p-6 w-96">
+        <div className="fixed inset-0 z-[50] flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
             <h3 className="text-lg font-bold mb-4">Adicionar Categoria/Sub-Categoria</h3>
             <div className="space-y-4">
               <div>
@@ -720,11 +720,11 @@ export default function FluxoCaixaPage() {
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione o nível" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">Nível 0 (Header)</SelectItem>
-                    <SelectItem value="1">Nível 1 (Categoria)</SelectItem>
-                    <SelectItem value="2">Nível 2 (Sub-Categoria)</SelectItem>
-                    <SelectItem value="3">Nível 3 (Item)</SelectItem>
+                  <SelectContent className="bg-white border rounded-md shadow-lg z-[50]">
+                    <SelectItem value="0" className="hover:bg-gray-100">Nível 0 (Header)</SelectItem>
+                    <SelectItem value="1" className="hover:bg-gray-100">Nível 1 (Categoria)</SelectItem>
+                    <SelectItem value="2" className="hover:bg-gray-100">Nível 2 (Sub-Categoria)</SelectItem>
+                    <SelectItem value="3" className="hover:bg-gray-100">Nível 3 (Item)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -737,9 +737,9 @@ export default function FluxoCaixaPage() {
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="receita">Receita</SelectItem>
-                    <SelectItem value="despesa">Despesa</SelectItem>
+                  <SelectContent className="bg-white border rounded-md shadow-lg z-[200]">
+                    <SelectItem value="receita" className="hover:bg-gray-100">Receita</SelectItem>
+                    <SelectItem value="despesa" className="hover:bg-gray-100">Despesa</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -752,14 +752,14 @@ export default function FluxoCaixaPage() {
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione uma categoria pai" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border rounded-md shadow-lg z-[200]">
                     {dreData.filter(item => item.nivel === 0 || item.isHeader).map((item) => (
-                      <SelectItem key={item.id} value={item.id}>{item.nome}</SelectItem>
+                      <SelectItem key={item.id} value={item.id} className="hover:bg-gray-100">{item.nome}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center gap-2">
+              {/*<div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="isHeader"
@@ -767,7 +767,7 @@ export default function FluxoCaixaPage() {
                   onChange={(e) => setNovaCat({ ...novaCat, isHeader: e.target.checked })}
                 />
                 <label htmlFor="isHeader" className="text-sm">É um header (categoria)</label>
-              </div>
+              </div>*/}
             </div>
             <div className="flex gap-2 mt-6">
               <Button variant="outline" onClick={() => setShowModal(false)} className="flex-1">
