@@ -18,6 +18,7 @@ import {
   Percent,
   Download,
   Filter,
+  Plus,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
 import { DreItem, DreResponse, DreMeses } from '@/types/dre';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 // Interface para edição
 interface EditingState {
@@ -50,6 +59,7 @@ interface MetaMensal {
 // Interface para nova categoria
 interface NovaCategoria {
   nome: string;
+  codigo?: string;
   nivel: number;
   tipo: 'receita' | 'despesa';
   isHeader?: boolean;
@@ -383,23 +393,38 @@ export default function FluxoCaixaPage() {
   };
 
   // Salvar nova categoria
-  const salvarCategoria = () => {
+  const salvarCategoria = async () => {
     if (!novaCat.nome.trim()) return;
 
-    const novaItem: DreItem = {
-      id: `nova-${Date.now()}`,
-      nome: novaCat.nome,
-      nivel: novaCat.nivel,
-      tipo: novaCat.tipo,
-      previsao: 0,
-      meses: meses.reduce((acc) => ({ ...acc, janeiro: 0, fevereiro: 0, marco: 0, abril: 0, maio: 0, junho: 0, julho: 0, agosto: 0, setembro: 0, outubro: 0, novembro: 0, dezembro: 0 }), {} as DreMeses),
-      av: 0,
-      ah: 0,
-      isHeader: novaCat.isHeader,
-    };
+    try {
+      const response = await fetch('/api/categorias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          codigo: novaCat.codigo || `Nova-${Date.now()}`,
+          nome: novaCat.nome,
+          nivel: novaCat.nivel,
+          tipo: novaCat.tipo,
+          isHeader: novaCat.isHeader,
+        }),
+      });
 
-    setDREData([...dreData, novaItem]);
-    setShowModal(false);
+      if (response.ok) {
+        alert('Categoria adicionada com sucesso!');
+        setShowModal(false);
+        setNovaCat({ nome: '', nivel: 1, tipo: 'despesa', isHeader: false, parentId: undefined });
+        // Recarregar dados para refletir a nova categoria
+        carregarDados();
+      } else {
+        alert('Erro ao salvar categoria');
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao salvar categoria');
+    }
+  };
+
+  const resetForm = () => {
     setNovaCat({ nome: '', nivel: 1, tipo: 'despesa', isHeader: false, parentId: undefined });
   };
 
@@ -441,10 +466,10 @@ export default function FluxoCaixaPage() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => setShowModal(true)}
-            className="rounded-full border-gray-200"
+            onClick={() => { resetForm(); setShowModal(true); }}
+            className="rounded-full bg-[#de4838] hover:bg-[#c73d2e] text-white px-5"
           >
-            <Settings className="mr-2 h-4 w-4" />
+            <Plus className="mr-2 h-4 w-4" />
             Adicionar Categoria
           </Button>
           {/*<Button
@@ -532,7 +557,7 @@ export default function FluxoCaixaPage() {
 
         {/* Tabela DRE Interativa - Nova estrutura */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-white-150 p-4 border-b border-gray-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-[#de4838]" />
@@ -637,15 +662,15 @@ export default function FluxoCaixaPage() {
                         {meses.map((_, idx) => {
                           const mesKey = idx === 0 ? 'janeiro' :
                             idx === 1 ? 'fevereiro' :
-                            idx === 2 ? 'marco' :
-                            idx === 3 ? 'abril' :
-                            idx === 4 ? 'maio' :
-                            idx === 5 ? 'junho' :
-                            idx === 6 ? 'julho' :
-                            idx === 7 ? 'agosto' :
-                            idx === 8 ? 'setembro' :
-                            idx === 9 ? 'outubro' :
-                            idx === 10 ? 'novembro' : 'dezembro';
+                              idx === 2 ? 'marco' :
+                                idx === 3 ? 'abril' :
+                                  idx === 4 ? 'maio' :
+                                    idx === 5 ? 'junho' :
+                                      idx === 6 ? 'julho' :
+                                        idx === 7 ? 'agosto' :
+                                          idx === 8 ? 'setembro' :
+                                            idx === 9 ? 'outubro' :
+                                              idx === 10 ? 'novembro' : 'dezembro';
 
                           const valor = item.meses[mesKey as keyof DreMeses] || 0;
                           const isMesAtual = idx === mesAtual - 1;
@@ -696,91 +721,117 @@ export default function FluxoCaixaPage() {
           </div>
         </div>
 
-      {/* Modal Adicionar Categoria */}
-      {showModal && (
-        <div className="fixed inset-0 z-[50] flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
-            <h3 className="text-lg font-bold mb-4">Adicionar Categoria/Sub-Categoria</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Nome</label>
-                <Input
-                  value={novaCat.nome}
-                  onChange={(e) => setNovaCat({ ...novaCat, nome: e.target.value })}
-                  placeholder="Digite o nome..."
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Nível</label>
-                <Select
-                  value={novaCat.nivel.toString()}
-                  onValueChange={(v) => v && setNovaCat({ ...novaCat, nivel: parseInt(v) })}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione o nível" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border rounded-md shadow-lg z-[50]">
-                    <SelectItem value="0" className="hover:bg-gray-100">Nível 0 (Header)</SelectItem>
-                    <SelectItem value="1" className="hover:bg-gray-100">Nível 1 (Categoria)</SelectItem>
-                    <SelectItem value="2" className="hover:bg-gray-100">Nível 2 (Sub-Categoria)</SelectItem>
-                    <SelectItem value="3" className="hover:bg-gray-100">Nível 3 (Item)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Tipo</label>
-                <Select
-                  value={novaCat.tipo}
-                  onValueChange={(v) => v && setNovaCat({ ...novaCat, tipo: v as 'receita' | 'despesa' })}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border rounded-md shadow-lg z-[200]">
-                    <SelectItem value="receita" className="hover:bg-gray-100">Receita</SelectItem>
-                    <SelectItem value="despesa" className="hover:bg-gray-100">Despesa</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Categoria Pai (opcional)</label>
-                <Select
-                  value={novaCat.parentId || ''}
-                  onValueChange={(v) => setNovaCat({ ...novaCat, parentId: v || undefined })}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione uma categoria pai" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border rounded-md shadow-lg z-[200]">
-                    {dreData.filter(item => item.nivel === 0 || item.isHeader).map((item) => (
-                      <SelectItem key={item.id} value={item.id} className="hover:bg-gray-100">{item.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {/*<div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isHeader"
-                  checked={novaCat.isHeader || false}
-                  onChange={(e) => setNovaCat({ ...novaCat, isHeader: e.target.checked })}
-                />
-                <label htmlFor="isHeader" className="text-sm">É um header (categoria)</label>
-              </div>*/}
+        {/* Modal Adicionar Categoria - Mesmo layout do Livro Diário */}
+        <Dialog open={showModal} onOpenChange={setShowModal}>
+          <DialogContent className="max-w-xl bg-white rounded-2xl p-0 border-none shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header fixo */}
+            <div className="sticky top-0 z-10 bg-white px-6 py-5 border-b border-gray-100 rounded-t-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-semibold text-gray-800">
+                  Adicionar Nova Categoria
+                </DialogTitle>
+              </DialogHeader>
             </div>
-            <div className="flex gap-2 mt-6">
-              <Button variant="outline" onClick={() => setShowModal(false)} className="flex-1">
-                Cancelar
-              </Button>
-              <Button onClick={salvarCategoria} className="flex-1 bg-[#de4838] hover:bg-[#c73d2e]">
-                Salvar
-              </Button>
+
+            {/* Conteúdo rolável */}
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Nome da Categoria *</Label>
+                  <Input
+                    value={novaCat.nome}
+                    onChange={(e) => setNovaCat({ ...novaCat, nome: e.target.value })}
+                    placeholder="Digite o nome da categoria..."
+                    className="rounded-lg border-gray-200 focus:ring-[#de4838] focus:border-[#de4838]"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Tipo *</Label>
+                  <div className="relative">
+                    <select
+                      className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                      value={novaCat.tipo}
+                      onChange={(e) => setNovaCat({ ...novaCat, tipo: e.target.value as 'receita' | 'despesa' })}
+                      required
+                    >
+                      <option value="receita">Receita</option>
+                      <option value="despesa">Despesa</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Categoria Pai</Label>
+                  <div className="relative">
+                    <select
+                      className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                      value={novaCat.parentId || ''}
+                      onChange={(e) => setNovaCat({ ...novaCat, parentId: e.target.value || undefined })}
+                    >
+                      <option value="">Nenhuma (categoria principal)</option>
+                      {dreData
+                        .filter(item => item.nivel === 0 || item.isHeader)
+                        .map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.nome}
+                          </option>
+                        ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Nível *</Label>
+                  <div className="relative">
+                    <select
+                      className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                      value={novaCat.nivel}
+                      onChange={(e) => setNovaCat({ ...novaCat, nivel: parseInt(e.target.value) })}
+                      required
+                    >
+                      <option value={0}>Nível 0 (Header)</option>
+                      <option value={1}>Nível 1 (Categoria)</option>
+                      <option value={2}>Nível 2 (Sub-Categoria)</option>
+                      <option value={3}>Nível 3 (Item)</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
-    </div>
+
+            {/* Footer fixo */}
+            <div className="sticky bottom-0 z-10 bg-white px-6 py-4 border-t border-gray-100 rounded-b-2xl">
+              <DialogFooter className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 rounded-lg border-gray-200 hover:bg-gray-100"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={salvarCategoria}
+                  className="flex-1 bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg"
+                >
+                  Adicionar Categoria
+                </Button>
+              </DialogFooter>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

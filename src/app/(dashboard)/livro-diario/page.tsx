@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatCurrency, formatDate } from "@/lib/utils"
+import { useCategorias } from "@/hooks/useCategorias"
 
 // Tipos
 interface ProdutoNota {
@@ -89,6 +90,15 @@ interface Lancamento {
   dataPagamento: string | null
   createdAt: string
   updatedAt: string
+}
+
+// Tipo para as opções de conta do select
+interface ContaOption {
+  codigo: string;
+  nome: string;
+  nivel: number;
+  tipo: 'receita' | 'despesa';
+  isHeader: boolean;
 }
 
 const obterDataHoje = () => {
@@ -343,6 +353,19 @@ export default function LivroDiarioPage() {
   const [notasCache, setNotasCache] = useState<Map<number, NotaFiscal>>(new Map())
   const [loadingNotas, setLoadingNotas] = useState<Set<number>>(new Set())
   const [mostrarExemplos, setMostrarExemplos] = useState(true)
+
+  // Hook para categorias dinâmicas
+  const {
+    categorias,
+    loading: loadingCategorias,
+    error: errorCategorias,
+    getContasDespesa,
+    getContasReceita,
+  } = useCategorias()
+
+  // Obter contas para o select
+  const contasDespesa = getContasDespesa()
+  const contasReceita = getContasReceita()
 
   const [resumo, setResumo] = useState({
     totalEntradas: 0,
@@ -1427,7 +1450,7 @@ export default function LivroDiarioPage() {
           {/* Conteúdo rolável */}
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
             {/* Seletor de tipo de lançamento */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setTipoLancamento("comum")}
@@ -1449,17 +1472,6 @@ export default function LivroDiarioPage() {
               >
                 <Barcode className="h-4 w-4" />
                 <span className="text-sm font-medium">Boleto</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setTipoLancamento("folha")}
-                className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${tipoLancamento === "folha"
-                    ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
-                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
-                  }`}
-              >
-                <Users className="h-4 w-4" />
-                <span className="text-sm font-medium">Folha</span>
               </button>
             </div>
 
@@ -1488,13 +1500,51 @@ export default function LivroDiarioPage() {
                 {tipoLancamento !== "folha" && (
                   <div className="space-y-1">
                     <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Conta *</Label>
-                    <Input
-                      value={formData.conta}
-                      onChange={(e) => setFormData({ ...formData, conta: e.target.value })}
-                      placeholder={tipoLancamento === "boleto" ? "Ex: 4.1.1 Despesas Administrativas" : "Ex: 3.1.1 Receita com Vendas"}
-                      className="rounded-lg border-gray-200 focus:ring-[#de4838]"
-                      required
-                    />
+                    <div className="relative">
+                      {loadingCategorias ? (
+                        <div className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-500">
+                          Carregando categorias...
+                        </div>
+                      ) : errorCategorias ? (
+                        <div className="w-full rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-500">
+                          Erro ao carregar categorias
+                        </div>
+                      ) : (
+                        <select
+                          className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                          value={formData.conta}
+                          onChange={(e) => setFormData({ ...formData, conta: e.target.value })}
+                          required
+                        >
+                          <option value="">Selecione a conta...</option>
+                          {/* Despesas - agrupadas por nível */}
+                          <optgroup label="DESPESAS">
+                            {contasDespesa
+                              .filter(c => c.nivel === 1)
+                              .map((conta) => (
+                                <option key={conta.codigo} value={`${conta.codigo} ${conta.nome}`}>
+                                  {conta.nome}
+                                </option>
+                              ))
+                            }
+                          </optgroup>
+                          {/* Receita */}
+                          <optgroup label="RECEITA">
+                            {contasReceita
+                              .filter(c => c.nivel === 1)
+                              .map((conta) => (
+                                <option key={conta.codigo} value={`${conta.codigo} ${conta.nome}`}>
+                                  {conta.nome}
+                                </option>
+                              ))
+                            }
+                          </optgroup>
+                        </select>
+                      )}
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
