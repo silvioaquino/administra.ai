@@ -111,18 +111,23 @@ model Empresa {
 
 model ContaFinanceira {
   id           Int      @id @default(autoincrement())
-  userId       String   @map("user_id")
+  empresaId    String   @map("empresa_id")
+  userId       String?  @map("user_id")
   nome         String
   tipo         String // CONTA_CORRENTE, CARTEIRA, APLICACAO, CONTA_IFOOD
   saldoInicial Decimal  @default(0) @map("saldo_inicial") @db.Decimal(10, 2)
   instituicao  String? // Banco, Fintech, etc.
+  isDefault    Boolean  @default(false) @map("is_default")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
-  @@unique([nome, userId])
-  @@index([userId])
+  despesasFixas DespesaFixa[]
+
+  @@unique([nome, empresaId])
+  @@index([empresaId])
   @@map("contas_financeiras")
 }
 
@@ -320,15 +325,19 @@ model FichaItem {
 // ============= DESPESAS E CONFIGURAÇÕES =============
 
 model DespesaFixa {
-  id        Int      @id @default(autoincrement())
-  userId    String
-  nome      String
-  valor     Decimal  @db.Decimal(10, 2)
-  ordem     Int      @default(0)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id         Int      @id @default(autoincrement())
+  userId     String
+  nome       String
+  valor      Decimal  @db.Decimal(10, 2)
+  vencimento DateTime
+  contaId    Int?     @map("conta_id")
+  status     String   @default("PENDENTE")
+  ordem      Int      @default(0)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conta ContaFinanceira? @relation(fields: [contaId], references: [id])
 
   @@unique([userId, nome])
   @@index([userId])
