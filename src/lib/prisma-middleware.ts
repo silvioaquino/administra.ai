@@ -18,6 +18,7 @@ const SKIP_EMPRESA_MODELS = new Set([
   'Account',
   'VerificationToken',
   'ResetToken',
+  'Empresa', // Modelo de empresa - usa userId, não empresaId
 ])
 
 // Modelos que já possuem userId (para auditoria)
