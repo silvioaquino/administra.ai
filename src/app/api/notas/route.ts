@@ -60,13 +60,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "100");
 
     const notas = await prisma.notaFiscal.findMany({
       where: {
-        userId: session.user.id,
+        empresaId,
       },
       include: {
         produtos: true,

@@ -15,6 +15,7 @@ declare module "next-auth" {
     trialEndsAt?: string
     subscriptionStatus?: string | null
     isInTrial?: boolean
+    empresaId?: string | null
   }
   interface Session {
     user: {
@@ -27,6 +28,7 @@ declare module "next-auth" {
       trialEndsAt?: string
       subscriptionStatus?: string | null
       isInTrial?: boolean
+      empresaId?: string | null
     }
   }
 }
@@ -47,7 +49,7 @@ export const authOptions: NextAuthOptions = {
         // Buscar usuário com os dados da empresa
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
-          include: { empresa: true }
+          include: { empresas: { take: 1 } }
         })
 
         if (!user || !user.passwordHash) {
@@ -78,12 +80,13 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
-          establishment: user.empresa?.nome || null,
-          whatsapp: user.empresa?.whatsapp || null,
-          segmento: user.empresa?.segmento || null,
+          establishment: user.empresas?.[0]?.nome || null,
+          whatsapp: user.empresas?.[0]?.whatsapp || null,
+          segmento: user.empresas?.[0]?.segmento || null,
           trialEndsAt: user.trialEndsAt?.toISOString(),
           subscriptionStatus: subscription?.status || null,
           isInTrial: isInTrial || false,
+          empresaId: user.empresas?.[0]?.id || null,
         }
       },
     }),
@@ -99,6 +102,7 @@ export const authOptions: NextAuthOptions = {
         token.trialEndsAt = user.trialEndsAt
         token.subscriptionStatus = user.subscriptionStatus
         token.isInTrial = user.isInTrial
+        token.empresaId = user.empresaId
       }
       return token
     },
@@ -112,6 +116,7 @@ export const authOptions: NextAuthOptions = {
         session.user.trialEndsAt = token.trialEndsAt as string
         session.user.subscriptionStatus = token.subscriptionStatus as string
         session.user.isInTrial = token.isInTrial as boolean
+        session.user.empresaId = token.empresaId as string
       }
       return session
     },

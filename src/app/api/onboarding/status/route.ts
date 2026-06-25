@@ -10,15 +10,20 @@ export async function GET() {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   try {
     const [produtos, fichas, despesas, funcionarios, metas] = await Promise.all([
-      prisma.produto.count({ where: { userId: session.user.id } }),
-      prisma.fichaTecnica.count({ where: { userId: session.user.id } }),
-      prisma.despesaFixa.count({ where: { userId: session.user.id } }),
-      prisma.funcionario.count({ where: { userId: session.user.id } }),
-      prisma.planejamentoFaturamento.count({ 
-        where: { 
-          userId: session.user.id,
+      prisma.produto.count({ where: { empresaId } }),
+      prisma.fichaTecnica.count({ where: { empresaId } }),
+      prisma.despesaFixa.count({ where: { empresaId } }),
+      prisma.funcionario.count({ where: { empresaId } }),
+      prisma.planejamentoFaturamento.count({
+        where: {
+          empresaId,
           metaDiariaAlmoco: { gt: 0 }
         }
       })

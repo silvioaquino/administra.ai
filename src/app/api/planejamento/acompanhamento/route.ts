@@ -10,6 +10,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url)
   const ano = parseInt(searchParams.get("ano") || new Date().getFullYear().toString())
   const mes = searchParams.get("mes") ? parseInt(searchParams.get("mes")!) : null
@@ -19,7 +24,7 @@ export async function GET(request: NextRequest) {
       // Buscar acompanhamento de um mês específico
       const acompanhamento = await prisma.planejamentoAcompanhamento.findFirst({
         where: {
-          userId: session.user.id,
+          empresaId,
           ano,
           mes
         }
@@ -48,7 +53,7 @@ export async function GET(request: NextRequest) {
     // Buscar todos os acompanhamentos do ano
     const acompanhamentos = await prisma.planejamentoAcompanhamento.findMany({
       where: {
-        userId: session.user.id,
+        empresaId,
         ano
       },
       orderBy: {
@@ -77,6 +82,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   try {
     const body = await request.json()
     const { ano, mes, faturamentoAlmoco, faturamentoJanta, observacao } = body
@@ -92,7 +102,8 @@ export async function POST(request: NextRequest) {
 
     const acompanhamento = await prisma.planejamentoAcompanhamento.upsert({
       where: {
-        userId_ano_mes: {
+        empresaId_userId_ano_mes: {
+          empresaId,
           userId: session.user.id,
           ano,
           mes
@@ -106,6 +117,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date()
       },
       create: {
+        empresaId,
         userId: session.user.id,
         ano,
         mes,
@@ -126,53 +138,6 @@ export async function POST(request: NextRequest) {
     console.error("Erro ao salvar acompanhamento:", error)
     return NextResponse.json(
       { error: "Erro ao salvar acompanhamento" },
-      { status: 500 }
-    )
-  }
-}
-
-export async function DELETE(request: NextRequest) {
-  const session = await getServerSession(authOptions)
-  if (!session) {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
-  }
-
-  const { searchParams } = new URL(request.url)
-  const ano = parseInt(searchParams.get("ano") || "0")
-  const mes = parseInt(searchParams.get("mes") || "0")
-
-  if (!ano || !mes) {
-    return NextResponse.json(
-      { error: "Ano e mês são obrigatórios" },
-      { status: 400 }
-    )
-  }
-
-  try {
-    const result = await prisma.planejamentoAcompanhamento.deleteMany({
-      where: {
-        userId: session.user.id,
-        ano,
-        mes
-      }
-    })
-
-    if (result.count === 0) {
-      return NextResponse.json(
-        { error: "Acompanhamento não encontrado" },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: "Acompanhamento removido com sucesso"
-    })
-
-  } catch (error) {
-    console.error("Erro ao deletar acompanhamento:", error)
-    return NextResponse.json(
-      { error: "Erro ao deletar acompanhamento" },
       { status: 500 }
     )
   }

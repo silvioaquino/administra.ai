@@ -31,6 +31,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   try {
     const body = await request.json()
     const { produto_nome, produto_id } = body
@@ -43,20 +48,20 @@ export async function POST(request: NextRequest) {
 
     // Buscar o produto mais recente
     let produtoMaisRecente = null
-    
+
     if (produto_id) {
       produtoMaisRecente = await prisma.produto.findFirst({
         where: {
           id: parseInt(produto_id.toString()),
-          userId: session.user.id
+          empresaId
         }
       })
     }
-    
+
     if (!produtoMaisRecente && produto_nome) {
       const produtos = await prisma.produto.findMany({
         where: {
-          userId: session.user.id,
+          empresaId,
           descricao: {
             contains: produto_nome,
             mode: "insensitive"
@@ -64,16 +69,16 @@ export async function POST(request: NextRequest) {
         },
         orderBy: { createdAt: "desc" }
       })
-      
+
       if (produtos.length > 0) {
         produtoMaisRecente = produtos[0]
       }
     }
 
     if (!produtoMaisRecente) {
-      return NextResponse.json({ 
-        success: false, 
-        message: `Produto não encontrado: ${produto_nome}` 
+      return NextResponse.json({
+        success: false,
+        message: `Produto não encontrado: ${produto_nome}`
       })
     }
 
@@ -83,9 +88,9 @@ export async function POST(request: NextRequest) {
 
     console.log(`Produto encontrado: ${novoNome} - Preço: R$ ${novoPreco}`)
 
-    // Buscar todas as fichas técnicas do usuário com seus itens
+    // Buscar todas as fichas técnicas da empresa com seus itens
     const fichas = await prisma.fichaTecnica.findMany({
-      where: { userId: session.user.id },
+      where: { empresaId },
       include: {
         fichaItems: true
       }

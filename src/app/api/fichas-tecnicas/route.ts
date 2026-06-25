@@ -4,11 +4,16 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-// GET - Listar todas as fichas técnicas do usuário
+// GET - Listar todas as fichas técnicas da empresa
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+  }
+
+  const empresaId = session.user.empresaId
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 })
   }
 
   const { searchParams } = new URL(request.url)
@@ -19,7 +24,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const where: any = {
-      userId: session.user.id
+      empresaId
     }
 
     if (categoria) {
@@ -91,6 +96,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 
+  const empresaId = session.user.empresaId
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 })
+  }
+
   try {
     const body = await request.json()
     const {
@@ -144,7 +154,7 @@ export async function POST(request: NextRequest) {
     // Verificar se já existe uma ficha com o mesmo nome
     const fichaExistente = await prisma.fichaTecnica.findFirst({
       where: {
-        userId: session.user.id,
+        empresaId,
         nome: {
           equals: nome.trim(),
           mode: "insensitive"
@@ -170,6 +180,7 @@ export async function POST(request: NextRequest) {
     // Criar a ficha técnica com os itens
     const ficha = await prisma.fichaTecnica.create({
       data: {
+        empresaId,
         userId: session.user.id,
         nome: nome.trim(),
         categoria,

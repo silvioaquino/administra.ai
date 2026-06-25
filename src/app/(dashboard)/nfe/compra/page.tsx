@@ -3,13 +3,14 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Truck, Search, Save, AlertCircle, Package, Building2, Calendar, DollarSign, CheckCircle } from "lucide-react"
+import { ArrowLeft, Truck, Search, Save, AlertCircle, Package, Building2, Calendar, DollarSign, CheckCircle, Camera } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatCurrency } from "@/lib/utils"
+import { CameraScanner } from "@/components/camera-scanner"
 
 interface ProdutoNota {
   codigo: string
@@ -29,10 +30,52 @@ export default function CompraNfePage() {
   const [url, setUrl] = useState("")
   const [notaProcessada, setNotaProcessada] = useState<any>(null)
   const [produtos, setProdutos] = useState<ProdutoNota[]>([])
+  const [showScanner, setShowScanner] = useState(false)
   const [formData, setFormData] = useState({
     contaDespesa: "3.2.1 Compras de Mercadorias",
     dataCompra: new Date().toISOString().split("T")[0]
   })
+
+  function handleScanResult(result: string) {
+    setUrl(result)
+    setShowScanner(false)
+    processarUrl(result)
+  }
+
+  async function processarUrl(scanResult: string) {
+    if (!scanResult.includes("nfce.sefaz.pe.gov.br")) {
+      alert("URL inválida. Apenas URLs da SEFAZ-PE são aceitas")
+      return
+    }
+
+    setProcessando(true)
+
+    try {
+      const response = await fetch("/api/nfe/processar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: scanResult })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setNotaProcessada(data.data)
+        const produtosComSelecao = (data.data.produtos || []).map((p: any) => ({
+          ...p,
+          selecionado: true
+        }))
+        setProdutos(produtosComSelecao)
+      } else {
+        throw new Error(data.error || "Erro ao processar nota")
+      }
+    } catch (error) {
+      console.error("Erro:", error)
+      alert(error instanceof Error ? error.message : "Erro ao processar nota")
+    } finally {
+      setProcessando(false)
+    }
+  }
 
   async function processarNota() {
     if (!url) {
@@ -210,20 +253,32 @@ export default function CompraNfePage() {
 
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">URL da NFC-e de Compra</Label>
-                  <textarea
-                    className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent"
-                    rows={3}
-                    placeholder="https://nfce.sefaz.pe.gov.br/nfce/consulta?p=..."
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                  />
+                  <div className="relative mt-1">
+                    <textarea
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent resize-none"
+                      rows={3}
+                      placeholder="https://nfce.sefaz.pe.gov.br/nfce/consulta?p=..."
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowScanner(true)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-gray-600 hover:text-[#de4838]"
+                      title="Escanear QR Code"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <p className="text-xs text-gray-500">
-                    Insira a URL da NFC-e de COMPRA da SEFAZ-PE
+                    Insira a URL da NFC-e de COMPRA da SEFAZ-PE ou escaneie o QR Code
                   </p>
                 </div>
 
-                <Button 
-                  onClick={processarNota} 
+                <Button
+                  onClick={processarNota}
                   className="w-full bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg"
                   disabled={processando || !url}
                 >
@@ -331,6 +386,15 @@ export default function CompraNfePage() {
             </div>
           </div>
         </div>
+
+        {/* Camera Scanner Modal */}
+        {showScanner && (
+          <CameraScanner
+            onScan={handleScanResult}
+            onClose={() => setShowScanner(false)}
+            scanMode="qrcode"
+          />
+        )}
 
         {/* Lista de produtos da nota - Full width */}
         {produtos.length > 0 && (

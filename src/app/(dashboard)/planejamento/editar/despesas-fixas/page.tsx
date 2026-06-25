@@ -14,6 +14,7 @@ interface DespesaFixa {
   id?: number
   nome: string
   valor: number
+  vencimento?: string
 }
 
 const DESPESAS_FIXAS_PADRAO: DespesaFixa[] = [
@@ -101,7 +102,9 @@ export default function EditarDespesasFixasPage() {
   }
 
   function adicionarDespesa() {
-    setDespesas([...despesas, { nome: "Nova Despesa", valor: 0 }])
+    const novaData = new Date()
+    novaData.setMonth(novaData.getMonth() + 1)
+    setDespesas([...despesas, { nome: "Nova Despesa", valor: 0, vencimento: novaData.toISOString().split('T')[0] }])
   }
 
   function removerDespesa(index: number) {
@@ -118,6 +121,8 @@ export default function EditarDespesasFixasPage() {
     const novas = [...despesas]
     if (campo === "valor") {
       novas[index].valor = Number(valor) || 0
+    } else if (campo === "vencimento") {
+      novas[index].vencimento = valor as string
     } else {
       novas[index].nome = valor as string
     }
@@ -214,7 +219,8 @@ export default function EditarDespesasFixasPage() {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Despesa</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Mensal (R$)</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor (R$)</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
                     <th className="px-4 py-3 text-center w-10"></th>
                   </tr>
                 </thead>
@@ -226,22 +232,31 @@ export default function EditarDespesasFixasPage() {
                           value={desp.nome}
                           onChange={(e) => atualizarDespesa(idx, "nome", e.target.value)}
                           className="h-9 rounded-lg border-gray-200 focus:ring-[#de4838]"
+                          placeholder="Nome da despesa"
                         />
                       </td>
                       <td className="px-4 py-2">
                         <Input
                           type="number"
-                          step="10"
+                          step="0.01"
                           value={desp.valor}
                           onChange={(e) => atualizarDespesa(idx, "valor", e.target.value)}
                           className="h-9 text-right rounded-lg border-gray-200 focus:ring-[#de4838]"
                         />
                       </td>
+                      <td className="px-4 py-2">
+                        <Input
+                          type="date"
+                          value={desp.vencimento || ""}
+                          onChange={(e) => atualizarDespesa(idx, "vencimento", e.target.value)}
+                          className="h-9 rounded-lg border-gray-200 focus:ring-[#de4838]"
+                        />
+                      </td>
                       <td className="px-4 py-2 text-center">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => removerDespesa(idx)} 
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removerDespesa(idx)}
                           className="h-8 w-8 p-0 rounded-lg hover:bg-red-50"
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />

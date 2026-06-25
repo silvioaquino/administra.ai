@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const empresa = await prisma.empresa.findUnique({
+    const empresa = await prisma.empresa.findFirst({
       where: { userId: session.user.id },
       select: {
         nome: true,

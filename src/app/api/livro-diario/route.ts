@@ -153,6 +153,7 @@ export async function POST(request: NextRequest) {
 
     const novoLancamento = await prisma.livroDiario.create({
       data: {
+        empresaId,
         data: dataLancamento,
         conta: conta.trim(),
         descricao: descricao.trim(),

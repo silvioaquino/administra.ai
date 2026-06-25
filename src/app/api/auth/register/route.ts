@@ -6,14 +6,14 @@ import { prisma } from "@/lib/prisma"
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { 
-      name, 
-      email, 
-      password, 
-      establishment, 
-      whatsapp, 
-      segmento, 
-      address 
+    const {
+      name,
+      email,
+      password,
+      establishment,
+      whatsapp,
+      segmento,
+      address
     } = body
 
     console.log("Recebendo requisição de registro:", { email, establishment })
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     console.log("Usuário e empresa criados com sucesso:", result.user.id)
 
-    // Criar dados iniciais para o usuário (despesas fixas padrão)
+    // Criar dados iniciais para a empresa
     const despesasFixasPadrao = [
       { nome: "ALUGUEL", valor: 1200 },
       { nome: "CELPE", valor: 700 },
@@ -116,6 +116,7 @@ export async function POST(request: NextRequest) {
 
     await prisma.planejamentoConfig.create({
       data: {
+        empresaId: result.empresa.id,
         userId: result.user.id,
         tipo: "despesas_fixas",
         dados: despesasFixasPadrao,
@@ -128,6 +129,7 @@ export async function POST(request: NextRequest) {
     for (let mes = 1; mes <= 12; mes++) {
       await prisma.planejamentoFaturamento.create({
         data: {
+          empresaId: result.empresa.id,
           userId: result.user.id,
           ano: anoAtual,
           mes,
@@ -155,6 +157,7 @@ export async function POST(request: NextRequest) {
 
     await prisma.taxasCartaoConfig.create({
       data: {
+        empresaId: result.empresa.id,
         userId: result.user.id,
         config: taxasPadrao
       }

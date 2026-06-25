@@ -3,13 +3,14 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Upload, FileText, Save, AlertCircle, Package, CheckCircle, XCircle, Building2 } from "lucide-react"
+import { ArrowLeft, Upload, FileText, Save, AlertCircle, Package, CheckCircle, XCircle, Building2, Camera } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatCurrency } from "@/lib/utils"
+import { CameraScanner } from "@/components/camera-scanner"
 
 interface ProdutoNota {
   codigo: string
@@ -27,13 +28,25 @@ export default function NfeXmlPage() {
   const [loading, setLoading] = useState(false)
   const [salvando, setSalvando] = useState(false)
   const [xmlFile, setXmlFile] = useState<File | null>(null)
+  const [url, setUrl] = useState("")
   const [notaProcessada, setNotaProcessada] = useState<any>(null)
   const [produtos, setProdutos] = useState<ProdutoNota[]>([])
   const [dragActive, setDragActive] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
   const [formData, setFormData] = useState({
     contaDespesa: "3.2.1 Compras de Mercadorias",
     dataCompra: new Date().toISOString().split("T")[0]
   })
+
+  function handleScanResult(result: string) {
+    // Para XML, o scanner pode ser usado para escanear URLs de NF-e
+    setShowScanner(false)
+    // O resultado do scan pode ser usado para processar uma URL
+    // ou pode ser um XML já em formato de texto
+    if (result.includes("nfce.sefaz.pe.gov.br")) {
+      setUrl(result)
+    }
+  }
 
   async function processarXml() {
     if (!xmlFile) {
@@ -242,10 +255,26 @@ export default function NfeXmlPage() {
 
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Arquivo XML da NF-e</Label>
-                  
+
+                  {/* Opção de scanear QR Code */}
+                  <div className="mt-1 mb-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowScanner(true)}
+                      className="w-full border-dashed border-gray-300 hover:border-[#de4838] hover:text-[#de4838]"
+                    >
+                      <Camera className="mr-2 h-4 w-4" />
+                      Escanear Código de Barras da NF-e
+                    </Button>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Ou selecione o arquivo XML abaixo
+                    </p>
+                  </div>
+
                   {/* Drag and Drop Area */}
                   <div
-                    className={`mt-1 relative border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer
+                    className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer
                       ${dragActive ? 'border-[#de4838] bg-[#de4838]/5' : 'border-gray-300 hover:border-gray-400'}
                       ${xmlFile ? 'bg-green-50 border-green-300' : ''}
                     `}
@@ -265,7 +294,7 @@ export default function NfeXmlPage() {
                       }}
                       className="hidden"
                     />
-                    
+
                     {xmlFile ? (
                       <div className="flex flex-col items-center gap-2">
                         <CheckCircle className="h-12 w-12 text-green-500" />
@@ -304,8 +333,8 @@ export default function NfeXmlPage() {
                   </p>
                 </div>
 
-                <Button 
-                  onClick={processarXml} 
+                <Button
+                  onClick={processarXml}
                   className="w-full bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg"
                   disabled={loading || !xmlFile}
                 >
@@ -503,6 +532,15 @@ export default function NfeXmlPage() {
           </div>
         )}
       </div>
+
+      {/* Camera Scanner Modal */}
+      {showScanner && (
+        <CameraScanner
+          onScan={handleScanResult}
+          onClose={() => setShowScanner(false)}
+          scanMode="barcode"
+        />
+      )}
     </div>
   )
 }

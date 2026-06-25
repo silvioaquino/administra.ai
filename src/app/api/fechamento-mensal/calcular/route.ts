@@ -10,6 +10,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   const body = await request.json();
   const { ano, mes } = body;
 
@@ -20,7 +25,7 @@ export async function POST(request: NextRequest) {
     // Buscar todos os lançamentos do período
     const lancamentos = await prisma.livroDiario.findMany({
       where: {
-        userId: session.user.id,
+        empresaId,
         data: {
           gte: dataInicio,
           lte: dataFim,
@@ -30,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     // Buscar configuração do plano de contas
     const planoContas = await prisma.planoContas.findMany({
-      where: { userId: session.user.id, ativo: true },
+      where: { empresaId, ativo: true },
     });
 
     // Inicializar totais por grupo
@@ -78,7 +83,8 @@ export async function POST(request: NextRequest) {
       dreLinhas.map(linha =>
         prisma.dreResultado.upsert({
           where: {
-            userId_ano_mes_linha: {
+            empresaId_userId_ano_mes_linha: {
+              empresaId,
               userId: session.user.id,
               ano,
               mes,
@@ -90,6 +96,7 @@ export async function POST(request: NextRequest) {
             percentual: linha.percentual,
           },
           create: {
+            empresaId,
             userId: session.user.id,
             ano,
             mes,

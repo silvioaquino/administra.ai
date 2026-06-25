@@ -9,6 +9,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { contaOrigemId, contaDestinoId, valor, descricao, data } = body;
@@ -37,10 +42,10 @@ export async function POST(request: NextRequest) {
     // Buscar as contas
     const [contaOrigem, contaDestino] = await Promise.all([
       prisma.contaFinanceira.findFirst({
-        where: { id: parseInt(contaOrigemId), userId: session.user.id },
+        where: { id: parseInt(contaOrigemId), empresaId },
       }),
       prisma.contaFinanceira.findFirst({
-        where: { id: parseInt(contaDestinoId), userId: session.user.id },
+        where: { id: parseInt(contaDestinoId), empresaId },
       }),
     ]);
 
@@ -54,7 +59,7 @@ export async function POST(request: NextRequest) {
     // Calcular saldo atual da conta de origem
     const movimentacoesOrigem = await prisma.livroDiario.aggregate({
       where: {
-        userId: session.user.id,
+        empresaId,
         origemDestino: contaOrigem.nome,
       },
       _sum: {
@@ -83,6 +88,8 @@ export async function POST(request: NextRequest) {
       // Saída da conta de origem (débito)
       prisma.livroDiario.create({
         data: {
+          empresaId,
+          userId: session.user.id,
           data: dataTransacao,
           conta: "5.1 Transferências Entre Contas",
           descricao: descricaoTransacao,
@@ -91,12 +98,13 @@ export async function POST(request: NextRequest) {
           saida: valor,
           tipo: "TRANSFERENCIA",
           origemDestino: contaOrigem.nome,
-          userId: session.user.id,
         },
       }),
       // Entrada na conta de destino (crédito)
       prisma.livroDiario.create({
         data: {
+          empresaId,
+          userId: session.user.id,
           data: dataTransacao,
           conta: "5.1 Transferências Entre Contas",
           descricao: descricaoTransacao,
@@ -105,7 +113,6 @@ export async function POST(request: NextRequest) {
           saida: 0,
           tipo: "TRANSFERENCIA",
           origemDestino: contaDestino.nome,
-          userId: session.user.id,
         },
       }),
     ]);

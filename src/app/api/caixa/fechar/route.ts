@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getCurrentEmpresaId } from '@/lib/prisma-middleware'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
@@ -10,10 +11,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
+    const empresaId = session.user.empresaId
+    if (!empresaId) {
+      return NextResponse.json({ error: 'Empresa não encontrada' }, { status: 401 })
+    }
+
     const { caixa_abertura_id, observacoes } = await request.json()
 
     const caixa = await prisma.caixaAbertura.findUnique({
-      where: { id: caixa_abertura_id },
+      where: { id: caixa_abertura_id, empresaId },
       include: {
         vendas: true,
         retiradas: true,
@@ -34,6 +40,8 @@ export async function POST(request: NextRequest) {
 
     const fechamento = await prisma.caixaFechamento.create({
       data: {
+        empresaId,
+        userId: session.user.id,
         valorAbertura: caixa.valorInicial,
         totalVendas,
         retiradas: totalRetiradas,

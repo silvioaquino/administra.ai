@@ -10,6 +10,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const ano = parseInt(searchParams.get("ano") || new Date().getFullYear().toString());
   const mes = searchParams.get("mes") ? parseInt(searchParams.get("mes")!) : null;
@@ -18,7 +23,7 @@ export async function GET(request: NextRequest) {
     if (mes) {
       const meta = await prisma.metaFluxoCaixa.findFirst({
         where: {
-          userId: session.user.id,
+          empresaId,
           ano,
           mes,
         },
@@ -51,7 +56,7 @@ export async function GET(request: NextRequest) {
 
     const metas = await prisma.metaFluxoCaixa.findMany({
       where: {
-        userId: session.user.id,
+        empresaId,
         ano,
       },
       orderBy: { mes: "asc" },
@@ -78,6 +83,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { ano, metas } = body;
@@ -87,8 +97,8 @@ export async function POST(request: NextRequest) {
       metas.map((meta: any) =>
         prisma.metaFluxoCaixa.upsert({
           where: {
-            userId_ano_mes: {
-              userId: session.user.id,
+            empresaId_ano_mes: {
+              empresaId,
               ano,
               mes: meta.mes,
             },
@@ -100,6 +110,7 @@ export async function POST(request: NextRequest) {
             diasUteis: meta.diasUteis,
           },
           create: {
+            empresaId,
             userId: session.user.id,
             ano,
             mes: meta.mes,

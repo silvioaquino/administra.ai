@@ -10,9 +10,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   try {
     const config = await prisma.taxasCartaoConfig.findUnique({
-      where: { userId: session.user.id }
+      where: { empresaId }
     })
 
     return NextResponse.json({
@@ -45,13 +50,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   try {
     const config = await request.json()
 
     const saved = await prisma.taxasCartaoConfig.upsert({
-      where: { userId: session.user.id },
+      where: { empresaId },
       update: { config },
       create: {
+        empresaId,
         userId: session.user.id,
         config
       }

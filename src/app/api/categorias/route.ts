@@ -113,6 +113,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: 'Empresa não encontrada' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const tipo = searchParams.get('tipo') as 'receita' | 'despesa' | null;
   const nivel = searchParams.get('nivel');
@@ -120,10 +125,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Buscar categorias personalizadas do banco
-    let whereClause: any = {};
-    if (session.user.id) {
-      whereClause.userId = session.user.id;
-    }
+    let whereClause: any = { empresaId };
 
     const categoriasPersonalizadas = await prisma.categoria.findMany({
       where: whereClause,
@@ -179,6 +181,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: 'Empresa não encontrada' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { codigo, nome, nivel, tipo, isHeader, parentId } = body;
@@ -211,6 +218,7 @@ export async function POST(request: NextRequest) {
 
     const categoria = await prisma.categoria.create({
       data: {
+        empresaId,
         codigo: codigoFinal,
         nome,
         nivel,

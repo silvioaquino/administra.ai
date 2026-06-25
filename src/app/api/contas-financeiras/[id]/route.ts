@@ -12,6 +12,11 @@ export async function GET(
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     const idNum = parseInt(id);
@@ -19,7 +24,7 @@ export async function GET(
     const conta = await prisma.contaFinanceira.findFirst({
       where: {
         id: idNum,
-        userId: session.user.id,
+        empresaId,
       },
     });
 
@@ -29,7 +34,7 @@ export async function GET(
 
     const movimentacoes = await prisma.livroDiario.aggregate({
       where: {
-        userId: session.user.id,
+        empresaId,
         origemDestino: conta.nome,
       },
       _sum: {
@@ -65,6 +70,11 @@ export async function PUT(
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     const idNum = parseInt(id);
@@ -72,7 +82,7 @@ export async function PUT(
     const { nome, tipo, instituicao } = body;
 
     const contaExistente = await prisma.contaFinanceira.findFirst({
-      where: { id: idNum, userId: session.user.id },
+      where: { id: idNum, empresaId },
     });
 
     if (!contaExistente) {
@@ -82,7 +92,7 @@ export async function PUT(
     if (nome && nome !== contaExistente.nome) {
       const conflito = await prisma.contaFinanceira.findFirst({
         where: {
-          userId: session.user.id,
+          empresaId,
           nome: { equals: nome.trim(), mode: "insensitive" },
           id: { not: idNum },
         },
@@ -121,12 +131,17 @@ export async function DELETE(
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     const idNum = parseInt(id);
 
     const conta = await prisma.contaFinanceira.findFirst({
-      where: { id: idNum, userId: session.user.id },
+      where: { id: idNum, empresaId },
     });
 
     if (!conta) {
@@ -135,7 +150,7 @@ export async function DELETE(
 
     const movimentacoes = await prisma.livroDiario.count({
       where: {
-        userId: session.user.id,
+        empresaId,
         origemDestino: conta.nome,
       },
     });

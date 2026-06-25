@@ -10,6 +10,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: "Empresa não encontrada" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const ano = parseInt(searchParams.get("ano") || new Date().getFullYear().toString());
   const mes = parseInt(searchParams.get("mes") || (new Date().getMonth() + 1).toString());
@@ -21,7 +26,7 @@ export async function POST(request: NextRequest) {
     // Buscar todos os lançamentos do período
     const lancamentos = await prisma.livroDiario.findMany({
       where: {
-        userId: session.user.id,
+        empresaId,
         data: {
           gte: dataInicio,
           lte: dataFim,
@@ -51,8 +56,8 @@ export async function POST(request: NextRequest) {
 
       await prisma.fluxoCaixaDiario.upsert({
         where: {
-          userId_data: {
-            userId: session.user.id,
+          empresaId_data: {
+            empresaId,
             data: new Date(data),
           },
         },
@@ -62,6 +67,7 @@ export async function POST(request: NextRequest) {
           lucroRealizado: lucro,
         },
         create: {
+          empresaId,
           userId: session.user.id,
           data: new Date(data),
           faturamentoRealizado: valores.faturamento,

@@ -10,6 +10,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
+  const empresaId = session.user.empresaId;
+  if (!empresaId) {
+    return NextResponse.json({ error: 'Empresa não encontrada' }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const ano = parseInt(searchParams.get('ano') || new Date().getFullYear().toString());
   const sobrescrever = searchParams.get('sobrescrever') === 'true';
@@ -18,7 +23,7 @@ export async function POST(request: NextRequest) {
     // Buscar todos os produtos do ano que ainda não foram sincronizados como lançamentos
     const produtos = await prisma.produto.findMany({
       where: {
-        userId: session.user.id,
+        empresaId,
         dataCompra: {
           gte: new Date(ano, 0, 1),
           lte: new Date(ano, 11, 31),
@@ -52,7 +57,7 @@ export async function POST(request: NextRequest) {
       // Verificar se já existe lançamento
       const lancamentoExistente = await prisma.livroDiario.findFirst({
         where: {
-          userId: session.user.id,
+          empresaId,
           data: new Date(data),
           conta: { contains: codigo },
         },
@@ -75,6 +80,7 @@ export async function POST(request: NextRequest) {
         // Criar novo lançamento
         await prisma.livroDiario.create({
           data: {
+            empresaId,
             userId: session.user.id,
             data: new Date(data),
             conta: codigo,
