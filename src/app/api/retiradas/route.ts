@@ -36,12 +36,19 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    }
+
     const { valor, observacao, caixa_abertura_id } = await request.json()
 
     const retirada = await prisma.retirada.create({
       data: {
         valor: parseFloat(valor),
         observacao: observacao || '',
+        empresaId: session.user.empresaId || '',
+        userId: session.user.id,
         caixaAberturaId: caixa_abertura_id
       }
     })

@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
       const produto = await prisma.produto.create({
         data: {
           userId: session.user.id,
+          empresaId: session.user.empresaId || "",
           descricao: prod.descricao,
           unidade: prod.unidade || "UN",
           precoVenda: prod.preco_venda || prod.precoVenda || 0,

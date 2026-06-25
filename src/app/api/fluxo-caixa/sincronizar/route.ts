@@ -56,8 +56,9 @@ export async function POST(request: NextRequest) {
 
       await prisma.fluxoCaixaDiario.upsert({
         where: {
-          empresaId_data: {
+          empresaId_userId_data: {
             empresaId,
+            userId: session.user.id,
             data: new Date(data),
           },
         },

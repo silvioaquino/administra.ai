@@ -109,6 +109,7 @@ export async function POST(request: NextRequest) {
     // Preparar dados para o Prisma
     const produtoData = {
       userId: session.user.id,
+      empresaId: session.user.empresaId || "",
       descricao: body.descricao.trim(),
       unidade: body.unidade || "UN",
       precoVenda: precoVenda,

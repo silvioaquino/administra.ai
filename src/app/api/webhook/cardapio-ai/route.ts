@@ -235,7 +235,9 @@ export async function POST(request: NextRequest) {
           telefoneCliente: telefoneCliente,
           tipoPedido: tipoPedido,
           endereco: endereco,
-          numeroPedido: numeroPedido
+          numeroPedido: numeroPedido,
+          empresaId: caixaAberto.empresaId,
+          userId: caixaAberto.userId
         }
 
         let venda
@@ -278,7 +280,9 @@ export async function POST(request: NextRequest) {
             quantidade: parseInt(produto.quantidade.toString()) || 1,
             valor: parseFloat(produto.valor.toString()) || 0,
             adicionais: produto.adicionais || [],
-            observacao: produto.observacao || null
+            observacao: produto.observacao || null,
+            empresaId: caixaAberto.empresaId,
+            userId: caixaAberto.userId
           }))
 
           await tx.produtoVenda.createMany({

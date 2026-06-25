@@ -45,7 +45,8 @@ export async function GET(request: NextRequest) {
       // Upsert no banco
       await prisma.planejamentoAcompanhamento.upsert({
         where: {
-          userId_ano_mes: {
+          empresaId_userId_ano_mes: {
+            empresaId: session.user.empresaId || "",
             userId: session.user.id,
             ano,
             mes
@@ -57,6 +58,7 @@ export async function GET(request: NextRequest) {
           faturamentoTotal: total
         },
         create: {
+          empresaId: session.user.empresaId || "",
           userId: session.user.id,
           ano,
           mes,

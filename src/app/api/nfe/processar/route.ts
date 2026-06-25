@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
       const notaFiscal = await prisma.notaFiscal.create({
         data: {
           userId: userId,
+          empresaId: session.user.empresaId || "",
           chaveAcesso: dados.chave_acesso,
           numero: parseInt(dados.numero) || 0,
           serie: parseInt(dados.serie) || 1,
@@ -84,6 +85,7 @@ export async function POST(request: NextRequest) {
           pagamentos: {
             create: [{
               userId: userId,
+              empresaId: session.user.empresaId || "",
               formaPagamento: "À vista",
               valor: dados.valor_total
             }]

@@ -97,8 +97,9 @@ export async function POST(request: NextRequest) {
       metas.map((meta: any) =>
         prisma.metaFluxoCaixa.upsert({
           where: {
-            empresaId_ano_mes: {
+            empresaId_userId_ano_mes: {
               empresaId,
+              userId: session.user.id,
               ano,
               mes: meta.mes,
             },

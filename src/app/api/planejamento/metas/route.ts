@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
       // Buscar meta específica do mês
       const meta = await prisma.planejamentoFaturamento.findUnique({
         where: {
-          userId_ano_mes: {
+          empresaId_userId_ano_mes: {
+            empresaId: session.user.empresaId || "",
             userId: session.user.id,
             ano,
             mes,
@@ -117,7 +118,8 @@ export async function POST(request: NextRequest) {
     for (const meta of metas) {
       await prisma.planejamentoFaturamento.upsert({
         where: {
-          userId_ano_mes: {
+          empresaId_userId_ano_mes: {
+            empresaId: session.user.empresaId || "",
             userId: session.user.id,
             ano,
             mes: meta.mes,
@@ -130,6 +132,7 @@ export async function POST(request: NextRequest) {
           lucroDesejado: meta.lucroDesejado,
         },
         create: {
+          empresaId: session.user.empresaId || "",
           userId: session.user.id,
           ano,
           mes: meta.mes,

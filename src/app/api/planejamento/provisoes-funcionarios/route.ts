@@ -69,7 +69,8 @@ export async function POST(request: NextRequest) {
 
       await prisma.provisaoFuncionario.upsert({
         where: {
-          userId_ano_provisao_funcionarioNome: {
+          empresaId_userId_ano_provisao_funcionarioNome: {
+            empresaId: session.user.empresaId || "",
             userId: session.user.id,
             ano,
             provisao,
@@ -80,6 +81,7 @@ export async function POST(request: NextRequest) {
           ativo,
         },
         create: {
+          empresaId: session.user.empresaId || "",
           userId: session.user.id,
           ano,
           provisao,

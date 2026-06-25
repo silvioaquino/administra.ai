@@ -45,8 +45,9 @@ export async function POST(request: NextRequest) {
     // Reabrir o mês
     const fechamento = await prisma.fechamentoMensal.update({
       where: {
-        empresaId_ano_mes: {
+        empresaId_userId_ano_mes: {
           empresaId,
+          userId: session.user.id,
           ano,
           mes,
         },

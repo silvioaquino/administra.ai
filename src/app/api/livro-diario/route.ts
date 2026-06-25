@@ -115,6 +115,8 @@ export async function POST(request: NextRequest) {
       notaFiscalId, // ID da nota fiscal relacionada
     } = body;
 
+    const empresaId = session.user.empresaId || "";
+
     // Validações
     if (!data) {
       return NextResponse.json(

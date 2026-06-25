@@ -46,7 +46,8 @@ export async function POST(request: NextRequest) {
 
     const config = await prisma.planejamentoConfig.upsert({
       where: {
-        userId_tipo_anoReferencia: {
+        empresaId_userId_tipo_anoReferencia: {
+          empresaId: session.user.empresaId || "",
           userId: session.user.id,
           tipo: "despesas_variaveis",
           anoReferencia: ano
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
       },
       update: { dados },
       create: {
+        empresaId: session.user.empresaId || "",
         userId: session.user.id,
         tipo: "despesas_variaveis",
         dados,
