@@ -206,6 +206,7 @@ model Produto {
   chaveAcesso   String?   @map("chave_acesso")
   codigo        String?
   descricao     String
+  //ncm           String?   @default("00000000")
   unidade       String?   @default("UN")
   quantidade    Decimal?  @db.Decimal(10, 3)
   valorUnitario Decimal?  @map("valor_unitario") @db.Decimal(10, 2)
@@ -222,6 +223,7 @@ model Produto {
 
   @@index([userId, descricao])
   @@index([empresaId])
+  @@index([notaFiscalId])
   @@map("produtos")
 }
 
