@@ -87,7 +87,7 @@ export default function NfeXmlPage() {
 
   async function salvarCompra() {
     const produtosSelecionados = produtos.filter(p => p.selecionado)
-    
+
     if (produtosSelecionados.length === 0) {
       alert("Selecione pelo menos um produto")
       return
@@ -96,9 +96,8 @@ export default function NfeXmlPage() {
     setSalvando(true)
 
     try {
-      // Registrar compra no livro diário
       const valorTotal = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
-      
+
       const response = await fetch("/api/livro-diario", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -115,30 +114,12 @@ export default function NfeXmlPage() {
 
       if (!response.ok) throw new Error("Erro ao registrar no livro diário")
 
-      // Salvar produtos no banco
-      const produtosParaSalvar = produtosSelecionados.map(p => ({
-        descricao: p.descricao,
-        unidade: p.unidade,
-        quantidade: p.quantidade,
-        valor_unitario: p.valor_unitario,
-        valor_total: p.valor_total,
-        codigo: p.codigo,
-        ncm: p.ncm,
-        fornecedor: notaProcessada?.nome_emitente || "",
-        data_compra: formData.dataCompra,
-        preco_venda: p.valor_unitario * 1.3 // Margem sugerida de 30%
-      }))
-
-      const batchResponse = await fetch("/api/produtos/batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(produtosParaSalvar)
-      })
-
-      if (!batchResponse.ok) throw new Error("Erro ao salvar produtos")
+      // OBS: Produtos já são salvos automaticamente na API /api/nfe/processar
+      // Não precisamos chamar /api/produtos/batch novamente para evitar duplicatas
+      // Os produtos estão associados à nota fiscal com notaFiscalId
 
       alert(`✅ Compra registrada com sucesso!\n💰 Total: ${formatCurrency(valorTotal)}\n📦 Produtos: ${produtosSelecionados.length}`)
-      
+
       // Resetar formulário
       setXmlFile(null)
       setNotaProcessada(null)
@@ -147,7 +128,7 @@ export default function NfeXmlPage() {
         contaDespesa: "3.2.1 Compras de Mercadorias",
         dataCompra: new Date().toISOString().split("T")[0]
       })
-      
+
     } catch (error) {
       console.error("Erro:", error)
       alert("Erro ao salvar compra")

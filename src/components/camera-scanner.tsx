@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 
 interface CameraScannerProps {
   onScan: (result: string) => void;
@@ -13,26 +13,24 @@ interface CameraScannerProps {
 
 export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraScannerProps) {
   const scannerRef = useRef<HTMLDivElement>(null);
+  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
     if (!scannerRef.current) return;
 
-    let scanner: any = null;
+    let isMounted = true;
 
     const initScanner = async () => {
       try {
-        const { Html5QrcodeScanner } = await import('html5-qrcode');
-
-        // Configuração base
         const config = {
           fps: 10,
           qrbox: { width: 250, height: 250 },
           // Forçar câmera traseira (environment)
-          cameraPreference: "environment",
+          facingMode: "environment" as any,
         };
 
         // Para códigos de barras, usamos múltiplas formatas
-        const formats = scanMode === 'barcode'
+        const decodeFormats = scanMode === 'barcode'
           ? [
               Html5QrcodeSupportedFormats.CODE_128,
               Html5QrcodeSupportedFormats.CODE_39,
@@ -46,21 +44,25 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
             ]
           : undefined;
 
-        scanner = new Html5QrcodeScanner(
-          'qr-reader',
-          { ...config, formatsToSupport: formats },
-          false
-        );
+        const html5QrCode = new Html5Qrcode('qr-reader');
+        html5QrCodeRef.current = html5QrCode;
 
         const onScanSuccess = (decodedText: string) => {
-          onScan(decodedText);
+          if (isMounted) {
+            onScan(decodedText);
+          }
         };
 
         const onScanError = (errorMessage: string) => {
-          // Silencioso
+          // Silencioso - evita poluir console
         };
 
-        scanner.render(onScanSuccess, onScanError);
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          decodeFormats ? { fps: 10, qrbox: 250 } : config,
+          onScanSuccess,
+          onScanError
+        );
       } catch (error) {
         console.error('Erro ao inicializar scanner:', error);
       }
@@ -69,8 +71,11 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
     initScanner();
 
     return () => {
-      if (scanner) {
-        scanner.clear().catch(() => {});
+      isMounted = false;
+      if (html5QrCodeRef.current) {
+        html5QrCodeRef.current.stop()
+          .then(() => html5QrCodeRef.current?.clear())
+          .catch(() => {});
       }
     };
   }, [scanMode, onScan]);
@@ -93,7 +98,7 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
         </div>
 
         <div className="p-4">
-          <div id="qr-reader" ref={scannerRef} className="w-full h-64 rounded-lg overflow-hidden"></div>
+          <div id="qr-reader" ref={scannerRef} className="w-full h-64 rounded-lg overflow-hidden bg-gray-100"></div>
           <div className="mt-4 text-xs text-gray-500 text-center">
             {scanMode === 'qrcode'
               ? 'Aponte a câmera para o QR Code da NFC-e'

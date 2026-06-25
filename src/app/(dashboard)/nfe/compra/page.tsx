@@ -125,13 +125,39 @@ export default function CompraNfePage() {
       return
     }
 
+    if (!notaProcessada) {
+      alert("Processe uma nota fiscal primeiro")
+      return
+    }
+
     setLoading(true)
 
     try {
-      // Registrar compra no livro diário
       const valorTotal = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
 
-      const response = await fetch("/api/livro-diario", {
+      // 1. Salvar a nota fiscal
+      const notaResponse = await fetch("/api/nfe/salvar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nota: notaProcessada,
+          produtos: produtosSelecionados,
+          contaDespesa: formData.contaDespesa,
+          dataCompra: formData.dataCompra,
+          valorTotal: valorTotal
+        })
+      })
+
+      if (!notaResponse.ok) {
+        const errorData = await notaResponse.json()
+        throw new Error(errorData.error || "Erro ao salvar nota fiscal")
+      }
+
+      const notaData = await notaResponse.json()
+      const notaFiscalId = notaData.data.id
+
+      // 2. Registrar no livro diário
+      const livroResponse = await fetch("/api/livro-diario", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -142,32 +168,14 @@ export default function CompraNfePage() {
           entrada: 0,
           saida: valorTotal,
           tipo: "COMPRA",
-          notaFiscalId: notaProcessada?.notaFiscalId
+          notaFiscalId: notaFiscalId
         })
       })
 
-      if (!response.ok) throw new Error("Erro ao registrar no livro diário")
-
-      // Salvar produtos no banco
-      const produtosParaSalvar = produtosSelecionados.map(p => ({
-        descricao: p.descricao,
-        unidade: p.unidade,
-        quantidade: p.quantidade,
-        valor_unitario: p.valor_unitario,
-        valor_total: p.valor_total,
-        codigo: p.codigo,
-        fornecedor: notaProcessada?.nome_emitente || "",
-        data_compra: formData.dataCompra,
-        preco_venda: p.valor_unitario * 1.3 // Margem sugerida de 30%
-      }))
-
-      const batchResponse = await fetch("/api/produtos/batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(produtosParaSalvar)
-      })
-
-      if (!batchResponse.ok) throw new Error("Erro ao salvar produtos")
+      if (!livroResponse.ok) {
+        const errorData = await livroResponse.json()
+        throw new Error(errorData.error || "Erro ao registrar no livro diário")
+      }
 
       alert(`✅ Compra registrada com sucesso!\n💰 Total: ${formatCurrency(valorTotal)}\n📦 Produtos: ${produtosSelecionados.length}`)
       
@@ -178,7 +186,7 @@ export default function CompraNfePage() {
       
     } catch (error) {
       console.error("Erro:", error)
-      alert("Erro ao salvar compra")
+      alert(error instanceof Error ? error.message : "Erro ao salvar compra")
     } finally {
       setLoading(false)
     }
@@ -223,7 +231,7 @@ export default function CompraNfePage() {
             className="bg-[#de4838] hover:bg-[#c73d2e] text-white px-6 rounded-full shadow-sm"
           >
             <Save className="mr-2 h-4 w-4" />
-            {loading ? "Salvando..." : `Salvar Compra (${formatCurrency(valorTotalCompra)})`}
+            {loading ? "Salvando..." : `Registrar Compra (${formatCurrency(valorTotalCompra)})`}
           </Button>
         )}
       </div>
