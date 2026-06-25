@@ -27,6 +27,8 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
         const config = {
           fps: 10,
           qrbox: { width: 250, height: 250 },
+          // Forçar câmera traseira (environment)
+          cameraPreference: "environment",
         };
 
         // Para códigos de barras, usamos múltiplas formatas
