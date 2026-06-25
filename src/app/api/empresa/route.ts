@@ -104,7 +104,7 @@ export async function PUT(request: NextRequest) {
     console.log("Dados recebidos para salvar:", body)
 
     // Verificar se já existe um registro da empresa para este usuário
-    const existingEmpresa = await prisma.empresa.findUnique({
+    const existingEmpresa = await prisma.empresa.findFirst({
       where: { userId: session.user.id }
     })
 
@@ -113,7 +113,7 @@ export async function PUT(request: NextRequest) {
     if (existingEmpresa) {
       // Atualizar empresa existente
       updatedEmpresa = await prisma.empresa.update({
-        where: { userId: session.user.id },
+        where: { id: existingEmpresa.id },
         data: {
           nome: nome,
           whatsapp: whatsapp,
