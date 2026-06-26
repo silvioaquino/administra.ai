@@ -1,8 +1,8 @@
-// components/camera-scanner.tsx (versão com @zxing)
+// components/camera-scanner.tsx (versão otimizada)
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { BrowserMultiFormatReader, Result, DecodeHintType, BarcodeFormat } from '@zxing/library';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library';
 import { X, Camera, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -19,7 +19,29 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const stopScanner = useCallback(() => {
+    if (readerRef.current) {
+      try {
+        readerRef.current.reset();
+      } catch (e) {
+        console.error('Erro ao resetar reader:', e);
+      }
+    }
+    
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  }, []);
+
   useEffect(() => {
+    // Verifica se o elemento de vídeo existe
+    if (!videoRef.current) {
+      setError('Elemento de vídeo não encontrado');
+      return;
+    }
+
     const reader = new BrowserMultiFormatReader();
     readerRef.current = reader;
 
@@ -29,10 +51,8 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
         const hints = new Map();
         
         if (scanMode === 'qrcode') {
-          // Forçar apenas QR Code
           hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
         } else {
-          // Para código de barras, permitir vários formatos
           hints.set(DecodeHintType.POSSIBLE_FORMATS, [
             BarcodeFormat.CODE_128,
             BarcodeFormat.CODE_39,
@@ -46,15 +66,18 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
           ]);
         }
 
-        // Tempo de scan mais alto para melhor precisão
+        const videoElement = videoRef.current;
+        if (!videoElement) {
+          throw new Error('Elemento de vídeo não disponível');
+        }
+
         await reader.decodeFromVideoDevice(
-          undefined, // câmera padrão
-          videoRef.current!,
-          (result: Result | null, error: any) => {
+          null,
+          videoElement,
+          (result: any, error: any) => {
             if (result && isScanning) {
               setIsScanning(false);
               
-              // Debounce para evitar múltiplas leituras
               if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current);
               }
@@ -64,8 +87,6 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
                 stopScanner();
               }, 300);
             }
-            
-            // Se houver erro de leitura, apenas ignorar (continuar tentando)
           }
         );
       } catch (err) {
@@ -82,23 +103,7 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
       }
       stopScanner();
     };
-  }, [onScan, scanMode]);
-
-  const stopScanner = () => {
-    if (readerRef.current) {
-      try {
-        readerRef.current.reset();
-      } catch (e) {
-        console.error('Erro ao resetar reader:', e);
-      }
-    }
-    
-    if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-  };
+  }, [onScan, scanMode, stopScanner, isScanning]);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
@@ -147,14 +152,12 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
                   muted
                 />
                 
-                {/* Overlay com guia de escaneamento */}
                 <div className="absolute inset-0 pointer-events-none">
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className={`
                       relative border-2 border-white/50 rounded-lg
                       ${scanMode === 'qrcode' ? 'w-48 h-48' : 'w-64 h-20'}
                     `}>
-                      {/* Cantos decorativos */}
                       <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-[#de4838]" />
                       <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-[#de4838]" />
                       <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-[#de4838]" />
