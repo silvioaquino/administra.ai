@@ -1,10 +1,10 @@
-// components/camera-scanner.tsx
+// components/camera-scanner.tsx (versão otimizada)
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from '@zxing/library';
 import { X, Camera, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 
 interface CameraScannerProps {
   onScan: (result: string) => void;
@@ -13,105 +13,97 @@ interface CameraScannerProps {
 }
 
 export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraScannerProps) {
-  const scannerRef = useRef<HTMLDivElement>(null);
-  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isScanning, setIsScanning] = useState(false);
+  const [isScanning, setIsScanning] = useState(true);
+  const readerRef = useRef<BrowserMultiFormatReader | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const stopScanner = useCallback(() => {
+    if (readerRef.current) {
+      try {
+        readerRef.current.reset();
+      } catch (e) {
+        console.error('Erro ao resetar reader:', e);
+      }
+    }
+    
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  }, []);
 
   useEffect(() => {
-    if (!scannerRef.current) return;
+    // Verifica se o elemento de vídeo existe
+    if (!videoRef.current) {
+      setError('Elemento de vídeo não encontrado');
+      return;
+    }
 
-    let isMounted = true;
+    const reader = new BrowserMultiFormatReader();
+    readerRef.current = reader;
 
-    const initScanner = async () => {
+    const startScanner = async () => {
       try {
-        // Limpa qualquer scanner anterior
-        if (html5QrCodeRef.current) {
-          try {
-            await html5QrCodeRef.current.stop();
-            await html5QrCodeRef.current.clear();
-          } catch (e) {}
-          html5QrCodeRef.current = null;
+        // Configuração de hints para melhor precisão
+        const hints = new Map();
+        
+        if (scanMode === 'qrcode') {
+          hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
+        } else {
+          hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+            BarcodeFormat.CODE_128,
+            BarcodeFormat.CODE_39,
+            BarcodeFormat.CODE_93,
+            BarcodeFormat.CODABAR,
+            BarcodeFormat.ITF,
+            BarcodeFormat.EAN_13,
+            BarcodeFormat.EAN_8,
+            BarcodeFormat.UPC_A,
+            BarcodeFormat.UPC_E,
+          ]);
         }
 
-        const html5QrCode = new Html5Qrcode('qr-reader');
-        html5QrCodeRef.current = html5QrCode;
-
-        // Configuração base
-        const config = {
-          fps: 15,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-        };
-
-        // Configuração específica para cada modo
-        let configs: any = config;
-        let formats: any = undefined;
-
-        if (scanMode === 'barcode') {
-          // Para código de barras, usamos formato retangular
-          configs = {
-            fps: 15,
-            qrbox: { width: 320, height: 100 }, // Mais largo para código de barras
-            aspectRatio: 1.0,
-          };
-          formats = [
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.CODE_93,
-            Html5QrcodeSupportedFormats.CODABAR,
-            Html5QrcodeSupportedFormats.ITF,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
-          ];
+        const videoElement = videoRef.current;
+        if (!videoElement) {
+          throw new Error('Elemento de vídeo não disponível');
         }
 
-        const onScanSuccess = (decodedText: string) => {
-          if (isMounted && isScanning) {
-            setIsScanning(false);
-            // Delay para evitar múltiplas leituras
-            setTimeout(() => {
-              onScan(decodedText);
-            }, 300);
+        await reader.decodeFromVideoDevice(
+          null,
+          videoElement,
+          (result: any, error: any) => {
+            if (result && isScanning) {
+              setIsScanning(false);
+              
+              if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+              }
+              
+              timeoutRef.current = setTimeout(() => {
+                onScan(result.getText());
+                stopScanner();
+              }, 300);
+            }
           }
-        };
-
-        const onScanError = (errorMessage: string) => {
-          // Silencioso - evita poluir console
-          // console.debug('Scan error:', errorMessage);
-        };
-
-        // Inicia com configuração correta
-        await html5QrCode.start(
-          { facingMode: "environment" },
-          formats ? { fps: 15, qrbox: scanMode === 'barcode' ? { width: 320, height: 100 } : { width: 250, height: 250 } } : configs,
-          onScanSuccess,
-          onScanError
         );
-
-        setIsScanning(true);
-        setError(null);
-
-      } catch (error) {
-        console.error('Erro ao inicializar scanner:', error);
+      } catch (err) {
+        console.error('Erro ao iniciar scanner:', err);
         setError('Não foi possível acessar a câmera. Verifique as permissões.');
       }
     };
 
-    initScanner();
+    startScanner();
 
     return () => {
-      isMounted = false;
-      setIsScanning(false);
-      if (html5QrCodeRef.current) {
-        html5QrCodeRef.current.stop()
-          .then(() => html5QrCodeRef.current?.clear())
-          .catch(() => {});
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
+      stopScanner();
     };
-  }, [scanMode, onScan]);
+  }, [onScan, scanMode, stopScanner, isScanning]);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
@@ -126,7 +118,10 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
           <Button
             variant="ghost"
             size="icon"
-            onClick={onClose}
+            onClick={() => {
+              stopScanner();
+              onClose();
+            }}
             className="rounded-full hover:bg-gray-100"
           >
             <X className="h-4 w-4" />
@@ -148,12 +143,30 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
             </div>
           ) : (
             <>
-              <div 
-                id="qr-reader" 
-                ref={scannerRef} 
-                className="w-full rounded-lg overflow-hidden bg-gray-900"
-                style={{ minHeight: '250px' }}
-              />
+              <div className="relative bg-black rounded-lg overflow-hidden">
+                <video
+                  ref={videoRef}
+                  className="w-full aspect-square object-cover"
+                  autoPlay
+                  playsInline
+                  muted
+                />
+                
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className={`
+                      relative border-2 border-white/50 rounded-lg
+                      ${scanMode === 'qrcode' ? 'w-48 h-48' : 'w-64 h-20'}
+                    `}>
+                      <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-[#de4838]" />
+                      <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-[#de4838]" />
+                      <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-[#de4838]" />
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-[#de4838]" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="mt-4 text-xs text-gray-500 text-center space-y-1">
                 <p>
                   {scanMode === 'qrcode'
