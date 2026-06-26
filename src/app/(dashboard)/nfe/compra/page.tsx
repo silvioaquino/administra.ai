@@ -39,7 +39,7 @@ export default function CompraNfePage() {
   function handleScanResult(result: string) {
     setUrl(result)
     setShowScanner(false)
-    processarUrl(result)
+    //processarUrl(result)
   }
 
   async function processarUrl(scanResult: string) {
