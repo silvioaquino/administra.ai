@@ -72,9 +72,9 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
           throw new Error('Elemento de vídeo não disponível');
         }
 
-        // Inicia a leitura
-        await reader.decodeFromVideoDevice(
-          { facingMode: "environment" },
+        // Inicia a leitura usando constraints para a câmera traseira
+        await reader.decodeFromConstraints(
+          { facingMode: "environment" } as MediaStreamConstraints,
           videoElement,
           (result: any, error: any) => {
             // Se já está processando ou não está escaneando, ignora
