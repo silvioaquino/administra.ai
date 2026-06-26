@@ -1,4 +1,4 @@
-// components/camera-scanner.tsx (versão otimizada)
+// components/camera-scanner.tsx (versão corrigida e melhorada)
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -18,6 +18,7 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
   const [isScanning, setIsScanning] = useState(true);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isProcessingRef = useRef(false);
 
   const stopScanner = useCallback(() => {
     if (readerRef.current) {
@@ -71,20 +72,34 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
           throw new Error('Elemento de vídeo não disponível');
         }
 
-        await reader.decodeFromVideoDevice(
-          null,
+        // Inicia a leitura usando constraints para a câmera traseira
+        await reader.decodeFromConstraints(
+          { facingMode: "environment" } as MediaStreamConstraints,
           videoElement,
           (result: any, error: any) => {
-            if (result && isScanning) {
+            // Se já está processando ou não está escaneando, ignora
+            if (isProcessingRef.current || !isScanning) {
+              return;
+            }
+
+            if (result) {
+              const decodedText = result.getText();
+              console.log('📸 QR Code lido:', decodedText);
+              
+              isProcessingRef.current = true;
               setIsScanning(false);
               
+              // Limpa timeout anterior
               if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current);
               }
               
+              // Delay para evitar múltiplas leituras
               timeoutRef.current = setTimeout(() => {
-                onScan(result.getText());
+                // Para o scanner antes de chamar o callback
                 stopScanner();
+                // Chama o callback com o resultado
+                onScan(decodedText);
               }, 300);
             }
           }
@@ -102,6 +117,7 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
         clearTimeout(timeoutRef.current);
       }
       stopScanner();
+      isProcessingRef.current = false;
     };
   }, [onScan, scanMode, stopScanner, isScanning]);
 
@@ -165,6 +181,15 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
                     </div>
                   </div>
                 </div>
+
+                {/* Indicador de leitura */}
+                {!isScanning && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                    <div className="bg-white/90 rounded-lg px-4 py-2 text-sm font-medium text-gray-700">
+                      ✅ Lendo...
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="mt-4 text-xs text-gray-500 text-center space-y-1">
