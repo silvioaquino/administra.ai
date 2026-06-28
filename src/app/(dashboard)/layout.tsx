@@ -273,17 +273,17 @@ export default function DashboardLayout({
           </button>
         </div>
         
-        <div className="flex h-[calc(100%-140px)] flex-col overflow-y-auto">
+        <div className="flex h-[calc(100%-120px)] flex-col overflow-y-auto">
           <div className="flex-1 p-2">
             {menuItems.map((item, idx) => (
               <Link
                 key={idx}
                 href={item.href}
-                className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] text-gray-400 hover:text-white hover:bg-gray-800/50"
+                className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800/50 sm:text-xs"
                 onClick={() => setSidebarOpen(false)}
               >
-                <item.icon className="h-3.5 w-3.5 text-gray-500" />
-                <span>{item.label}</span>
+                <item.icon className="h-4 w-4 text-gray-500 sm:h-3.5 sm:w-3.5" />
+                <span className="font-medium">{item.label}</span>
               </Link>
             ))}
             <div className="my-2 border-t border-gray-800 pt-2">
@@ -291,11 +291,11 @@ export default function DashboardLayout({
                 <Link
                   key={idx}
                   href={item.href}
-                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] text-gray-400 hover:text-white hover:bg-gray-800/50"
+                  className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800/50 sm:text-xs"
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <item.icon className="h-3.5 w-3.5 text-gray-500" />
-                  <span>{item.label}</span>
+                  <item.icon className="h-4 w-4 text-gray-500 sm:h-3.5 sm:w-3.5" />
+                  <span className="font-medium">{item.label}</span>
                 </Link>
               ))}
             </div>

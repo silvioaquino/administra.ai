@@ -14,17 +14,35 @@ export async function GET(request: NextRequest) {
   const ano = parseInt(searchParams.get("ano") || new Date().getFullYear().toString())
 
   try {
-    const config = await prisma.planejamentoConfig.findFirst({
+    // Buscar da tabela Funcionario (principal)
+    const funcionarios = await prisma.funcionario.findMany({
       where: {
         userId: session.user.id,
-        tipo: "funcionarios",
-        anoReferencia: ano
-      }
+        empresaId: session.user.empresaId || "sem-empresa"
+      },
+      orderBy: { nome: "asc" }
     })
+
+    // Se não encontrar, buscar na tabela planejamentoConfig
+    if (funcionarios.length === 0) {
+      const config = await prisma.planejamentoConfig.findFirst({
+        where: {
+          userId: session.user.id,
+          tipo: "funcionarios",
+          anoReferencia: ano
+        }
+      })
+      if (config?.dados) {
+        return NextResponse.json({
+          success: true,
+          dados: config.dados
+        })
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      dados: config?.dados || []
+      dados: funcionarios
     })
   } catch (error) {
     console.error("Erro ao buscar funcionários:", error)
@@ -44,10 +62,35 @@ export async function POST(request: NextRequest) {
   try {
     const { dados, ano } = await request.json()
 
-    const config = await prisma.planejamentoConfig.upsert({
+    // Validar dados
+    if (!dados || !Array.isArray(dados)) {
+      return NextResponse.json({ error: "Dados inválidos" }, { status: 400 })
+    }
+
+    const empresaId = session.user.empresaId || "sem-empresa"
+
+    // SALVAR na tabela Funcionario (principal)
+    await prisma.funcionario.deleteMany({
+      where: {
+        userId: session.user.id,
+        empresaId
+      }
+    })
+
+    await prisma.funcionario.createMany({
+      data: dados.map((func: any) => ({
+        nome: func.nome,
+        salario: func.salario,
+        userId: session.user.id,
+        empresaId
+      }))
+    })
+
+    // SALVAR também na tabela planejamentoConfig
+    await prisma.planejamentoConfig.upsert({
       where: {
         empresaId_userId_tipo_anoReferencia: {
-          empresaId: session.user.empresaId || "",
+          empresaId,
           userId: session.user.id,
           tipo: "funcionarios",
           anoReferencia: ano
@@ -55,7 +98,7 @@ export async function POST(request: NextRequest) {
       },
       update: { dados },
       create: {
-        empresaId: session.user.empresaId || "",
+        empresaId,
         userId: session.user.id,
         tipo: "funcionarios",
         dados,
@@ -63,7 +106,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ success: true, data: config })
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Erro ao salvar funcionários:", error)
     return NextResponse.json(

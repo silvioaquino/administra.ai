@@ -1,7 +1,7 @@
 // src/app/(dashboard)/nfe/xml/page.tsx
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Upload, FileText, Save, AlertCircle, Package, CheckCircle, XCircle, Building2, Camera } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatCurrency } from "@/lib/utils"
 import { CameraScanner } from "@/components/camera-scanner"
+import { useContasFinanceiras } from "@/hooks/useContasFinanceiras"
 
 interface ProdutoNota {
   codigo: string
@@ -33,10 +34,22 @@ export default function NfeXmlPage() {
   const [produtos, setProdutos] = useState<ProdutoNota[]>([])
   const [dragActive, setDragActive] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
+
+  // Carregar contas financeiras da API
+  const { contas, loading: loadingContas } = useContasFinanceiras()
+
   const [formData, setFormData] = useState({
-    contaDespesa: "3.2.1 Compras de Mercadorias",
-    dataCompra: new Date().toISOString().split("T")[0]
+    contaDespesa: "",
+    dataCompra: new Date().toISOString().split("T")[0],
+    formaPagamento: "À vista"
   })
+
+  // Definir a primeira conta como padrão quando carregar
+  useEffect(() => {
+    if (contas.length > 0 && !formData.contaDespesa) {
+      setFormData(prev => ({ ...prev, contaDespesa: contas[0].id.toString() }))
+    }
+  }, [contas, formData.contaDespesa])
 
   function handleScanResult(result: string) {
     // Para XML, o scanner pode ser usado para escanear URLs de NF-e
@@ -74,6 +87,10 @@ export default function NfeXmlPage() {
           selecionado: true
         }))
         setProdutos(produtosComSelecao)
+        // Preencher data da compra com data de emissão da nota
+        if (data.data.data_emissao) {
+          setFormData(prev => ({ ...prev, dataCompra: data.data.data_emissao }))
+        }
       } else {
         throw new Error(data.error || "Erro ao processar XML")
       }
@@ -97,6 +114,7 @@ export default function NfeXmlPage() {
 
     try {
       const valorTotal = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
+      const contaSelecionada = contas.find(c => c.id.toString() === formData.contaDespesa);
 
       const response = await fetch("/api/livro-diario", {
         method: "POST",
@@ -108,7 +126,8 @@ export default function NfeXmlPage() {
           cliente_fornecedor: `${notaProcessada?.nome_emitente || ""} | ${notaProcessada?.cnpj_emitente || ""}`,
           entrada: 0,
           saida: valorTotal,
-          tipo: "COMPRA"
+          tipo: "COMPRA",
+          origemDestino: contaSelecionada?.nome || null
         })
       })
 
@@ -125,8 +144,9 @@ export default function NfeXmlPage() {
       setNotaProcessada(null)
       setProdutos([])
       setFormData({
-        contaDespesa: "3.2.1 Compras de Mercadorias",
-        dataCompra: new Date().toISOString().split("T")[0]
+        contaDespesa: "", // Deixar vazio para o useEffect definir a primeira conta
+        dataCompra: new Date().toISOString().split("T")[0],
+        formaPagamento: "À vista"
       })
 
     } catch (error) {
@@ -237,7 +257,7 @@ export default function NfeXmlPage() {
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Arquivo XML da NF-e</Label>
 
-                  {/* Opção de scanear QR Code */}
+                  {/* Opção de scanear Codigo de Barras da NF-e  
                   <div className="mt-1 mb-3">
                     <Button
                       type="button"
@@ -251,7 +271,7 @@ export default function NfeXmlPage() {
                     <p className="text-xs text-gray-500 mt-1">
                       Ou selecione o arquivo XML abaixo
                     </p>
-                  </div>
+                  </div>*/}
 
                   {/* Drag and Drop Area */}
                   <div
@@ -358,12 +378,19 @@ export default function NfeXmlPage() {
                           className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none"
                           value={formData.contaDespesa}
                           onChange={(e) => setFormData({ ...formData, contaDespesa: e.target.value })}
-                        >
-                          <option value="3.2.1 Compras de Mercadorias">📦 Compras de Mercadorias</option>
-                          <option value="3.2.2 Compras de Insumos">🥩 Compras de Insumos</option>
-                          <option value="3.2.3 Compras de Embalagens">📦 Compras de Embalagens</option>
-                          <option value="3.2.4 Compras de Equipamentos">🔧 Compras de Equipamentos</option>
-                          <option value="3.2.5 Compras de Material Limpeza">🧹 Compras de Material Limpeza</option>
+                          disabled={loadingContas || contas.length === 0}
+                         >
+                          {loadingContas ? (
+                            <option value="">Carregando contas...</option>
+                          ) : contas.length === 0 ? (
+                            <option value="">Nenhuma conta disponível</option>
+                          ) : (
+                            contas.map((conta) => (
+                              <option key={conta.id} value={conta.id.toString()}>
+                                {conta.nome}
+                              </option>
+                            ))
+                          )}
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                           <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>

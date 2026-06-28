@@ -127,38 +127,38 @@ export default function ContasBancariasPage() {
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Cards de Resumo */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white h-full min-h-[132px] sm:min-h-[150px]">
-            <CardContent className="p-6">
-              <p className="text-sm opacity-90">Saldo Total</p>
-              <p className="text-2xl font-bold mt-2">{formatCurrency(saldoTotal)}</p>
-              <p className="text-xs opacity-80 mt-1">em todas as contas</p>
+          <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white h-full min-h-[92px] sm:min-h-[105px]">
+            <CardContent className="p-3 sm:p-4">
+              <p className="text-[11px] sm:text-sm opacity-90 leading-tight">Saldo Total</p>
+              <p className="text-sm sm:text-xl font-bold mt-1 leading-tight">{formatCurrency(saldoTotal)}</p>
+              <p className="text-[10px] sm:text-xs opacity-80 mt-0.5">em todas as contas</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white h-full min-h-[132px] sm:min-h-[150px]">
-            <CardContent className="p-6">
-              <p className="text-sm opacity-90">Total de Contas</p>
-              <p className="text-2xl font-bold mt-2">{contas.length}</p>
-              <p className="text-xs opacity-80 mt-1">cadastradas</p>
+          <Card className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white h-full min-h-[92px] sm:min-h-[105px]">
+            <CardContent className="p-3 sm:p-4">
+              <p className="text-[11px] sm:text-sm opacity-90 leading-tight">Total de Contas</p>
+              <p className="text-sm sm:text-xl font-bold mt-1 leading-tight">{contas.length}</p>
+              <p className="text-[10px] sm:text-xs opacity-80 mt-0.5">cadastradas</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-r from-purple-600 to-purple-700 text-white h-full min-h-[132px] sm:min-h-[150px]">
-            <CardContent className="p-6">
-              <p className="text-sm opacity-90">Maior Saldo</p>
+          <Card className="bg-gradient-to-r from-purple-600 to-purple-700 text-white h-full min-h-[92px] sm:min-h-[105px]">
+            <CardContent className="p-3 sm:p-4">
+              <p className="text-[11px] sm:text-sm opacity-90 leading-tight">Maior Saldo</p>
               {contas.length > 0 ? (
                 <>
-                  <p className="text-2xl font-bold mt-2">{formatCurrency(Math.max(...contas.map(c => c.saldoAtual)))}</p>
-                  <p className="text-xs opacity-80 mt-1">{contas.find(c => c.saldoAtual === Math.max(...contas.map(c => c.saldoAtual)))?.nome}</p>
+                  <p className="text-sm sm:text-xl font-bold mt-1 leading-tight">{formatCurrency(Math.max(...contas.map(c => c.saldoAtual)))}</p>
+                  <p className="text-[10px] sm:text-xs opacity-80 mt-0.5">{contas.find(c => c.saldoAtual === Math.max(...contas.map(c => c.saldoAtual)))?.nome}</p>
                 </>
               ) : (
-                <p className="text-sm mt-2">Nenhuma conta</p>
+                <p className="text-sm mt-1">Nenhuma conta</p>
               )}
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-r from-orange-600 to-orange-700 text-white h-full min-h-[132px] sm:min-h-[150px]">
-            <CardContent className="p-6">
-              <p className="text-sm opacity-90">Média por Conta</p>
-              <p className="text-2xl font-bold mt-2">{formatCurrency(contas.length > 0 ? saldoTotal / contas.length : 0)}</p>
-              <p className="text-xs opacity-80 mt-1">saldo médio</p>
+          <Card className="bg-gradient-to-r from-orange-600 to-orange-700 text-white h-full min-h-[92px] sm:min-h-[105px]">
+            <CardContent className="p-3 sm:p-4">
+              <p className="text-[11px] sm:text-sm opacity-90 leading-tight">Média por Conta</p>
+              <p className="text-sm sm:text-xl font-bold mt-1 leading-tight">{formatCurrency(contas.length > 0 ? saldoTotal / contas.length : 0)}</p>
+              <p className="text-[10px] sm:text-xs opacity-80 mt-0.5">saldo médio</p>
             </CardContent>
           </Card>
         </div>

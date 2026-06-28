@@ -16,11 +16,7 @@ interface Funcionario {
 }
 
 const FUNCIONARIOS_PADRAO: Funcionario[] = [
-  { nome: "Sandra", salario: 1302 },
-  { nome: "Lene", salario: 1302 },
-  { nome: "Marilia", salario: 1302 },
-  { nome: "Meiry", salario: 1500 },
-  { nome: "Diarista", salario: 1920 }
+  { nome: "Pro-Labore(add seu Nome)", salario: 1302 },
 ]
 
 export default function EditarFuncionariosPage() {

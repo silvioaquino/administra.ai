@@ -19,8 +19,8 @@ interface DespesaFixa {
 
 const DESPESAS_FIXAS_PADRAO: DespesaFixa[] = [
   { nome: "ALUGUEL", valor: 1200 },
-  { nome: "CELPE", valor: 700 },
-  { nome: "COMPESA", valor: 310 },
+  { nome: "ENERGIA", valor: 700 },
+  { nome: "AGUA", valor: 310 },
   { nome: "TELEFONE", valor: 112 },
   { nome: "INTERNET", valor: 70 },
   { nome: "CONTABILIDADE", valor: 350 },
@@ -29,15 +29,9 @@ const DESPESAS_FIXAS_PADRAO: DespesaFixa[] = [
   { nome: "PASSAGEM FUNCIN.", valor: 635 },
   { nome: "INSS", valor: 446 },
   { nome: "MERCANTIL", valor: 200 },
-  { nome: "MAQUINETAS", valor: 120 },
-  { nome: "CARRO", valor: 0 },
-  { nome: "COMBUSTIVEL", valor: 200 },
   { nome: "BOMBEIROS", valor: 30 },
   { nome: "IPTU", valor: 150 },
-  { nome: "ANOTAI", valor: 0 },
   { nome: "GAS", valor: 1330 },
-  { nome: "CELULAR", valor: 20 },
-  { nome: "PRO-LABORE", valor: 1500 }
 ]
 
 export default function EditarDespesasFixasPage() {

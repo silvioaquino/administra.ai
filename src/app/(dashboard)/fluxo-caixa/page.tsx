@@ -506,49 +506,49 @@ export default function FluxoCaixaPage() {
 
         {/* Cards de Resumo Anual */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          <Card className="relative overflow-hidden bg-gradient-to-r from-emerald-500 to-emerald-600 text-white h-full min-h-[132px]">
-            <CardContent className="p-6">
+          <Card className="relative overflow-hidden bg-gradient-to-r from-emerald-500 to-emerald-600 text-white h-full min-h-[92px] sm:min-h-[105px]">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium opacity-90">Previsão Anual</p>
-                <Target className="h-5 w-5 opacity-80" />
+                <p className="text-[11px] sm:text-sm font-medium opacity-90 leading-tight">Previsão Anual</p>
+                <Target className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
               </div>
-              <div className="mt-2 text-2xl font-bold">
+              <div className="mt-1 text-sm sm:text-xl font-bold leading-tight">
                 {hideValues ? '••••••••' : formatCurrency(totaisAno.previsao)}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 text-white h-full min-h-[132px]">
-            <CardContent className="p-6">
+          <Card className="relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 text-white h-full min-h-[92px] sm:min-h-[105px]">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium opacity-90">Realizado Anual</p>
-                <BarChart3 className="h-5 w-5 opacity-80" />
+                <p className="text-[11px] sm:text-sm font-medium opacity-90 leading-tight">Realizado Anual</p>
+                <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
               </div>
-              <div className="mt-2 text-2xl font-bold">
+              <div className="mt-1 text-sm sm:text-xl font-bold leading-tight">
                 {hideValues ? '••••••••' : formatCurrency(totaisAno.realizado)}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden bg-gradient-to-r from-purple-500 to-purple-600 text-white h-full min-h-[132px]">
-            <CardContent className="p-6">
+          <Card className="relative overflow-hidden bg-gradient-to-r from-purple-500 to-purple-600 text-white h-full min-h-[92px] sm:min-h-[105px]">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium opacity-90">Diferença</p>
-                <TrendingUp className="h-5 w-5 opacity-80" />
+                <p className="text-[11px] sm:text-sm font-medium opacity-90 leading-tight">Diferença</p>
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
               </div>
-              <div className="mt-2 text-2xl font-bold">
+              <div className="mt-1 text-sm sm:text-xl font-bold leading-tight">
                 {hideValues ? '••••••••' : formatCurrency(totaisAno.realizado - totaisAno.previsao)}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden bg-gradient-to-r from-orange-500 to-orange-600 text-white h-full min-h-[132px]">
-            <CardContent className="p-6">
+          <Card className="relative overflow-hidden bg-gradient-to-r from-orange-500 to-orange-600 text-white h-full min-h-[92px] sm:min-h-[105px]">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium opacity-90">Acurácia</p>
-                <Percent className="h-5 w-5 opacity-80" />
+                <p className="text-[11px] sm:text-sm font-medium opacity-90 leading-tight">Acurácia</p>
+                <Percent className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
               </div>
-              <div className="mt-2 text-2xl font-bold">
+              <div className="mt-1 text-sm sm:text-xl font-bold leading-tight">
                 {hideValues ? '••••••••' : formatPercentage(totaisAno.previsao > 0 ? (totaisAno.realizado / totaisAno.previsao) * 100 : 0)}
               </div>
             </CardContent>

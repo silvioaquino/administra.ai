@@ -1157,20 +1157,20 @@ export default function LivroDiarioPage() {
           {cardsResumo.map((card, idx) => (
             <Card
               key={idx}
-              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white border-0 h-full min-h-[132px] sm:min-h-[150px]`}
+              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white border-0 h-full min-h-[92px] sm:min-h-[105px]`}
             >
-              <CardContent className="p-5">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium opacity-90">{card.title}</p>
-                  <card.icon className="h-5 w-5 opacity-80" />
+                  <p className="text-[11px] sm:text-sm font-medium opacity-90 leading-tight">{card.title}</p>
+                  <card.icon className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
                 </div>
-                <div className="mt-2 text-2xl font-bold">
+                <div className="mt-1 text-sm sm:text-xl font-bold leading-tight">
                   {card.value}
                 </div>
-                <p className="mt-1 text-xs opacity-80">{card.detail}</p>
+                <p className="mt-0.5 text-[10px] sm:text-xs opacity-80">{card.detail}</p>
               </CardContent>
-              <div className="absolute -bottom-4 -right-4 opacity-10">
-                <card.icon className="h-20 w-20" />
+              <div className="absolute -bottom-3 -right-3 opacity-10">
+                <card.icon className="h-12 w-12" />
               </div>
             </Card>
           ))}

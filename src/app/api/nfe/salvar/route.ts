@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { nota, produtos, contaDespesa, dataCompra, valorTotal } = body
+    const { nota, produtos, contaDespesa, dataCompra, valorTotal, formaPagamento } = body
     const userId = session.user.id
     const empresaId = session.user.empresaId
 
@@ -66,14 +66,15 @@ export async function POST(request: NextRequest) {
             valorTotal: p.valor_total || 0,
             fornecedor: nota.nome_emitente || '',
             dataCompra: new Date(dataCompra),
-            precoVenda: (p.valor_unitario || 0) * 1.3
+            precoVenda: (p.valor_unitario || 0) * 1.3,
+            formaPagamento: formaPagamento || 'À vista'
           }))
         },
         pagamentos: {
           create: [{
             userId: userId,
             empresaId: empresaId,
-            formaPagamento: 'À vista',
+            formaPagamento: formaPagamento || 'À vista',
             valor: valorTotal || nota.valor_total
           }]
         }

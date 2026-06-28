@@ -384,43 +384,43 @@ export default function DashboardCaixa({
     <div className="space-y-6">
       {/* Cards de Resumo */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl p-4 text-white shadow-sm h-full min-h-[132px] sm:min-h-[150px]">
+        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl p-3 sm:p-4 text-white shadow-sm h-full min-h-[92px] sm:min-h-[105px]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs opacity-90">Saldo em Dinheiro</p>
-              <p className="text-2xl font-bold">{formatarMoeda(saldoAtual)}</p>
+              <p className="text-[10px] sm:text-xs opacity-90 leading-tight">Saldo em Dinheiro</p>
+              <p className="text-sm sm:text-xl font-bold leading-tight">{formatarMoeda(saldoAtual)}</p>
             </div>
-            <Wallet className="h-8 w-8 opacity-80" />
+            <Wallet className="h-5 w-5 sm:h-6 sm:w-6 opacity-80" />
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-sm h-full min-h-[132px] sm:min-h-[150px]">
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-3 sm:p-4 text-white shadow-sm h-full min-h-[92px] sm:min-h-[105px]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs opacity-90">Total de Vendas</p>
-              <p className="text-2xl font-bold">{formatarMoeda(todasVendas)}</p>
+              <p className="text-[10px] sm:text-xs opacity-90 leading-tight">Total de Vendas</p>
+              <p className="text-sm sm:text-xl font-bold leading-tight">{formatarMoeda(todasVendas)}</p>
             </div>
-            <TrendingUp className="h-8 w-8 opacity-80" />
+            <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 opacity-80" />
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl p-4 text-white shadow-sm h-full min-h-[132px] sm:min-h-[150px]">
+        <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl p-3 sm:p-4 text-white shadow-sm h-full min-h-[92px] sm:min-h-[105px]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs opacity-90">Total de Retiradas</p>
-              <p className="text-2xl font-bold">{formatarMoeda(totalRetiradas)}</p>
+              <p className="text-[10px] sm:text-xs opacity-90 leading-tight">Total de Retiradas</p>
+              <p className="text-sm sm:text-xl font-bold leading-tight">{formatarMoeda(totalRetiradas)}</p>
             </div>
-            <TrendingDown className="h-8 w-8 opacity-80" />
+            <TrendingDown className="h-5 w-5 sm:h-6 sm:w-6 opacity-80" />
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-4 text-white shadow-sm h-full min-h-[132px] sm:min-h-[150px]">
+        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-3 sm:p-4 text-white shadow-sm h-full min-h-[92px] sm:min-h-[105px]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs opacity-90">Vendas Pendentes</p>
-              <p className="text-2xl font-bold">{vendasPendentes.length}</p>
+              <p className="text-[10px] sm:text-xs opacity-90 leading-tight">Vendas Pendentes</p>
+              <p className="text-sm sm:text-xl font-bold leading-tight">{vendasPendentes.length}</p>
             </div>
-            <Clock className="h-8 w-8 opacity-80" />
+            <Clock className="h-5 w-5 sm:h-6 sm:w-6 opacity-80" />
           </div>
         </div>
       </div>

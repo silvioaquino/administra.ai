@@ -149,7 +149,7 @@ export default function NfePage() {
 
       {/* Main Content */}
       <div className="container mx-auto p-6 max-w-7xl">
-        {/* Stats Cards com gradientes modernos - mantido igual */}
+        {/* Stats Cards com gradientes modernos - mantido igual 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {statsCards.map((card, idx) => (
             <Card
@@ -166,13 +166,13 @@ export default function NfePage() {
                 </div>
                 <p className="mt-1 text-xs opacity-80">{card.change}</p>
               </CardContent>
-              {/* Ícone decorativo de fundo */}
+              {/* Ícone decorativo de fundo /}
               <div className="absolute -bottom-4 -right-4 opacity-10">
                 <card.icon className="h-20 w-20" />
               </div>
             </Card>
           ))}
-        </div>
+        </div>*/}
 
         {/* Ações Rápidas */}
         <div className="mt-8 space-y-3">

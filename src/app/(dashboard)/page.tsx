@@ -503,18 +503,18 @@ export default function DashboardPage() {
         {/* Filtros */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
           <div className="py-3 px-5">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 <Filter className="h-4 w-4 text-[#de4838]" />
-                <h3 className="font-semibold text-gray-800 text-sm">Filtros</h3>
+                <h3 className="font-semibold text-gray-800 text-sm hidden sm:inline">Filtros</h3>
               </div>
-              
-              <div className="flex-1 flex flex-wrap items-center gap-2">
-                <div className="relative">
+
+              <div className="flex items-center gap-2 flex-grow min-w-0">
+                <div className="relative flex-shrink-0">
                   <select
                     value={periodo}
                     onChange={(e) => setPeriodo(e.target.value as PeriodoType)}
-                    className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8"
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8 min-w-[120px]"
                   >
                     {periodOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -526,26 +526,26 @@ export default function DashboardPage() {
                 </div>
 
                 {periodo === "especifico" && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <input
                       type="date"
                       value={dataInicio}
                       onChange={(e) => setDataInicio(e.target.value)}
-                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] min-w-[120px]"
                       placeholder="Início"
                     />
-                    <span className="text-gray-400">até</span>
+                    <span className="text-gray-400 flex-shrink-0">até</span>
                     <input
                       type="date"
                       value={dataFim}
                       onChange={(e) => setDataFim(e.target.value)}
-                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] min-w-[120px]"
                       placeholder="Fim"
                     />
                   </div>
                 )}
 
-                <div className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700">
+                <div className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 flex-shrink-0">
                   <CalendarRange className="h-4 w-4 inline mr-1" />
                   {periodoTexto}
                 </div>
@@ -559,20 +559,20 @@ export default function DashboardPage() {
           {statsCards.map((card, idx) => (
             <Card
               key={idx}
-              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white border-0 hover:scale-105 transition-transform duration-200 cursor-pointer h-full min-h-[132px] sm:min-h-[150px]`}
+              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white border-0 hover:scale-105 transition-transform duration-200 cursor-pointer h-full min-h-[92px] sm:min-h-[105px]`}
             >
-              <CardContent className="p-3 sm:p-5">
+              <CardContent className="p-2 sm:p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-[11px] sm:text-sm font-medium opacity-90 leading-tight">{card.title}</p>
-                  <card.icon className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
+                  <p className="text-[10px] sm:text-sm font-medium opacity-90 leading-tight">{card.title}</p>
+                  <card.icon className="h-3 w-3 sm:h-4 sm:w-4 opacity-80" />
                 </div>
-                <div className="mt-2 text-lg sm:text-2xl font-bold leading-tight">
+                <div className="mt-1 text-sm sm:text-xl font-bold leading-tight">
                   {card.value}
                 </div>
-                <p className="mt-1 text-[10px] sm:text-xs opacity-80">{card.detail}</p>
+                <p className="mt-0.5 text-[9px] sm:text-xs opacity-80">{card.detail}</p>
               </CardContent>
-              <div className="absolute -bottom-4 -right-4 opacity-10">
-                <card.icon className="h-20 w-20" />
+              <div className="absolute -bottom-3 -right-3 opacity-10">
+                <card.icon className="h-12 w-12" />
               </div>
             </Card>
           ))}
@@ -902,68 +902,50 @@ export default function DashboardPage() {
             </CardContent>
           </div>
         </div>
-
-        {/* Ações Rápidas e Informações do Sistema */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Ações Rápidas Card */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-[#de4838]" />
-                <h3 className="font-semibold text-gray-800">Ações Rápidas</h3>
-              </div>
-            </div>
-            <div className="p-5 space-y-3">
-              {quickActions.map((action, idx) => (
-                <Button 
-                  key={idx}
-                  variant={action.variant}
-                  className="w-full justify-between rounded-lg"
-                  onClick={() => router.push(action.route)}
-                >
-                  <span>{action.label}</span>
-                  <ArrowRight className="h-4 w-4 opacity-70" />
-                </Button>
-              ))}
+        {/* Informações do Sistema - Largura total */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+          <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <Store className="h-5 w-5 text-[#de4838]" />
+              <h3 className="font-semibold text-gray-800">Informações do Sistema</h3>
             </div>
           </div>
-
-          {/* Informações do Sistema */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <Store className="h-5 w-5 text-[#de4838]" />
-                <h3 className="font-semibold text-gray-800">Informações do Sistema</h3>
+          <div className="p-5 space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Coluna Esquerda */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-500">Status da assinatura:</span>
+                  <Badge className={isInTrial ? "bg-blue-100 text-blue-700 rounded-full" : "bg-emerald-100 text-emerald-700 rounded-full"}>
+                    {isInTrial ? "Período de teste" : session?.user?.subscriptionStatus === "active" ? "Ativa" : "Não ativa"}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-500">Fim do teste:</span>
+                  <span className="font-medium text-gray-700">{trialEndsAt ? new Date(trialEndsAt).toLocaleDateString("pt-BR") : "-"}</span>
+                </div>
+              </div>
+              {/* Coluna Direita */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-500">Total de Produtos:</span>
+                  <span className="font-medium text-gray-700">{stats.totalProdutos}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-500">Fichas Técnicas:</span>
+                  <span className="font-medium text-gray-700">{stats.totalFichas}</span>
+                </div>
               </div>
             </div>
-            <div className="p-5 space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-500">Status da assinatura:</span>
-                <Badge className={isInTrial ? "bg-blue-100 text-blue-700 rounded-full" : "bg-emerald-100 text-emerald-700 rounded-full"}>
-                  {isInTrial ? "Período de teste" : session?.user?.subscriptionStatus === "active" ? "Ativa" : "Não ativa"}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-500">Fim do teste:</span>
-                <span className="font-medium text-gray-700">{trialEndsAt ? new Date(trialEndsAt).toLocaleDateString("pt-BR") : "-"}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-500">Total de Produtos:</span>
-                <span className="font-medium text-gray-700">{stats.totalProdutos}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-500">Fichas Técnicas:</span>
-                <span className="font-medium text-gray-700">{stats.totalFichas}</span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-gray-500">Versão do sistema:</span>
-                <span className="font-medium text-gray-700">2.0.0</span>
-              </div>
+            <div className="flex justify-between items-center pt-2">
+              <span className="text-sm text-gray-500">Versão do sistema:</span>
+              <span className="font-medium text-gray-700">2.0.0</span>
             </div>
           </div>
         </div>
 
         {/* Dica rápida */}
+
         <div className="mt-6 bg-gradient-to-r from-[#de4838]/5 to-transparent rounded-xl p-4 border border-[#de4838]/10">
           <div className="flex items-start gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#de4838]/10">

@@ -14,17 +14,35 @@ export async function GET(request: NextRequest) {
   const ano = parseInt(searchParams.get("ano") || new Date().getFullYear().toString())
 
   try {
-    const config = await prisma.planejamentoConfig.findFirst({
+    // Buscar da tabela DespesaFixa (principal)
+    const despesas = await prisma.despesaFixa.findMany({
       where: {
         userId: session.user.id,
-        tipo: "despesas_fixas",
-        anoReferencia: ano
-      }
+        empresaId: session.user.empresaId || "sem-empresa"
+      },
+      orderBy: { nome: "asc" }
     })
+
+    // Se não encontrar, buscar na tabela planejamentoConfig
+    if (despesas.length === 0) {
+      const config = await prisma.planejamentoConfig.findFirst({
+        where: {
+          userId: session.user.id,
+          tipo: "despesas_fixas",
+          anoReferencia: ano
+        }
+      })
+      if (config?.dados) {
+        return NextResponse.json({
+          success: true,
+          dados: config.dados
+        })
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      dados: config?.dados || []
+      dados: despesas
     })
   } catch (error) {
     console.error("Erro ao buscar despesas fixas:", error)
@@ -44,10 +62,31 @@ export async function POST(request: NextRequest) {
   try {
     const { dados, ano } = await request.json()
 
-    const config = await prisma.planejamentoConfig.upsert({
+    const empresaId = session.user.empresaId || "sem-empresa"
+
+    // SALVAR na tabela DespesaFixa (principal)
+    await prisma.despesaFixa.deleteMany({
+      where: {
+        userId: session.user.id,
+        empresaId
+      }
+    })
+
+    await prisma.despesaFixa.createMany({
+      data: dados.map((despesa: any) => ({
+        nome: despesa.nome,
+        valor: despesa.valor,
+        vencimento: despesa.vencimento ? new Date(despesa.vencimento) : new Date(),
+        userId: session.user.id,
+        empresaId
+      }))
+    })
+
+    // SALVAR também na tabela planejamentoConfig
+    await prisma.planejamentoConfig.upsert({
       where: {
         empresaId_userId_tipo_anoReferencia: {
-          empresaId: session.user.empresaId || "",
+          empresaId,
           userId: session.user.id,
           tipo: "despesas_fixas",
           anoReferencia: ano
@@ -55,7 +94,7 @@ export async function POST(request: NextRequest) {
       },
       update: { dados },
       create: {
-        empresaId: session.user.empresaId || "",
+        empresaId,
         userId: session.user.id,
         tipo: "despesas_fixas",
         dados,
@@ -63,7 +102,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ success: true, data: config })
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Erro ao salvar despesas fixas:", error)
     return NextResponse.json(

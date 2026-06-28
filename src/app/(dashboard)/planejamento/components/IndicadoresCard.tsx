@@ -161,7 +161,7 @@ export function IndicadoresCard({
             const colors = getStatusColor(status)
             const Icon = ind.icone
             const isIdeal = status === 'ideal'
-            
+
             // Calcula percentual para a barra de progresso
             let percentual = 0
             if (ind.valor < ind.min) {
@@ -173,38 +173,38 @@ export function IndicadoresCard({
               percentual = ((ind.valor - ind.min) / (ind.max - ind.min)) * 100
             }
             percentual = Math.min(100, Math.max(0, percentual))
-            
+
             return (
-              <div 
-                key={ind.nome} 
-                className={`rounded-xl border ${colors.border} ${colors.bg} p-3 shadow-sm hover:shadow-md transition-all cursor-help h-full min-h-[160px] sm:min-h-[180px]`}
+              <div
+                key={ind.nome}
+                className={`rounded-xl border ${colors.border} ${colors.bg} p-3 shadow-sm hover:shadow-md transition-all cursor-help h-full min-h-[112px] sm:min-h-[126px]`}
                 title={ind.tooltip}
               >
-                <div className="mb-3 flex items-center justify-between">
+                <div className="mb-2 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className={`p-1.5 rounded-lg ${colors.iconBg}`}>
-                      <Icon className={`h-4 w-4 ${colors.iconColor}`} />
+                    <div className={`p-1 rounded-lg ${colors.iconBg}`}>
+                      <Icon className={`h-3 w-3 ${colors.iconColor}`} />
                     </div>
-                    <h6 className="font-semibold text-gray-800 text-[11px] sm:text-sm leading-tight">{ind.nome}</h6>
+                    <h6 className="font-semibold text-gray-800 text-[10px] sm:text-sm leading-tight">{ind.nome}</h6>
                   </div>
-                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] sm:text-xs font-medium ${colors.iconBg} ${colors.text}`}>
+                  <span className={`rounded-full px-1 py-0.5 text-[8px] sm:text-xs font-medium ${colors.iconBg} ${colors.text}`}>
                     Ideal: {ind.min}{ind.unidade} - {ind.max}{ind.unidade}
                   </span>
                 </div>
-                <div className="my-3 text-center">
-                  <span className={`text-2xl sm:text-3xl font-bold ${colors.text}`}>{ind.valor.toFixed(1)}</span>
-                  <span className="text-gray-500 ml-0.5 text-[10px] sm:text-xs">{ind.unidade}</span>
+                <div className="my-2 text-center">
+                  <span className={`text-lg sm:text-2xl font-bold ${colors.text}`}>{ind.valor.toFixed(1)}</span>
+                  <span className="text-gray-500 ml-0.5 text-[9px] sm:text-xs">{ind.unidade}</span>
                 </div>
-                
+
                 {/* Custom Progress Bar */}
-                <div className={`w-full ${colors.progressBg} rounded-full h-2 overflow-hidden`}>
-                  <div 
+                <div className={`w-full ${colors.progressBg} rounded-full h-1.5 overflow-hidden`}>
+                  <div
                     className={`${colors.progressFill} h-full rounded-full transition-all duration-300`}
                     style={{ width: `${percentual}%` }}
                   />
                 </div>
-                
-                <div className="mt-2 flex justify-between text-xs">
+
+                <div className="mt-1 flex justify-between text-[10px] sm:text-xs">
                   <span className="text-gray-500">Min: {ind.min}{ind.unidade}</span>
                   <span className={`font-medium ${colors.statusColor}`}>
                     {colors.statusText}
@@ -216,15 +216,15 @@ export function IndicadoresCard({
           })}
 
           {/* Resumo da Saúde Financeira */}
-          <div className={`rounded-xl ${saude.bg} p-3 shadow-sm h-full min-h-[160px] sm:min-h-[180px]`}>
-            <h6 className="mb-3 font-semibold text-gray-800 flex items-center gap-2">
+          <div className={`rounded-xl ${saude.bg} p-3 shadow-sm h-full min-h-[112px] sm:min-h-[126px]`}>
+            <h6 className="mb-2 font-semibold text-gray-800 flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Resumo da Saúde Financeira
             </h6>
             <div className="text-center">
-              <div className="text-5xl">{saude.icon}</div>
-              <div className={`mt-2 font-bold ${saude.color} text-[11px] sm:text-sm leading-tight`}>{saude.text}</div>
-              <div className="mt-2 text-[10px] sm:text-sm text-gray-500">
+              <div className="text-3xl">{saude.icon}</div>
+              <div className={`mt-1 font-bold ${saude.color} text-[10px] sm:text-sm leading-tight`}>{saude.text}</div>
+              <div className="mt-1 text-[9px] sm:text-xs text-gray-500">
                 {indicadoresIdeais}/5 indicadores ideais
               </div>
             </div>
