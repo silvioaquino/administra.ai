@@ -40,9 +40,15 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Converter Decimal para número
+    const despesasFormatadas = despesas.map(d => ({
+      ...d,
+      valor: Number(d.valor)
+    }))
+
     return NextResponse.json({
       success: true,
-      dados: despesas
+      dados: despesasFormatadas
     })
   } catch (error) {
     console.error("Erro ao buscar despesas fixas:", error)

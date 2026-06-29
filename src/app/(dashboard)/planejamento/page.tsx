@@ -377,7 +377,7 @@ export default function PlanejamentoPage() {
 
       {/* Main Content */}
       <div className="container mx-auto p-6 max-w-7xl">
-        {/* Cards Resumo 
+        {/* Cards Resumo */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {cardsResumo.map((card, idx) => (
             <Card
@@ -399,7 +399,7 @@ export default function PlanejamentoPage() {
               </div>
             </Card>
           ))}
-        </div>*/}
+        </div>
 
         {/* Indicadores Ideais vs Atuais */}
         <div className="mt-8">

@@ -40,9 +40,15 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Converter Decimal para número
+    const funcionariosFormatados = funcionarios.map(f => ({
+      ...f,
+      salario: Number(f.salario)
+    }))
+
     return NextResponse.json({
       success: true,
-      dados: funcionarios
+      dados: funcionariosFormatados
     })
   } catch (error) {
     console.error("Erro ao buscar funcionários:", error)
