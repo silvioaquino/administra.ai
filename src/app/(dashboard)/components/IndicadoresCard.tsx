@@ -112,7 +112,7 @@ export function IndicadoresCard({
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className="bg-gray-50 p-3 border-b border-gray-100">
+      <div className="bg-gray-100 p-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <Activity className="h-4 w-4 text-[#de4838]" />
           <h3 className="font-semibold text-gray-800 text-sm">Indicadores Financeiros</h3>

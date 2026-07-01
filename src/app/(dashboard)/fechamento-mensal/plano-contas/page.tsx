@@ -135,14 +135,14 @@ export default function PlanoContasPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
@@ -166,7 +166,7 @@ export default function PlanoContasPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Formulário */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden h-fit">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <h3 className="font-semibold text-gray-800">
                 {editandoId ? "Editar Conta" : "Nova Conta"}
               </h3>
@@ -253,13 +253,13 @@ export default function PlanoContasPage() {
 
           {/* Lista de Contas */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <h3 className="font-semibold text-gray-800">Contas Configuradas</h3>
               <p className="text-xs text-gray-500 mt-1">{contas.length} contas cadastradas</p>
             </div>
             <div className="p-0 overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-gray-100 border-b border-gray-200">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Código</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Nome</th>
@@ -270,7 +270,7 @@ export default function PlanoContasPage() {
                 </thead>
                 <tbody>
                   {contas.map((conta) => (
-                    <tr key={conta.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <tr key={conta.id} className="border-b border-gray-100 hover:bg-gray-100">
                       <td className="px-4 py-3 font-mono text-xs text-gray-600">{conta.codigo}</td>
                       <td className="px-4 py-3 text-gray-800">{conta.nome}</td>
                       <td className="px-4 py-3 text-center">

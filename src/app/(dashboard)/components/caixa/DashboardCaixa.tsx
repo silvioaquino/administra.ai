@@ -430,7 +430,7 @@ export default function DashboardCaixa({
         <div className="space-y-6">
           {/* Informações do Caixa - COMPLETO */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <h3 className="font-semibold text-gray-800">Informações do Caixa</h3>
             </div>
             <div className="p-5 space-y-3">
@@ -465,7 +465,7 @@ export default function DashboardCaixa({
 
           {/* Nova Retirada */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <h3 className="font-semibold text-gray-800">Nova Retirada</h3>
             </div>
             <div className="p-5 space-y-4">
@@ -507,7 +507,7 @@ export default function DashboardCaixa({
 
           {/* Lista de Retiradas */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <h3 className="font-semibold text-gray-800">Últimas Retiradas</h3>
             </div>
             <div className="p-4 max-h-64 overflow-y-auto">
@@ -515,7 +515,7 @@ export default function DashboardCaixa({
                 <div 
                   key={retirada.id} 
                   onClick={() => { setRetiradaSelecionada(retirada); setShowDetalhesRetirada(true); }}
-                  className="cursor-pointer border-b border-gray-100 pb-3 mb-3 last:border-0 hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                  className="cursor-pointer border-b border-gray-100 pb-3 mb-3 last:border-0 hover:bg-gray-100 p-2 rounded-lg transition-colors"
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -591,12 +591,12 @@ export default function DashboardCaixa({
         {/* Coluna Direita - Relatório de Vendas */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100 flex justify-between items-center">
+            <div className="bg-gray-100 p-4 border-b border-gray-100 flex justify-between items-center">
               <h3 className="font-semibold text-gray-800">Relatório de Vendas</h3>
               <div className="flex gap-2">
                 <button 
                   onClick={() => onPreviewImpressao('parcial')} 
-                  className="px-3 py-1.5 text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-1"
+                  className="px-3 py-1.5 text-sm border border-gray-200 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1"
                 >
                   <Printer className="h-3 w-3" />
                   Parcial
@@ -703,7 +703,7 @@ export default function DashboardCaixa({
                               <div 
                                 key={venda.id} 
                                 onClick={() => { setVendaSelecionada(venda); setShowDetalhesVenda(true); }} 
-                                className="cursor-pointer p-1.5 border-b border-gray-100 text-sm hover:bg-gray-50"
+                                className="cursor-pointer p-1.5 border-b border-gray-100 text-sm hover:bg-gray-100"
                               >
                                 <div className="flex justify-between">
                                   <span className="font-medium">{formatarMoeda(venda.valorTotal)}</span>
@@ -771,7 +771,7 @@ export default function DashboardCaixa({
               </div>
 
               {/* Resumo Geral */}
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <div className="mt-4 p-4 bg-gray-100 rounded-lg">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <h4 className="font-semibold text-gray-800 mb-2">Resumo de Vendas</h4>

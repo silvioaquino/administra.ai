@@ -80,7 +80,7 @@ export function FolhaPagamentoTab({ funcionarios, onChange }: FolhaPagamentoTabP
   return (
     <div className="space-y-4">
       {/* Formulário de adição */}
-      <div className="border rounded-lg p-4 bg-gray-50">
+      <div className="border rounded-lg p-4 bg-gray-100">
         <h4 className="font-semibold mb-3">Adicionar Funcionário</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>

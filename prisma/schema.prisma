@@ -59,6 +59,7 @@ model User {
   vendasManuais              VendaManual[]
   retiradas                  Retirada[]
   produtosVenda              ProdutoVenda[]
+  despesasVariaveisResultados DespesasVariaveisResultado[]
 
   @@map("users")
 }
@@ -140,6 +141,7 @@ model Empresa {
   retiradas                  Retirada[]
   caixasFechamento           CaixaFechamento[]
   taxasCartaoConfig          TaxasCartaoConfig?
+  despesasVariaveisResultados DespesasVariaveisResultado[]
 
   @@map("empresas")
 }
@@ -422,6 +424,7 @@ model DespesaVariavel {
   userId     String
   nome       String
   percentual Float
+  aluguel    Float    @default(0)
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
@@ -799,4 +802,43 @@ model Categoria {
   @@index([userId, tipo, nivel])
   @@index([empresaId])
   @@map("categorias")
+}
+
+// ============= RESULTADOS DESPESAS VARIÁVEIS =============
+
+model DespesasVariaveisResultado {
+  id                       Int      @id @default(autoincrement())
+  empresaId                String   @map("empresa_id")
+  userId                   String   @map("user_id")
+  ano                      Int
+  mes                      Int?     @map("mes")
+  
+  // Dados de configuração
+  faturamentoBase          Decimal  @map("faturamento_base") @db.Decimal(15, 2)
+  distribuicaoDebito       Int      @map("distribuicao_debito")
+  distribuicaoCredito      Int      @map("distribuicao_credito")
+  distribuicaoVoucher      Int      @map("distribuicao_voucher")
+  manutencao               Float    @map("manutencao")
+  simplesNacional          Float    @map("simples_nacional")
+  maquininhasConfig        Json     @map("maquininhas_config")
+  
+  // Resultados calculados
+  debitoMedia              Float    @map("debito_media")
+  creditoMedia             Float    @map("credito_media")
+  taxaMediaGeral           Float    @map("taxa_media_geral")
+  aluguelTotal             Float    @map("aluguel_total")
+  percentualAluguel        Float    @map("percentual_aluguel")
+  totalDespesasVariaveis   Float    @map("total_despesas_variaveis")
+  
+  // Metadados
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  empresa                  Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, userId, ano, mes])
+  @@index([userId, ano, mes])
+  @@index([empresaId])
+  @@map("despesas_variaveis_resultados")
 }

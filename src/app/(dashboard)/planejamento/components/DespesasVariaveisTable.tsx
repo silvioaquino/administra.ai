@@ -14,10 +14,11 @@ interface DespesasVariaveisTableProps {
 
 export function DespesasVariaveisTable({ percentual, metaMensalTotal, title, onEdit }: DespesasVariaveisTableProps) {
   const impactoMensal = metaMensalTotal * (percentual / 100)
+  console.log("DespesasVariaveisTable - percentual:", percentual, "metaMensalTotal:", metaMensalTotal, "impactoMensal:", impactoMensal)
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className="bg-gray-50 p-4 border-b border-gray-100">
+      <div className="bg-gray-100 p-4 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-lg">📈</span>

@@ -188,7 +188,7 @@ export default function MovimentacoesContaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-[#de4838]" />
           <p className="text-sm text-gray-500">Carregando movimentações...</p>
@@ -199,7 +199,7 @@ export default function MovimentacoesContaPage() {
 
   if (!conta) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500 mb-2">Conta não encontrada.</p>
@@ -212,7 +212,7 @@ export default function MovimentacoesContaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm flex-wrap gap-4">
         <div className="flex items-center gap-4">
@@ -298,7 +298,7 @@ export default function MovimentacoesContaPage() {
 
         {/* Filtros */}
         <div className="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-[#de4838]" />
               <h3 className="font-semibold text-gray-800">Filtros</h3>
@@ -357,7 +357,7 @@ export default function MovimentacoesContaPage() {
 
         {/* Tabela de Movimentações */}
         <div className="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-50 p-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2">
+          <div className="bg-gray-100 p-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2">
             <div>
               <h3 className="font-semibold text-gray-800">Histórico de Transações</h3>
               <p className="text-xs text-gray-500 mt-1">
@@ -372,7 +372,7 @@ export default function MovimentacoesContaPage() {
           </div>
           <div className="p-0 overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gray-100 border-b border-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
@@ -402,7 +402,7 @@ export default function MovimentacoesContaPage() {
                   </tr>
                 ) : (
                   movimentacoes.map((mov) => (
-                    <tr key={mov.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <tr key={mov.id} className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
                       <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDate(mov.data)}</td>
                       <td className="px-4 py-3 font-medium text-gray-800 max-w-[200px] truncate" title={mov.descricao}>
                         {mov.descricao}
@@ -429,7 +429,7 @@ export default function MovimentacoesContaPage() {
                 )}
               </tbody>
               {movimentacoes.length > 0 && (
-                <tfoot className="border-t-2 border-gray-200 bg-gray-50 font-bold">
+                <tfoot className="border-t-2 border-gray-200 bg-gray-100 font-bold">
                   <tr>
                     <td colSpan={5} className="px-4 py-3 text-right">TOTAIS NO PERÍODO:</td>
                     <td className="px-4 py-3 text-right text-emerald-600">{formatCurrency(totalEntradas)}</td>

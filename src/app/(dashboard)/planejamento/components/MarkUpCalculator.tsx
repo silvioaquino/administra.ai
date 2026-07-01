@@ -39,7 +39,7 @@ export function MarkUpCalculator({
     <div className="grid gap-6 md:grid-cols-2">
       {/* Mark-Up e Precificação */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="bg-gray-50 p-4 border-b border-gray-100">
+        <div className="bg-gray-100 p-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <Calculator className="h-5 w-5 text-[#de4838]" />
             <h3 className="font-semibold text-gray-800">Mark-Up e Precificação</h3>
@@ -62,7 +62,7 @@ export function MarkUpCalculator({
               <Input 
                 value={markUpCalculado.toFixed(4)} 
                 readOnly 
-                className="bg-gray-50 rounded-lg border-gray-200 font-mono"
+                className="bg-gray-100 rounded-lg border-gray-200 font-mono"
               />
               <Button 
                 onClick={aplicarMarkUp}
@@ -82,7 +82,7 @@ export function MarkUpCalculator({
 
       {/* Custo Máximo com Produção */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="bg-gray-50 p-4 border-b border-gray-100">
+        <div className="bg-gray-100 p-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <Factory className="h-5 w-5 text-[#de4838]" />
             <h3 className="font-semibold text-gray-800">Custo Máximo com Produção (CMV)</h3>

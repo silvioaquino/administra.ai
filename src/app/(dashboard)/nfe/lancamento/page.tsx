@@ -158,7 +158,7 @@ export default function LancamentoManualPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -339,7 +339,7 @@ export default function LancamentoManualPage() {
                       type="button"
                       variant="outline"
                       onClick={() => router.push("/nfe/produtos/novo")}
-                      className="border-gray-300 rounded-lg hover:bg-gray-50"
+                      className="border-gray-300 rounded-lg hover:bg-gray-100"
                     >
                       <Package className="h-4 w-4 text-gray-500" />
                     </Button>
@@ -496,7 +496,7 @@ export default function LancamentoManualPage() {
           {/* Right Column - Preview Card */}
           <div className="lg:sticky lg:top-24 h-fit">
             <Card className="overflow-hidden border-0 shadow-lg rounded-2xl bg-white">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <h3 className="font-semibold text-gray-800">Pré-visualização do lançamento</h3>
                 <p className="text-xs text-gray-500">Confira os detalhes antes de salvar</p>
               </div>

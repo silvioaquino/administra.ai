@@ -3,13 +3,10 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Search, Filter, Package, TrendingUp, DollarSign, AlertCircle, Zap } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Plus, Search, Filter, Package, TrendingUp, DollarSign, AlertCircle, Zap, CalendarRange } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
 import { FichaCard } from "./components/FichaCard"
 
@@ -114,14 +111,14 @@ export default function FichasTecnicasPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 ml-6 mr-6 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div>
@@ -164,38 +161,48 @@ export default function FichasTecnicasPage() {
         </div>*/}
 
         {/* Filtros */}
-        <div className="mt-6 flex flex-col gap-4 sm:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input
-              placeholder="Buscar por nome do prato..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 rounded-lg border-gray-200 focus:ring-[#de4838]"
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant={categoriaFiltro === "" ? "default" : "outline"}
-              onClick={() => setCategoriaFiltro("")}
-              className={categoriaFiltro === "" ? "bg-[#de4838] hover:bg-[#c73d2e]" : "border-gray-200 hover:border-[#de4838]"}
-            >
-              Todos
-            </Button>
-            <Button
-              variant={categoriaFiltro === "Almoço" ? "default" : "outline"}
-              onClick={() => setCategoriaFiltro("Almoço")}
-              className={categoriaFiltro === "Almoço" ? "bg-[#de4838] hover:bg-[#c73d2e]" : "border-gray-200 hover:border-[#de4838]"}
-            >
-              Almoço
-            </Button>
-            <Button
-              variant={categoriaFiltro === "Janta" ? "default" : "outline"}
-              onClick={() => setCategoriaFiltro("Janta")}
-              className={categoriaFiltro === "Janta" ? "bg-[#de4838] hover:bg-[#c73d2e]" : "border-gray-200 hover:border-[#de4838]"}
-            >
-              Janta
-            </Button>
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+          <div className="py-3 px-5">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <Filter className="h-4 w-4 text-[#de4838]" />
+                <h3 className="font-semibold text-gray-800 text-sm hidden sm:inline">Filtros</h3>
+              </div>
+
+              <div className="flex items-center gap-2 flex-grow min-w-0">
+                {/* Busca por nome */}
+                <div className="relative flex-shrink-0">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    placeholder="Buscar por nome do prato..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-9 pr-3 py-2 text-sm rounded-lg border-gray-200 focus:ring-[#de4838] focus:border-transparent min-w-[200px]"
+                  />
+                </div>
+
+                {/* Filtro de categoria */}
+                <div className="relative flex-shrink-0">
+                  <select
+                    value={categoriaFiltro}
+                    onChange={(e) => setCategoriaFiltro(e.target.value)}
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8 min-w-[120px]"
+                  >
+                    <option value="">Todos</option>
+                    <option value="Almoço">Almoço</option>
+                    <option value="Janta">Janta</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                    <svg className="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                  </div>
+                </div>
+
+                <div className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 flex-shrink-0">
+                  <CalendarRange className="h-4 w-4 inline mr-1" />
+                  {stats.total} ficha{stats.total !== 1 ? 's' : ''}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

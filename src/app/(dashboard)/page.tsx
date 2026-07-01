@@ -409,7 +409,7 @@ export default function DashboardPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-150 flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
       </div>
     )
@@ -471,7 +471,7 @@ export default function DashboardPage() {
   const lucroTotal = totalReceitasChart - totalDespesasChart
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Header */}
         <div className="sticky top-0 z-10 ml-1 mb-5 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
@@ -580,7 +580,7 @@ export default function DashboardPage() {
 
         {/* Metas */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="bg-gray-50 py-3 px-5 border-b border-gray-100">
+          <div className="bg-gray-100 py-3 px-5 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-[#de4838]" />
               <h3 className="font-semibold text-gray-800">Metas</h3>
@@ -718,7 +718,7 @@ export default function DashboardPage() {
 
         {/* Gráfico de Receitas vs Despesas */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-[#de4838]" />
               <h3 className="font-semibold text-gray-800">Evolução Financeira</h3>
@@ -824,7 +824,7 @@ export default function DashboardPage() {
 
         {/* Produtividade por funcionário */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-[#de4838]" />
               <h3 className="font-semibold text-gray-800">Produtividade</h3>
@@ -839,7 +839,7 @@ export default function DashboardPage() {
         <div className="grid gap-6 md:grid-cols-2 mb-6">
           {/* Últimos Lançamentos */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-[#de4838]" />
                 <h3 className="font-semibold text-gray-800">Últimos Lançamentos</h3>
@@ -849,7 +849,7 @@ export default function DashboardPage() {
               <div className="space-y-3 max-h-80 overflow-y-auto">
                 {ultimosLancamentos.length > 0 ? (
                   ultimosLancamentos.map((lanc) => (
-                    <div key={lanc.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div key={lanc.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
                       <div className="flex items-center gap-3">
                         {getTipoIcon(lanc.entrada)}
                         <div>
@@ -875,7 +875,7 @@ export default function DashboardPage() {
 
           {/* Alertas */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-[#de4838]" />
                 <h3 className="font-semibold text-gray-800">Alertas</h3>
@@ -904,7 +904,7 @@ export default function DashboardPage() {
         </div>
         {/* Informações do Sistema - Largura total */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <Store className="h-5 w-5 text-[#de4838]" />
               <h3 className="font-semibold text-gray-800">Informações do Sistema</h3>

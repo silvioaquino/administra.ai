@@ -1,4 +1,4 @@
-// src/app/(dashboard)/planejamento/page.tsx
+// src/app/(dashboard)/planejamento/page.tsx (versão simplificada)
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
@@ -49,91 +49,6 @@ interface Funcionario {
   salario: number
 }
 
-interface TaxasCartaoConfig {
-  distribuicaoVendas: { debito: number; credito: number; voucher: number }
-  distribuicaoMaquininhas: { infinitepay: number; stone: number; caixa: number }
-  taxas: {
-    debito: { infinitepay: number; stone: number; caixa: number }
-    credito: { infinitepay: number; stone: number; caixa: number }
-    voucher: number
-  }
-  aluguelMaquininhas: { stone1: number; stone2: number }
-  manutencao: number
-  simplesNacional: number
-}
-
-interface ResultadosDespesasVariaveis {
-  debitoMedia: number
-  creditoMedia: number
-  taxaMediaGeral: number
-  aluguelTotal: number
-  percentualAluguel: number
-  totalDespesasVariaveis: number
-}
-
-// Configuração padrão para taxas de cartão (fallback quando API falha)
-const TAXAS_CARTAO_DEFAULT: TaxasCartaoConfig = {
-  distribuicaoVendas: { debito: 40, credito: 50, voucher: 10 },
-  distribuicaoMaquininhas: { infinitepay: 50, stone: 30, caixa: 20 },
-  taxas: {
-    debito: { infinitepay: 1.37, stone: 2.34, caixa: 4.48 },
-    credito: { infinitepay: 3.15, stone: 6.44, caixa: 5.78 },
-    voucher: 7.0
-  },
-  aluguelMaquininhas: { stone1: 59.90, stone2: 19.90 },
-  manutencao: 1.0,
-  simplesNacional: 8.0
-}
-
-const calcularDespesasVariaveis = (config: TaxasCartaoConfig, faturamentoBase: number): ResultadosDespesasVariaveis => {
-  let debitoMedia = 0
-  for (const [maquina, percentual] of Object.entries(config.distribuicaoMaquininhas)) {
-    debitoMedia += config.taxas.debito[maquina as keyof typeof config.taxas.debito] * (percentual / 100)
-  }
-
-  let creditoMedia = 0
-  for (const [maquina, percentual] of Object.entries(config.distribuicaoMaquininhas)) {
-    creditoMedia += config.taxas.credito[maquina as keyof typeof config.taxas.credito] * (percentual / 100)
-  }
-
-  const percDebito = config.distribuicaoVendas.debito / 100
-  const percCredito = config.distribuicaoVendas.credito / 100
-  const percVoucher = config.distribuicaoVendas.voucher / 100
-  const taxaMediaGeral = (debitoMedia * percDebito) + (creditoMedia * percCredito) + (config.taxas.voucher * percVoucher)
-  const aluguelTotal = config.aluguelMaquininhas.stone1 + config.aluguelMaquininhas.stone2
-  const percentualAluguel = (aluguelTotal / faturamentoBase) * 100
-  const totalDespesasVariaveis = config.simplesNacional + taxaMediaGeral + config.manutencao + percentualAluguel
-
-  return {
-    debitoMedia,
-    creditoMedia,
-    taxaMediaGeral,
-    aluguelTotal,
-    percentualAluguel,
-    totalDespesasVariaveis
-  }
-}
-
-// Função auxiliar para fetch seguro com tratamento de erro
-async function safeFetch<T>(url: string, fallback: T): Promise<T> {
-  try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      console.warn(`API ${url} retornou status ${response.status}, usando fallback`)
-      return fallback
-    }
-    const data = await response.json()
-    if (!data.success) {
-      console.warn(`API ${url} retornou success: false, usando fallback`)
-      return fallback
-    }
-    return data
-  } catch (error) {
-    console.warn(`Erro ao buscar ${url}:`, error, '- usando fallback')
-    return fallback
-  }
-}
-
 export default function PlanejamentoPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -141,114 +56,84 @@ export default function PlanejamentoPage() {
   const [metasMensais, setMetasMensais] = useState<MetaMensal[]>([])
   const [acompanhamentos, setAcompanhamentos] = useState<Acompanhamento[]>([])
   const [despesasFixas, setDespesasFixas] = useState<DespesaFixa[]>([])
-  const [despesasVariaveisPct, setDespesasVariaveisPct] = useState(0)
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([])
   const [activeTab, setActiveTab] = useState("almoco")
-  const [resumo, setResumo] = useState({
-    metaMensalTotal: 0,
-    metaAlmoco: 73,
-    metaJanta: 27,
-    lucroDesejado: 15,
-    markUp: 0,
-    cmvMaximo: 0
-  })
   const [salariosTotal, setSalariosTotal] = useState(0)
   const [provisoesDetalhadas, setProvisoesDetalhadas] = useState<Array<{nome: string, valor: number}>>([])
+  
+  // Estado para os indicadores (vem da API)
+  const [indicadores, setIndicadores] = useState({
+    metaMensalTotal: 0,
+    lucroDesejado: 15,
+    markUp: 0,
+    cmvMaximo: 0,
+    pctFixas: 0,
+    pctVariaveis: 0,
+    totalDespesasVariaveis: 0,
+    despesasFixas: [] as DespesaFixa[]
+  })
 
   const handleTotalsChange = (salarios: number, provisoes: Array<{nome: string, valor: number}>) => {
     setSalariosTotal(salarios)
     setProvisoesDetalhadas(provisoes)
   }
 
-  const carregarDados = useCallback(() => {
-    async function load() {
+  const carregarDados = useCallback(async () => {
     setLoading(true)
     try {
-      // 1. Carregar metas mensais
+      // 1. Carregar indicadores da API (inclui despesas fixas, variáveis, metas, etc)
+      const indicadoresResponse = await fetch(`/api/planejamento/indicadores-resumo?ano=${anoAtual}`)
+      const indicadoresData = await indicadoresResponse.json()
+      
+      if (indicadoresData.success) {
+        console.log("📊 Dados dos indicadores:", indicadoresData)
+
+        setIndicadores({
+          metaMensalTotal: indicadoresData.metaMensalTotal || 0,
+          lucroDesejado: indicadoresData.lucroDesejado || 15,
+          markUp: indicadoresData.markUp || 0,
+          cmvMaximo: indicadoresData.cmv || 0,
+          pctFixas: indicadoresData.pctFixas || 0,
+          pctVariaveis: indicadoresData.despesasVariaveisPct || 0,
+          totalDespesasVariaveis: indicadoresData.totalDespesasVariaveis || 0,
+          despesasFixas: indicadoresData.despesasFixas || []
+        })
+
+        setDespesasFixas(indicadoresData.despesasFixas || [])
+      }
+
+      // 2. Carregar metas mensais
       const metasResponse = await fetch(`/api/planejamento/metas?ano=${anoAtual}`)
       const metasData = await metasResponse.json()
-      const metasMensaisCarregadas: MetaMensal[] = metasData.success ? metasData.metas || [] : []
-      setMetasMensais(metasMensaisCarregadas)
+      if (metasData.success) {
+        setMetasMensais(metasData.metas || [])
+      }
 
-      // 2. Carregar acompanhamento real
+      // 3. Carregar acompanhamento
       const acompResponse = await fetch(`/api/planejamento/acompanhamento?ano=${anoAtual}`)
       const acompData = await acompResponse.json()
       if (acompData.success) {
         setAcompanhamentos(acompData.dados || [])
       }
 
-      // 3. Carregar despesas fixas
-      const fixasResponse = await fetch(`/api/planejamento/despesas-fixas?ano=${anoAtual}`)
-      const fixasData = await fixasResponse.json()
-      const despesasFixasCarregadas: DespesaFixa[] = fixasData.success && fixasData.dados ? fixasData.dados : []
-      setDespesasFixas(despesasFixasCarregadas)
-
       // 4. Carregar funcionários
       const funcResponse = await fetch(`/api/planejamento/funcionarios?ano=${anoAtual}`)
       const funcData = await funcResponse.json()
       if (funcData.success && funcData.dados) {
         setFuncionarios(funcData.dados)
-        // Calcular total de salários
         const totalSalarios = funcData.dados.reduce((sum: number, f: Funcionario) => sum + (f.salario || 0), 0)
         setSalariosTotal(totalSalarios)
       }
-
-      // 4.5. Carregar provisões (buscar dados, mas os totais são calculados pelo FolhaSalarialTable)
-      const provisoesResponse = await fetch(`/api/planejamento/provisoes-funcionarios?ano=${anoAtual}`)
-      // Os valores de provisões são calculados dinamicamente pelo componente FolhaSalarialTable
-
-      // 5. Carregar despesas variáveis e calcular total
-      const taxasResponse = await fetch("/api/planejamento/taxas-cartao")
-      const taxasData = await taxasResponse.json()
-      const faturamentoBase = Number(localStorage.getItem("faturamentoBase")) || 30000
-      const despesasVariaveisCarregadas = calcularDespesasVariaveis(taxasData.config, faturamentoBase)
-      setDespesasVariaveisPct(despesasVariaveisCarregadas.totalDespesasVariaveis)
-
-      // 6. Calcular resumo do mês atual
-      const mesAtual = new Date().getMonth() + 1
-      const metaAtual: MetaMensal = metasMensaisCarregadas.find(m => m.mes === mesAtual) || {
-        mes: mesAtual,
-        metaDiariaAlmoco: 0,
-        metaDiariaJanta: 0,
-        diasTrabalhados: 26,
-        lucroDesejado: 15
-      }
-
-      const metaMensalAlmoco = metaAtual.metaDiariaAlmoco * metaAtual.diasTrabalhados
-      const metaMensalJanta = metaAtual.metaDiariaJanta * metaAtual.diasTrabalhados
-      const metaTotal = metaMensalAlmoco + metaMensalJanta
-
-      // Calcular Mark-Up e CMV
-      const totalFixas = despesasFixasCarregadas.reduce((sum, d) => sum + d.valor, 0)
-      const pctFixas = metaTotal > 0 ? (totalFixas / metaTotal) * 100 : 0
-      const cmvCalculado = 100 - (pctFixas + despesasVariaveisCarregadas.totalDespesasVariaveis + metaAtual.lucroDesejado)
-      const markUpCalculado = cmvCalculado > 0 ? 100 / cmvCalculado : 0
-
-      setResumo({
-        metaMensalTotal: metaTotal,
-        metaAlmoco: 73,
-        metaJanta: 27,
-        lucroDesejado: metaAtual.lucroDesejado,
-        markUp: markUpCalculado,
-        cmvMaximo: cmvCalculado
-      })
 
     } catch (error) {
       console.error("Erro ao carregar dados:", error)
     } finally {
       setLoading(false)
     }
-    }
-
-    return load()
   }, [anoAtual])
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      carregarDados()
-    }, 0)
-
-    return () => clearTimeout(timeoutId)
+    carregarDados()
   }, [carregarDados])
 
   async function sincronizarDadosReais() {
@@ -287,37 +172,35 @@ export default function PlanejamentoPage() {
     }
   }
 
-  // Funções de navegação
   const navegarPara = (rota: string) => {
-    console.log(`Navegando para: ${rota}`)
     router.push(rota)
   }
 
   const cardsResumo = [
     {
       title: "Faturamento Mensal",
-      value: formatCurrency(resumo.metaMensalTotal),
+      value: formatCurrency(indicadores.metaMensalTotal),
       icon: DollarSign,
       gradient: "from-emerald-500 to-emerald-600",
-      detail: `Almoço: ${resumo.metaAlmoco}% | Janta: ${resumo.metaJanta}%`,
+      detail: `Almoço: 73% | Janta: 27%`,
     },
     {
       title: "Lucro Desejado",
-      value: formatPercentage(resumo.lucroDesejado),
+      value: formatPercentage(indicadores.lucroDesejado),
       icon: TrendingUp,
       gradient: "from-green-600 to-green-500",
       detail: "Margem alvo",
     },
     {
       title: "Mark-Up",
-      value: resumo.markUp.toFixed(2),
+      value: indicadores.markUp.toFixed(2),
       icon: Calculator,
       gradient: "from-orange-500 to-orange-600",
       detail: "Fator multiplicador",
     },
     {
       title: "CMV Máximo",
-      value: formatPercentage(resumo.cmvMaximo),
+      value: formatPercentage(indicadores.cmvMaximo),
       icon: Percent,
       gradient: "from-purple-500 to-purple-600",
       detail: "Custo com Produção",
@@ -326,14 +209,14 @@ export default function PlanejamentoPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#e5e7eb] flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 ml-3 mr-3 sm:ml-6 sm:mr-6 bg-white border-b border-gray-200 px-3 py-3 sm:px-6 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
         <div>
@@ -378,24 +261,24 @@ export default function PlanejamentoPage() {
       {/* Main Content */}
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Cards Resumo */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {cardsResumo.map((card, idx) => (
             <Card
               key={idx}
-              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white hover:cursor-pointer hover:scale-105 transition-transform duration-200 h-full min-h-[132px] sm:min-h-[150px]`}
+              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white hover:cursor-pointer hover:scale-105 transition-transform duration-200 h-full min-h-[64px] sm:min-h-[73px]`}
             >
-              <CardContent className="p-6">
+              <CardContent className="p-2 sm:p-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium opacity-90">{card.title}</p>
-                  <card.icon className="h-5 w-5 opacity-80" />
+                  <p className="text-[10px] sm:text-xs font-medium opacity-90 leading-tight">{card.title}</p>
+                  <card.icon className="h-3 w-3 sm:h-4 sm:w-4 opacity-80" />
                 </div>
-                <div className="mt-2 text-2xl font-bold">
+                <div className="mt-1 text-xs sm:text-lg font-bold leading-tight">
                   {card.value}
                 </div>
-                <p className="mt-1 text-xs opacity-80">{card.detail}</p>
+                <p className="mt-0.5 text-[9px] sm:text-[10px] opacity-80">{card.detail}</p>
               </CardContent>
-              <div className="absolute -bottom-4 -right-4 opacity-10">
-                <card.icon className="h-20 w-20" />
+              <div className="absolute -bottom-2 -right-2 opacity-10">
+                <card.icon className="h-8 w-8" />
               </div>
             </Card>
           ))}
@@ -403,39 +286,40 @@ export default function PlanejamentoPage() {
 
         {/* Indicadores Ideais vs Atuais */}
         <div className="mt-8">
-          <IndicadoresCard 
-            despesasFixas={despesasFixas}
-            despesasVariaveisPct={despesasVariaveisPct}
-            metaMensalTotal={resumo.metaMensalTotal}
-            lucroDesejado={resumo.lucroDesejado}
-            markUp={resumo.markUp}
-            cmv={resumo.cmvMaximo}
+          <IndicadoresCard
+            despesasFixas={indicadores.despesasFixas}
+            despesasVariaveisPct={indicadores.pctVariaveis}
+            metaMensalTotal={indicadores.metaMensalTotal}
+            lucroDesejado={indicadores.lucroDesejado}
+            markUp={indicadores.markUp}
+            cmv={indicadores.cmvMaximo}
+            pctFixas={indicadores.pctFixas}
           />
         </div>
 
         {/* Tabs Almoço e Janta */}
-        <div className="mt-8">
-          <div className="flex gap-2 mb-6">
+        <div className="mt-5">
+          <div className="flex gap-1 mb-4">
             <button
               onClick={() => setActiveTab("almoco")}
-              className={`flex items-center gap-2 px-6 py-2 rounded-lg transition-all w-32 justify-center hover:cursor-pointer hover:border-2 hover:border-red-500 ${
-                activeTab === "almoco" 
-                  ? "bg-white shadow-sm text-gray-800 border-2 border-red-500" 
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all w-24 justify-center hover:cursor-pointer hover:border-2 hover:border-red-500 text-[13px] ${
+                activeTab === "almoco"
+                  ? "bg-white shadow-sm text-gray-800 border-2 border-red-500"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              <Sun className="h-4 w-4" />
+              <Sun className="h-3 w-3" />
               ALMOÇO (73%)
             </button>
             <button
               onClick={() => setActiveTab("janta")}
-              className={`flex items-center gap-2 px-6 py-2 rounded-lg transition-all w-32 justify-center hover:cursor-pointer hover:border-2 hover:border-red-500 ${
-                activeTab === "janta" 
-                  ? "bg-white shadow-sm text-gray-800 border-2 border-red-500" 
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all w-24 justify-center hover:cursor-pointer hover:border-2 hover:border-red-500 text-[13px] ${
+                activeTab === "janta"
+                  ? "bg-white shadow-sm text-gray-800 border-2 border-red-500"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              <Moon className="h-4 w-4" />
+              <Moon className="h-3 w-3" />
               JANTA (27%)
             </button>
           </div>
@@ -444,7 +328,7 @@ export default function PlanejamentoPage() {
           {activeTab === "almoco" && (
             <div className="grid gap-6 lg:grid-cols-2">
               <DespesasFixasTable
-                despesas={despesasFixas}
+                despesas={indicadores.despesasFixas}
                 percentual={0.73}
                 title="Despesas Fixas - Almoço (73%)"
                 onEdit={() => navegarPara("/planejamento/editar/despesas-fixas")}
@@ -453,17 +337,17 @@ export default function PlanejamentoPage() {
               />
               <div className="space-y-6">
                 <DespesasVariaveisTable 
-                  percentual={despesasVariaveisPct}
-                  metaMensalTotal={resumo.metaMensalTotal}
+                  percentual={indicadores.pctVariaveis}
+                  metaMensalTotal={indicadores.metaMensalTotal}
                   title="Despesas Variáveis"
                   onEdit={() => navegarPara("/planejamento/editar/despesas-variaveis")}
                 />
                 <GraficosDistribuicao 
                   tipo="almoco"
-                  despesasFixasPct={(despesasFixas.reduce((s, d) => s + d.valor, 0) / resumo.metaMensalTotal) * 100}
-                  despesasVariaveisPct={despesasVariaveisPct}
-                  lucroDesejado={resumo.lucroDesejado}
-                  cmv={resumo.cmvMaximo}
+                  despesasFixasPct={indicadores.pctFixas}
+                  despesasVariaveisPct={indicadores.pctVariaveis}
+                  lucroDesejado={indicadores.lucroDesejado}
+                  cmv={indicadores.cmvMaximo}
                 />
               </div>
             </div>
@@ -473,7 +357,7 @@ export default function PlanejamentoPage() {
           {activeTab === "janta" && (
             <div className="grid gap-6 lg:grid-cols-2">
               <DespesasFixasTable
-                despesas={despesasFixas}
+                despesas={indicadores.despesasFixas}
                 percentual={0.27}
                 title="Despesas Fixas - Janta (27%)"
                 onEdit={() => navegarPara("/planejamento/editar/despesas-fixas")}
@@ -482,17 +366,17 @@ export default function PlanejamentoPage() {
               />
               <div className="space-y-6">
                 <DespesasVariaveisTable 
-                  percentual={despesasVariaveisPct}
-                  metaMensalTotal={resumo.metaMensalTotal}
+                  percentual={indicadores.pctVariaveis}
+                  metaMensalTotal={indicadores.metaMensalTotal}
                   title="Despesas Variáveis"
                   onEdit={() => navegarPara("/planejamento/editar/despesas-variaveis")}
                 />
                 <GraficosDistribuicao 
                   tipo="janta"
-                  despesasFixasPct={(despesasFixas.reduce((s, d) => s + d.valor, 0) / resumo.metaMensalTotal) * 100}
-                  despesasVariaveisPct={despesasVariaveisPct}
-                  lucroDesejado={resumo.lucroDesejado}
-                  cmv={resumo.cmvMaximo}
+                  despesasFixasPct={indicadores.pctFixas}
+                  despesasVariaveisPct={indicadores.pctVariaveis}
+                  lucroDesejado={indicadores.lucroDesejado}
+                  cmv={indicadores.cmvMaximo}
                 />
               </div>
             </div>
@@ -502,26 +386,6 @@ export default function PlanejamentoPage() {
         {/* Tabela de Metas Mensais */}
         <div className="mt-8">
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-[#de4838]" />
-                  <h3 className="font-semibold text-gray-800">Metas Mensais</h3>
-                  <Badge variant="secondary" className="bg-gray-200 text-gray-700">
-                    {anoAtual}
-                  </Badge>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navegarPara("/planejamento/editar/metas-mensais")}
-                  className="rounded-lg border-gray-200 hover:cursor-pointer hover:border-red-500 hover:border-2 transition-all"
-                >
-                  <Settings className="mr-2 h-3 w-3" />
-                  Configurar
-                </Button>
-              </div>
-            </div>
             <div className="p-0">
               <TabelaMetasMensais 
                 metas={metasMensais}
@@ -535,34 +399,6 @@ export default function PlanejamentoPage() {
         {/* Folha Salarial & Provisões */}
         <div className="mt-8">
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-[#de4838]" />
-                  <h3 className="font-semibold text-gray-800">Folha Salarial</h3>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navegarPara("/planejamento/editar/funcionarios")}
-                    className="rounded-lg border-gray-200 hover:cursor-pointer hover:border-red-500 hover:border-2 transition-all"
-                  >
-                    <Users className="mr-2 h-3 w-3" />
-                    Funcionários
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navegarPara("/planejamento/editar/provisoes")}
-                    className="rounded-lg border-gray-200 hover:cursor-pointer hover:border-red-500 hover:border-2 transition-all"
-                  >
-                    <Calculator className="mr-2 h-3 w-3" />
-                    Provisões
-                  </Button>
-                </div>
-              </div>
-            </div>
             <div className="p-0">
               <FolhaSalarialTable
                 funcionarios={funcionarios}
@@ -577,12 +413,6 @@ export default function PlanejamentoPage() {
         {/* Comparativo Real x Meta */}
         <div className="mt-8">
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-[#de4838]" />
-                <h3 className="font-semibold text-gray-800">Comparativo Real x Meta</h3>
-              </div>
-            </div>
             <div className="p-0">
               <TabelaAcompanhamento 
                 metas={metasMensais}
@@ -595,12 +425,12 @@ export default function PlanejamentoPage() {
         {/* Mark-Up & Custos */}
         <div className="mt-8">
           <MarkUpCalculator 
-            despesasFixasTotal={despesasFixas.reduce((s, d) => s + d.valor, 0)}
-            despesasVariaveisPct={despesasVariaveisPct}
-            metaMensalTotal={resumo.metaMensalTotal}
-            lucroDesejado={resumo.lucroDesejado}
-            markUp={resumo.markUp}
-            cmv={resumo.cmvMaximo}
+            despesasFixasTotal={indicadores.despesasFixas.reduce((s, d) => s + d.valor, 0)}
+            despesasVariaveisPct={indicadores.pctVariaveis}
+            metaMensalTotal={indicadores.metaMensalTotal}
+            lucroDesejado={indicadores.lucroDesejado}
+            markUp={indicadores.markUp}
+            cmv={indicadores.cmvMaximo}
           />
         </div>
       </div>

@@ -290,11 +290,11 @@ export function TaxasCartaoConfig({ config, resultados, onUpdate, onSave, saving
                 <p className="text-xs text-muted-foreground">Taxa Média Geral</p>
                 <p className="text-lg font-bold text-yellow-600">{formatPercentage(resultados.taxaMediaGeral)}</p>
               </div>
-              <div className="rounded-lg bg-gray-50 p-2 text-center">
+              <div className="rounded-lg bg-gray-100 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Aluguel Total</p>
                 <p className="text-lg font-bold text-gray-600">{formatCurrency(resultados.aluguelTotal)}</p>
               </div>
-              <div className="rounded-lg bg-gray-50 p-2 text-center">
+              <div className="rounded-lg bg-gray-100 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Aluguel % (base R$30k)</p>
                 <p className="text-lg font-bold text-gray-600">{formatPercentage(resultados.percentualAluguel)}</p>
               </div>

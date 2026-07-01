@@ -211,7 +211,7 @@ export default function RegisterPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Coluna Esquerda - Showcase */}
@@ -402,7 +402,7 @@ export default function RegisterPage() {
                               <button
                                 key={seg}
                                 type="button"
-                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                 onClick={() => {
                                   setFormData({ ...formData, segmento: seg })
                                   setSegmentoOpen(false)
@@ -521,7 +521,7 @@ export default function RegisterPage() {
                 </div>
 
                 {showAddress && (
-                  <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="space-y-4 p-4 bg-gray-100 rounded-xl">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-1">
                         <Label className="text-xs font-medium text-gray-600">CEP</Label>

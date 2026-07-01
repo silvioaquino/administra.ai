@@ -428,7 +428,7 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
             </CardContent>
 
             {/* Footer */}
-            <div className="p-4 border-t bg-gray-50 rounded-b-xl">
+            <div className="p-4 border-t bg-gray-100 rounded-b-xl">
               <div className="flex justify-center gap-1.5">
                 {steps.map((_, idx) => (
                   <button

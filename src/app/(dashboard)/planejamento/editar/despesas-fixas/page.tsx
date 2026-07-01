@@ -127,14 +127,14 @@ export default function EditarDespesasFixasPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -179,7 +179,7 @@ export default function EditarDespesasFixasPage() {
         </Alert>
 
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-2">
                 <Home className="h-5 w-5 text-[#de4838]" />
@@ -210,7 +210,7 @@ export default function EditarDespesasFixasPage() {
           <div className="p-5">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-gray-100 border-b border-gray-200">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Despesa</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor (R$)</th>
@@ -220,7 +220,7 @@ export default function EditarDespesasFixasPage() {
                 </thead>
                 <tbody>
                   {despesas.map((desp, idx) => (
-                    <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <tr key={idx} className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
                       <td className="px-4 py-2">
                         <Input
                           value={desp.nome}
@@ -259,7 +259,7 @@ export default function EditarDespesasFixasPage() {
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="border-t-2 border-gray-200 bg-gray-50">
+                <tfoot className="border-t-2 border-gray-200 bg-gray-100">
                   <tr className="font-semibold">
                     <td className="px-4 py-3 text-gray-800">TOTAL</td>
                     <td className="px-4 py-3 text-right text-[#de4838] text-lg">{formatCurrency(totalDespesas)}</td>

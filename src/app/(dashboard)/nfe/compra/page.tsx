@@ -231,7 +231,7 @@ export default function CompraNfePage() {
   const valorTotalCompra = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -268,7 +268,7 @@ export default function CompraNfePage() {
           <div className="space-y-6">
             {/* Processar NFC-e Card */}
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <Truck className="h-5 w-5 text-[#de4838]" />
                   <h3 className="font-semibold text-gray-800">Processar NFC-e</h3>
@@ -323,14 +323,14 @@ export default function CompraNfePage() {
             {/* Informações da Compra */}
             {notaProcessada && (
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="bg-gray-50 p-4 border-b border-gray-100">
+                <div className="bg-gray-100 p-4 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-[#de4838]" />
                     <h3 className="font-semibold text-gray-800">Informações da Compra</h3>
                   </div>
                 </div>
                 <div className="p-6 space-y-4">
-                  <div className="rounded-lg bg-gray-50 p-4">
+                  <div className="rounded-lg bg-gray-100 p-4">
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Fornecedor</p>
                     <p className="text-sm font-medium text-gray-800 mt-1">{notaProcessada.nome_emitente || "Não informado"}</p>
                     <p className="text-xs text-gray-500 mt-0.5">CNPJ: {notaProcessada.cnpj_emitente || "Não informado"}</p>
@@ -403,7 +403,7 @@ export default function CompraNfePage() {
           {/* Right Column - Preview */}
           <div className="lg:sticky lg:top-24 h-fit">
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <Package className="h-5 w-5 text-[#de4838]" />
                   <h3 className="font-semibold text-gray-800">Resumo da Operação</h3>
@@ -461,7 +461,7 @@ export default function CompraNfePage() {
         {produtos.length > 0 && (
           <div className="mt-8">
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-2">
                     <Package className="h-5 w-5 text-[#de4838]" />
@@ -485,7 +485,7 @@ export default function CompraNfePage() {
               </div>
               <div className="p-0 overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-100 border-b border-gray-200">
                     <tr>
                       <th className="px-4 py-3 text-left w-10"></th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
@@ -497,7 +497,7 @@ export default function CompraNfePage() {
                   </thead>
                   <tbody>
                     {produtos.map((produto, index) => (
-                      <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <tr key={index} className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
                         <td className="px-4 py-3">
                           <input
                             type="checkbox"
@@ -518,7 +518,7 @@ export default function CompraNfePage() {
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="bg-gray-50 border-t border-gray-200">
+                  <tfoot className="bg-gray-100 border-t border-gray-200">
                     <tr>
                       <td colSpan={5} className="px-4 py-4 text-right font-semibold text-gray-700">
                         Total da Compra:

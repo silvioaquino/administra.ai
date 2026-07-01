@@ -52,7 +52,7 @@ export function TabelaAcompanhamento({ metas, acompanhamentos }: TabelaAcompanha
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className="bg-gray-50 p-4 border-b border-gray-100">
+      <div className="bg-gray-100 p-4 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-[#de4838]" />
           <h3 className="font-semibold text-gray-800">Acompanhamento Mensal - Real vs Meta</h3>
@@ -61,7 +61,7 @@ export function TabelaAcompanhamento({ metas, acompanhamentos }: TabelaAcompanha
       <div className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-100 border-b border-gray-200">
               <tr className="border-b border-gray-200">
                 <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mês</th>
                 <th colSpan={2} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-x border-gray-200">Almoço</th>
@@ -122,7 +122,7 @@ export function TabelaAcompanhamento({ metas, acompanhamentos }: TabelaAcompanha
                 )
               })}
             </tbody>
-            <tfoot className="border-t-2 border-gray-200 bg-gray-50">
+            <tfoot className="border-t-2 border-gray-200 bg-gray-100">
               <tr className="font-semibold">
                 <td className="px-4 py-3 text-gray-800">TOTAL ANUAL</td>
                 <td className="px-4 py-3 text-right text-gray-800">{formatCurrency(totalMetaAlmoco)}</td>

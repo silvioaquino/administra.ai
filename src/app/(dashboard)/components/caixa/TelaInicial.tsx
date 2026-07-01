@@ -66,7 +66,7 @@ export default function TelaInicial({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       {/* Header - mesmo estilo da página Fichas Técnicas */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div>
@@ -153,7 +153,7 @@ export default function TelaInicial({
           <div className="py-3 px-4">
             <div className="flex items-center justify-between gap-2">
               {/ Backend Status /}
-              <div className="flex-1 flex items-center justify-between py-1.5 px-2 bg-gray-50 rounded-lg">
+              <div className="flex-1 flex items-center justify-between py-1.5 px-2 bg-gray-100 rounded-lg">
                 <span className="text-xs font-medium text-gray-600">Backend:</span>
                 <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
                   statusBackend === 'Online' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
@@ -168,7 +168,7 @@ export default function TelaInicial({
               </div>
 
               {/ Database Status /}
-              <div className="flex-1 flex items-center justify-between py-1.5 px-2 bg-gray-50 rounded-lg">
+              <div className="flex-1 flex items-center justify-between py-1.5 px-2 bg-gray-100 rounded-lg">
                 <span className="text-xs font-medium text-gray-600">Banco:</span>
                 <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
                   statusDatabase === 'Conectado' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'

@@ -66,7 +66,7 @@ export function GraficosDistribuicao({
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className="bg-gray-50 p-4 border-b border-gray-100">
+      <div className="bg-gray-100 p-4 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <PieChart className="h-5 w-5 text-[#de4838]" />
           <h3 className="font-semibold text-gray-800">Distribuição % - {tipo === "almoco" ? "Almoço" : "Janta"}</h3>

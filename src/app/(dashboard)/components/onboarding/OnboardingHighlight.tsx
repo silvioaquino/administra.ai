@@ -212,7 +212,7 @@ export function OnboardingHighlight({ steps, onComplete, onSkip }: OnboardingHig
         </div>
 
         {/* Footer */}
-        <div className="p-2 border-t bg-gray-50 rounded-b-xl">
+        <div className="p-2 border-t bg-gray-100 rounded-b-xl">
           <div className="flex justify-center gap-1">
             {steps.map((_, idx) => (
               <button

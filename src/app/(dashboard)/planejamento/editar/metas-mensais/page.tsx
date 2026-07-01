@@ -129,16 +129,34 @@ export default function EditarMetasMensaisPage() {
     }
   }, { almoco: 0, janta: 0, geral: 0 })
 
+  // ADICIONAR CONSOLE.LOG AQUI
+  const mesAtual = new Date().getMonth() + 1
+  const metaMesAtual = metas.find(m => m.mes === mesAtual)
+  
+  if (metaMesAtual) {
+    const metaGeralMesAtual = (metaMesAtual.metaDiariaAlmoco + metaMesAtual.metaDiariaJanta) * metaMesAtual.diasTrabalhados
+    console.log("📊 INFORMAÇÕES DO MÊS ATUAL:")
+    console.log(`📅 Mês atual: ${MESES[mesAtual - 1]}`)
+    console.log(`📆 Dias trabalhados: ${metaMesAtual.diasTrabalhados}`)
+    console.log(`💰 Meta Geral do mês: ${formatCurrency(metaGeralMesAtual)}`)
+    console.log(`🍽️  Meta Almoço: ${formatCurrency(metaMesAtual.metaDiariaAlmoco * metaMesAtual.diasTrabalhados)}`)
+    console.log(`🌙 Meta Janta: ${formatCurrency(metaMesAtual.metaDiariaJanta * metaMesAtual.diasTrabalhados)}`)
+    console.log(`📈 Lucro desejado: ${metaMesAtual.lucroDesejado}%`)
+    console.log("----------------------------------------")
+  } else {
+    console.log("⚠️ Dados do mês atual não encontrados")
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -191,7 +209,7 @@ export default function EditarMetasMensaisPage() {
         </Alert>
 
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <Target className="h-5 w-5 text-[#de4838]" />
               <h3 className="font-semibold text-gray-800">Metas de Faturamento</h3>
@@ -200,7 +218,7 @@ export default function EditarMetasMensaisPage() {
           <div className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-gray-100 border-b border-gray-200">
                   <tr className="border-b border-gray-200">
                     <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mês</th>
                     <th colSpan={2} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-x border-gray-200">Meta Diária</th>
@@ -217,7 +235,7 @@ export default function EditarMetasMensaisPage() {
                   {metas.map((meta) => {
                     const metaMensal = (meta.metaDiariaAlmoco + meta.metaDiariaJanta) * meta.diasTrabalhados
                     return (
-                      <tr key={meta.mes} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <tr key={meta.mes} className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
                         <td className="px-4 py-3 font-medium text-gray-800">{MESES[meta.mes - 1]}</td>
                         <td className="px-4 py-2">
                           <Input
@@ -264,7 +282,7 @@ export default function EditarMetasMensaisPage() {
                     )
                   })}
                 </tbody>
-                <tfoot className="border-t-2 border-gray-200 bg-gray-50">
+                <tfoot className="border-t-2 border-gray-200 bg-gray-100">
                   <tr className="font-semibold">
                     <td className="px-4 py-3 text-gray-800">TOTAL ANUAL</td>
                     <td colSpan={2} className="px-4 py-3 text-center text-gray-800">{formatCurrency(totais.almoco)}</td>

@@ -137,7 +137,7 @@ export function DespesasFixasConfig({ despesas, onUpdate, onSave, onReset, savin
                 </tr>
               ))}
             </tbody>
-            <tfoot className="border-t bg-gray-50">
+            <tfoot className="border-t bg-gray-100">
               <tr className="font-bold">
                 <td className="px-3 py-3">TOTAL</td>
                 <td className="px-3 py-3 text-right text-primary">{formatCurrency(totalDespesas)}</td>

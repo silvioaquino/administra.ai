@@ -295,7 +295,7 @@ export default function ModalFecharCaixa({
                   const totalTipo = totaisPorTipo[tipo] || 0
                   if (totalTipo === 0) return null
                   return (
-                    <div key={tipo} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                    <div key={tipo} className="flex justify-between items-center p-2 bg-gray-100 rounded-lg">
                       <span className="text-muted-foreground">{formatarTipoPagamento(tipo)}:</span>
                       <strong>{formatarMoeda(totalTipo)}</strong>
                     </div>
@@ -307,7 +307,7 @@ export default function ModalFecharCaixa({
 
           {/* Footer */}
           <div className="flex justify-end gap-3 p-4 border-t border-border">
-            <button onClick={onClose} disabled={loading} className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
+            <button onClick={onClose} disabled={loading} className="px-4 py-2 bg-gray-1000 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
               Cancelar
             </button>
             <button onClick={() => setShowPreview(true)} disabled={loading} className="px-4 py-2 border border-primary text-primary hover:bg-primary/10 font-medium rounded-lg transition-colors flex items-center gap-2">
@@ -371,7 +371,7 @@ export default function ModalFecharCaixa({
               </div>
             </div>
             <div className="flex justify-end gap-3 p-4 border-t border-border">
-              <button onClick={() => setShowPreview(false)} className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">Fechar</button>
+              <button onClick={() => setShowPreview(false)} className="px-4 py-2 bg-gray-1000 hover:bg-gray-600 text-white rounded-lg">Fechar</button>
               <button onClick={async () => { await imprimirComprovanteTermico(); setShowPreview(false); }} className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />

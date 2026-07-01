@@ -432,14 +432,14 @@ export default function ConfigLojaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 ml-6 mr-6 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div>
@@ -557,7 +557,7 @@ export default function ConfigLojaPage() {
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Logo e Nome */}
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="bg-gray-50 p-4 border-b border-gray-100">
+                <div className="bg-gray-100 p-4 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <Store className="h-5 w-5 text-[#de4838]" />
                     <h3 className="font-semibold text-gray-800">Identificação</h3>
@@ -644,7 +644,7 @@ export default function ConfigLojaPage() {
 
               {/* Documentos */}
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="bg-gray-50 p-4 border-b border-gray-100">
+                <div className="bg-gray-100 p-4 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-[#de4838]" />
                     <h3 className="font-semibold text-gray-800">Dados Fiscais</h3>
@@ -680,7 +680,7 @@ export default function ConfigLojaPage() {
 
               {/* Endereço */}
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden lg:col-span-2">
-                <div className="bg-gray-50 p-4 border-b border-gray-100">
+                <div className="bg-gray-100 p-4 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-[#de4838]" />
                     <h3 className="font-semibold text-gray-800">Endereço</h3>
@@ -752,7 +752,7 @@ export default function ConfigLojaPage() {
 
               {/* Configurações do Cardápio */}
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden lg:col-span-2">
-                <div className="bg-gray-50 p-4 border-b border-gray-100">
+                <div className="bg-gray-100 p-4 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <Settings className="h-5 w-5 text-[#de4838]" />
                     <h3 className="font-semibold text-gray-800">Configurações do Cardápio</h3>
@@ -817,7 +817,7 @@ export default function ConfigLojaPage() {
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Cores */}
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="bg-gray-50 p-4 border-b border-gray-100">
+                <div className="bg-gray-100 p-4 border-b border-gray-100">
                   <h3 className="font-semibold text-gray-800">Cor de destaque</h3>
                 </div>
                 <div className="p-6">
@@ -838,7 +838,7 @@ export default function ConfigLojaPage() {
 
               {/* Preview do Cardápio */}
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="bg-gray-50 p-4 border-b border-gray-100">
+                <div className="bg-gray-100 p-4 border-b border-gray-100">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-gray-800">Visualização ao vivo</h3>
                     <Button variant="link" className="text-[#de4838]" onClick={() => window.open(storeLinks.cardapio, "_blank")}>
@@ -873,7 +873,7 @@ export default function ConfigLojaPage() {
         {activeTab === "horarios" && (
           <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Clock className="h-5 w-5 text-[#de4838]" />
@@ -1005,7 +1005,7 @@ export default function ConfigLojaPage() {
         {activeTab === "entrega" && (
           <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <Truck className="h-5 w-5 text-[#de4838]" />
                   <h3 className="font-semibold text-gray-800">Configurações de Entrega</h3>
@@ -1117,7 +1117,7 @@ export default function ConfigLojaPage() {
 
             {/* Mapa de áreas de entrega */}
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <h3 className="font-semibold text-gray-800">Áreas de Entrega</h3>
               </div>
               <div className="p-6">
@@ -1137,7 +1137,7 @@ export default function ConfigLojaPage() {
         {activeTab === "pagamento" && (
           <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <CreditCard className="h-5 w-5 text-[#de4838]" />
                   <h3 className="font-semibold text-gray-800">Formas de Pagamento Presencial</h3>
@@ -1172,7 +1172,7 @@ export default function ConfigLojaPage() {
 
             {/* Bandeiras de Cartão */}
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5 text-[#de4838]" />
@@ -1255,7 +1255,7 @@ export default function ConfigLojaPage() {
         {activeTab === "links" && (
           <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <Link2 className="h-5 w-5 text-[#de4838]" />
                   <h3 className="font-semibold text-gray-800">Links Pré-definidos</h3>
@@ -1280,7 +1280,7 @@ export default function ConfigLojaPage() {
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Link2 className="h-5 w-5 text-[#de4838]" />
@@ -1351,7 +1351,7 @@ export default function ConfigLojaPage() {
         {activeTab === "acessos" && (
           <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-[#de4838]" />

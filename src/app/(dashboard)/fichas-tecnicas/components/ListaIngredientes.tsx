@@ -27,7 +27,7 @@ export function ListaIngredientes({ ingredientes, onRemove, readOnly = false }: 
 
   if (ingredientes.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
+      <div className="rounded-xl border border-gray-200 bg-gray-100 p-8 text-center">
         <Package className="h-8 w-8 text-gray-300 mx-auto mb-2" />
         <p className="text-sm text-gray-400">Nenhum ingrediente adicionado</p>
         <p className="text-xs text-gray-300 mt-1">Adicione produtos ou fichas técnicas</p>
@@ -38,7 +38,7 @@ export function ListaIngredientes({ ingredientes, onRemove, readOnly = false }: 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="bg-gray-50 border-b border-gray-200">
+        <thead className="bg-gray-100 border-b border-gray-200">
           <tr className="border-b border-gray-200">
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ingrediente</th>
             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Quantidade</th>
@@ -49,7 +49,7 @@ export function ListaIngredientes({ ingredientes, onRemove, readOnly = false }: 
         </thead>
         <tbody>
           {ingredientes.map((ing) => (
-            <tr key={ing.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <tr key={ing.id} className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2">
                   {ing.isProdutoAcabado ? (
@@ -86,7 +86,7 @@ export function ListaIngredientes({ ingredientes, onRemove, readOnly = false }: 
             </tr>
           ))}
         </tbody>
-        <tfoot className="border-t-2 border-gray-200 bg-gray-50">
+        <tfoot className="border-t-2 border-gray-200 bg-gray-100">
           <tr className="font-semibold">
             <td colSpan={3} className="px-4 py-3 text-right text-gray-700">Custo Total:</td>
             <td className="px-4 py-3 text-right text-[#de4838] text-lg">{formatCurrency(custoTotal)}</td>

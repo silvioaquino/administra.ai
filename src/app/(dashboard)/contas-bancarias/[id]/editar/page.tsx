@@ -89,14 +89,14 @@ export default function EditarContaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <Button
@@ -125,7 +125,7 @@ export default function EditarContaPage() {
 
       <div className="container mx-auto p-6 max-w-3xl">
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-[#de4838]" />
               <h3 className="font-semibold text-gray-800">Dados da Conta</h3>

@@ -160,7 +160,7 @@ export function FormIngrediente({
     <div className="space-y-4">
       {/* Adicionar Produto */}
       <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-        <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
+        <div className="bg-gray-100 px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <Package className="h-4 w-4 text-[#de4838]" />
             <h4 className="text-sm font-medium text-gray-700">Adicionar Produto</h4>
@@ -203,7 +203,7 @@ export function FormIngrediente({
                     <button
                       key={p.id}
                       type="button"
-                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex justify-between"
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex justify-between"
                       onClick={() => {
                         setSelectedProdutoId(p.id.toString())
                         setProdutoSearch("")
@@ -244,7 +244,7 @@ export function FormIngrediente({
             </Button>
           </div>
           {produtoSelecionado && (
-            <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
+            <div className="text-xs text-gray-500 bg-gray-100 rounded-lg p-2">
               Valor total: {formatCurrency(valorTotalProduto)} | 
               Estoque: {produtoSelecionado.quantidade} {produtoSelecionado.unidade}
             </div>
@@ -254,7 +254,7 @@ export function FormIngrediente({
 
       {/* Adicionar Produto Acabado */}
       <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-        <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
+        <div className="bg-gray-100 px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-[#de4838]" />
             <h4 className="text-sm font-medium text-gray-700">Adicionar Produto Acabado (Ficha Técnica)</h4>
@@ -297,7 +297,7 @@ export function FormIngrediente({
                     <button
                       key={f.id}
                       type="button"
-                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex justify-between"
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex justify-between"
                       onClick={() => {
                         setSelectedFichaId(f.id)
                         setFichaSearch("")
@@ -338,7 +338,7 @@ export function FormIngrediente({
             </Button>
           </div>
           {fichaSelecionada && (
-            <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
+            <div className="text-xs text-gray-500 bg-gray-100 rounded-lg p-2">
               Valor total: {formatCurrency(valorTotalFicha)} | 
               Custo unitário: {formatCurrency(fichaSelecionada.custoTotal)}
             </div>

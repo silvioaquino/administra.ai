@@ -106,7 +106,7 @@ export default function ContasBancariasPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       <div className="sticky top-0 z-10 ml-6 mr-6 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div>
           <h1 className="text-xl font-semibold text-gray-800">Contas Financeiras</h1>
@@ -165,13 +165,13 @@ export default function ContasBancariasPage() {
 
         {/* Lista de Contas */}
         <div className="mt-8 bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
             <h3 className="font-semibold text-gray-800">Suas Contas</h3>
             <p className="text-xs text-gray-500 mt-1">Clique em uma conta para ver suas movimentações</p>
           </div>
           <div className="p-0 overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gray-100 border-b border-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conta</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
@@ -204,7 +204,7 @@ export default function ContasBancariasPage() {
                   contas.map((conta) => (
                     <tr 
                       key={conta.id} 
-                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
+                      className="border-b border-gray-100 hover:bg-gray-100 transition-colors cursor-pointer"
                       onClick={() => router.push(`/contas-bancarias/${conta.id}/movimentacoes`)}
                     >
                       <td className="px-4 py-3">
@@ -243,7 +243,7 @@ export default function ContasBancariasPage() {
                 )}
               </tbody>
               {contas.length > 0 && (
-                <tfoot className="border-t-2 border-gray-200 bg-gray-50 font-bold">
+                <tfoot className="border-t-2 border-gray-200 bg-gray-100 font-bold">
                   <tr>
                     <td colSpan={4} className="px-4 py-3 text-right">SALDO TOTAL:</td>
                     <td className="px-4 py-3 text-right text-[#de4838] text-lg">{formatCurrency(saldoTotal)}</td>

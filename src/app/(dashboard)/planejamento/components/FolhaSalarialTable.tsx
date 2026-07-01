@@ -308,7 +308,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-50 p-4 border-b border-gray-100">
+      <div className="bg-gray-100 p-4 border-b border-gray-100">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-[#de4838]" />
@@ -351,7 +351,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
       <div className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-100 border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8"></th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Funcionário</th>
@@ -382,7 +382,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                   </th>
                 )}
               </tr>
-              {/* Sub-header para indicar valor + switch */}
+              {/* Sub-header para indicar valor + switch 
               <tr className="border-b border-gray-200 bg-gray-100">
                 <td className="px-4 py-2"></td>
                 <td className="px-4 py-2"></td>
@@ -402,7 +402,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                 {provisoesAtivas.inss && (
                   <td className="px-4 py-2 text-center text-xs text-gray-500">Valor / Status</td>
                 )}
-              </tr>
+              </tr>*/}
             </thead>
             <tbody>
               {funcionarios.map((func) => {
@@ -412,7 +412,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                 return (
                   <React.Fragment key={func.nome}>
                     {/* Linha principal */}
-                    <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <tr className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
                       <td className="px-4 py-3">
                         <button
                           onClick={() => toggleRow(func.nome)}
@@ -516,7 +516,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
 
                     {/* Linha expandida com detalhes das provisões */}
                     {isExpanded && (
-                      <tr key={`${func.nome}-expanded`} className="bg-gray-50">
+                      <tr key={`${func.nome}-expanded`} className="bg-gray-100">
                         <td colSpan={7} className="px-4 py-3">
                           <div className="space-y-3">
                             <div className="flex items-center gap-2 mb-2">
@@ -571,7 +571,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                 )
               })}
             </tbody>
-            <tfoot className="border-t border-gray-200 bg-gray-50">
+            <tfoot className="border-t border-gray-200 bg-gray-100">
               <tr className="font-semibold">
                 <td className="px-4 py-3"></td>
                 <td className="px-4 py-3 text-gray-800">TOTAL</td>
@@ -603,7 +603,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
       </div>
 
       {/* Informação sobre provisões */}
-      <div className="bg-gray-50 p-3 border-t border-gray-100 text-xs text-gray-500 flex items-center gap-2 flex-wrap">
+      <div className="bg-gray-100 p-3 border-t border-gray-100 text-xs text-gray-500 flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded-full bg-green-500"></div>
           <span>Ativo</span>

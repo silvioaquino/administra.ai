@@ -44,7 +44,7 @@ export function DespesasFixasTable({
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden h-full">
-      <div className="bg-gray-50 p-4 border-b border-gray-100">
+      <div className="bg-gray-100 p-4 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-lg">💰</span>
@@ -64,7 +64,7 @@ export function DespesasFixasTable({
       <div className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-100 border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Despesa</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Real (100%)</th>
@@ -81,7 +81,7 @@ export function DespesasFixasTable({
                 const pctDaFatia = totalRateado > 0 ? Number(((valorRateado / totalRateado) * 100).toFixed(2)) : 0
                 somaPercentuais += pctDaFatia
                 return (
-                  <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <tr key={idx} className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
                     <td className="px-4 py-3 text-gray-700">{desp.nome}</td>
                     <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(valor)}</td>
                     <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(valorRateado)}</td>
@@ -91,7 +91,7 @@ export function DespesasFixasTable({
               })}
               {/* Linha de salários */}
               {salariosTotal > 0 && (
-                <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
                   <td className="px-4 py-3 text-gray-700 font-medium">Salários Funcionários</td>
                   <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(Number(salariosTotal))}</td>
                   <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(Number((Number(salariosTotal) * percentual).toFixed(2)))}</td>
@@ -107,7 +107,7 @@ export function DespesasFixasTable({
                 const pctDaFatia = totalComFolha > 0 ? Number(((valor / totalComFolha) * 100).toFixed(2)) : 0
                 somaPercentuais += pctDaFatia
                 return (
-                  <tr key={`prov-${idx}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <tr key={`prov-${idx}`} className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
                     <td className="px-4 py-3 text-gray-700 font-medium pl-6">{prov.nome}</td>
                     <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(valor)}</td>
                     <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(valorRateado)}</td>
@@ -116,7 +116,7 @@ export function DespesasFixasTable({
                 )
               })}
             </tbody>
-            <tfoot className="border-t border-gray-200 bg-gray-50">
+            <tfoot className="border-t border-gray-200 bg-gray-100">
               <tr className="font-semibold">
                 <td className="px-4 py-3 text-gray-800">TOTAL</td>
                 <td className="px-4 py-3 text-right text-gray-800">{formatCurrency(Number(totalComFolha.toFixed(2)))}</td>

@@ -3,22 +3,29 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Save, CreditCard, Percent, Building2, TrendingUp } from "lucide-react"
+import { ArrowLeft, Save, Percent, Building2, TrendingUp, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
 
-interface TaxasConfig {
-  distribuicaoVendas: { debito: number; credito: number; voucher: number }
-  distribuicaoMaquininhas: { infinitepay: number; stone: number; caixa: number }
-  taxas: {
-    debito: { infinitepay: number; stone: number; caixa: number }
-    credito: { infinitepay: number; stone: number; caixa: number }
+interface Maquininha {
+  id: string
+  nome: string
+  taxaDebito: number
+  taxaCredito: number
+  aluguel: number
+  ativo: boolean
+}
+
+interface ConfiguracaoMaquininhas {
+  maquininhas: Maquininha[]
+  distribuicaoVendas: {
+    debito: number
+    credito: number
     voucher: number
   }
-  aluguelMaquininhas: { stone1: number; stone2: number }
   manutencao: number
   simplesNacional: number
 }
@@ -27,16 +34,15 @@ export default function EditarDespesasVariaveisPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [faturamentoBase, setFaturamentoBase] = useState(30000)
-  const [config, setConfig] = useState<TaxasConfig>({
+  const [faturamentoBase, setFaturamentoBase] = useState(0)
+  const [anoReferencia, setAnoReferencia] = useState(new Date().getFullYear())
+  const [config, setConfig] = useState<ConfiguracaoMaquininhas>({
+    maquininhas: [
+      { id: "1", nome: "InfinitePay", taxaDebito: 1.37, taxaCredito: 3.15, aluguel: 0, ativo: true },
+      { id: "2", nome: "Stone", taxaDebito: 2.34, taxaCredito: 6.44, aluguel: 79.80, ativo: true },
+      { id: "3", nome: "Caixa", taxaDebito: 4.48, taxaCredito: 5.78, aluguel: 0, ativo: true },
+    ],
     distribuicaoVendas: { debito: 40, credito: 50, voucher: 10 },
-    distribuicaoMaquininhas: { infinitepay: 50, stone: 30, caixa: 20 },
-    taxas: {
-      debito: { infinitepay: 1.37, stone: 2.34, caixa: 4.48 },
-      credito: { infinitepay: 3.15, stone: 6.44, caixa: 5.78 },
-      voucher: 7.0
-    },
-    aluguelMaquininhas: { stone1: 59.90, stone2: 19.90 },
     manutencao: 1.0,
     simplesNacional: 8.0
   })
@@ -51,47 +57,81 @@ export default function EditarDespesasVariaveisPage() {
 
   useEffect(() => {
     carregarConfig()
-  }, [])
+  }, [anoReferencia])
+
+  // Recalcular quando faturamentoBase mudar
+  useEffect(() => {
+    if (faturamentoBase > 0) {
+      calcularTaxas()
+    }
+  }, [faturamentoBase])
 
   async function carregarConfig() {
+    setLoading(true)
     try {
-      const response = await fetch("/api/planejamento/taxas-cartao")
+      // Buscar configuração de despesas variáveis
+      const response = await fetch(`/api/planejamento/despesas-variaveis?ano=${anoReferencia}`)
       const data = await response.json()
-      if (data.success && data.config) {
-        setConfig(data.config)
+      if (data.success && data.dados) {
+        setConfig(data.dados)
       }
-      const savedFaturamento = localStorage.getItem("faturamentoBase")
-      if (savedFaturamento) {
-        setFaturamentoBase(Number(savedFaturamento))
+
+      // Buscar indicadores resumo para obter a meta mensal total
+      const indicadoresResponse = await fetch(`/api/planejamento/indicadores-resumo?ano=${anoReferencia}`)
+      const indicadoresData = await indicadoresResponse.json()
+
+      if (indicadoresData.success && indicadoresData.metaMensalTotal > 0) {
+        const metaMensalTotal = indicadoresData.metaMensalTotal
+        setFaturamentoBase(metaMensalTotal)
+        localStorage.setItem("faturamentoBase", metaMensalTotal.toString())
       }
+
     } catch (error) {
-      console.error("Erro ao carregar taxas:", error)
+      console.error("Erro ao carregar dados:", error)
     } finally {
       setLoading(false)
     }
-    calcularTaxas()
   }
 
   function calcularTaxas() {
-    let taxaDebitoMedia = 0
-    for (const [maquina, percentual] of Object.entries(config.distribuicaoMaquininhas)) {
-      taxaDebitoMedia += config.taxas.debito[maquina as keyof typeof config.taxas.debito] * (percentual / 100)
+    const maquininhasAtivas = config.maquininhas.filter(m => m.ativo)
+    
+    // Verificar se há maquininhas ativas e faturamento válido
+    if (maquininhasAtivas.length === 0 || faturamentoBase <= 0) {
+      setResultados({
+        debitoMedia: 0,
+        creditoMedia: 0,
+        taxaMediaGeral: 0,
+        aluguelTotal: 0,
+        percentualAluguel: 0,
+        totalDespesasVariaveis: 0
+      })
+      return
     }
 
+    const distribuicaoMaquininhas = 100 / maquininhasAtivas.length
+
+    let taxaDebitoMedia = 0
     let taxaCreditoMedia = 0
-    for (const [maquina, percentual] of Object.entries(config.distribuicaoMaquininhas)) {
-      taxaCreditoMedia += config.taxas.credito[maquina as keyof typeof config.taxas.credito] * (percentual / 100)
+    let aluguelTotal = 0
+
+    for (const maquina of maquininhasAtivas) {
+      const peso = distribuicaoMaquininhas / 100
+      taxaDebitoMedia += maquina.taxaDebito * peso
+      taxaCreditoMedia += maquina.taxaCredito * peso
+      aluguelTotal += maquina.aluguel
     }
 
     const percDebito = config.distribuicaoVendas.debito / 100
     const percCredito = config.distribuicaoVendas.credito / 100
     const percVoucher = config.distribuicaoVendas.voucher / 100
-    const taxaMediaGeral = (taxaDebitoMedia * percDebito) + (taxaCreditoMedia * percCredito) + (config.taxas.voucher * percVoucher)
-
-    const aluguelTotal = config.aluguelMaquininhas.stone1 + config.aluguelMaquininhas.stone2
+    
+    const taxaVoucher = 7.0
+    
+    const taxaMediaGeral = (taxaDebitoMedia * percDebito) + (taxaCreditoMedia * percCredito) + (taxaVoucher * percVoucher)
     const percentualAluguel = (aluguelTotal / faturamentoBase) * 100
     const totalDespesasVariaveis = config.simplesNacional + taxaMediaGeral + config.manutencao + percentualAluguel
-
+    
     setResultados({
       debitoMedia: taxaDebitoMedia,
       creditoMedia: taxaCreditoMedia,
@@ -105,10 +145,14 @@ export default function EditarDespesasVariaveisPage() {
   async function salvarConfig() {
     setSaving(true)
     try {
-      const response = await fetch("/api/planejamento/taxas-cartao", {
+      const response = await fetch("/api/planejamento/despesas-variaveis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config)
+        body: JSON.stringify({
+          dados: config,
+          ano: anoReferencia,
+          faturamentoBase: faturamentoBase
+        })
       })
       const data = await response.json()
       if (data.success) {
@@ -138,19 +182,71 @@ export default function EditarDespesasVariaveisPage() {
     setTimeout(calcularTaxas, 100)
   }
 
+  function atualizarMaquininha(id: string, campo: keyof Maquininha, value: number | string | boolean) {
+    const novoEstado = { ...config }
+    const index = novoEstado.maquininhas.findIndex(m => m.id === id)
+    if (index !== -1) {
+      novoEstado.maquininhas[index] = { ...novoEstado.maquininhas[index], [campo]: value }
+      setConfig(novoEstado)
+      setTimeout(calcularTaxas, 100)
+    }
+  }
+
+  function adicionarMaquininha() {
+    const novaMaquininha: Maquininha = {
+      id: crypto.randomUUID(),
+      nome: `Nova Maquininha ${config.maquininhas.length + 1}`,
+      taxaDebito: 0,
+      taxaCredito: 0,
+      aluguel: 0,
+      ativo: true
+    }
+    setConfig({
+      ...config,
+      maquininhas: [...config.maquininhas, novaMaquininha]
+    })
+    setTimeout(calcularTaxas, 100)
+  }
+
+  function removerMaquininha(id: string) {
+    if (config.maquininhas.filter(m => m.ativo).length <= 1) {
+      alert("Você precisa manter pelo menos uma maquininha ativa!")
+      return
+    }
+    setConfig({
+      ...config,
+      maquininhas: config.maquininhas.map(m => 
+        m.id === id ? { ...m, ativo: false } : m
+      )
+    })
+    setTimeout(calcularTaxas, 100)
+  }
+
+  function excluirMaquininha(id: string) {
+    if (config.maquininhas.filter(m => m.ativo).length <= 1) {
+      alert("Você precisa manter pelo menos uma maquininha ativa!")
+      return
+    }
+    setConfig({
+      ...config,
+      maquininhas: config.maquininhas.filter(m => m.id !== id)
+    })
+    setTimeout(calcularTaxas, 100)
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
       </div>
     )
   }
 
+  const maquininhasAtivas = config.maquininhas.filter(m => m.ativo)
   const somaVendas = config.distribuicaoVendas.debito + config.distribuicaoVendas.credito + config.distribuicaoVendas.voucher
-  const somaMaquininhas = config.distribuicaoMaquininhas.infinitepay + config.distribuicaoMaquininhas.stone + config.distribuicaoMaquininhas.caixa
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -167,29 +263,164 @@ export default function EditarDespesasVariaveisPage() {
             <p className="text-sm text-gray-500">Configure taxas de cartão e outras despesas variáveis</p>
           </div>
         </div>
-        <Button 
-          onClick={salvarConfig}
-          className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-5"
-          disabled={saving}
-        >
-          <Save className="mr-2 h-4 w-4" />
-          {saving ? "Salvando..." : "Salvar Configurações"}
-        </Button>
+        <div className="flex gap-2">
+          <div className="relative">
+            <select
+              className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8"
+              value={anoReferencia}
+              onChange={(e) => setAnoReferencia(Number(e.target.value))}
+            >
+              <option value={2024}>2024</option>
+              <option value={2025}>2025</option>
+              <option value={2026}>2026</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+              <svg className="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            </div>
+          </div>
+          <Button 
+            onClick={salvarConfig}
+            className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-5"
+            disabled={saving}
+          >
+            <Save className="mr-2 h-4 w-4" />
+            {saving ? "Salvando..." : "Salvar Configurações"}
+          </Button>
+        </div>
       </div>
 
       {/* Main Content */}
       <div className="container mx-auto p-6 max-w-7xl">
         <Alert className="mb-6 bg-blue-50 border-blue-200 rounded-xl">
           <AlertDescription className="text-sm text-blue-700">
-            As taxas configuradas aqui são usadas para calcular o percentual de despesas variáveis
-            que será aplicado nas Fichas Técnicas e no Planejamento Financeiro.
+            Configure as maquininhas que sua empresa utiliza. Você pode adicionar, editar ou remover operadoras conforme necessário.
+            Apenas maquininhas ativas serão consideradas nos cálculos.
           </AlertDescription>
         </Alert>
 
         <div className="grid gap-6 lg:grid-cols-2">
+          {/* Maquininhas */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden lg:col-span-2">
+            <div className="bg-gray-100 p-4 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-[#de4838]" />
+                <h3 className="font-semibold text-gray-800">Maquininhas</h3>
+                <span className="text-sm text-gray-500 ml-2">
+                  ({maquininhasAtivas.length} ativa{maquininhasAtivas.length !== 1 ? 's' : ''})
+                </span>
+              </div>
+              <Button 
+                size="sm"
+                onClick={adicionarMaquininha}
+                className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Adicionar
+              </Button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {config.maquininhas.map((maquina) => (
+                  <div 
+                    key={maquina.id} 
+                    className={`border rounded-xl p-4 transition-all ${maquina.ativo ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-100 opacity-60'}`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={maquina.ativo}
+                          onChange={(e) => atualizarMaquininha(maquina.id, 'ativo', e.target.checked)}
+                          className="h-4 w-4 rounded border-gray-300 text-[#de4838] focus:ring-[#de4838]"
+                        />
+                        <Label className="text-sm font-medium text-gray-700">
+                          {maquina.ativo ? 'Ativa' : 'Inativa'}
+                        </Label>
+                      </div>
+                      <div className="flex gap-1">
+                        {maquina.ativo && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => removerMaquininha(maquina.id)}
+                            className="h-8 w-8 p-0 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50"
+                            title="Desativar maquininha"
+                          >
+                            <span className="text-xs">⏸</span>
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => excluirMaquininha(maquina.id)}
+                          className="h-8 w-8 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                          title="Excluir maquininha"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div>
+                        <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Nome</Label>
+                        <Input
+                          type="text"
+                          value={maquina.nome}
+                          onChange={(e) => atualizarMaquininha(maquina.id, 'nome', e.target.value)}
+                          className="rounded-lg border-gray-200 focus:ring-[#de4838] text-sm"
+                          placeholder="Nome da operadora"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Taxa Débito %</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={maquina.taxaDebito}
+                            onChange={(e) => atualizarMaquininha(maquina.id, 'taxaDebito', Number(e.target.value))}
+                            className="rounded-lg border-gray-200 focus:ring-[#de4838] text-sm"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Taxa Crédito %</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={maquina.taxaCredito}
+                            onChange={(e) => atualizarMaquininha(maquina.id, 'taxaCredito', Number(e.target.value))}
+                            className="rounded-lg border-gray-200 focus:ring-[#de4838] text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Aluguel (R$)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={maquina.aluguel}
+                          onChange={(e) => atualizarMaquininha(maquina.id, 'aluguel', Number(e.target.value))}
+                          className="rounded-lg border-gray-200 focus:ring-[#de4838] text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {maquininhasAtivas.length === 0 && (
+                <Alert variant="destructive">
+                  <AlertDescription>
+                    Nenhuma maquininha ativa. Ative pelo menos uma para realizar os cálculos.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </div>
+
           {/* Distribuição das Vendas */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <Percent className="h-5 w-5 text-[#de4838]" />
                 <h3 className="font-semibold text-gray-800">Distribuição das Vendas (%)</h3>
@@ -234,144 +465,19 @@ export default function EditarDespesasVariaveisPage() {
             </div>
           </div>
 
-          {/* Distribuição das Maquininhas */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-[#de4838]" />
-                <h3 className="font-semibold text-gray-800">Distribuição entre Maquininhas (%)</h3>
-              </div>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">InfinitePay</Label>
-                <Input
-                  type="number"
-                  step="1"
-                  value={config.distribuicaoMaquininhas.infinitepay}
-                  onChange={(e) => atualizarCampo("distribuicaoMaquininhas.infinitepay", Number(e.target.value))}
-                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Stone</Label>
-                <Input
-                  type="number"
-                  step="1"
-                  value={config.distribuicaoMaquininhas.stone}
-                  onChange={(e) => atualizarCampo("distribuicaoMaquininhas.stone", Number(e.target.value))}
-                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Caixa</Label>
-                <Input
-                  type="number"
-                  step="1"
-                  value={config.distribuicaoMaquininhas.caixa}
-                  onChange={(e) => atualizarCampo("distribuicaoMaquininhas.caixa", Number(e.target.value))}
-                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
-                />
-              </div>
-              <Alert className={somaMaquininhas === 100 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}>
-                <AlertDescription className={somaMaquininhas === 100 ? "text-emerald-700" : "text-red-700"}>
-                  Total: {somaMaquininhas}% {somaMaquininhas !== 100 && "(Deve ser 100%)"}
-                </AlertDescription>
-              </Alert>
-            </div>
-          </div>
-
-          {/* Taxas Débito */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-800">Taxas Débito (%)</h3>
-            </div>
-            <div className="p-5 space-y-3">
-              <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">InfinitePay Débito</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={config.taxas.debito.infinitepay}
-                  onChange={(e) => atualizarCampo("taxas.debito.infinitepay", Number(e.target.value))}
-                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Stone Débito</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={config.taxas.debito.stone}
-                  onChange={(e) => atualizarCampo("taxas.debito.stone", Number(e.target.value))}
-                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Caixa Débito</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={config.taxas.debito.caixa}
-                  onChange={(e) => atualizarCampo("taxas.debito.caixa", Number(e.target.value))}
-                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Taxas Crédito */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-800">Taxas Crédito (%)</h3>
-            </div>
-            <div className="p-5 space-y-3">
-              <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">InfinitePay Crédito</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={config.taxas.credito.infinitepay}
-                  onChange={(e) => atualizarCampo("taxas.credito.infinitepay", Number(e.target.value))}
-                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Stone Crédito</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={config.taxas.credito.stone}
-                  onChange={(e) => atualizarCampo("taxas.credito.stone", Number(e.target.value))}
-                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Caixa Crédito</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={config.taxas.credito.caixa}
-                  onChange={(e) => atualizarCampo("taxas.credito.caixa", Number(e.target.value))}
-                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
-                />
-              </div>
-            </div>
-          </div>
-
           {/* Outras Taxas */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <h3 className="font-semibold text-gray-800">Outras Taxas</h3>
             </div>
             <div className="p-5 space-y-3">
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Taxa Voucher (%)</Label>
+                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Voucher (%)</Label>
                 <Input
                   type="number"
                   step="0.01"
-                  value={config.taxas.voucher}
-                  onChange={(e) => atualizarCampo("taxas.voucher", Number(e.target.value))}
+                  value={7.0}
+                  onChange={(e) => {/* Configurar voucher */}}
                   className="rounded-lg border-gray-200 focus:ring-[#de4838]"
                 />
               </div>
@@ -397,26 +503,6 @@ export default function EditarDespesasVariaveisPage() {
               </div>
               <div className="pt-3 border-t border-gray-200">
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Aluguel Stone 1 (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={config.aluguelMaquininhas.stone1}
-                    onChange={(e) => atualizarCampo("aluguelMaquininhas.stone1", Number(e.target.value))}
-                    className="rounded-lg border-gray-200 focus:ring-[#de4838]"
-                  />
-                </div>
-                <div className="space-y-1 mt-3">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Aluguel Stone 2 (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={config.aluguelMaquininhas.stone2}
-                    onChange={(e) => atualizarCampo("aluguelMaquininhas.stone2", Number(e.target.value))}
-                    className="rounded-lg border-gray-200 focus:ring-[#de4838]"
-                  />
-                </div>
-                <div className="space-y-1 mt-3">
                   <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Faturamento Base (R$)</Label>
                   <Input
                     type="number"
@@ -432,15 +518,22 @@ export default function EditarDespesasVariaveisPage() {
           </div>
 
           {/* Resultados */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden lg:col-span-2">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-emerald-600" />
                 <h3 className="font-semibold text-emerald-600">RESULTADOS DOS CÁLCULOS</h3>
               </div>
             </div>
             <div className="p-5">
-              <div className="grid grid-cols-2 gap-3">
+              {faturamentoBase === 0 && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-center">
+                  <p className="text-sm text-yellow-700">
+                    ⚠️ Aguardando dados de faturamento. O cálculo será atualizado automaticamente.
+                  </p>
+                </div>
+              )}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                 <div className="rounded-xl bg-blue-50 p-3 text-center">
                   <p className="text-xs text-gray-500 mb-1">Taxa Débito Média</p>
                   <p className="text-lg font-bold text-blue-600">{formatPercentage(resultados.debitoMedia)}</p>
@@ -459,12 +552,19 @@ export default function EditarDespesasVariaveisPage() {
                 </div>
                 <div className="rounded-xl bg-gray-100 p-3 text-center">
                   <p className="text-xs text-gray-500 mb-1">Aluguel % (base {formatCurrency(faturamentoBase)})</p>
-                  <p className="text-lg font-bold text-gray-700">{formatPercentage(resultados.percentualAluguel)}</p>
+                  <p className="text-lg font-bold text-gray-700">
+                    {faturamentoBase > 0 ? formatPercentage(resultados.percentualAluguel) : '0%'}
+                  </p>
                 </div>
                 <div className="rounded-xl bg-emerald-50 p-3 text-center">
                   <p className="text-xs text-gray-500 mb-1">🎯 TOTAL DESPESAS VARIÁVEIS</p>
-                  <p className="text-xl font-bold text-emerald-600">{formatPercentage(resultados.totalDespesasVariaveis)}</p>
+                  <p className="text-xl font-bold text-emerald-600">
+                    {faturamentoBase > 0 ? formatPercentage(resultados.totalDespesasVariaveis) : '0%'}
+                  </p>
                 </div>
+              </div>
+              <div className="mt-4 text-sm text-gray-500 text-center">
+                * Distribuição igual entre {maquininhasAtivas.length} maquininha{maquininhasAtivas.length !== 1 ? 's' : ''} ativa{maquininhasAtivas.length !== 1 ? 's' : ''}
               </div>
             </div>
           </div>
