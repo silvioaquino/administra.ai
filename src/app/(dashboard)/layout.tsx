@@ -81,6 +81,7 @@ export default function DashboardLayout({
     { icon: Truck, label: "Contas bancárias", href: "/contas-bancarias", badge: null },
     { icon: CreditCard, label: "Fechamento Mensal", href: "/fechamento-mensal", badge: null },
     { icon: CreditCard, label: "Abrir/Fechar Caixa Diário", href: "/caixa", badge: null },
+    { icon: TrendingUp, label: "Planejamento Financeiro", href: "/planejamento-financeiro", badge: null },
   ]
 
   const configItems = [

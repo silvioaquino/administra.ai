@@ -26,6 +26,7 @@ interface ConfiguracaoMaquininhas {
     credito: number
     voucher: number
   }
+  taxaVoucher: number
   manutencao: number
   simplesNacional: number
 }
@@ -125,8 +126,8 @@ export default function EditarDespesasVariaveisPage() {
     const percDebito = config.distribuicaoVendas.debito / 100
     const percCredito = config.distribuicaoVendas.credito / 100
     const percVoucher = config.distribuicaoVendas.voucher / 100
-    
-    const taxaVoucher = 7.0
+
+    const taxaVoucher = config.taxaVoucher || 7.0
     
     const taxaMediaGeral = (taxaDebitoMedia * percDebito) + (taxaCreditoMedia * percCredito) + (taxaVoucher * percVoucher)
     const percentualAluguel = (aluguelTotal / faturamentoBase) * 100
