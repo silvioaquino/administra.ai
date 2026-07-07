@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { formatCurrency } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -74,33 +74,17 @@ function calculateMetaTotal(periodos: MetaFaturamentoPeriodo, diasTrabalhados: n
 
 export function TabelaMetasMensais({ metas, anoAtual, onSalvar }: TabelaMetasMensaisProps) {
   const [linhas, setLinhas] = useState<MetaFaturamentoRow[]>([])
-  const [ano, setAno] = useState(anoAtual)
+  const [ano] = useState(anoAtual)
   const [periodosSelecionados, setPeriodosSelecionados] = useState<PeriodoRefeicao[]>(['turnoUnico'])
   const [salvando, setSalvando] = useState(false)
+  const prevPeriodosRef = useRef<PeriodoRefeicao[]>(['turnoUnico'])
 
+  // Efeito para carregar dados iniciais
   useEffect(() => {
     if (metas && metas.length > 0) {
       const linhasAtualizadas = meses.map(m => {
         const encontrado = metas.find(d => d.mes === m.value)
         if (encontrado) {
-          // Detectar períodos ativos inline
-          const periodos = encontrado.periodos
-          const temTurnoUnico = (periodos.turnoUnico ?? 0) > 0
-          const temCafe = (periodos.cafe ?? 0) > 0
-          const temAlmoco = (periodos.almoco ?? 0) > 0
-          const temJanta = (periodos.janta ?? 0) > 0
-
-          let periodosAtivos: PeriodoRefeicao[]
-          if (temTurnoUnico && !temCafe && !temAlmoco && !temJanta) {
-            periodosAtivos = ['turnoUnico']
-          } else {
-            const ativos: PeriodoRefeicao[] = []
-            if (temCafe) ativos.push('cafe')
-            if (temAlmoco) ativos.push('almoco')
-            if (temJanta) ativos.push('janta')
-            periodosAtivos = ativos.length > 0 ? ativos : ['turnoUnico']
-          }
-
           return {
             ...encontrado,
             periodos: encontrado.periodos,
@@ -125,25 +109,14 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar }: TabelaMetasMen
       )
       if (primeiroComDados) {
         const periodos = primeiroComDados.periodos
-        const temTurnoUnico = (periodos.turnoUnico ?? 0) > 0
-        const temCafe = (periodos.cafe ?? 0) > 0
-        const temAlmoco = (periodos.almoco ?? 0) > 0
-        const temJanta = (periodos.janta ?? 0) > 0
-
-        let periodosAtivos: PeriodoRefeicao[]
-        if (temTurnoUnico && !temCafe && !temAlmoco && !temJanta) {
-          periodosAtivos = ['turnoUnico']
-        } else {
-          const ativos: PeriodoRefeicao[] = []
-          if (temCafe) ativos.push('cafe')
-          if (temAlmoco) ativos.push('almoco')
-          if (temJanta) ativos.push('janta')
-          periodosAtivos = ativos.length > 0 ? ativos : ['turnoUnico']
-        }
-        setPeriodosSelecionados(periodosAtivos)
+        const ativos: PeriodoRefeicao[] = []
+        if ((periodos.cafe ?? 0) > 0) ativos.push('cafe')
+        if ((periodos.almoco ?? 0) > 0) ativos.push('almoco')
+        if ((periodos.janta ?? 0) > 0) ativos.push('janta')
+        if ((periodos.turnoUnico ?? 0) > 0 && !ativos.length) ativos.push('turnoUnico')
+        setPeriodosSelecionados(ativos.length > 0 ? ativos : ['turnoUnico'])
       }
     } else {
-      // Inicializar linhas vazias
       const linhasIniciais = meses.map(m => ({
         mes: m.value,
         periodos: getInitialPeriodos(),
@@ -154,32 +127,61 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar }: TabelaMetasMen
     }
   }, [metas])
 
+  // Limpa valores dos períodos deselecionados
+  useEffect(() => {
+    const periodosRemovidos = prevPeriodosRef.current.filter(p => !periodosSelecionados.includes(p))
+    if (periodosRemovidos.length > 0) {
+      setLinhas(linhasAtuais => linhasAtuais.map(linha => {
+        const novosPeriodos: MetaFaturamentoPeriodo = { ...linha.periodos }
+        periodosRemovidos.forEach((p: PeriodoRefeicao) => {
+          novosPeriodos[p] = 0
+        })
+        return {
+          ...linha,
+          periodos: novosPeriodos,
+          metaTotal: calculateMetaTotal(novosPeriodos, linha.diasTrabalhados)
+        }
+      }))
+    }
+    prevPeriodosRef.current = periodosSelecionados
+  }, [periodosSelecionados])
+
   const togglePeriodo = (periodo: PeriodoRefeicao) => {
     setPeriodosSelecionados(prev => {
       const isTurnoUnico = periodo === 'turnoUnico'
       const hasTurnoUnico = prev.includes('turnoUnico')
-      const hasRefeicoes = prev.some(p => p !== 'turnoUnico')
+
+      let novosPeriodos: PeriodoRefeicao[]
 
       if (isTurnoUnico) {
         if (hasTurnoUnico) {
-          return prev.filter(p => p !== 'turnoUnico')
+          // Remover turno único - se não tiver outros, adicionar uma refeição
+          novosPeriodos = prev.filter(p => p !== 'turnoUnico')
+          if (novosPeriodos.length === 0) {
+            novosPeriodos = ['turnoUnico']
+          }
         } else {
-          // Turno único exclusivo - remover refeições
-          return ['turnoUnico']
+          novosPeriodos = ['turnoUnico']
         }
       } else {
         // É uma refeição (cafe, almoco, janta)
         if (hasTurnoUnico) {
           // Se tinha turno único, remover e adicionar a refeição
-          return [periodo]
+          novosPeriodos = [periodo]
+        } else {
+          const hasPeriodo = prev.includes(periodo)
+          if (hasPeriodo) {
+            novosPeriodos = prev.filter(p => p !== periodo)
+            if (novosPeriodos.length === 0) {
+              novosPeriodos = ['turnoUnico']
+            }
+          } else {
+            novosPeriodos = [...prev, periodo]
+          }
         }
-        const hasPeriodo = prev.includes(periodo)
-        if (hasPeriodo) {
-          const novo = prev.filter(p => p !== periodo)
-          return novo.length > 0 ? novo : ['turnoUnico']
-        }
-        return [...prev, periodo]
       }
+
+      return novosPeriodos
     })
   }
 
@@ -187,14 +189,13 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar }: TabelaMetasMen
     setLinhas(prev => prev.map(l => {
       if (l.mes === mes) {
         const novosPeriodos = { ...l.periodos, [periodo]: valor }
-        // Se digitou valor em turno único, limpar refeições e vice-versa
         let periodosFinais = novosPeriodos
         if (periodo === 'turnoUnico' && valor > 0) {
           periodosFinais = { ...novosPeriodos, cafe: 0, almoco: 0, janta: 0 }
           setPeriodosSelecionados(['turnoUnico'])
         } else if (periodo !== 'turnoUnico' && valor > 0 && (l.periodos.turnoUnico ?? 0) > 0) {
           periodosFinais = { ...novosPeriodos, turnoUnico: 0 }
-          setPeriodosSelecionados(prev => prev.filter(p => p !== 'turnoUnico'))
+          setPeriodosSelecionados(sel => sel.filter(p => p !== 'turnoUnico'))
         }
 
         return {
@@ -251,7 +252,7 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar }: TabelaMetasMen
         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
           Dias Trabalhados
         </th>
-        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+        <th className="px-4 py-3 text-right text-xs font-medium text-gray-505 uppercase tracking-wider">
           Meta Total (R$)
         </th>
       </tr>

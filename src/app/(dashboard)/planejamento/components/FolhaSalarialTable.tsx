@@ -1,7 +1,7 @@
 // src/app/(dashboard)/planejamento/components/FolhaSalarialTable.tsx
 "use client"
 
-import React, { useState, useEffect, Fragment, useMemo } from "react"
+import React, { useState, useEffect, useMemo, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { formatCurrency } from "@/lib/utils"
@@ -23,7 +23,7 @@ interface FolhaSalarialTableProps {
   funcionarios: Funcionario[]
   onEdit: () => void
   onConfigProvisoes: () => void
-  onTotalsChange: (salariosTotal: number, provisoes: Array<{nome: string, valor: number}>, folhaEncargosPercentual: number) => void
+  onTotalsChange: (salariosTotal: number, provisoes: Array<{nome: string, valor: number}>) => void
   onSaveTotals?: (totals: {
     totalSalarios: number
     totalDecimo: number
@@ -34,8 +34,6 @@ interface FolhaSalarialTableProps {
     totalMensal: number
     folhaEncargosPercentual: number
   }) => void
-  metaMensalTotal?: number
-  anoReferencia?: number
 }
 
 // Configuração das provisões
@@ -101,20 +99,14 @@ const DEFAULT_PROVISOES_ATIVAS = {
   inss: true
 }
 
-export function FolhaSalarialTable({
-  funcionarios,
-  onEdit,
-  onConfigProvisoes,
-  onTotalsChange,
-  onSaveTotals,
-  metaMensalTotal = 0
-}: FolhaSalarialTableProps) {
+export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, onTotalsChange, onSaveTotals }: FolhaSalarialTableProps) {
   const [provisoesAtivas, setProvisoesAtivas] = useState(DEFAULT_PROVISOES_ATIVAS)
   const [provisoesFuncionarios, setProvisoesFuncionarios] = useState<ProvisaoFuncionario[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
   const [anoReferencia] = useState(new Date().getFullYear())
+  const lastSavedTotalRef = useRef<number | null>(null)
 
   useEffect(() => {
     carregarProvisoes()
@@ -213,11 +205,28 @@ export function FolhaSalarialTable({
   async function salvarTodasProvisoes() {
     setSaving(true)
     try {
+      // Gerar dados a partir dos funcionários atuais e provisões ativas
+      // Isso garante que todos os funcionários tenham suas provisões salvas
+      const dadosParaSalvar: any[] = []
+
+      for (const func of funcionarios) {
+        for (const provisaoKey of Object.keys(PROVISOES_CONFIG)) {
+          if (provisoesAtivas[provisaoKey as keyof typeof provisoesAtivas]) {
+            const statusExistente = getProvisaoStatus(func.nome, provisaoKey)
+            dadosParaSalvar.push({
+              funcionario_nome: func.nome,
+              provisao: provisaoKey,
+              ativo: statusExistente
+            })
+          }
+        }
+      }
+
       const response = await fetch("/api/planejamento/provisoes-funcionarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          dados: provisoesFuncionarios,
+          dados: dadosParaSalvar,
           ano: anoReferencia
         })
       })
@@ -304,36 +313,29 @@ export function FolhaSalarialTable({
     return arr
   }, [totais.totalDecimo, totais.totalFerias, totais.totalFgts, totais.totalInssPatronal, totais.totalInss, provisoesAtivas])
 
-  // Calcular percentual da folha + encargos
-  const folhaEncargosPercentual = metaMensalTotal > 0 ? (totalMensal / metaMensalTotal) * 100 : 0
-
   // Notificar parent component sobre os totais (apenas quando houver mudança real)
   const salariosMemo = useMemo(() => totais.totalSalarios, [totais.totalSalarios])
-  const folhaEncargosMemo = useMemo(() => folhaEncargosPercentual, [folhaEncargosPercentual])
-
   useEffect(() => {
-    onTotalsChange(salariosMemo, provisoesArray, folhaEncargosPercentual)
+    onTotalsChange(salariosMemo, provisoesArray)
   }, [salariosMemo, provisoesArray, onTotalsChange])
 
-  // Salvar totais no backend quando houver mudança significativa (debounce manual)
+  // Salvar totalMensal automaticamente no backend (apenas se mudou)
   useEffect(() => {
-    if (onSaveTotals && totalMensal > 0) {
-      const handler = setTimeout(() => {
-        onSaveTotals({
-          totalSalarios: totais.totalSalarios,
-          totalDecimo: totais.totalDecimo,
-          totalFerias: totais.totalFerias,
-          totalFgts: totais.totalFgts,
-          totalInss: totais.totalInss,
-          totalInssPatronal: totais.totalInssPatronal,
-          totalMensal,
-          folhaEncargosPercentual
-        })
-      }, 500) // Debounce de 500ms
-
-      return () => clearTimeout(handler)
+    const totalArredondado = Math.round(totalMensal * 100) / 100
+    if (lastSavedTotalRef.current !== totalArredondado) {
+      lastSavedTotalRef.current = totalArredondado
+      onSaveTotals?.({
+        totalSalarios: totais.totalSalarios,
+        totalDecimo: totais.totalDecimo,
+        totalFerias: totais.totalFerias,
+        totalFgts: totais.totalFgts,
+        totalInss: totais.totalInss,
+        totalInssPatronal: totais.totalInssPatronal,
+        totalMensal: totalMensal,
+        folhaEncargosPercentual: 0
+      })
     }
-  }, [folhaEncargosMemo, totalMensal, onSaveTotals])
+  }, [totalMensal, totais, onSaveTotals])
 
   const toggleRow = (funcionarioNome: string) => {
     setExpandedRow(expandedRow === funcionarioNome ? null : funcionarioNome)
@@ -352,7 +354,7 @@ export function FolhaSalarialTable({
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-100 p-4 border-b border-gray-100">
+      <div className="bg-gray-50 p-4 border-b border-gray-100">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-[#de4838]" />
@@ -395,7 +397,7 @@ export function FolhaSalarialTable({
       <div className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-100 border-b border-gray-200">
+            <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8"></th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Funcionário</th>
@@ -426,7 +428,7 @@ export function FolhaSalarialTable({
                   </th>
                 )}
               </tr>
-              {/* Sub-header para indicar valor + switch 
+              {/* Sub-header para indicar valor + switch */}
               <tr className="border-b border-gray-200 bg-gray-100">
                 <td className="px-4 py-2"></td>
                 <td className="px-4 py-2"></td>
@@ -446,7 +448,7 @@ export function FolhaSalarialTable({
                 {provisoesAtivas.inss && (
                   <td className="px-4 py-2 text-center text-xs text-gray-500">Valor / Status</td>
                 )}
-              </tr>*/}
+              </tr>
             </thead>
             <tbody>
               {funcionarios.map((func) => {
@@ -456,7 +458,7 @@ export function FolhaSalarialTable({
                 return (
                   <React.Fragment key={func.nome}>
                     {/* Linha principal */}
-                    <tr className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
+                    <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
                         <button
                           onClick={() => toggleRow(func.nome)}
@@ -560,7 +562,7 @@ export function FolhaSalarialTable({
 
                     {/* Linha expandida com detalhes das provisões */}
                     {isExpanded && (
-                      <tr key={`${func.nome}-expanded`} className="bg-gray-100">
+                      <tr key={`${func.nome}-expanded`} className="bg-gray-50">
                         <td colSpan={7} className="px-4 py-3">
                           <div className="space-y-3">
                             <div className="flex items-center gap-2 mb-2">
@@ -615,7 +617,7 @@ export function FolhaSalarialTable({
                 )
               })}
             </tbody>
-            <tfoot className="border-t border-gray-200 bg-gray-100">
+            <tfoot className="border-t border-gray-200 bg-gray-50">
               <tr className="font-semibold">
                 <td className="px-4 py-3"></td>
                 <td className="px-4 py-3 text-gray-800">TOTAL</td>
@@ -647,7 +649,7 @@ export function FolhaSalarialTable({
       </div>
 
       {/* Informação sobre provisões */}
-      <div className="bg-gray-100 p-3 border-t border-gray-100 text-xs text-gray-500 flex items-center gap-2 flex-wrap">
+      <div className="bg-gray-50 p-3 border-t border-gray-100 text-xs text-gray-500 flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded-full bg-green-500"></div>
           <span>Ativo</span>

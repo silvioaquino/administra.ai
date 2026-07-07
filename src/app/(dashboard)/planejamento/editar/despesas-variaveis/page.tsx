@@ -37,6 +37,7 @@ export default function EditarDespesasVariaveisPage() {
   const [saving, setSaving] = useState(false)
   const [faturamentoBase, setFaturamentoBase] = useState(0)
   const [anoReferencia, setAnoReferencia] = useState(new Date().getFullYear())
+  const [folhaSalarialTotalMensal, setFolhaSalarialTotalMensal] = useState(0)
   const [config, setConfig] = useState<ConfiguracaoMaquininhas>({
     maquininhas: [
       { id: "1", nome: "InfinitePay", taxaDebito: 1.37, taxaCredito: 3.15, aluguel: 0, ativo: true },
@@ -44,6 +45,7 @@ export default function EditarDespesasVariaveisPage() {
       { id: "3", nome: "Caixa", taxaDebito: 4.48, taxaCredito: 5.78, aluguel: 0, ativo: true },
     ],
     distribuicaoVendas: { debito: 40, credito: 50, voucher: 10 },
+    taxaVoucher: 7.0,
     manutencao: 1.0,
     simplesNacional: 8.0
   })
@@ -65,7 +67,7 @@ export default function EditarDespesasVariaveisPage() {
     if (faturamentoBase > 0) {
       calcularTaxas()
     }
-  }, [faturamentoBase])
+  }, [faturamentoBase, folhaSalarialTotalMensal])
 
   async function carregarConfig() {
     setLoading(true)
@@ -85,6 +87,13 @@ export default function EditarDespesasVariaveisPage() {
         const metaMensalTotal = indicadoresData.metaMensalTotal
         setFaturamentoBase(metaMensalTotal)
         localStorage.setItem("faturamentoBase", metaMensalTotal.toString())
+      }
+
+      // Buscar totais da folha salarial
+      const folhaResponse = await fetch(`/api/planejamento/folha-salarial?ano=${anoReferencia}`)
+      const folhaData = await folhaResponse.json()
+      if (folhaData.success && folhaData.dados) {
+        setFolhaSalarialTotalMensal(folhaData.dados.totalMensal || 0)
       }
 
     } catch (error) {
@@ -131,7 +140,10 @@ export default function EditarDespesasVariaveisPage() {
     
     const taxaMediaGeral = (taxaDebitoMedia * percDebito) + (taxaCreditoMedia * percCredito) + (taxaVoucher * percVoucher)
     const percentualAluguel = (aluguelTotal / faturamentoBase) * 100
-    const totalDespesasVariaveis = config.simplesNacional + taxaMediaGeral + config.manutencao + percentualAluguel
+    const percentualFolhaSalarial = faturamentoBase > 0 && folhaSalarialTotalMensal > 0
+      ? (folhaSalarialTotalMensal / faturamentoBase) * 100
+      : 0
+    const totalDespesasVariaveis = config.simplesNacional + taxaMediaGeral + config.manutencao + percentualAluguel + percentualFolhaSalarial
     
     setResultados({
       debitoMedia: taxaDebitoMedia,
@@ -534,7 +546,7 @@ export default function EditarDespesasVariaveisPage() {
                   </p>
                 </div>
               )}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-8 gap-3">
                 <div className="rounded-xl bg-blue-50 p-3 text-center">
                   <p className="text-xs text-gray-500 mb-1">Taxa Débito Média</p>
                   <p className="text-lg font-bold text-blue-600">{formatPercentage(resultados.debitoMedia)}</p>
@@ -555,6 +567,20 @@ export default function EditarDespesasVariaveisPage() {
                   <p className="text-xs text-gray-500 mb-1">Aluguel % (base {formatCurrency(faturamentoBase)})</p>
                   <p className="text-lg font-bold text-gray-700">
                     {faturamentoBase > 0 ? formatPercentage(resultados.percentualAluguel) : '0%'}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-gray-100 p-3 text-center">
+                  <p className="text-xs text-gray-500 mb-1">Folha Salarial (R$)</p>
+                  <p className="text-lg font-bold text-gray-700">
+                    {formatCurrency(folhaSalarialTotalMensal)}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-gray-100 p-3 text-center">
+                  <p className="text-xs text-gray-500 mb-1">Folha Salarial (%)</p>
+                  <p className="text-lg font-bold text-gray-700">
+                    {faturamentoBase > 0 && folhaSalarialTotalMensal > 0
+                      ? formatPercentage((folhaSalarialTotalMensal / faturamentoBase) * 100)
+                      : '0%'}
                   </p>
                 </div>
                 <div className="rounded-xl bg-emerald-50 p-3 text-center">

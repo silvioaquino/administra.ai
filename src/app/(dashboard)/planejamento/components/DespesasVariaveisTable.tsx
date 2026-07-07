@@ -11,6 +11,7 @@ interface DespesasVariaveisTableProps {
   onEdit: () => void
   folhaEncargosPercentual?: number
   impactoMensal?: number
+  totalMensalFolha?: number
 }
 
 export function DespesasVariaveisTable({
@@ -19,13 +20,19 @@ export function DespesasVariaveisTable({
   title,
   onEdit,
   folhaEncargosPercentual = 0,
-  impactoMensal
+  impactoMensal,
+  totalMensalFolha = 0
 }: DespesasVariaveisTableProps) {
-  // Calcular impacto mensal se não foi passado
-  const impactoCalculado = impactoMensal ?? (metaMensalTotal * (percentual / 100))
+  // Calcular percentual da folha salarial em relação ao metaMensalTotal
+  const percentualFolha = metaMensalTotal > 0 && totalMensalFolha > 0
+    ? (totalMensalFolha / metaMensalTotal) * 100
+    : 0
 
   // Percentual total inclui folha + encargos se informado
-  const percentualTotal = percentual + (folhaEncargosPercentual || 0)
+  const percentualTotal = percentual + (folhaEncargosPercentual || 0) + percentualFolha
+
+  // Calcular impacto mensal se não foi passado
+  const impactoCalculado = impactoMensal ?? (metaMensalTotal * (percentualTotal / 100))
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -35,7 +42,7 @@ export function DespesasVariaveisTable({
             <span className="text-lg">📈</span>
             <h3 className="font-semibold text-gray-800">{title}</h3>
           </div>
-          <Button
+          {/*<Button
             variant="outline"
             size="sm"
             onClick={onEdit}
@@ -43,7 +50,7 @@ export function DespesasVariaveisTable({
           >
             <Settings className="mr-1 h-3 w-3" />
             Configurar
-          </Button>
+          </Button>*/}
         </div>
       </div>
 
@@ -54,13 +61,6 @@ export function DespesasVariaveisTable({
             <span className="text-sm text-gray-500">Percentual Total:</span>
             <span className="text-sm font-mono text-gray-700">{formatPercentage(percentualTotal)}</span>
           </div>
-
-          {(folhaEncargosPercentual && folhaEncargosPercentual > 0) && (
-            <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-              <span className="text-sm text-gray-500">Folha Salarial + Encargos:</span>
-              <span className="text-sm font-mono text-gray-700">{formatPercentage(folhaEncargosPercentual)}</span>
-            </div>
-          )}
 
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-500">Impacto Mensal:</span>

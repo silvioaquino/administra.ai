@@ -131,10 +131,9 @@ export default function PlanejamentoPage() {
     folhaEncargosPercentual: 0
   })
 
-  const handleTotalsChange = (salarios: number, provisoes: Array<{nome: string, valor: number}>, folhaEncargosPercentual: number) => {
+  const handleTotalsChange = (salarios: number, provisoes: Array<{nome: string, valor: number}>) => {
     setSalariosTotal(salarios)
     setProvisoesDetalhadas(provisoes)
-    setFolhaEncargosPercentual(folhaEncargosPercentual)
   }
 
   // Estado para armazenar os totais da folha salarial
@@ -360,9 +359,6 @@ export default function PlanejamentoPage() {
       <div className="sticky top-0 z-10 ml-3 mr-3 sm:ml-6 sm:mr-6 bg-white border-b border-gray-200 px-3 py-3 sm:px-6 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
         <div>
           <h1 className="text-xl font-semibold text-gray-800">Planejamento Financeiro</h1>
-          <p className="text-sm text-gray-500">
-            Base: Almoço (73%) | Janta (27%)
-          </p>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <div className="relative">
@@ -386,13 +382,6 @@ export default function PlanejamentoPage() {
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Sincronizar
-          </Button>
-          <Button 
-            onClick={salvarTodasConfiguracoes}
-            className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-4 py-2 hover:cursor-pointer hover:border-red-500 hover:border-2 transition-all whitespace-nowrap text-xs sm:text-sm"
-          >
-            <Save className="mr-2 h-4 w-4" />
-            Salvar Tudo
           </Button>
         </div>
       </div>
@@ -497,6 +486,7 @@ export default function PlanejamentoPage() {
                   title="Despesas Variáveis"
                   onEdit={() => navegarPara("/planejamento-financeiro/editar/taxas")}
                   folhaEncargosPercentual={folhaEncargosPercentual}
+                  totalMensalFolha={folhaSalarialTotais.totalMensal}
                 />
                 <GraficosDistribuicao
                   tipo="almoco"
@@ -543,6 +533,7 @@ export default function PlanejamentoPage() {
                   title="Despesas Variáveis"
                   onEdit={() => navegarPara("/planejamento-financeiro/editar/taxas")}
                   folhaEncargosPercentual={folhaEncargosPercentual}
+                  totalMensalFolha={folhaSalarialTotais.totalMensal}
                 />
                 <GraficosDistribuicao
                   tipo="janta"
@@ -596,7 +587,6 @@ export default function PlanejamentoPage() {
                 onConfigProvisoes={() => navegarPara("/planejamento/editar/provisoes")}
                 onTotalsChange={handleTotalsChange}
                 onSaveTotals={handleSaveFolhaTotais}
-                metaMensalTotal={indicadores.metaMensalTotal}
               />
             </div>
           </div>

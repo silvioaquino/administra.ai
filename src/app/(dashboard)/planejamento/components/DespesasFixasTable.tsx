@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { formatCurrency } from '@/lib/utils'
@@ -33,12 +33,27 @@ interface DespesasFixasTableProps {
 export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maquininhas }: DespesasFixasTableProps) {
   const [despesas, setDespesas] = useState<DespesaFixa[]>([])
   const [salvando, setSalvando] = useState(false)
+  const justSavedRef = useRef(false)
 
+  // Sincronizar dados do banco com estado local (apenas após salvar ou quando houver dados)
   useEffect(() => {
-    if (dados && dados.length > 0) {
-      setDespesas(dados)
+    // Atualiza o estado sempre que 'dados' mudar do banco, mas ignora no ciclo imediato após salvar
+    // para não sobrescrever as alterações locais antes que a API responda
+    if (!justSavedRef.current) {
+      setDespesas(Array.isArray(dados) ? dados : [])
     }
+    justSavedRef.current = false
   }, [dados])
+
+  const salvarDados = async () => {
+    setSalvando(true)
+    try {
+      await onSalvar(despesas, ano, mes)
+      justSavedRef.current = true
+    } finally {
+      setSalvando(false)
+    }
+  }
 
   const adicionarLinha = () => {
     setDespesas(prev => [...prev, { nome: '', valor: 0 }])
@@ -52,15 +67,6 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
     setDespesas(prev => prev.map((d, i) =>
       i === index ? { ...d, [campo]: valor } : d
     ))
-  }
-
-  const salvarDados = async () => {
-    setSalvando(true)
-    try {
-      await onSalvar(despesas, ano, mes)
-    } finally {
-      setSalvando(false)
-    }
   }
 
   // Calcular aluguel total das maquininhas ativas

@@ -90,34 +90,51 @@ export async function GET(request: Request) {
     const metaMensalTotal = metaAtual?.metaTotal || 0
     const lucroDesejado = 15 // Valor padrão (não está no PlanejamentoFaturamentoNovo)
 
-    // 2. Buscar despesas fixas (DA TABELA DESPESA FIXA, igual ao page.tsx)
-    const despesasFixasDb = await prisma.despesaFixa.findMany({
+    // 2. Buscar despesas fixas (DA NOVA TABELA primeiro, depois fallback para tabela antiga)
+    const despesasFixasNova = await prisma.planejamentoDespesaFixaNovo.findMany({
       where: {
         userId,
-        empresaId
+        empresaId,
+        ano
       },
       orderBy: { nome: "asc" }
     })
 
     let despesasFixas: Array<{ nome: string; valor: number }> = []
 
-    // Se encontrou na tabela principal, usar ela
-    if (despesasFixasDb.length > 0) {
-      despesasFixas = despesasFixasDb.map(d => ({
+    // Se encontrou na nova tabela, usar ela
+    if (despesasFixasNova.length > 0) {
+      despesasFixas = despesasFixasNova.map(d => ({
         nome: d.nome,
         valor: Number(d.valor)
       }))
     } else {
-      // Fallback: buscar do planejamentoConfig
-      const configFixas = await prisma.planejamentoConfig.findFirst({
+      // Fallback: buscar da tabela principal DespesaFixa
+      const despesasFixasDb = await prisma.despesaFixa.findMany({
         where: {
-          empresaId,
           userId,
-          tipo: "despesas_fixas",
-          anoReferencia: ano
-        }
+          empresaId
+        },
+        orderBy: { nome: "asc" }
       })
-      despesasFixas = (configFixas?.dados as Array<{ nome: string; valor: number }>) || []
+
+      // Se não encontrou na tabela principal, buscar do planejamentoConfig
+      if (despesasFixasDb.length > 0) {
+        despesasFixas = despesasFixasDb.map(d => ({
+          nome: d.nome,
+          valor: Number(d.valor)
+        }))
+      } else {
+        const configFixas = await prisma.planejamentoConfig.findFirst({
+          where: {
+            empresaId,
+            userId,
+            tipo: "despesas_fixas",
+            anoReferencia: ano
+          }
+        })
+        despesasFixas = (configFixas?.dados as Array<{ nome: string; valor: number }>) || []
+      }
     }
 
     // 3. Buscar configuração de despesas variáveis (usando API NOVA)

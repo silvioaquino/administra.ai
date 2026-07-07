@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency, formatPercentage } from '@/lib/utils'
+import { Calculator, TrendingUp, TrendingDown, CreditCard, DollarSign, Users, PieChart } from 'lucide-react'
 
 interface ResultadosTaxasProps {
   maquininhas: {
@@ -20,12 +21,16 @@ interface ResultadosTaxasProps {
     simplesNacional: number
     manutencao: number
   }
+  faturamentoTotal?: number
+  folhaSalarialTotalMensal?: number
 }
 
 export function ResultadosTaxas({
   maquininhas,
   distribuicaoVendas,
-  outrasTaxas
+  outrasTaxas,
+  faturamentoTotal = 0,
+  folhaSalarialTotalMensal = 0
 }: ResultadosTaxasProps) {
   // Calcular resultados
   const maquininhasAtivas = maquininhas.filter(m => m.ativo)
@@ -51,55 +56,155 @@ export function ResultadosTaxas({
   // Total Aluguel
   const aluguelTotal = maquininhasAtivas.reduce((sum, m) => sum + (m.aluguel || 0), 0)
 
-  // Total Despesas Variáveis (sem Aluguel % baseado no Faturamento)
-  const totalDespesasVariaveis = outrasTaxas.simplesNacional + taxaMediaGeral + outrasTaxas.manutencao
+  // Percentual Aluguel baseado no Faturamento
+  const percentualAluguel = (faturamentoTotal || 0) > 0 ? (aluguelTotal / (faturamentoTotal || 0)) * 100 : 0
+
+  // Percentual Folha Salarial baseado no Faturamento
+  const percentualFolhaSalarial = (faturamentoTotal || 0) > 0 && (folhaSalarialTotalMensal || 0) > 0
+    ? ((folhaSalarialTotalMensal || 0) / (faturamentoTotal || 0)) * 100
+    : 0
+
+  // Total Despesas Variáveis (inclui Aluguel % + Folha Salarial %)
+  const totalDespesasVariaveis = outrasTaxas.simplesNacional + taxaMediaGeral + outrasTaxas.manutencao + percentualAluguel + percentualFolhaSalarial
+
+  // Dados para os cards de resultado
+  const resultadosCards = [
+    {
+      title: "Taxa Débito Média",
+      value: `${taxaDebitoMedia.toFixed(2)}%`,
+      icon: TrendingDown,
+      gradient: "from-blue-500 to-blue-600",
+      detail: "Média das maquininhas ativas"
+    },
+    {
+      title: "Taxa Crédito Média",
+      value: `${taxaCreditoMedia.toFixed(2)}%`,
+      icon: TrendingUp,
+      gradient: "from-purple-500 to-purple-600",
+      detail: "Média das maquininhas ativas"
+    },
+    {
+      title: "Taxa Média Geral",
+      value: `${taxaMediaGeral.toFixed(2)}%`,
+      icon: Calculator,
+      gradient: "from-orange-500 to-orange-600",
+      detail: "Ponderada por distribuição de vendas"
+    },
+    {
+      title: "Total Aluguel",
+      value: formatCurrency(aluguelTotal),
+      icon: DollarSign,
+      gradient: "from-amber-500 to-amber-600",
+      detail: "Maquininhas ativas"
+    },
+    {
+      title: "Folha Salarial",
+      value: formatCurrency(folhaSalarialTotalMensal || 0),
+      icon: Users,
+      gradient: "from-indigo-500 to-indigo-600",
+      detail: "Total mensal"
+    },
+    {
+      title: "Folha Salarial (%)",
+      value: (faturamentoTotal || 0) > 0 && (folhaSalarialTotalMensal || 0) > 0
+        ? formatPercentage(percentualFolhaSalarial)
+        : '0%',
+      icon: PieChart,
+      gradient: "from-emerald-500 to-emerald-600",
+      detail: "Percentual sobre faturamento"
+    }
+  ]
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-5">
-      <h4 className="font-semibold text-gray-800 mb-4">Resultados</h4>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="border border-gray-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Taxa Débito Média</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-gray-800">{taxaDebitoMedia.toFixed(2)}%</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-gray-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Taxa Crédito Média</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-gray-800">{taxaCreditoMedia.toFixed(2)}%</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-gray-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Taxa Média Geral</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-orange-600">{taxaMediaGeral.toFixed(2)}%</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-gray-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Aluguel (R$)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-gray-800">{formatCurrency(aluguelTotal)}</p>
-          </CardContent>
-        </Card>
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="bg-gray-50 p-4 border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          <Calculator className="h-5 w-5 text-[#de4838]" />
+          <h3 className="font-semibold text-gray-800">Resultados</h3>
+          <span className="text-xs text-gray-400 ml-auto">
+            Base: {formatCurrency(faturamentoTotal || 0)} de faturamento
+          </span>
+        </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-gray-100">
-        <div className="flex justify-between items-center">
-          <span className="text-lg font-semibold text-gray-800">Total Despesas Variáveis:</span>
-          <span className="text-2xl font-bold text-[#de4838]">{formatPercentage(totalDespesasVariaveis)}</span>
+      {/* Cards de Resultados */}
+      <div className="p-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {resultadosCards.map((card, idx) => (
+            <div
+              key={idx}
+              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white rounded-xl p-4 shadow-sm`}
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium opacity-90">{card.title}</p>
+                <card.icon className="h-4 w-4 opacity-80" />
+              </div>
+              <div className="mt-1 text-xl font-bold">
+                {card.value}
+              </div>
+              <p className="mt-0.5 text-[10px] opacity-80">{card.detail}</p>
+              <div className="absolute -bottom-2 -right-2 opacity-10">
+                <card.icon className="h-12 w-12" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Total Despesas Variáveis */}
+        <div className="mt-6 pt-4 border-t-2 border-gray-200">
+          <div className="flex justify-between items-center">
+            <span className="text-base font-semibold text-gray-800 flex items-center gap-2">
+              <PieChart className="h-5 w-5 text-[#de4838]" />
+              Total Despesas Variáveis:
+            </span>
+            <span className="text-3xl font-bold text-[#de4838]">
+              {formatPercentage(totalDespesasVariaveis)}
+            </span>
+          </div>
+          <div className="mt-2 grid grid-cols-2 md:grid-cols-5 gap-2 text-xs text-gray-500">
+            <div className="flex justify-between">
+              <span>Simples Nacional:</span>
+              <span className="font-medium">{formatPercentage(outrasTaxas.simplesNacional)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Taxa Média:</span>
+              <span className="font-medium">{formatPercentage(taxaMediaGeral)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Manutenção:</span>
+              <span className="font-medium">{formatPercentage(outrasTaxas.manutencao)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Aluguel:</span>
+              <span className="font-medium">{formatPercentage(percentualAluguel)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Folha:</span>
+              <span className="font-medium">{formatPercentage(percentualFolhaSalarial)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Informações adicionais */}
+        <div className="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+          <p className="text-xs text-blue-700">
+            <strong>ℹ️ Detalhamento:</strong> Taxa Média Geral = (Débito {distribuicaoVendas.debito}% × {taxaDebitoMedia.toFixed(2)}%) + 
+            (Crédito {distribuicaoVendas.credito}% × {taxaCreditoMedia.toFixed(2)}%) + 
+            (Voucher {distribuicaoVendas.voucher}% × {taxaVoucher.toFixed(2)}%) = {taxaMediaGeral.toFixed(2)}%
+          </p>
+        </div>
+
+        {/* Status das maquininhas */}
+        <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+            {maquininhasAtivas.length} maquininhas ativas
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-2 w-2 rounded-full bg-gray-300" />
+            {maquininhas.length - maquininhasAtivas.length} inativas
+          </span>
         </div>
       </div>
     </div>
