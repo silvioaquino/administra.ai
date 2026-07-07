@@ -1,133 +1,191 @@
-// src/app/(dashboard)/planejamento/components/DespesasFixasTable.tsx
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
-import { formatCurrency } from "@/lib/utils"
-import { Settings } from "lucide-react"
+import { useState, useEffect, useMemo } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { formatCurrency } from '@/lib/utils'
+import { Settings, Plus, Trash2 } from 'lucide-react'
 
 interface DespesaFixa {
+  id?: number
   nome: string
   valor: number
+  status?: string
+  dataVencimento?: string
+  dataPagamento?: string
+  contaFinanceira?: string
 }
 
-interface ProvisaoItem {
-  nome: string
-  valor: number
+interface Maquininha {
+  aluguel: number
+  ativo: boolean
 }
 
 interface DespesasFixasTableProps {
-  despesas: DespesaFixa[]
-  percentual: number
-  title: string
-  onEdit: () => void
-  salariosTotal?: number
-  provisoes?: ProvisaoItem[]
+  dados: DespesaFixa[]
+  metaTotal: number
+  onSalvar: (despesas: DespesaFixa[], ano: number, mes?: number) => void
+  ano: number
+  mes?: number
+  maquininhas?: Maquininha[]
 }
 
-export function DespesasFixasTable({ 
-  despesas, 
-  percentual, 
-  title, 
-  onEdit, 
-  salariosTotal = 0, 
-  provisoes = [] 
-}: DespesasFixasTableProps) {
-  // Garantir que os valores sejam números
-  const totalReal = despesas.reduce((sum, d) => sum + Number(d.valor || 0), 0)
-  const provisoesTotal = provisoes.reduce((sum, p) => sum + Number(p.valor || 0), 0)
-  const folhaTotal = Number(salariosTotal || 0) + provisoesTotal
-  const totalComFolha = totalReal + folhaTotal
-  const totalRateado = Number((totalComFolha * percentual).toFixed(2))
+export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maquininhas }: DespesasFixasTableProps) {
+  const [despesas, setDespesas] = useState<DespesaFixa[]>([])
+  const [salvando, setSalvando] = useState(false)
 
-  // Calcular todos os percentuais para somar no final
-  let somaPercentuais = 0
+  useEffect(() => {
+    if (dados && dados.length > 0) {
+      setDespesas(dados)
+    }
+  }, [dados])
+
+  const adicionarLinha = () => {
+    setDespesas(prev => [...prev, { nome: '', valor: 0 }])
+  }
+
+  const removerLinha = (index: number) => {
+    setDespesas(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const atualizarDespesa = (index: number, campo: 'nome' | 'valor', valor: string | number) => {
+    setDespesas(prev => prev.map((d, i) =>
+      i === index ? { ...d, [campo]: valor } : d
+    ))
+  }
+
+  const salvarDados = async () => {
+    setSalvando(true)
+    try {
+      await onSalvar(despesas, ano, mes)
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  // Calcular aluguel total das maquininhas ativas
+  const aluguelTotal = useMemo(() => {
+    return (maquininhas || [])
+      .filter((m: Maquininha) => m.ativo)
+      .reduce((sum: number, m: Maquininha) => sum + (m.aluguel || 0), 0)
+  }, [maquininhas])
+
+  const totalDespesas = despesas.reduce((sum, d) => sum + (d.valor || 0), 0) + aluguelTotal
+  const pctDespesasFixas = metaTotal > 0 ? Math.min((totalDespesas / metaTotal) * 100, 10000) : 0
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden h-full">
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
       <div className="bg-gray-100 p-4 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-lg">💰</span>
-            <h3 className="font-semibold text-gray-800">{title}</h3>
+            <h3 className="font-semibold text-gray-800">Despesas Fixas</h3>
           </div>
           <Button
             variant="outline"
             size="sm"
-            onClick={onEdit}
+            onClick={adicionarLinha}
             className="rounded-lg border-gray-200 hover:border-[#de4838] hover:cursor-pointer transition-all"
           >
-            <Settings className="mr-1 h-3 w-3" />
-            Editar
+            <Plus className="h-4 w-4" />
           </Button>
         </div>
       </div>
-      <div className="p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-100 border-b border-gray-200">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Despesa</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Real (100%)</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {percentual === 0.73 ? "Almoço (73%)" : "Janta (27%)"}
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">% da Fatia</th>
-              </tr>
-            </thead>
-            <tbody>
-              {despesas.map((desp, idx) => {
-                const valor = Number(desp.valor || 0)
-                const valorRateado = Number((valor * percentual).toFixed(2))
-                const pctDaFatia = totalRateado > 0 ? Number(((valorRateado / totalRateado) * 100).toFixed(2)) : 0
-                somaPercentuais += pctDaFatia
-                return (
-                  <tr key={idx} className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
-                    <td className="px-4 py-3 text-gray-700">{desp.nome}</td>
-                    <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(valor)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(valorRateado)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-gray-500">{pctDaFatia.toFixed(2)}%</td>
-                  </tr>
-                )
-              })}
-              {/* Linha de salários */}
-              {salariosTotal > 0 && (
-                <tr className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
-                  <td className="px-4 py-3 text-gray-700 font-medium">Salários Funcionários</td>
-                  <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(Number(salariosTotal))}</td>
-                  <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(Number((Number(salariosTotal) * percentual).toFixed(2)))}</td>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Despesa</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor (R$)</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">% da Fatia</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {despesas.map((desp, index) => {
+              const valor = desp.valor || 0
+              const pctFatia = metaTotal > 0 ? (valor / metaTotal) * 100 : 0
+
+              return (
+                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <Input
+                      type="text"
+                      value={desp.nome}
+                      onChange={e => atualizarDespesa(index, 'nome', e.target.value)}
+                      className="text-sm font-medium text-gray-700"
+                      placeholder="Nome da despesa"
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <Input
+                      type="number"
+                      value={valor || ''}
+                      onChange={e => atualizarDespesa(index, 'valor', parseFloat(e.target.value) || 0)}
+                      className="text-right text-sm font-mono text-gray-700"
+                      placeholder="0,00"
+                    />
+                  </td>
                   <td className="px-4 py-3 text-right font-mono text-gray-500">
-                    {totalComFolha > 0 ? ((Number(salariosTotal) / totalComFolha) * 100).toFixed(2) : 0}%
+                    {pctFatia.toFixed(2)}%
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removerLinha(index)}
+                      disabled={despesas.length <= 1}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </td>
                 </tr>
-              )}
-              {/* Cada provisão em linha separada */}
-              {provisoes.map((prov, idx) => {
-                const valor = Number(prov.valor || 0)
-                const valorRateado = Number((valor * percentual).toFixed(2))
-                const pctDaFatia = totalComFolha > 0 ? Number(((valor / totalComFolha) * 100).toFixed(2)) : 0
-                somaPercentuais += pctDaFatia
-                return (
-                  <tr key={`prov-${idx}`} className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
-                    <td className="px-4 py-3 text-gray-700 font-medium pl-6">{prov.nome}</td>
-                    <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(valor)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(valorRateado)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-gray-500">{pctDaFatia.toFixed(2)}%</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-            <tfoot className="border-t border-gray-200 bg-gray-100">
-              <tr className="font-semibold">
-                <td className="px-4 py-3 text-gray-800">TOTAL</td>
-                <td className="px-4 py-3 text-right text-gray-800">{formatCurrency(Number(totalComFolha.toFixed(2)))}</td>
-                <td className="px-4 py-3 text-right text-[#de4838] font-bold">{formatCurrency(totalRateado)}</td>
-                <td className="px-4 py-3 text-right text-[#de4838] font-bold">
-                  {somaPercentuais.toFixed(2)}%
+              )
+            })}
+
+            {/* Linha de Aluguel das Maquininhas (somente leitura) */}
+            {aluguelTotal > 0 && (
+              <tr className="border-b border-gray-100 bg-blue-50 hover:bg-blue-50 transition-colors">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2 text-blue-800 font-medium">
+                    <span className="text-lg">🏪</span>
+                    <span>Aluguel Maquininhas</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-right font-mono text-blue-800 font-semibold">
+                  {formatCurrency(aluguelTotal)}
+                </td>
+                <td className="px-4 py-3 text-right font-mono text-blue-600">
+                  {metaTotal > 0 ? ((aluguelTotal / metaTotal) * 100).toFixed(2) : '0.00'}%
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <span className="text-xs text-blue-500 bg-blue-100 px-2 py-1 rounded-full">Automático</span>
                 </td>
               </tr>
-            </tfoot>
-          </table>
-        </div>
+            )}
+          </tbody>
+          <tfoot className="border-t border-gray-200 bg-gray-100">
+            <tr className="font-semibold">
+              <td className="px-4 py-3 text-gray-800">TOTAL</td>
+              <td className="px-4 py-3 text-right text-gray-800">{formatCurrency(totalDespesas)}</td>
+              <td className="px-4 py-3 text-right text-[#de4838] font-bold">{pctDespesasFixas.toFixed(2)}%</td>
+              <td className="px-4 py-3 text-center"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div className="p-4 border-t border-gray-100 flex justify-end">
+        <Button
+          onClick={salvarDados}
+          disabled={salvando}
+          className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-4 py-2 hover:cursor-pointer transition-all"
+        >
+          <Settings className="mr-2 h-4 w-4" />
+          {salvando ? 'Salvando...' : 'Salvar'}
+        </Button>
       </div>
     </div>
   )

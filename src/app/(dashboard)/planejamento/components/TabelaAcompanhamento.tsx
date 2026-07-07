@@ -5,12 +5,18 @@ import { Progress } from "@/components/ui/progress"
 import { formatCurrency } from "@/lib/utils"
 import { BarChart3, TrendingUp, TrendingDown } from "lucide-react"
 
-interface MetaMensal {
+export interface MetaFaturamentoPeriodo {
+  cafe?: number
+  almoco?: number
+  janta?: number
+  turnoUnico?: number
+}
+
+export interface MetaFaturamentoRow {
   mes: number
-  metaDiariaAlmoco: number
-  metaDiariaJanta: number
+  periodos: MetaFaturamentoPeriodo
   diasTrabalhados: number
-  lucroDesejado: number
+  metaTotal: number
 }
 
 interface Acompanhamento {
@@ -21,7 +27,7 @@ interface Acompanhamento {
 }
 
 interface TabelaAcompanhamentoProps {
-  metas: MetaMensal[]
+  metas: MetaFaturamentoRow[]
   acompanhamentos: Acompanhamento[]
 }
 
@@ -37,11 +43,15 @@ export function TabelaAcompanhamento({ metas, acompanhamentos }: TabelaAcompanha
   let totalRealJanta = 0
 
   for (let i = 1; i <= 12; i++) {
-    const meta = metas.find(m => m.mes === i) || { metaDiariaAlmoco: 0, metaDiariaJanta: 0, diasTrabalhados: 26 }
+    const meta = metas.find(m => m.mes === i) || { periodos: { almoco: 0, janta: 0 }, diasTrabalhados: 26 }
     const acompanhamento = acompanhamentos.find(a => a.mes === i) || { faturamentoAlmoco: 0, faturamentoJanta: 0, faturamentoTotal: 0 }
-    
-    totalMetaAlmoco += meta.metaDiariaAlmoco * meta.diasTrabalhados
-    totalMetaJanta += meta.metaDiariaJanta * meta.diasTrabalhados
+
+    // Extrair valores dos períodos (novo formato) ou usar valores padrão
+    const metaDiariaAlmoco = meta.periodos?.almoco || 0
+    const metaDiariaJanta = meta.periodos?.janta || 0
+
+    totalMetaAlmoco += metaDiariaAlmoco * meta.diasTrabalhados
+    totalMetaJanta += metaDiariaJanta * meta.diasTrabalhados
     totalRealAlmoco += acompanhamento.faturamentoAlmoco
     totalRealJanta += acompanhamento.faturamentoJanta
   }
@@ -80,17 +90,21 @@ export function TabelaAcompanhamento({ metas, acompanhamentos }: TabelaAcompanha
             <tbody>
               {MESES.map((mes, idx) => {
                 const mesNum = idx + 1
-                const meta = metas.find(m => m.mes === mesNum) || { metaDiariaAlmoco: 0, metaDiariaJanta: 0, diasTrabalhados: 26 }
+                const meta = metas.find(m => m.mes === mesNum) || { periodos: { almoco: 0, janta: 0 }, diasTrabalhados: 26 }
                 const acompanhamento = acompanhamentos.find(a => a.mes === mesNum) || { faturamentoAlmoco: 0, faturamentoJanta: 0, faturamentoTotal: 0 }
-                
-                const metaAlmoco = meta.metaDiariaAlmoco * meta.diasTrabalhados
-                const metaJanta = meta.metaDiariaJanta * meta.diasTrabalhados
+
+                // Extrair valores dos períodos (novo formato)
+                const metaDiariaAlmoco = meta.periodos?.almoco || 0
+                const metaDiariaJanta = meta.periodos?.janta || 0
+
+                const metaAlmoco = metaDiariaAlmoco * meta.diasTrabalhados
+                const metaJanta = metaDiariaJanta * meta.diasTrabalhados
                 const metaTotal = metaAlmoco + metaJanta
-                
+
                 const realAlmoco = acompanhamento.faturamentoAlmoco
                 const realJanta = acompanhamento.faturamentoJanta
                 const realTotal = acompanhamento.faturamentoTotal
-                
+
                 let rowClass = ""
                 let statusIcon = null
                 if (realTotal >= metaTotal) {
@@ -103,7 +117,7 @@ export function TabelaAcompanhamento({ metas, acompanhamentos }: TabelaAcompanha
                   rowClass = "bg-red-50"
                   statusIcon = <TrendingDown className="h-3 w-3 text-red-600" />
                 }
-                
+
                 return (
                   <tr key={idx} className={`border-b border-gray-100 ${rowClass}`}>
                     <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">
@@ -145,9 +159,9 @@ export function TabelaAcompanhamento({ metas, acompanhamentos }: TabelaAcompanha
           <Progress value={percentualGeral} className="h-3" />
           <div className="mt-4">
             <div className={`rounded-xl p-3 text-center text-sm ${percentualGeral >= 100 ? 'bg-emerald-100 text-emerald-700' : percentualGeral >= 80 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
-              {percentualGeral >= 100 
-                ? "🎉 Meta Anual Alcançada! Parabéns!" 
-                : percentualGeral >= 80 
+              {percentualGeral >= 100
+                ? "🎉 Meta Anual Alcançada! Parabéns!"
+                : percentualGeral >= 80
                 ? "📈 Próximo da meta! Continue assim!"
                 : "⚠️ Atenção! Faturamento abaixo da meta anual"}
             </div>

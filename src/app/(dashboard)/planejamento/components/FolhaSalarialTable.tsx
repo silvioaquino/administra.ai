@@ -23,7 +23,19 @@ interface FolhaSalarialTableProps {
   funcionarios: Funcionario[]
   onEdit: () => void
   onConfigProvisoes: () => void
-  onTotalsChange: (salariosTotal: number, provisoes: Array<{nome: string, valor: number}>) => void
+  onTotalsChange: (salariosTotal: number, provisoes: Array<{nome: string, valor: number}>, folhaEncargosPercentual: number) => void
+  onSaveTotals?: (totals: {
+    totalSalarios: number
+    totalDecimo: number
+    totalFerias: number
+    totalFgts: number
+    totalInss: number
+    totalInssPatronal: number
+    totalMensal: number
+    folhaEncargosPercentual: number
+  }) => void
+  metaMensalTotal?: number
+  anoReferencia?: number
 }
 
 // Configuração das provisões
@@ -89,7 +101,14 @@ const DEFAULT_PROVISOES_ATIVAS = {
   inss: true
 }
 
-export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, onTotalsChange }: FolhaSalarialTableProps) {
+export function FolhaSalarialTable({
+  funcionarios,
+  onEdit,
+  onConfigProvisoes,
+  onTotalsChange,
+  onSaveTotals,
+  metaMensalTotal = 0
+}: FolhaSalarialTableProps) {
   const [provisoesAtivas, setProvisoesAtivas] = useState(DEFAULT_PROVISOES_ATIVAS)
   const [provisoesFuncionarios, setProvisoesFuncionarios] = useState<ProvisaoFuncionario[]>([])
   const [loading, setLoading] = useState(true)
@@ -285,11 +304,36 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
     return arr
   }, [totais.totalDecimo, totais.totalFerias, totais.totalFgts, totais.totalInssPatronal, totais.totalInss, provisoesAtivas])
 
+  // Calcular percentual da folha + encargos
+  const folhaEncargosPercentual = metaMensalTotal > 0 ? (totalMensal / metaMensalTotal) * 100 : 0
+
   // Notificar parent component sobre os totais (apenas quando houver mudança real)
   const salariosMemo = useMemo(() => totais.totalSalarios, [totais.totalSalarios])
+  const folhaEncargosMemo = useMemo(() => folhaEncargosPercentual, [folhaEncargosPercentual])
+
   useEffect(() => {
-    onTotalsChange(salariosMemo, provisoesArray)
+    onTotalsChange(salariosMemo, provisoesArray, folhaEncargosPercentual)
   }, [salariosMemo, provisoesArray, onTotalsChange])
+
+  // Salvar totais no backend quando houver mudança significativa (debounce manual)
+  useEffect(() => {
+    if (onSaveTotals && totalMensal > 0) {
+      const handler = setTimeout(() => {
+        onSaveTotals({
+          totalSalarios: totais.totalSalarios,
+          totalDecimo: totais.totalDecimo,
+          totalFerias: totais.totalFerias,
+          totalFgts: totais.totalFgts,
+          totalInss: totais.totalInss,
+          totalInssPatronal: totais.totalInssPatronal,
+          totalMensal,
+          folhaEncargosPercentual
+        })
+      }, 500) // Debounce de 500ms
+
+      return () => clearTimeout(handler)
+    }
+  }, [folhaEncargosMemo, totalMensal, onSaveTotals])
 
   const toggleRow = (funcionarioNome: string) => {
     setExpandedRow(expandedRow === funcionarioNome ? null : funcionarioNome)

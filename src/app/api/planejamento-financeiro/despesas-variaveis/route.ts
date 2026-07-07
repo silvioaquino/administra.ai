@@ -28,9 +28,37 @@ export async function GET(request: NextRequest) {
       where: whereClause
     })
 
+    // Buscar faturamento do mês para preencher faturamentoBase
+    const mesAtual = mes !== undefined ? mes : new Date().getMonth() + 1
+    const faturamentoData = await prisma.planejamentoFaturamentoNovo.findFirst({
+      where: {
+        userId: session.user.id,
+        empresaId: session.user.empresaId || 'sem-empresa',
+        ano,
+        mes: mesAtual
+      }
+    })
+
+    const registro = dados.length > 0 ? dados[0] : null
+    // Calcular faturamentoBase do mês
+    const diasTrabalhados = faturamentoData?.diasTrabalhados ?? 26
+    const metaDiariaValor = faturamentoData?.metaDiaria ?? 0
+    const faturamentoBase = faturamentoData ? Number(faturamentoData.metaTotal || metaDiariaValor * diasTrabalhados) : 0
+
     return NextResponse.json({
       success: true,
-      dados: dados.length > 0 ? dados[0] : null
+      dados: registro ? {
+        ...registro,
+        faturamentoBase: faturamentoBase,
+        config: {
+          ...(registro.config as object),
+          outrasTaxas: {
+            voucher: (registro.config as any)?.taxaVoucher || 7.0,
+            simplesNacional: (registro.config as any)?.simplesNacional || 0,
+            manutencao: (registro.config as any)?.manutencao || 0
+          }
+        }
+      } : null
     })
   } catch (error) {
     console.error('Erro ao buscar despesas variáveis:', error)

@@ -4,21 +4,17 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-// Função para calcular despesas variáveis (MESMA lógica do page.tsx)
-function calcularDespesasVariaveis(config: {
-  maquininhas: Array<{
-    id: string
-    nome: string
-    taxaDebito: number
-    taxaCredito: number
-    aluguel: number
-    ativo: boolean
-  }>
-  distribuicaoVendas: { debito: number; credito: number; voucher: number }
-  manutencao: number
-  simplesNacional: number
-}, faturamentoBase: number) {
-  const maquininhasAtivas = config.maquininhas.filter(m => m.ativo)
+// Função para calcular despesas variáveis (compatível com nova estrutura)
+function calcularDespesasVariaveis(config: any, faturamentoBase: number) {
+  // Suportar ambas as estruturas: com outrasTaxas OU sem (campos diretos)
+  const outrasTaxas = config.outrasTaxas || {
+    voucher: config.taxaVoucher || 7.0,
+    simplesNacional: config.simplesNacional || 0,
+    manutencao: config.manutencao || 0
+  }
+
+  const maquininhasAtivas = config.maquininhas?.filter((m: any) => m.ativo) ?? []
+
   if (maquininhasAtivas.length === 0) {
     return {
       debitoMedia: 0,
@@ -44,16 +40,17 @@ function calcularDespesasVariaveis(config: {
     aluguelTotal += maquina.aluguel
   }
 
-  const percDebito = config.distribuicaoVendas.debito / 100
-  const percCredito = config.distribuicaoVendas.credito / 100
-  const percVoucher = config.distribuicaoVendas.voucher / 100
-  
+  const distribuicao = config.distribuicaoVendas || { debito: 0, credito: 0, voucher: 0 }
+  const percDebito = (distribuicao.debito || 0) / 100
+  const percCredito = (distribuicao.credito || 0) / 100
+  const percVoucher = (distribuicao.voucher || 0) / 100
+
   // Taxa voucher padrão
-  const taxaVoucher = 7.0
-  
+  const taxaVoucher = outrasTaxas.voucher || 7.0
+
   const taxaMediaGeral = (debitoMedia * percDebito) + (creditoMedia * percCredito) + (taxaVoucher * percVoucher)
   const percentualAluguel = faturamentoBase > 0 ? (aluguelTotal / faturamentoBase) * 100 : 0
-  const totalDespesasVariaveis = config.simplesNacional + taxaMediaGeral + config.manutencao + percentualAluguel
+  const totalDespesasVariaveis = (outrasTaxas.simplesNacional || 0) + taxaMediaGeral + (outrasTaxas.manutencao || 0) + percentualAluguel
 
   return {
     debitoMedia,
@@ -78,9 +75,9 @@ export async function GET(request: Request) {
   const ano = parseInt(searchParams.get("ano") || new Date().getFullYear().toString())
 
   try {
-    // 1. Buscar meta do mês atual
+    // 1. Buscar meta do mês atual (usando tabela NOVA)
     const mesAtual = new Date().getMonth() + 1
-    const metaAtual = await prisma.planejamentoFaturamento.findFirst({
+    const metaAtual = await prisma.planejamentoFaturamentoNovo.findFirst({
       where: {
         empresaId,
         userId,
@@ -89,14 +86,9 @@ export async function GET(request: Request) {
       }
     })
 
-    const diasTrabalhados = metaAtual?.diasTrabalhados || 26
-    const metaDiariaAlmoco = metaAtual?.metaDiariaAlmoco || 0
-    const metaDiariaJanta = metaAtual?.metaDiariaJanta || 0
-    const lucroDesejado = metaAtual?.lucroDesejado || 15
-
-    const metaMensalAlmoco = metaDiariaAlmoco * diasTrabalhados
-    const metaMensalJanta = metaDiariaJanta * diasTrabalhados
-    const metaMensalTotal = metaMensalAlmoco + metaMensalJanta
+    // Usar metaTotal diretamente se disponível
+    const metaMensalTotal = metaAtual?.metaTotal || 0
+    const lucroDesejado = 15 // Valor padrão (não está no PlanejamentoFaturamentoNovo)
 
     // 2. Buscar despesas fixas (DA TABELA DESPESA FIXA, igual ao page.tsx)
     const despesasFixasDb = await prisma.despesaFixa.findMany({
@@ -108,7 +100,7 @@ export async function GET(request: Request) {
     })
 
     let despesasFixas: Array<{ nome: string; valor: number }> = []
-    
+
     // Se encontrou na tabela principal, usar ela
     if (despesasFixasDb.length > 0) {
       despesasFixas = despesasFixasDb.map(d => ({
@@ -128,9 +120,9 @@ export async function GET(request: Request) {
       despesasFixas = (configFixas?.dados as Array<{ nome: string; valor: number }>) || []
     }
 
-    // 3. Buscar configuração de despesas variáveis (MESMA estrutura do page.tsx)
+    // 3. Buscar configuração de despesas variáveis (usando API NOVA)
     const taxasResponse = await fetch(
-      `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/planejamento/despesas-variaveis?ano=${ano}`,
+      `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/planejamento-financeiro/despesas-variaveis?ano=${ano}&mes=${mesAtual}`,
       {
         headers: {
           cookie: request.headers.get('cookie') || ''
@@ -139,21 +131,32 @@ export async function GET(request: Request) {
     )
     const taxasData = await taxasResponse.json()
 
-    // Configuração padrão (mesma do page.tsx)
-    const configMaquininhas = taxasData.success && taxasData.dados ? taxasData.dados : {
+    // Configuração padrão com estrutura compatível para DespesasVariaveisTable
+    const configMaquininhas = taxasData.success && taxasData.dados ? {
+      maquininhas: taxasData.dados.config?.maquininhas || [],
+      distribuicaoVendas: taxasData.dados.config?.distribuicaoVendas || { debito: 40, credito: 50, voucher: 10 },
+      outrasTaxas: {
+        voucher: taxasData.dados.config?.taxaVoucher || 7.0,
+        simplesNacional: taxasData.dados.config?.simplesNacional || 0,
+        manutencao: taxasData.dados.config?.manutencao || 0
+      }
+    } : {
       maquininhas: [
         { id: "1", nome: "InfinitePay", taxaDebito: 1.37, taxaCredito: 3.15, aluguel: 0, ativo: true },
         { id: "2", nome: "Stone", taxaDebito: 2.34, taxaCredito: 6.44, aluguel: 79.80, ativo: true },
         { id: "3", nome: "Caixa", taxaDebito: 4.48, taxaCredito: 5.78, aluguel: 0, ativo: true },
       ],
       distribuicaoVendas: { debito: 40, credito: 50, voucher: 10 },
-      manutencao: 1.0,
-      simplesNacional: 8.0
+      outrasTaxas: {
+        voucher: 7.0,
+        simplesNacional: 8.0,
+        manutencao: 1.0
+      }
     }
 
     // 4. Calcular despesas variáveis usando a MESMA função do page.tsx
     // Usar meta do mês atual
-    const referenciaCalculo = metaMensalTotal
+    const referenciaCalculo = metaMensalTotal || 52000
     const despesasVariaveisCalculadas = calcularDespesasVariaveis(configMaquininhas, referenciaCalculo)
     const despesasVariaveisPct = despesasVariaveisCalculadas.totalDespesasVariaveis
 

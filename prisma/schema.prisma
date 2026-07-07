@@ -43,6 +43,7 @@ model User {
   planejamentoDespesaVariavelNovo PlanejamentoDespesaVariavelNovo[]
   planejamentoFaturamento         PlanejamentoFaturamento[]
   planejamentoFaturamentoNovo     PlanejamentoFaturamentoNovo[]
+  planejamentoFolhaSalarial       PlanejamentoFolhaSalarial[]
   planoContas                     PlanoContas[]
   produtosVenda                   ProdutoVenda[]
   produtos                        Produto[]
@@ -125,6 +126,7 @@ model Empresa {
   planejamentoDespesaVariavelNovo PlanejamentoDespesaVariavelNovo[]
   planejamentoFaturamento         PlanejamentoFaturamento[]
   planejamentoFaturamentoNovo     PlanejamentoFaturamentoNovo[]
+  planejamentoFolhaSalarial       PlanejamentoFolhaSalarial[]
   planoContas                     PlanoContas[]
   produtosVenda                   ProdutoVenda[]
   produtos                        Produto[]
@@ -851,4 +853,28 @@ model PlanejamentoAcompanhamentoNovo {
   @@index([userId, ano, mes])
   @@index([empresaId])
   @@map("planejamento_acompanhamento_novo")
+}
+
+model PlanejamentoFolhaSalarial {
+  id                    Int      @id @default(autoincrement())
+  empresaId             String   @map("empresa_id")
+  userId                String   @map("user_id")
+  anoReferencia         Int      @map("ano_referencia")
+  totalSalarios         Decimal  @default(0) @map("total_salarios") @db.Decimal(10, 2)
+  totalDecimo           Decimal  @default(0) @map("total_decimo") @db.Decimal(10, 2)
+  totalFerias           Decimal  @default(0) @map("total_ferias") @db.Decimal(10, 2)
+  totalFgts             Decimal  @default(0) @map("total_fgts") @db.Decimal(10, 2)
+  totalInss             Decimal  @default(0) @map("total_inss") @db.Decimal(10, 2)
+  totalInssPatronal     Decimal  @default(0) @map("total_inss_patronal") @db.Decimal(10, 2)
+  totalMensal           Decimal  @default(0) @map("total_mensal") @db.Decimal(10, 2)
+  folhaEncargosPercentual Float  @default(0) @map("folha_encargos_percentual")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  empresa               Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, userId, anoReferencia])
+  @@index([userId, anoReferencia])
+  @@index([empresaId])
+  @@map("planejamento_folha_salarial")
 }

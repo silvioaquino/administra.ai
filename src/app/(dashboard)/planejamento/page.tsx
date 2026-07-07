@@ -3,14 +3,13 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { 
-  Target, TrendingUp, DollarSign, Users,
-  BarChart3, Settings, Percent, Calculator, Save, RefreshCw,
+import {
+  TrendingUp, DollarSign,
+  Percent, Calculator, Save, RefreshCw,
   Sun, Moon, HelpCircle
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
 
 // Components
@@ -22,14 +21,21 @@ import { DespesasFixasTable } from "./components/DespesasFixasTable"
 import { DespesasVariaveisTable } from "./components/DespesasVariaveisTable"
 import { GraficosDistribuicao } from "./components/GraficosDistribuicao"
 import { MarkUpCalculator } from "./components/MarkUpCalculator"
+import { toast } from 'sonner'
 
 // Tipos
-interface MetaMensal {
+interface MetaFaturamentoPeriodo {
+  cafe?: number
+  almoco?: number
+  janta?: number
+  turnoUnico?: number
+}
+
+interface MetaFaturamentoRow {
   mes: number
-  metaDiariaAlmoco: number
-  metaDiariaJanta: number
+  periodos: MetaFaturamentoPeriodo
   diasTrabalhados: number
-  lucroDesejado: number
+  metaTotal: number
 }
 
 interface Acompanhamento {
@@ -40,8 +46,55 @@ interface Acompanhamento {
 }
 
 interface DespesaFixa {
+  id?: number
   nome: string
   valor: number
+  status?: string
+  dataVencimento?: string
+  dataPagamento?: string
+  contaFinanceira?: string
+}
+
+interface Maquininha {
+  id?: string
+  nome: string
+  taxaDebito: number
+  taxaCredito: number
+  aluguel: number
+  ativo: boolean
+}
+
+interface DistribuicaoVendas {
+  debito: number
+  credito: number
+  voucher: number
+}
+
+interface OutrasTaxas {
+  voucher: number
+  simplesNacional: number
+  manutencao: number
+}
+
+interface ConfiguracaoDespesasVariaveis {
+  maquininhas: Maquininha[]
+  distribuicaoVendas: DistribuicaoVendas
+  outrasTaxas: OutrasTaxas
+}
+
+interface DespesasVariaveisData {
+  percentualTotal: number
+  faturamentoBase: number
+  impactoMensal: number
+  config: ConfiguracaoDespesasVariaveis
+  resultados: {
+    debitoMedia: number
+    creditoMedia: number
+    taxaMediaGeral: number
+    aluguelTotal: number
+    percentualAluguel: number
+    totalDespesasVariaveis: number
+  }
 }
 
 interface Funcionario {
@@ -53,14 +106,18 @@ export default function PlanejamentoPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [anoAtual, setAnoAtual] = useState(new Date().getFullYear())
-  const [metasMensais, setMetasMensais] = useState<MetaMensal[]>([])
+  const [metasMensais, setMetasMensais] = useState<MetaFaturamentoRow[]>([])
   const [acompanhamentos, setAcompanhamentos] = useState<Acompanhamento[]>([])
   const [despesasFixas, setDespesasFixas] = useState<DespesaFixa[]>([])
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([])
   const [activeTab, setActiveTab] = useState("almoco")
   const [salariosTotal, setSalariosTotal] = useState(0)
   const [provisoesDetalhadas, setProvisoesDetalhadas] = useState<Array<{nome: string, valor: number}>>([])
-  
+  const [folhaEncargosPercentual, setFolhaEncargosPercentual] = useState(0)
+
+  // Estado para despesas variáveis (nova API)
+  const [despesasVariaveisData, setDespesasVariaveisData] = useState<DespesasVariaveisData | null>(null)
+
   // Estado para os indicadores (vem da API)
   const [indicadores, setIndicadores] = useState({
     metaMensalTotal: 0,
@@ -70,12 +127,52 @@ export default function PlanejamentoPage() {
     pctFixas: 0,
     pctVariaveis: 0,
     totalDespesasVariaveis: 0,
-    despesasFixas: [] as DespesaFixa[]
+    despesasFixas: [] as DespesaFixa[],
+    folhaEncargosPercentual: 0
   })
 
-  const handleTotalsChange = (salarios: number, provisoes: Array<{nome: string, valor: number}>) => {
+  const handleTotalsChange = (salarios: number, provisoes: Array<{nome: string, valor: number}>, folhaEncargosPercentual: number) => {
     setSalariosTotal(salarios)
     setProvisoesDetalhadas(provisoes)
+    setFolhaEncargosPercentual(folhaEncargosPercentual)
+  }
+
+  // Estado para armazenar os totais da folha salarial
+  const [folhaSalarialTotais, setFolhaSalarialTotais] = useState({
+    totalSalarios: 0,
+    totalDecimo: 0,
+    totalFerias: 0,
+    totalFgts: 0,
+    totalInss: 0,
+    totalInssPatronal: 0,
+    totalMensal: 0,
+    folhaEncargosPercentual: 0
+  })
+
+  const handleSaveFolhaTotais = async (totals: {
+    totalSalarios: number
+    totalDecimo: number
+    totalFerias: number
+    totalFgts: number
+    totalInss: number
+    totalInssPatronal: number
+    totalMensal: number
+    folhaEncargosPercentual: number
+  }) => {
+    setFolhaSalarialTotais(totals)
+    // Salvar no backend automaticamente
+    try {
+      await fetch("/api/planejamento/folha-salarial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ano: anoAtual,
+          ...totals
+        })
+      })
+    } catch (error) {
+      console.error("Erro ao salvar totais da folha:", error)
+    }
   }
 
   const carregarDados = useCallback(async () => {
@@ -84,7 +181,7 @@ export default function PlanejamentoPage() {
       // 1. Carregar indicadores da API (inclui despesas fixas, variáveis, metas, etc)
       const indicadoresResponse = await fetch(`/api/planejamento/indicadores-resumo?ano=${anoAtual}`)
       const indicadoresData = await indicadoresResponse.json()
-      
+
       if (indicadoresData.success) {
         console.log("📊 Dados dos indicadores:", indicadoresData)
 
@@ -96,17 +193,25 @@ export default function PlanejamentoPage() {
           pctFixas: indicadoresData.pctFixas || 0,
           pctVariaveis: indicadoresData.despesasVariaveisPct || 0,
           totalDespesasVariaveis: indicadoresData.totalDespesasVariaveis || 0,
-          despesasFixas: indicadoresData.despesasFixas || []
+          despesasFixas: indicadoresData.despesasFixas || [],
+          folhaEncargosPercentual: indicadoresData.folhaEncargosPercentual || 0
         })
 
         setDespesasFixas(indicadoresData.despesasFixas || [])
       }
 
-      // 2. Carregar metas mensais
-      const metasResponse = await fetch(`/api/planejamento/metas?ano=${anoAtual}`)
+      // 2. Carregar metas mensais (nova API planejamento-financeiro)
+      const metasResponse = await fetch(`/api/planejamento-financeiro/faturamento?ano=${anoAtual}`)
       const metasData = await metasResponse.json()
       if (metasData.success) {
-        setMetasMensais(metasData.metas || [])
+        // Converter formato novo para o formato do componente
+        const dadosConvertidos = (metasData.dados || []).map((item: any) => ({
+          mes: item.mes,
+          periodos: item.periodos || { turnoUnico: item.metaDiaria || 0 },
+          diasTrabalhados: item.diasTrabalhados || 26,
+          metaTotal: item.metaTotal || (item.metaDiaria || 0) * (item.diasTrabalhados || 26)
+        }))
+        setMetasMensais(dadosConvertidos)
       }
 
       // 3. Carregar acompanhamento
@@ -123,6 +228,31 @@ export default function PlanejamentoPage() {
         setFuncionarios(funcData.dados)
         const totalSalarios = funcData.dados.reduce((sum: number, f: Funcionario) => sum + (f.salario || 0), 0)
         setSalariosTotal(totalSalarios)
+      }
+
+      // 4.5 Carregar totais da folha salarial (nova API)
+      const folhaResponse = await fetch(`/api/planejamento/folha-salarial?ano=${anoAtual}`)
+      const folhaData = await folhaResponse.json()
+      if (folhaData.success && folhaData.dados) {
+        setFolhaSalarialTotais({
+          totalSalarios: folhaData.dados.totalSalarios || 0,
+          totalDecimo: folhaData.dados.totalDecimo || 0,
+          totalFerias: folhaData.dados.totalFerias || 0,
+          totalFgts: folhaData.dados.totalFgts || 0,
+          totalInss: folhaData.dados.totalInss || 0,
+          totalInssPatronal: folhaData.dados.totalInssPatronal || 0,
+          totalMensal: folhaData.dados.totalMensal || 0,
+          folhaEncargosPercentual: folhaData.dados.folhaEncargosPercentual || 0
+        })
+        setFolhaEncargosPercentual(folhaData.dados.folhaEncargosPercentual || 0)
+      }
+
+      // 5. Carregar despesas variáveis (nova API planejamento-financeiro)
+      const mesAtual = new Date().getMonth() + 1
+      const variaveisResponse = await fetch(`/api/planejamento-financeiro/despesas-variaveis?ano=${anoAtual}&mes=${mesAtual}`)
+      const variaveisData = await variaveisResponse.json()
+      if (variaveisData.success && variaveisData.dados) {
+        setDespesasVariaveisData(variaveisData.dados)
       }
 
     } catch (error) {
@@ -162,6 +292,15 @@ export default function PlanejamentoPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ dados: funcionarios, ano: anoAtual })
+        }),
+        // Salvar totais da folha salarial
+        fetch("/api/planejamento/folha-salarial", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ano: anoAtual,
+            ...folhaSalarialTotais
+          })
         })
       ])
       alert("✅ Todas as configurações foram salvas com sucesso!")
@@ -328,21 +467,38 @@ export default function PlanejamentoPage() {
           {activeTab === "almoco" && (
             <div className="grid gap-6 lg:grid-cols-2">
               <DespesasFixasTable
-                despesas={indicadores.despesasFixas}
-                percentual={0.73}
-                title="Despesas Fixas - Almoço (73%)"
-                onEdit={() => navegarPara("/planejamento/editar/despesas-fixas")}
-                salariosTotal={salariosTotal}
-                provisoes={provisoesDetalhadas}
+                dados={indicadores.despesasFixas}
+                metaTotal={indicadores.metaMensalTotal * 0.73}
+                onSalvar={async (despesas, ano) => {
+                  try {
+                    const response = await fetch("/api/planejamento-financeiro/despesas-fixas", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ ano, despesas })
+                    })
+                    const data = await response.json()
+                    if (data.success) {
+                      toast.success('Despesas fixas salvas com sucesso!')
+                      carregarDados()
+                    } else {
+                      toast.error('Erro ao salvar despesas fixas')
+                    }
+                  } catch (error) {
+                    toast.error('Erro ao salvar dados')
+                  }
+                }}
+                ano={anoAtual}
+                mes={undefined}
               />
               <div className="space-y-6">
-                <DespesasVariaveisTable 
-                  percentual={indicadores.pctVariaveis}
-                  metaMensalTotal={indicadores.metaMensalTotal}
+                <DespesasVariaveisTable
+                  percentual={despesasVariaveisData?.percentualTotal || indicadores.pctVariaveis || 0}
+                  metaMensalTotal={despesasVariaveisData?.faturamentoBase || indicadores.metaMensalTotal}
                   title="Despesas Variáveis"
-                  onEdit={() => navegarPara("/planejamento/editar/despesas-variaveis")}
+                  onEdit={() => navegarPara("/planejamento-financeiro/editar/taxas")}
+                  folhaEncargosPercentual={folhaEncargosPercentual}
                 />
-                <GraficosDistribuicao 
+                <GraficosDistribuicao
                   tipo="almoco"
                   despesasFixasPct={indicadores.pctFixas}
                   despesasVariaveisPct={indicadores.pctVariaveis}
@@ -357,21 +513,38 @@ export default function PlanejamentoPage() {
           {activeTab === "janta" && (
             <div className="grid gap-6 lg:grid-cols-2">
               <DespesasFixasTable
-                despesas={indicadores.despesasFixas}
-                percentual={0.27}
-                title="Despesas Fixas - Janta (27%)"
-                onEdit={() => navegarPara("/planejamento/editar/despesas-fixas")}
-                salariosTotal={salariosTotal}
-                provisoes={provisoesDetalhadas}
+                dados={indicadores.despesasFixas}
+                metaTotal={indicadores.metaMensalTotal * 0.27}
+                onSalvar={async (despesas, ano) => {
+                  try {
+                    const response = await fetch("/api/planejamento-financeiro/despesas-fixas", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ ano, despesas })
+                    })
+                    const data = await response.json()
+                    if (data.success) {
+                      toast.success('Despesas fixas salvas com sucesso!')
+                      carregarDados()
+                    } else {
+                      toast.error('Erro ao salvar despesas fixas')
+                    }
+                  } catch (error) {
+                    toast.error('Erro ao salvar dados')
+                  }
+                }}
+                ano={anoAtual}
+                mes={undefined}
               />
               <div className="space-y-6">
-                <DespesasVariaveisTable 
-                  percentual={indicadores.pctVariaveis}
-                  metaMensalTotal={indicadores.metaMensalTotal}
+                <DespesasVariaveisTable
+                  percentual={despesasVariaveisData?.percentualTotal || indicadores.pctVariaveis || 0}
+                  metaMensalTotal={despesasVariaveisData?.faturamentoBase || indicadores.metaMensalTotal}
                   title="Despesas Variáveis"
-                  onEdit={() => navegarPara("/planejamento/editar/despesas-variaveis")}
+                  onEdit={() => navegarPara("/planejamento-financeiro/editar/taxas")}
+                  folhaEncargosPercentual={folhaEncargosPercentual}
                 />
-                <GraficosDistribuicao 
+                <GraficosDistribuicao
                   tipo="janta"
                   despesasFixasPct={indicadores.pctFixas}
                   despesasVariaveisPct={indicadores.pctVariaveis}
@@ -387,10 +560,27 @@ export default function PlanejamentoPage() {
         <div className="mt-8">
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
             <div className="p-0">
-              <TabelaMetasMensais 
+              <TabelaMetasMensais
                 metas={metasMensais}
-                acompanhamentos={acompanhamentos}
-                onEdit={() => navegarPara("/planejamento/editar/metas-mensais")}
+                anoAtual={anoAtual}
+                onSalvar={async (dados, ano) => {
+                  try {
+                    const response = await fetch("/api/planejamento-financeiro/faturamento", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ ano, meses: dados })
+                    })
+                    const data = await response.json()
+                    if (data.success) {
+                      toast.success('Metas de faturamento salvas com sucesso!')
+                      carregarDados()
+                    } else {
+                      toast.error('Erro ao salvar metas de faturamento')
+                    }
+                  } catch (error) {
+                    toast.error('Erro ao salvar dados')
+                  }
+                }}
               />
             </div>
           </div>
@@ -405,6 +595,8 @@ export default function PlanejamentoPage() {
                 onEdit={() => navegarPara("/planejamento/editar/funcionarios")}
                 onConfigProvisoes={() => navegarPara("/planejamento/editar/provisoes")}
                 onTotalsChange={handleTotalsChange}
+                onSaveTotals={handleSaveFolhaTotais}
+                metaMensalTotal={indicadores.metaMensalTotal}
               />
             </div>
           </div>
