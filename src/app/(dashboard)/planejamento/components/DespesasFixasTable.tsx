@@ -21,6 +21,14 @@ interface Maquininha {
   ativo: boolean
 }
 
+// Percentuais padrão para cada período
+const PERCENTUAIS_PADRAO: Record<string, number> = {
+  almoco: 73,
+  janta: 27,
+  cafe: 0,
+  turnoUnico: 100
+}
+
 interface DespesasFixasTableProps {
   dados: DespesaFixa[]
   metaTotal: number
@@ -28,12 +36,19 @@ interface DespesasFixasTableProps {
   ano: number
   mes?: number
   maquininhas?: Maquininha[]
+  periodoAtual?: string
 }
 
-export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maquininhas }: DespesasFixasTableProps) {
+export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maquininhas, periodoAtual = 'almoco' }: DespesasFixasTableProps) {
   const [despesas, setDespesas] = useState<DespesaFixa[]>([])
   const [salvando, setSalvando] = useState(false)
   const justSavedRef = useRef(false)
+
+  // Estado para o percentual do período - usa o padrão ou valor customizado
+  const [percentualPeriodo, setPercentualPeriodo] = useState(() => {
+    // Se não houver período especifico, usa 100% (turno único)
+    return PERCENTUAIS_PADRAO[periodoAtual] || 100
+  })
 
   // Sincronizar dados do banco com estado local (apenas após salvar ou quando houver dados)
   useEffect(() => {
@@ -44,6 +59,12 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
     }
     justSavedRef.current = false
   }, [dados])
+
+  // Atualizar percentual quando o período mudar
+  useEffect(() => {
+    const novoPercentual = PERCENTUAIS_PADRAO[periodoAtual] || 100
+    setPercentualPeriodo(novoPercentual)
+  }, [periodoAtual])
 
   const salvarDados = async () => {
     setSalvando(true)
@@ -87,14 +108,29 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
             <span className="text-lg">💰</span>
             <h3 className="font-semibold text-gray-800">Despesas Fixas</h3>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={adicionarLinha}
-            className="rounded-lg border-gray-200 hover:border-[#de4838] hover:cursor-pointer transition-all"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <span className="text-xs font-medium text-gray-600">Percentual:</span>
+              <Input
+                type="number"
+                value={percentualPeriodo}
+                onChange={e => setPercentualPeriodo(parseFloat(e.target.value) || 0)}
+                className="w-16 h-7 text-right text-xs font-mono"
+                min="0"
+                max="100"
+                step="1"
+              />
+              <span className="text-xs font-medium text-gray-600">%</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={adicionarLinha}
+              className="rounded-lg border-gray-200 hover:border-[#de4838] hover:cursor-pointer transition-all"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -104,6 +140,7 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Despesa</th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor (R$)</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Pago (R$)</th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">% da Fatia</th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
             </tr>
@@ -112,6 +149,7 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
             {despesas.map((desp, index) => {
               const valor = desp.valor || 0
               const pctFatia = metaTotal > 0 ? (valor / metaTotal) * 100 : 0
+              const valorPago = (valor * percentualPeriodo) / 100
 
               return (
                 <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
@@ -132,6 +170,9 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
                       className="text-right text-sm font-mono text-gray-700"
                       placeholder="0,00"
                     />
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono text-gray-500">
+                    {formatCurrency(valorPago)}
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-gray-500">
                     {pctFatia.toFixed(2)}%
@@ -164,6 +205,9 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
                   {formatCurrency(aluguelTotal)}
                 </td>
                 <td className="px-4 py-3 text-right font-mono text-blue-600">
+                  {formatCurrency(aluguelTotal * percentualPeriodo / 100)}
+                </td>
+                <td className="px-4 py-3 text-right font-mono text-blue-600">
                   {metaTotal > 0 ? ((aluguelTotal / metaTotal) * 100).toFixed(2) : '0.00'}%
                 </td>
                 <td className="px-4 py-3 text-center">
@@ -176,6 +220,7 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
             <tr className="font-semibold">
               <td className="px-4 py-3 text-gray-800">TOTAL</td>
               <td className="px-4 py-3 text-right text-gray-800">{formatCurrency(totalDespesas)}</td>
+              <td className="px-4 py-3 text-right text-gray-800">{formatCurrency(totalDespesas * percentualPeriodo / 100)}</td>
               <td className="px-4 py-3 text-right text-[#de4838] font-bold">{pctDespesasFixas.toFixed(2)}%</td>
               <td className="px-4 py-3 text-center"></td>
             </tr>

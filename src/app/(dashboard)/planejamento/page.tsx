@@ -1,27 +1,26 @@
-// src/app/(dashboard)/planejamento/page.tsx (versão simplificada)
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
   TrendingUp, DollarSign,
-  Percent, Calculator, Save, RefreshCw,
+  Percent, Calculator, RefreshCw,
   Sun, Moon, HelpCircle
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
+import { toast } from 'sonner'
 
 // Components
 import { IndicadoresCard } from "./components/IndicadoresCard"
-import { TabelaMetasMensais } from "./components/TabelaMetasMensais"
+import { TabelaMetasMensais, PeriodoRefeicao, PERIODOS_CONFIG } from "./components/TabelaMetasMensais"
 import { TabelaAcompanhamento } from "./components/TabelaAcompanhamento"
 import { FolhaSalarialTable } from "./components/FolhaSalarialTable"
 import { DespesasFixasTable } from "./components/DespesasFixasTable"
 import { DespesasVariaveisTable } from "./components/DespesasVariaveisTable"
 import { GraficosDistribuicao } from "./components/GraficosDistribuicao"
 import { MarkUpCalculator } from "./components/MarkUpCalculator"
-import { toast } from 'sonner'
 
 // Tipos
 interface MetaFaturamentoPeriodo {
@@ -55,45 +54,14 @@ interface DespesaFixa {
   contaFinanceira?: string
 }
 
-interface Maquininha {
-  id?: string
-  nome: string
-  taxaDebito: number
-  taxaCredito: number
-  aluguel: number
-  ativo: boolean
-}
-
-interface DistribuicaoVendas {
-  debito: number
-  credito: number
-  voucher: number
-}
-
-interface OutrasTaxas {
-  voucher: number
-  simplesNacional: number
-  manutencao: number
-}
-
-interface ConfiguracaoDespesasVariaveis {
-  maquininhas: Maquininha[]
-  distribuicaoVendas: DistribuicaoVendas
-  outrasTaxas: OutrasTaxas
-}
-
 interface DespesasVariaveisData {
   percentualTotal: number
   faturamentoBase: number
   impactoMensal: number
-  config: ConfiguracaoDespesasVariaveis
-  resultados: {
-    debitoMedia: number
-    creditoMedia: number
-    taxaMediaGeral: number
-    aluguelTotal: number
-    percentualAluguel: number
-    totalDespesasVariaveis: number
+  config: {
+    maquininhas: Array<{ aluguel: number; ativo: boolean }>
+    distribuicaoVendas: { debito: number; credito: number; voucher: number }
+    outrasTaxas: { voucher: number; simplesNacional: number; manutencao: number }
   }
 }
 
@@ -130,6 +98,9 @@ export default function PlanejamentoPage() {
     despesasFixas: [] as DespesaFixa[],
     folhaEncargosPercentual: 0
   })
+
+  // Estado para controlar períodos de metas no header
+  const [periodosSelecionados, setPeriodosSelecionados] = useState<PeriodoRefeicao[]>(['turnoUnico'])
 
   const handleTotalsChange = (salarios: number, provisoes: Array<{nome: string, valor: number}>) => {
     setSalariosTotal(salarios)
@@ -314,6 +285,39 @@ export default function PlanejamentoPage() {
     router.push(rota)
   }
 
+  const togglePeriodo = (periodo: PeriodoRefeicao) => {
+    setPeriodosSelecionados(prev => {
+      const isTurnoUnico = periodo === 'turnoUnico'
+      const hasTurnoUnico = prev.includes('turnoUnico')
+
+      let novosPeriodos: PeriodoRefeicao[]
+
+      if (isTurnoUnico) {
+        if (hasTurnoUnico) {
+          novosPeriodos = prev.filter(p => p !== 'turnoUnico')
+          if (novosPeriodos.length === 0) novosPeriodos = ['turnoUnico']
+        } else {
+          novosPeriodos = ['turnoUnico']
+        }
+      } else {
+        // É uma refeição (cafe, almoco, janta)
+        if (hasTurnoUnico) {
+          novosPeriodos = [periodo]
+        } else {
+          const hasPeriodo = prev.includes(periodo)
+          if (hasPeriodo) {
+            novosPeriodos = prev.filter(p => p !== periodo)
+            if (novosPeriodos.length === 0) novosPeriodos = ['turnoUnico']
+          } else {
+            novosPeriodos = [...prev, periodo]
+          }
+        }
+      }
+
+      return novosPeriodos
+    })
+  }
+
   const cardsResumo = [
     {
       title: "Faturamento Mensal",
@@ -355,12 +359,34 @@ export default function PlanejamentoPage() {
 
   return (
     <div className="min-h-screen bg-[#e5e7eb]">
-      {/* Header */}
+      {/* Header com botões de períodos */}
       <div className="sticky top-0 z-10 ml-3 mr-3 sm:ml-6 sm:mr-6 bg-white border-b border-gray-200 px-3 py-3 sm:px-6 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
         <div>
           <h1 className="text-xl font-semibold text-gray-800">Planejamento Financeiro</h1>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          {/* Botões de seleção de períodos - NOVO HEADER */}
+          <div className="flex items-center gap-1 bg-gray-50 rounded-lg p-1 border border-gray-200">
+            <span className="text-xs font-medium text-gray-600 px-2">Períodos:</span>
+            {PERIODOS_CONFIG.map(config => (
+              <Button
+                key={config.id}
+                type="button"
+                variant={periodosSelecionados.includes(config.id) ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => togglePeriodo(config.id)}
+                className={`
+                  rounded-md text-xs font-medium transition-all min-w-0 px-2 py-1 h-7
+                  ${periodosSelecionados.includes(config.id)
+                    ? 'bg-[#de4838] text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-100 border-gray-200'
+                  }
+                `}
+              >
+                {config.shortLabel}
+              </Button>
+            ))}
+          </div>
           <div className="relative">
             <select
               className="rounded-full border border-gray-200 bg-white px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8 cursor-pointer hover:border-red-500 transition-colors"
@@ -375,8 +401,8 @@ export default function PlanejamentoPage() {
               <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
             </div>
           </div>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={sincronizarDadosReais}
             className="rounded-full border-gray-200 hover:bg-gray-100 hover:border-red-500 hover:cursor-pointer transition-all whitespace-nowrap text-xs sm:text-sm"
           >
@@ -454,10 +480,11 @@ export default function PlanejamentoPage() {
 
           {/* Conteúdo do Almoço */}
           {activeTab === "almoco" && (
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-6 lg:grid-cols-[58%_40%]">
               <DespesasFixasTable
                 dados={indicadores.despesasFixas}
                 metaTotal={indicadores.metaMensalTotal * 0.73}
+                periodoAtual="almoco"
                 onSalvar={async (despesas, ano) => {
                   try {
                     const response = await fetch("/api/planejamento-financeiro/despesas-fixas", {
@@ -501,10 +528,11 @@ export default function PlanejamentoPage() {
 
           {/* Conteúdo da Janta */}
           {activeTab === "janta" && (
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-6 lg:grid-cols-[58%_40%]">
               <DespesasFixasTable
                 dados={indicadores.despesasFixas}
                 metaTotal={indicadores.metaMensalTotal * 0.27}
+                periodoAtual="janta"
                 onSalvar={async (despesas, ano) => {
                   try {
                     const response = await fetch("/api/planejamento-financeiro/despesas-fixas", {
@@ -572,6 +600,7 @@ export default function PlanejamentoPage() {
                     toast.error('Erro ao salvar dados')
                   }
                 }}
+                periodosExternos={periodosSelecionados}
               />
             </div>
           </div>
@@ -596,7 +625,7 @@ export default function PlanejamentoPage() {
         <div className="mt-8">
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
             <div className="p-0">
-              <TabelaAcompanhamento 
+              <TabelaAcompanhamento
                 metas={metasMensais}
                 acompanhamentos={acompanhamentos}
               />
@@ -606,7 +635,7 @@ export default function PlanejamentoPage() {
 
         {/* Mark-Up & Custos */}
         <div className="mt-8">
-          <MarkUpCalculator 
+          <MarkUpCalculator
             despesasFixasTotal={indicadores.despesasFixas.reduce((s, d) => s + d.valor, 0)}
             despesasVariaveisPct={indicadores.pctVariaveis}
             metaMensalTotal={indicadores.metaMensalTotal}

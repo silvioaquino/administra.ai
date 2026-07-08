@@ -54,6 +54,8 @@ interface TabelaMetasMensaisProps {
   metas: MetaFaturamentoRow[]
   anoAtual: number
   onSalvar: (dados: MetaFaturamentoRow[], ano: number) => void
+  periodosExternos?: PeriodoRefeicao[]
+  onPeriodosChange?: (periodos: PeriodoRefeicao[]) => void
 }
 
 function getInitialPeriodos(): MetaFaturamentoPeriodo {
@@ -72,7 +74,7 @@ function calculateMetaTotal(periodos: MetaFaturamentoPeriodo, diasTrabalhados: n
   return somaRefeicoes * diasTrabalhados
 }
 
-export function TabelaMetasMensais({ metas, anoAtual, onSalvar }: TabelaMetasMensaisProps) {
+export function TabelaMetasMensais({ metas, anoAtual, onSalvar, periodosExternos }: TabelaMetasMensaisProps) {
   const [linhas, setLinhas] = useState<MetaFaturamentoRow[]>([])
   const [ano] = useState(anoAtual)
   const [periodosSelecionados, setPeriodosSelecionados] = useState<PeriodoRefeicao[]>(['turnoUnico'])
@@ -129,6 +131,14 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar }: TabelaMetasMen
 
   // Limpa valores dos períodos deselecionados
   useEffect(() => {
+    // Sincroniza períodos externos com estado interno
+    if (periodosExternos) {
+      setPeriodosSelecionados(periodosExternos)
+    }
+  }, [periodosExternos])
+
+  // Limpa valores quando períodos são deselecionados
+  useEffect(() => {
     const periodosRemovidos = prevPeriodosRef.current.filter(p => !periodosSelecionados.includes(p))
     if (periodosRemovidos.length > 0) {
       setLinhas(linhasAtuais => linhasAtuais.map(linha => {
@@ -145,45 +155,6 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar }: TabelaMetasMen
     }
     prevPeriodosRef.current = periodosSelecionados
   }, [periodosSelecionados])
-
-  const togglePeriodo = (periodo: PeriodoRefeicao) => {
-    setPeriodosSelecionados(prev => {
-      const isTurnoUnico = periodo === 'turnoUnico'
-      const hasTurnoUnico = prev.includes('turnoUnico')
-
-      let novosPeriodos: PeriodoRefeicao[]
-
-      if (isTurnoUnico) {
-        if (hasTurnoUnico) {
-          // Remover turno único - se não tiver outros, adicionar uma refeição
-          novosPeriodos = prev.filter(p => p !== 'turnoUnico')
-          if (novosPeriodos.length === 0) {
-            novosPeriodos = ['turnoUnico']
-          }
-        } else {
-          novosPeriodos = ['turnoUnico']
-        }
-      } else {
-        // É uma refeição (cafe, almoco, janta)
-        if (hasTurnoUnico) {
-          // Se tinha turno único, remover e adicionar a refeição
-          novosPeriodos = [periodo]
-        } else {
-          const hasPeriodo = prev.includes(periodo)
-          if (hasPeriodo) {
-            novosPeriodos = prev.filter(p => p !== periodo)
-            if (novosPeriodos.length === 0) {
-              novosPeriodos = ['turnoUnico']
-            }
-          } else {
-            novosPeriodos = [...prev, periodo]
-          }
-        }
-      }
-
-      return novosPeriodos
-    })
-  }
 
   const atualizarPeriodo = (mes: number, periodo: PeriodoRefeicao, valor: number) => {
     setLinhas(prev => prev.map(l => {
@@ -333,35 +304,9 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar }: TabelaMetasMen
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
       <div className="bg-gray-100 p-4 border-b border-gray-100">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">💰</span>
-            <h3 className="font-semibold text-gray-800">Meta de Faturamento</h3>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1 bg-white rounded-lg p-1 border border-gray-200">
-              {PERIODOS_CONFIG.map(config => (
-                <Button
-                  key={config.id}
-                  type="button"
-                  variant={periodosSelecionados.includes(config.id) ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => togglePeriodo(config.id)}
-                  className={`
-                    rounded-md text-xs font-medium transition-all min-w-0 px-2 py-1
-                    ${periodosSelecionados.includes(config.id)
-                      ? 'bg-[#de4838] text-white shadow-sm'
-                      : 'text-gray-600 hover:bg-gray-50 border-gray-200'
-                    }
-                  `}
-                  disabled={config.id === 'turnoUnico' && periodosSelecionados.length > 1 && !periodosSelecionados.includes('turnoUnico')}
-                >
-                  {config.shortLabel}
-                </Button>
-              ))}
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          <span className="text-lg">💰</span>
+          <h3 className="font-semibold text-gray-800">Meta de Faturamento</h3>
         </div>
       </div>
       <div className="p-0">
