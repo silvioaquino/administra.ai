@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { formatCurrency } from '@/lib/utils'
-import { Settings, Plus, Trash2 } from 'lucide-react'
+import { Settings, Plus, Trash2, Loader2 } from 'lucide-react'
 
 interface DespesaFixa {
   id?: number
@@ -234,7 +234,7 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
           disabled={salvando}
           className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-4 py-2 hover:cursor-pointer transition-all"
         >
-          <Settings className="mr-2 h-4 w-4" />
+          {salvando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Settings className="mr-2 h-4 w-4" />}
           {salvando ? 'Salvando...' : 'Salvar'}
         </Button>
       </div>

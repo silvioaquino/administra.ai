@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
   TrendingUp, DollarSign,
-  Percent, Calculator, RefreshCw,
+  Percent, Calculator, RefreshCw, Loader2,
   Sun, Moon, HelpCircle
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
@@ -370,14 +370,6 @@ export default function PlanejamentoPage() {
       detail: "Custo com Produção",
     },
   ]
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#e5e7eb] flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-[#e5e7eb]">

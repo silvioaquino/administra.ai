@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { formatCurrency } from "@/lib/utils"
-import { Users, Calculator, Settings, ChevronDown, ChevronRight, Save } from "lucide-react"
+import { Users, Calculator, Settings, ChevronDown, ChevronRight, Save, Loader2 } from "lucide-react"
 
 interface Funcionario {
   nome: string
@@ -386,7 +386,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
               disabled={saving}
               className="bg-[#de4838] hover:bg-[#c73d2e]"
             >
-              <Save className="mr-1 h-3 w-3" />
+              {saving ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Save className="mr-1 h-3 w-3" />}
               {saving ? "Salvando..." : "Salvar Todas"}
             </Button>
           </div>
