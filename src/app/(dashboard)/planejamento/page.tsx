@@ -22,6 +22,14 @@ import { DespesasVariaveisTable } from "./components/DespesasVariaveisTable"
 import { GraficosDistribuicao } from "./components/GraficosDistribuicao"
 import { MarkUpCalculator } from "./components/MarkUpCalculator"
 
+// Percentuais padrão para cada período
+const PERCENTUAIS_PADRAO: Record<string, number> = {
+  almoco: 73,
+  janta: 27,
+  cafe: 0,
+  turnoUnico: 100
+}
+
 // Tipos
 interface MetaFaturamentoPeriodo {
   cafe?: number
@@ -78,7 +86,7 @@ export default function PlanejamentoPage() {
   const [acompanhamentos, setAcompanhamentos] = useState<Acompanhamento[]>([])
   const [despesasFixas, setDespesasFixas] = useState<DespesaFixa[]>([])
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([])
-  const [activeTab, setActiveTab] = useState("almoco")
+  const [activeTab, setActiveTab] = useState<PeriodoRefeicao>("almoco")
   const [salariosTotal, setSalariosTotal] = useState(0)
   const [provisoesDetalhadas, setProvisoesDetalhadas] = useState<Array<{nome: string, valor: number}>>([])
   const [folhaEncargosPercentual, setFolhaEncargosPercentual] = useState(0)
@@ -235,6 +243,20 @@ export default function PlanejamentoPage() {
   useEffect(() => {
     carregarDados()
   }, [carregarDados])
+
+  // Sincronizar activeTab com os períodos selecionados
+  useEffect(() => {
+    // Se o período ativo não está mais entre os selecionados, mudar para o primeiro selecionado
+    if (!periodosSelecionados.includes(activeTab as PeriodoRefeicao)) {
+      if (periodosSelecionados.length > 0) {
+        setActiveTab(periodosSelecionados[0])
+      }
+    }
+    // Se não há aba ativa e há períodos selecionados, definir o primeiro
+    if (periodosSelecionados.length > 0 && !activeTab) {
+      setActiveTab(periodosSelecionados[0])
+    }
+  }, [periodosSelecionados, activeTab])
 
   async function sincronizarDadosReais() {
     try {
@@ -451,40 +473,38 @@ export default function PlanejamentoPage() {
           />
         </div>
 
-        {/* Tabs Almoço e Janta */}
+        {/* Tabs dinâmicas baseadas nos períodos selecionados */}
         <div className="mt-5">
-          <div className="flex gap-1 mb-4">
-            <button
-              onClick={() => setActiveTab("almoco")}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all w-24 justify-center hover:cursor-pointer hover:border-2 hover:border-red-500 text-[13px] ${
-                activeTab === "almoco"
-                  ? "bg-white shadow-sm text-gray-800 border-2 border-red-500"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              <Sun className="h-3 w-3" />
-              ALMOÇO (73%)
-            </button>
-            <button
-              onClick={() => setActiveTab("janta")}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all w-24 justify-center hover:cursor-pointer hover:border-2 hover:border-red-500 text-[13px] ${
-                activeTab === "janta"
-                  ? "bg-white shadow-sm text-gray-800 border-2 border-red-500"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              <Moon className="h-3 w-3" />
-              JANTA (27%)
-            </button>
+          <div className="flex gap-1 mb-4 flex-wrap">
+            {periodosSelecionados.map((periodo) => {
+              const config = PERIODOS_CONFIG.find(c => c.id === periodo)
+              const percentual = PERCENTUAIS_PADRAO[periodo] || 100
+              const Icon = periodo === 'almoco' ? Sun : periodo === 'janta' ? Moon : Sun
+
+              return (
+                <button
+                  key={periodo}
+                  onClick={() => setActiveTab(periodo)}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all w-24 justify-center hover:cursor-pointer hover:border-2 hover:border-red-500 text-[13px] ${
+                    activeTab === periodo
+                      ? "bg-white shadow-sm text-gray-800 border-2 border-red-500"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  <Icon className="h-3 w-3" />
+                  {config?.shortLabel.toUpperCase()} ({percentual}%)
+                </button>
+              )
+            })}
           </div>
 
-          {/* Conteúdo do Almoço */}
-          {activeTab === "almoco" && (
-            <div className="grid gap-6 lg:grid-cols-[58%_40%]">
+          {/* Conteúdo dinâmico baseado no período ativo */}
+          {periodosSelecionados.includes(activeTab) && (
+            <div className="grid gap-6 lg:grid-cols-[60%_40%]">
               <DespesasFixasTable
                 dados={indicadores.despesasFixas}
-                metaTotal={indicadores.metaMensalTotal * 0.73}
-                periodoAtual="almoco"
+                metaTotal={indicadores.metaMensalTotal * (PERCENTUAIS_PADRAO[activeTab] || 100) / 100}
+                periodoAtual={activeTab}
                 onSalvar={async (despesas, ano) => {
                   try {
                     const response = await fetch("/api/planejamento-financeiro/despesas-fixas", {
@@ -516,55 +536,7 @@ export default function PlanejamentoPage() {
                   totalMensalFolha={folhaSalarialTotais.totalMensal}
                 />
                 <GraficosDistribuicao
-                  tipo="almoco"
-                  despesasFixasPct={indicadores.pctFixas}
-                  despesasVariaveisPct={indicadores.pctVariaveis}
-                  lucroDesejado={indicadores.lucroDesejado}
-                  cmv={indicadores.cmvMaximo}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Conteúdo da Janta */}
-          {activeTab === "janta" && (
-            <div className="grid gap-6 lg:grid-cols-[58%_40%]">
-              <DespesasFixasTable
-                dados={indicadores.despesasFixas}
-                metaTotal={indicadores.metaMensalTotal * 0.27}
-                periodoAtual="janta"
-                onSalvar={async (despesas, ano) => {
-                  try {
-                    const response = await fetch("/api/planejamento-financeiro/despesas-fixas", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ ano, despesas })
-                    })
-                    const data = await response.json()
-                    if (data.success) {
-                      toast.success('Despesas fixas salvas com sucesso!')
-                      carregarDados()
-                    } else {
-                      toast.error('Erro ao salvar despesas fixas')
-                    }
-                  } catch (error) {
-                    toast.error('Erro ao salvar dados')
-                  }
-                }}
-                ano={anoAtual}
-                mes={undefined}
-              />
-              <div className="space-y-6">
-                <DespesasVariaveisTable
-                  percentual={despesasVariaveisData?.percentualTotal || indicadores.pctVariaveis || 0}
-                  metaMensalTotal={despesasVariaveisData?.faturamentoBase || indicadores.metaMensalTotal}
-                  title="Despesas Variáveis"
-                  onEdit={() => navegarPara("/planejamento-financeiro/editar/taxas")}
-                  folhaEncargosPercentual={folhaEncargosPercentual}
-                  totalMensalFolha={folhaSalarialTotais.totalMensal}
-                />
-                <GraficosDistribuicao
-                  tipo="janta"
+                  tipo={((activeTab === 'turnoUnico' || activeTab === 'cafe') ? 'almoco' : activeTab) as 'almoco' | 'janta'}
                   despesasFixasPct={indicadores.pctFixas}
                   despesasVariaveisPct={indicadores.pctVariaveis}
                   lucroDesejado={indicadores.lucroDesejado}
@@ -628,6 +600,8 @@ export default function PlanejamentoPage() {
               <TabelaAcompanhamento
                 metas={metasMensais}
                 acompanhamentos={acompanhamentos}
+                periodosSelecionados={periodosSelecionados}
+                abaAtiva={activeTab}
               />
             </div>
           </div>
