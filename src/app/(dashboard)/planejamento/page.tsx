@@ -562,6 +562,7 @@ export default function PlanejamentoPage() {
                 periodoAtual={activeTab}
                 percentualPeriodoSalvo={percentuaisPeriodos[activeTab]}
                 maquininhas={despesasVariaveisData?.config?.maquininhas || []}
+                totalSalarios={folhaSalarialTotais.totalSalarios}
                 onSalvar={async (despesas, ano, _mes, percentualPeriodo) => {
                   try {
                     // 1. Salvar despesas fixas

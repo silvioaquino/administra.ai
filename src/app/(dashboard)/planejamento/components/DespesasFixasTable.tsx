@@ -49,7 +49,8 @@ export function DespesasFixasTable({
   mes,
   maquininhas,
   periodoAtual = 'almoco',
-  percentualPeriodoSalvo
+  percentualPeriodoSalvo,
+  totalSalarios
 }: DespesasFixasTableProps) {
   const [despesas, setDespesas] = useState<DespesaFixa[]>([])
   const [salvando, setSalvando] = useState(false)
@@ -107,7 +108,7 @@ export function DespesasFixasTable({
       .reduce((sum: number, m: Maquininha) => sum + (m.aluguel || 0), 0)
   }, [maquininhas])
 
-  const totalDespesas = despesas.reduce((sum, d) => sum + (d.valor || 0), 0) + aluguelTotal
+  const totalDespesas = despesas.reduce((sum, d) => sum + (d.valor || 0), 0) + aluguelTotal + (totalSalarios || 0)
   const pctDespesasFixas = metaTotal > 0 ? Math.min((totalDespesas / metaTotal) * 100, 10000) : 0
 
   return (
@@ -202,6 +203,29 @@ export function DespesasFixasTable({
               )
             })}
 
+            {/* Linha de Total de Salários (somente leitura) */}
+            {totalSalarios !== undefined && totalSalarios > 0 && (
+              <tr className="border-b border-gray-100 bg-green-50 hover:bg-green-50 transition-colors">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2 text-green-800 font-medium">
+                    <span className="text-lg">👥</span>
+                    <span>Total Salários</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-right font-mono text-green-800 font-semibold">
+                  {formatCurrency(totalSalarios)}
+                </td>
+                <td className="px-4 py-3 text-right font-mono text-green-600">
+                  {formatCurrency(totalSalarios * percentualPeriodo / 100)}
+                </td>
+                <td className="px-4 py-3 text-right font-mono text-green-600">
+                  {metaTotal > 0 ? ((totalSalarios / metaTotal) * 100).toFixed(2) : '0.00'}%
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <span className="text-xs text-green-500 bg-green-100 px-2 py-1 rounded-full">Automático</span>
+                </td>
+              </tr>
+            )}
             {/* Linha de Aluguel das Maquininhas (somente leitura) */}
             {aluguelTotal > 0 && (
               <tr className="border-b border-gray-100 bg-blue-50 hover:bg-blue-50 transition-colors">
