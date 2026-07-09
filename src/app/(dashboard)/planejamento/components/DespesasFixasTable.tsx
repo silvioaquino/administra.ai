@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { formatCurrency } from '@/lib/utils'
-import { Settings, Plus, Trash2, Loader2 } from 'lucide-react'
+import { Save, Plus, Trash2, Loader2 } from 'lucide-react'
 
 interface DespesaFixa {
   id?: number
@@ -32,44 +32,53 @@ const PERCENTUAIS_PADRAO: Record<string, number> = {
 interface DespesasFixasTableProps {
   dados: DespesaFixa[]
   metaTotal: number
-  onSalvar: (despesas: DespesaFixa[], ano: number, mes?: number) => void
+  onSalvar: (despesas: DespesaFixa[], ano: number, mes?: number, percentualPeriodo?: number) => void
   ano: number
   mes?: number
   maquininhas?: Maquininha[]
   periodoAtual?: string
+  percentualPeriodoSalvo?: number | null
 }
 
-export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maquininhas, periodoAtual = 'almoco' }: DespesasFixasTableProps) {
+export function DespesasFixasTable({
+  dados,
+  metaTotal,
+  onSalvar,
+  ano,
+  mes,
+  maquininhas,
+  periodoAtual = 'almoco',
+  percentualPeriodoSalvo
+}: DespesasFixasTableProps) {
   const [despesas, setDespesas] = useState<DespesaFixa[]>([])
   const [salvando, setSalvando] = useState(false)
   const justSavedRef = useRef(false)
 
-  // Estado para o percentual do período - usa o padrão ou valor customizado
-  const [percentualPeriodo, setPercentualPeriodo] = useState(() => {
-    // Se não houver período especifico, usa 100% (turno único)
-    return PERCENTUAIS_PADRAO[periodoAtual] || 100
-  })
+  // Estado para o percentual do período - sempre sincronizado com a prop
+  const [percentualPeriodo, setPercentualPeriodo] = useState<number>(PERCENTUAIS_PADRAO[periodoAtual] || 100)
 
-  // Sincronizar dados do banco com estado local (apenas após salvar ou quando houver dados)
+  // Sincronizar dados do banco com estado local
   useEffect(() => {
-    // Atualiza o estado sempre que 'dados' mudar do banco, mas ignora no ciclo imediato após salvar
-    // para não sobrescrever as alterações locais antes que a API responda
     if (!justSavedRef.current) {
       setDespesas(Array.isArray(dados) ? dados : [])
     }
     justSavedRef.current = false
   }, [dados])
 
-  // Atualizar percentual quando o período mudar
+  // Sincronizar percentual com a prop (quando carrega do banco ou muda de aba)
   useEffect(() => {
-    const novoPercentual = PERCENTUAIS_PADRAO[periodoAtual] || 100
-    setPercentualPeriodo(novoPercentual)
-  }, [periodoAtual])
+    // Usar percentualPeriodoSalvo se disponível, senão usar padrão
+    if (percentualPeriodoSalvo !== undefined && percentualPeriodoSalvo !== null) {
+      setPercentualPeriodo(percentualPeriodoSalvo)
+    } else {
+      setPercentualPeriodo(PERCENTUAIS_PADRAO[periodoAtual] ?? 100)
+    }
+  }, [periodoAtual, percentualPeriodoSalvo])
 
   const salvarDados = async () => {
     setSalvando(true)
     try {
-      await onSalvar(despesas, ano, mes)
+      await onSalvar(despesas, ano, mes, percentualPeriodo)
       justSavedRef.current = true
     } finally {
       setSalvando(false)
@@ -234,7 +243,7 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
           disabled={salvando}
           className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-4 py-2 hover:cursor-pointer transition-all"
         >
-          {salvando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Settings className="mr-2 h-4 w-4" />}
+          {salvando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           {salvando ? 'Salvando...' : 'Salvar'}
         </Button>
       </div>

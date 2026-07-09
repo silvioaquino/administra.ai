@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import {
   TrendingUp, DollarSign,
@@ -94,6 +94,19 @@ export default function PlanejamentoPage() {
   // Estado para despesas variáveis (nova API)
   const [despesasVariaveisData, setDespesasVariaveisData] = useState<DespesasVariaveisData | null>(null)
 
+  // Estado para os percentuais de cada período (salvo no banco)
+  const [percentuaisPeriodos, setPercentuaisPeriodos] = useState<Record<PeriodoRefeicao, number>>({
+    cafe: 0,
+    almoco: 73,
+    janta: 27,
+    turnoUnico: 100
+  })
+
+  // Carregar percentuais quando mudar o ano
+  useEffect(() => {
+    // O carregarDados será chamado automaticamente pelo useEffect abaixo
+  }, [anoAtual])
+
   // Estado para os indicadores (vem da API)
   const [indicadores, setIndicadores] = useState({
     metaMensalTotal: 0,
@@ -108,7 +121,7 @@ export default function PlanejamentoPage() {
   })
 
   // Estado para controlar períodos de metas no header
-  const [periodosSelecionados, setPeriodosSelecionados] = useState<PeriodoRefeicao[]>(['turnoUnico'])
+  const [periodosSelecionados, setPeriodosSelecionados] = useState<PeriodoRefeicao[]>([])
 
   const handleTotalsChange = (salarios: number, provisoes: Array<{nome: string, valor: number}>) => {
     setSalariosTotal(salarios)
@@ -156,12 +169,20 @@ export default function PlanejamentoPage() {
   const carregarDados = useCallback(async () => {
     setLoading(true)
     try {
+      // 0. Carregar períodos selecionados (nova API)
+      const periodosResponse = await fetch(`/api/planejamento/periodos-selecionados?ano=${anoAtual}`)
+      const periodosData = await periodosResponse.json()
+      if (periodosData.success && periodosData.periodos?.length > 0) {
+        setPeriodosSelecionados(periodosData.periodos)
+      } else {
+        setPeriodosSelecionados(['turnoUnico'])
+      }
+
       // 1. Carregar indicadores da API (inclui despesas fixas, variáveis, metas, etc)
       const indicadoresResponse = await fetch(`/api/planejamento/indicadores-resumo?ano=${anoAtual}`)
       const indicadoresData = await indicadoresResponse.json()
 
       if (indicadoresData.success) {
-        console.log("📊 Dados dos indicadores:", indicadoresData)
 
         setIndicadores({
           metaMensalTotal: indicadoresData.metaMensalTotal || 0,
@@ -231,6 +252,18 @@ export default function PlanejamentoPage() {
       const variaveisData = await variaveisResponse.json()
       if (variaveisData.success && variaveisData.dados) {
         setDespesasVariaveisData(variaveisData.dados)
+      }
+
+      // 6. Carregar percentuais dos períodos (salvo no banco)
+      const percentualResponse = await fetch(`/api/planejamento/percentuais-periodos?ano=${anoAtual}`)
+      const percentualData = await percentualResponse.json()
+      if (percentualData.success && percentualData.percentuais) {
+        setPercentuaisPeriodos({
+          cafe: percentualData.percentuais.cafe ?? 0,
+          almoco: percentualData.percentuais.almoco ?? 73,
+          janta: percentualData.percentuais.janta ?? 27,
+          turnoUnico: percentualData.percentuais.turnoUnico ?? 100
+        })
       }
 
     } catch (error) {
@@ -339,6 +372,36 @@ export default function PlanejamentoPage() {
       return novosPeriodos
     })
   }
+
+  // Salvar períodos no banco após mudar
+  const prevPeriodosRef = useRef<string[]>([])
+  const isFirstLoadRef = useRef(true)
+
+  useEffect(() => {
+    // Ignora a primeira carga (quando dados são carregados do banco)
+    if (isFirstLoadRef.current) {
+      isFirstLoadRef.current = false
+      prevPeriodosRef.current = periodosSelecionados.map(p => String(p))
+      return
+    }
+
+    // Só salva se os períodos realmente mudaram
+    const currentPeriodos = periodosSelecionados.map(p => String(p)).sort().join(',')
+    const prevPeriodos = prevPeriodosRef.current.join(',')
+
+    if (currentPeriodos !== prevPeriodos && periodosSelecionados.length > 0) {
+      fetch("/api/planejamento/periodos-selecionados", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ano: anoAtual,
+          periodos: periodosSelecionados
+        })
+      }).catch(err => console.error('Erro ao salvar períodos:', err))
+
+      prevPeriodosRef.current = periodosSelecionados.map(p => String(p))
+    }
+  }, [periodosSelecionados, anoAtual])
 
   const cardsResumo = [
     {
@@ -492,18 +555,40 @@ export default function PlanejamentoPage() {
 
           {/* Conteúdo dinâmico baseado no período ativo */}
           {periodosSelecionados.includes(activeTab) && (
-            <div className="grid gap-6 lg:grid-cols-[60%_40%]">
+            <div className="grid gap-6 lg:grid-cols-[58%_40%]">
               <DespesasFixasTable
                 dados={indicadores.despesasFixas}
                 metaTotal={indicadores.metaMensalTotal * (PERCENTUAIS_PADRAO[activeTab] || 100) / 100}
                 periodoAtual={activeTab}
-                onSalvar={async (despesas, ano) => {
+                percentualPeriodoSalvo={percentuaisPeriodos[activeTab]}
+                maquininhas={despesasVariaveisData?.config?.maquininhas || []}
+                onSalvar={async (despesas, ano, _mes, percentualPeriodo) => {
                   try {
+                    // 1. Salvar despesas fixas
                     const response = await fetch("/api/planejamento-financeiro/despesas-fixas", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ ano, despesas })
                     })
+
+                    // 2. Salvar percentual do período atual
+                    if (percentualPeriodo !== undefined) {
+                      const novosPercentuais = {
+                        ...percentuaisPeriodos,
+                        [activeTab]: percentualPeriodo
+                      }
+                      setPercentuaisPeriodos(novosPercentuais)
+
+                      await fetch("/api/planejamento/percentuais-periodos", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          ano,
+                          percentuais: novosPercentuais
+                        })
+                      })
+                    }
+
                     const data = await response.json()
                     if (data.success) {
                       toast.success('Despesas fixas salvas com sucesso!')
@@ -511,8 +596,10 @@ export default function PlanejamentoPage() {
                     } else {
                       toast.error('Erro ao salvar despesas fixas')
                     }
+                    return data.success
                   } catch (error) {
                     toast.error('Erro ao salvar dados')
+                    return false
                   }
                 }}
                 ano={anoAtual}

@@ -79,7 +79,7 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar, periodosExternos
   const [ano] = useState(anoAtual)
   const [periodosSelecionados, setPeriodosSelecionados] = useState<PeriodoRefeicao[]>(['turnoUnico'])
   const [salvando, setSalvando] = useState(false)
-  const prevPeriodosRef = useRef<PeriodoRefeicao[]>(['turnoUnico'])
+  const prevPeriodosRef = useRef<PeriodoRefeicao[] | null>(null)
 
   // Efeito para carregar dados iniciais
   useEffect(() => {
@@ -101,23 +101,6 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar, periodosExternos
         }
       })
       setLinhas(linhasAtualizadas)
-
-      // Detectar períodos ativos dos dados salvos
-      const primeiroComDados = metas.find(d =>
-        (d.periodos.cafe ?? 0) > 0 ||
-        (d.periodos.almoco ?? 0) > 0 ||
-        (d.periodos.janta ?? 0) > 0 ||
-        (d.periodos.turnoUnico ?? 0) > 0
-      )
-      if (primeiroComDados) {
-        const periodos = primeiroComDados.periodos
-        const ativos: PeriodoRefeicao[] = []
-        if ((periodos.cafe ?? 0) > 0) ativos.push('cafe')
-        if ((periodos.almoco ?? 0) > 0) ativos.push('almoco')
-        if ((periodos.janta ?? 0) > 0) ativos.push('janta')
-        if ((periodos.turnoUnico ?? 0) > 0 && !ativos.length) ativos.push('turnoUnico')
-        setPeriodosSelecionados(ativos.length > 0 ? ativos : ['turnoUnico'])
-      }
     } else {
       const linhasIniciais = meses.map(m => ({
         mes: m.value,
@@ -139,6 +122,12 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar, periodosExternos
 
   // Limpa valores quando períodos são deselecionados
   useEffect(() => {
+    // Ignora a primeira carga (prevPeriodosRef.current é null)
+    if (prevPeriodosRef.current === null) {
+      prevPeriodosRef.current = [...periodosSelecionados]
+      return
+    }
+
     const periodosRemovidos = prevPeriodosRef.current.filter(p => !periodosSelecionados.includes(p))
     if (periodosRemovidos.length > 0) {
       setLinhas(linhasAtuais => linhasAtuais.map(linha => {
@@ -153,7 +142,7 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar, periodosExternos
         }
       }))
     }
-    prevPeriodosRef.current = periodosSelecionados
+    prevPeriodosRef.current = [...periodosSelecionados]
   }, [periodosSelecionados])
 
   const atualizarPeriodo = (mes: number, periodo: PeriodoRefeicao, valor: number) => {

@@ -29,12 +29,25 @@ export async function GET(request: NextRequest) {
       orderBy: { nome: 'asc' }
     })
 
+    // Buscar percentual do período salvo
+    const percentualConfig = await prisma.planejamentoConfig.findFirst({
+      where: {
+        userId: session.user.id,
+        empresaId: session.user.empresaId || 'sem-empresa',
+        tipo: 'percentual-periodo',
+        anoReferencia: ano
+      }
+    })
+
+    const percentualPeriodo = (percentualConfig?.dados as any)?.percentualPeriodo ?? null
+
     return NextResponse.json({
       success: true,
       dados: dados.map(d => ({
         ...d,
         valor: Number(d.valor)
-      }))
+      })),
+      percentualPeriodo
     })
   } catch (error) {
     console.error('Erro ao buscar despesas fixas:', error)
@@ -52,7 +65,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { ano, mes, despesas } = await request.json()
+    const { ano, mes, despesas, percentualPeriodo } = await request.json()
     const empresaId = session.user.empresaId || 'sem-empresa'
 
     // Deletar existentes
@@ -80,6 +93,30 @@ export async function POST(request: NextRequest) {
           dataPagamento: d.dataPagamento ? new Date(d.dataPagamento) : null,
           contaFinanceira: d.contaFinanceira
         }))
+      })
+    }
+
+    // Salvar percentual do período na configuração
+    if (percentualPeriodo !== undefined && percentualPeriodo !== null) {
+      await prisma.planejamentoConfig.upsert({
+        where: {
+          empresaId_userId_tipo_anoReferencia: {
+            empresaId,
+            userId: session.user.id,
+            tipo: 'percentual-periodo',
+            anoReferencia: ano
+          }
+        },
+        update: {
+          dados: { percentualPeriodo }
+        },
+        create: {
+          empresaId,
+          userId: session.user.id,
+          tipo: 'percentual-periodo',
+          anoReferencia: ano,
+          dados: { percentualPeriodo }
+        }
       })
     }
 
