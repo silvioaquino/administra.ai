@@ -38,6 +38,7 @@ interface DespesasFixasTableProps {
   maquininhas?: Maquininha[]
   periodoAtual?: string
   percentualPeriodoSalvo?: number | null
+  totalSalarios?: number
 }
 
 export function DespesasFixasTable({

@@ -42,7 +42,14 @@ export default function TaxasConfigPage() {
   const [distribuicaoVendas, setDistribuicaoVendas] = useState<DistribuicaoVendas>({ debito: 0, credito: 0, voucher: 0 })
   const [outrasTaxas, setOutrasTaxas] = useState<OutrasTaxas>({ voucher: 0, simplesNacional: 0, manutencao: 0 })
   const [faturamentoTotal, setFaturamentoTotal] = useState(0)
-  const [folhaSalarialTotalMensal, setFolhaSalarialTotalMensal] = useState(0)
+  const [folhaTotais, setFolhaTotais] = useState({
+    totalSalarios: 0,
+    totalDecimo: 0,
+    totalFerias: 0,
+    totalFgts: 0,
+    totalInss: 0,
+    totalInssPatronal: 0
+  })
   const [salvando, setSalvando] = useState(false)
 
   const meses = [
@@ -79,7 +86,14 @@ export default function TaxasConfigPage() {
       const folhaRes = await fetch(`/api/planejamento/folha-salarial?ano=${anoAtual}`)
       const folhaData = await folhaRes.json()
       if (folhaData.success && folhaData.dados) {
-        setFolhaSalarialTotalMensal(folhaData.dados.totalMensal || 0)
+        setFolhaTotais({
+          totalSalarios: folhaData.dados.totalSalarios || 0,
+          totalDecimo: folhaData.dados.totalDecimo || 0,
+          totalFerias: folhaData.dados.totalFerias || 0,
+          totalFgts: folhaData.dados.totalFgts || 0,
+          totalInss: folhaData.dados.totalInss || 0,
+          totalInssPatronal: folhaData.dados.totalInssPatronal || 0
+        })
       }
     } catch (error) {
       console.error('Erro ao carregar:', error)
@@ -452,7 +466,7 @@ export default function TaxasConfigPage() {
             distribuicaoVendas={distribuicaoVendas}
             outrasTaxas={outrasTaxas}
             faturamentoTotal={faturamentoTotal}
-            folhaSalarialTotalMensal={folhaSalarialTotalMensal}
+            folhaSalarialTotalMensal={folhaTotais.totalDecimo + folhaTotais.totalFerias + folhaTotais.totalFgts + folhaTotais.totalInss + folhaTotais.totalInssPatronal}
           />
         </div>
       </div>
