@@ -96,11 +96,11 @@ export function IndicadoresCard({
       cor: "danger",
       valor: pctFixas,
       unidade: "%",
-      min: 30,
-      max: 45,
+      min: 20,
+      max: 35,
       tooltip: "Ideal: entre 30% e 45% do faturamento",
-      getStatus: (v: number) => getStatusType(v, 30, 45),
-      isIdeal: (v: number) => v >= 30 && v <= 45
+      getStatus: (v: number) => getStatusType(v, 20, 35),
+      isIdeal: (v: number) => v >= 20 && v <= 35
     },
     {
       nome: "Despesas Variáveis",
@@ -109,10 +109,10 @@ export function IndicadoresCard({
       valor: despesasVariaveisPct,
       unidade: "%",
       min: 5,
-      max: 15,
+      max: 25,
       tooltip: "Ideal: entre 5% e 15% do faturamento",
-      getStatus: (v: number) => getStatusType(v, 5, 15),
-      isIdeal: (v: number) => v >= 5 && v <= 15
+      getStatus: (v: number) => getStatusType(v, 5, 25),
+      isIdeal: (v: number) => v >= 5 && v <= 25
     },
     {
       nome: "CMV (Custo Produção)",

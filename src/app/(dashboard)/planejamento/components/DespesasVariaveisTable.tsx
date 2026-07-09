@@ -9,8 +9,6 @@ interface DespesasVariaveisTableProps {
   metaMensalTotal: number
   title: string
   onEdit: () => void
-  folhaEncargosPercentual?: number
-  impactoMensal?: number
   totalMensalFolha?: number
 }
 
@@ -19,20 +17,19 @@ export function DespesasVariaveisTable({
   metaMensalTotal,
   title,
   onEdit,
-  folhaEncargosPercentual = 0,
-  impactoMensal,
   totalMensalFolha = 0
 }: DespesasVariaveisTableProps) {
-  // Calcular percentual da folha salarial em relação ao metaMensalTotal
+  // Percentual da folha salarial (encargos) em relação ao faturamento base.
+  // Espelha o cálculo de ResultadosTaxas (sem aluguel).
   const percentualFolha = metaMensalTotal > 0 && totalMensalFolha > 0
     ? (totalMensalFolha / metaMensalTotal) * 100
     : 0
 
-  // Percentual total inclui folha + encargos se informado
-  const percentualTotal = percentual + (folhaEncargosPercentual || 0) + percentualFolha
+  // Percentual total = impostos/taxas base + percentual da folha salarial
+  const percentualTotal = percentual + percentualFolha
 
-  // Calcular impacto mensal se não foi passado
-  const impactoCalculado = impactoMensal ?? (metaMensalTotal * (percentualTotal / 100))
+  // Impacto mensal sobre o faturamento base
+  const impactoCalculado = metaMensalTotal * (percentualTotal / 100)
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">

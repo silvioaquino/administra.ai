@@ -15,6 +15,7 @@ interface MarkUpCalculatorProps {
   lucroDesejado: number
   markUp: number
   cmv: number
+  pctFixas?: number
 }
 
 export function MarkUpCalculator({
@@ -23,11 +24,13 @@ export function MarkUpCalculator({
   metaMensalTotal,
   lucroDesejado: lucroDesejadoInicial,
   markUp: markUpInicial,
-  cmv: cmvInicial
+  cmv: cmvInicial,
+  pctFixas: pctFixasProp,
 }: MarkUpCalculatorProps) {
   const [lucroDesejado, setLucroDesejado] = useState(lucroDesejadoInicial)
-  
-  const pctFixas = metaMensalTotal > 0 ? (despesasFixasTotal / metaMensalTotal) * 100 : 0
+
+  // Usa o percentual passado (espelha o card Despesas Fixas); senão calcula do total
+  const pctFixas = pctFixasProp ?? (metaMensalTotal > 0 ? (despesasFixasTotal / metaMensalTotal) * 100 : 0)
   const cmvCalculado = 100 - (pctFixas + despesasVariaveisPct + lucroDesejado)
   const markUpCalculado = cmvCalculado > 0 ? 100 / cmvCalculado : 0
 
@@ -91,13 +94,14 @@ export function MarkUpCalculator({
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl bg-blue-50 p-3 text-center">
-              <p className="text-xs text-gray-500 mb-1">CMV Máximo</p>
+              <p className="text-xs text-gray-500 mb-1">CMV Calculado</p>
               <p className="text-xl font-bold text-blue-600">{formatPercentage(Math.max(0, cmvCalculado))}</p>
               <p className="text-xs text-gray-400 mt-1">= 100% - (Fixas% + Variáveis% + Lucro%)</p>
             </div>
             <div className="rounded-xl bg-amber-50 p-3 text-center">
-              <p className="text-xs text-gray-500 mb-1">CMV Atual</p>
-              <p className="text-xl font-bold text-amber-600">{formatPercentage(cmvInicial)}</p>
+              <p className="text-xs text-gray-500 mb-1">CMV Máximo</p>
+              <p className="text-xl font-bold text-amber-600">{formatPercentage(45)}</p>
+              <p className="text-xs text-gray-400 mt-1">Margem Ideal entre 35% e 45%</p>
             </div>
           </div>
           

@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency, formatPercentage } from '@/lib/utils'
+import { calcularTotalDespesasVariaveis } from '@/lib/calculoDespesasVariaveis'
 import { Calculator, TrendingUp, TrendingDown, CreditCard, DollarSign, Users, PieChart } from 'lucide-react'
 
 interface ResultadosTaxasProps {
@@ -32,40 +33,27 @@ export function ResultadosTaxas({
   faturamentoTotal = 0,
   folhaSalarialTotalMensal = 0
 }: ResultadosTaxasProps) {
-  // Calcular resultados
-  const maquininhasAtivas = maquininhas.filter(m => m.ativo)
+  // Calcular resultados (cálculo centralizado em @/lib/calculoDespesasVariaveis)
+  const calculo = calcularTotalDespesasVariaveis({
+    maquininhas,
+    distribuicaoVendas,
+    outrasTaxas,
+    faturamentoBase: faturamentoTotal ?? 0,
+    folhaSalarialTotalMensal,
+  })
 
-  // Taxa Débito Média
-  const taxaDebitoMedia = maquininhasAtivas.length > 0
-    ? maquininhasAtivas.reduce((sum, m) => sum + m.taxaDebito, 0) / maquininhasAtivas.length
-    : 0
+  const {
+    taxaDebitoMedia,
+    taxaCreditoMedia,
+    taxaMediaGeral,
+    aluguelTotal,
+    percentualFolhaSalarial,
+    total: totalDespesasVariaveis,
+  } = calculo
 
-  // Taxa Crédito Média
-  const taxaCreditoMedia = maquininhasAtivas.length > 0
-    ? maquininhasAtivas.reduce((sum, m) => sum + m.taxaCredito, 0) / maquininhasAtivas.length
-    : 0
-
-  // Taxa Média Geral
-  const percDebito = distribuicaoVendas.debito / 100
-  const percCredito = distribuicaoVendas.credito / 100
-  const percVoucher = distribuicaoVendas.voucher / 100
+  // Apenas para exibição (contagem de maquininhas e detalhamento da fórmula)
+  const maquininhasAtivas = maquininhas.filter((m) => m.ativo)
   const taxaVoucher = outrasTaxas.voucher || 7.0
-
-  const taxaMediaGeral = (taxaDebitoMedia * percDebito) + (taxaCreditoMedia * percCredito) + (taxaVoucher * percVoucher)
-
-  // Total Aluguel
-  const aluguelTotal = maquininhasAtivas.reduce((sum, m) => sum + (m.aluguel || 0), 0)
-
-  // Percentual Aluguel baseado no Faturamento
-  const percentualAluguel = (faturamentoTotal || 0) > 0 ? (aluguelTotal / (faturamentoTotal || 0)) * 100 : 0
-
-  // Percentual Folha Salarial baseado no Faturamento
-  const percentualFolhaSalarial = (faturamentoTotal || 0) > 0 && (folhaSalarialTotalMensal || 0) > 0
-    ? ((folhaSalarialTotalMensal || 0) / (faturamentoTotal || 0)) * 100
-    : 0
-
-  // Total Despesas Variáveis (inclui Aluguel % + Folha Salarial %)
-  const totalDespesasVariaveis = outrasTaxas.simplesNacional + taxaMediaGeral + outrasTaxas.manutencao + percentualAluguel + percentualFolhaSalarial
 
   // Dados para os cards de resultado
   const resultadosCards = [
@@ -174,10 +162,6 @@ export function ResultadosTaxas({
             <div className="flex justify-between">
               <span>Manutenção:</span>
               <span className="font-medium">{formatPercentage(outrasTaxas.manutencao)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Aluguel:</span>
-              <span className="font-medium">{formatPercentage(percentualAluguel)}</span>
             </div>
             <div className="flex justify-between">
               <span>Folha:</span>

@@ -10,6 +10,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
+import { calcularTotalDespesasVariaveis } from "@/lib/calculoDespesasVariaveis"
 import { toast } from 'sonner'
 
 // Components
@@ -67,9 +68,11 @@ interface DespesasVariaveisData {
   faturamentoBase: number
   impactoMensal: number
   config: {
-    maquininhas: Array<{ aluguel: number; ativo: boolean }>
+    maquininhas: Array<{ id?: string; nome?: string; taxaDebito: number; taxaCredito: number; aluguel: number; ativo: boolean }>
     distribuicaoVendas: { debito: number; credito: number; voucher: number }
-    outrasTaxas: { voucher: number; simplesNacional: number; manutencao: number }
+    taxaVoucher: number
+    simplesNacional: number
+    manutencao: number
   }
 }
 
@@ -89,7 +92,6 @@ export default function PlanejamentoPage() {
   const [activeTab, setActiveTab] = useState<PeriodoRefeicao>("almoco")
   const [salariosTotal, setSalariosTotal] = useState(0)
   const [provisoesDetalhadas, setProvisoesDetalhadas] = useState<Array<{nome: string, valor: number}>>([])
-  const [folhaEncargosPercentual, setFolhaEncargosPercentual] = useState(0)
 
   // Estado para despesas variáveis (nova API)
   const [despesasVariaveisData, setDespesasVariaveisData] = useState<DespesasVariaveisData | null>(null)
@@ -243,7 +245,6 @@ export default function PlanejamentoPage() {
           totalMensal: folhaData.dados.totalMensal || 0,
           folhaEncargosPercentual: folhaData.dados.folhaEncargosPercentual || 0
         })
-        setFolhaEncargosPercentual(folhaData.dados.folhaEncargosPercentual || 0)
       }
 
       // 5. Carregar despesas variáveis (nova API planejamento-financeiro)
@@ -339,6 +340,48 @@ export default function PlanejamentoPage() {
   const navegarPara = (rota: string) => {
     router.push(rota)
   }
+
+  // Encargos da folha salarial (mesmos componentes usados na tela de edição)
+  const encargosFolha =
+    folhaSalarialTotais.totalDecimo + folhaSalarialTotais.totalFerias +
+    folhaSalarialTotais.totalFgts + folhaSalarialTotais.totalInss +
+    folhaSalarialTotais.totalInssPatronal
+
+  // Espelha o cálculo de ResultadosTaxas (sem aluguel): base de impostos/taxas + % folha (encargos)
+  const calculoDV = despesasVariaveisData?.config
+    ? calcularTotalDespesasVariaveis({
+        maquininhas: despesasVariaveisData.config.maquininhas,
+        distribuicaoVendas: despesasVariaveisData.config.distribuicaoVendas,
+        outrasTaxas: {
+          voucher: despesasVariaveisData.config.taxaVoucher,
+          simplesNacional: despesasVariaveisData.config.simplesNacional,
+          manutencao: despesasVariaveisData.config.manutencao,
+        },
+        faturamentoBase: despesasVariaveisData.faturamentoBase || indicadores.metaMensalTotal,
+        folhaSalarialTotalMensal: encargosFolha,
+      })
+    : null
+
+  // Percentual de Despesas Fixas espelhado do card DespesasFixasTable:
+  // (soma das despesas fixas + aluguel das maquininhas + total de salários) / meta do período atual
+  const aluguelMaquininhas = (despesasVariaveisData?.config?.maquininhas || [])
+    .filter((m) => m.ativo)
+    .reduce((sum, m) => sum + (m.aluguel || 0), 0)
+
+  const totalDespesasFixasCard =
+    (indicadores.despesasFixas || []).reduce((sum, d) => sum + (d.valor || 0), 0) +
+    aluguelMaquininhas +
+    (folhaSalarialTotais.totalSalarios || 0)
+
+  const metaTotalTab = indicadores.metaMensalTotal * (PERCENTUAIS_PADRAO[activeTab] || 100) / 100
+
+  const pctDespesasFixasCard = metaTotalTab > 0
+    ? Math.min((totalDespesasFixasCard / metaTotalTab) * 100, 10000)
+    : 0
+
+  // CMV calculado espelhado do card MarkUpCalculator (Custo Máximo com Produção):
+  // 100% - (Fixas% + Variáveis% + Lucro%)
+  const cmvCalculadoCard = 100 - (pctDespesasFixasCard + (calculoDV?.total ?? indicadores.pctVariaveis) + indicadores.lucroDesejado)
 
   const togglePeriodo = (periodo: PeriodoRefeicao) => {
     setPeriodosSelecionados(prev => {
@@ -519,12 +562,12 @@ export default function PlanejamentoPage() {
         <div className="mt-8">
           <IndicadoresCard
             despesasFixas={indicadores.despesasFixas}
-            despesasVariaveisPct={indicadores.pctVariaveis}
+            despesasVariaveisPct={calculoDV?.total ?? indicadores.pctVariaveis}
             metaMensalTotal={indicadores.metaMensalTotal}
             lucroDesejado={indicadores.lucroDesejado}
             markUp={indicadores.markUp}
-            cmv={indicadores.cmvMaximo}
-            pctFixas={indicadores.pctFixas}
+            cmv={cmvCalculadoCard}
+            pctFixas={pctDespesasFixasCard}
           />
         </div>
 
@@ -608,19 +651,18 @@ export default function PlanejamentoPage() {
               />
               <div className="space-y-6">
                 <DespesasVariaveisTable
-                  percentual={despesasVariaveisData?.percentualTotal || indicadores.pctVariaveis || 0}
+                  percentual={calculoDV?.base ?? (indicadores.pctVariaveis || 0)}
                   metaMensalTotal={despesasVariaveisData?.faturamentoBase || indicadores.metaMensalTotal}
                   title="Despesas Variáveis"
                   onEdit={() => navegarPara("/planejamento-financeiro/editar/taxas")}
-                  folhaEncargosPercentual={folhaEncargosPercentual}
-                  totalMensalFolha={folhaSalarialTotais.totalMensal}
+                  totalMensalFolha={encargosFolha}
                 />
                 <GraficosDistribuicao
                   tipo={((activeTab === 'turnoUnico' || activeTab === 'cafe') ? 'almoco' : activeTab) as 'almoco' | 'janta'}
-                  despesasFixasPct={indicadores.pctFixas}
-                  despesasVariaveisPct={indicadores.pctVariaveis}
+                  despesasFixasPct={pctDespesasFixasCard}
+                  despesasVariaveisPct={calculoDV?.total ?? indicadores.pctVariaveis}
                   lucroDesejado={indicadores.lucroDesejado}
-                  cmv={indicadores.cmvMaximo}
+                  cmv={cmvCalculadoCard}
                 />
               </div>
             </div>
@@ -691,11 +733,12 @@ export default function PlanejamentoPage() {
         <div className="mt-8">
           <MarkUpCalculator
             despesasFixasTotal={indicadores.despesasFixas.reduce((s, d) => s + d.valor, 0)}
-            despesasVariaveisPct={indicadores.pctVariaveis}
+            despesasVariaveisPct={calculoDV?.total ?? indicadores.pctVariaveis}
             metaMensalTotal={indicadores.metaMensalTotal}
             lucroDesejado={indicadores.lucroDesejado}
             markUp={indicadores.markUp}
             cmv={indicadores.cmvMaximo}
+            pctFixas={pctDespesasFixasCard}
           />
         </div>
       </div>
