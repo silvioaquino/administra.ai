@@ -655,7 +655,7 @@ export default function PlanejamentoPage() {
                   percentual={calculoDV?.base ?? (indicadores.pctVariaveis || 0)}
                   metaMensalTotal={despesasVariaveisData?.faturamentoBase || indicadores.metaMensalTotal}
                   title="Despesas Variáveis"
-                  onEdit={() => navegarPara("/planejamento-financeiro/editar/taxas")}
+                  onEdit={() => navegarPara("/planejamento/editar/despesas-variaveis")}
                   totalMensalFolha={encargosFolha}
                 />
                 <GraficosDistribuicao

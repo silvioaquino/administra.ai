@@ -435,7 +435,7 @@ export default function PlanejamentoFinanceiroPage() {
             percentualTotal={percentualTotal}
             impactoMensal={impactoMensal}
             metaMensalTotal={faturamentoTotalMes}
-            onEditar={() => router.push('/planejamento-financeiro/editar/taxas')}
+            onEditar={() => router.push('/planejamento/editar/despesas-variaveis')}
           />
         </div>
 

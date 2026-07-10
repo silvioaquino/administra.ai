@@ -86,14 +86,14 @@ export function ResultadosTaxas({
       detail: "Maquininhas ativas"
     },
     {
-      title: "Folha Salarial",
+      title: "Provisões Salarial",
       value: formatCurrency(folhaSalarialTotalMensal || 0),
       icon: Users,
       gradient: "from-indigo-500 to-indigo-600",
       detail: "Total mensal"
     },
     {
-      title: "Folha Salarial (%)",
+      title: "Provisões Salarial (%)",
       value: (faturamentoTotal || 0) > 0 && (folhaSalarialTotalMensal || 0) > 0
         ? formatPercentage(percentualFolhaSalarial)
         : '0%',
