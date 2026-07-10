@@ -1,7 +1,7 @@
 // src/app/(dashboard)/planejamento/components/MarkUpCalculator.tsx
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -16,6 +16,7 @@ interface MarkUpCalculatorProps {
   markUp: number
   cmv: number
   pctFixas?: number
+  onMarkUpChange?: (markUp: number) => void
 }
 
 export function MarkUpCalculator({
@@ -26,6 +27,7 @@ export function MarkUpCalculator({
   markUp: markUpInicial,
   cmv: cmvInicial,
   pctFixas: pctFixasProp,
+  onMarkUpChange,
 }: MarkUpCalculatorProps) {
   const [lucroDesejado, setLucroDesejado] = useState(lucroDesejadoInicial)
 
@@ -33,6 +35,11 @@ export function MarkUpCalculator({
   const pctFixas = pctFixasProp ?? (metaMensalTotal > 0 ? (despesasFixasTotal / metaMensalTotal) * 100 : 0)
   const cmvCalculado = 100 - (pctFixas + despesasVariaveisPct + lucroDesejado)
   const markUpCalculado = cmvCalculado > 0 ? 100 / cmvCalculado : 0
+
+  // Sobe o Mark-Up calculado para o card "Indicadores Ideais vs Atuais" sempre que mudar
+  useEffect(() => {
+    onMarkUpChange?.(markUpCalculado)
+  }, [markUpCalculado, onMarkUpChange])
 
   function aplicarMarkUp() {
     alert(`Mark-Up de ${markUpCalculado.toFixed(4)} aplicado!\n\nPreço de Venda = Custo do Produto × Mark-Up`)

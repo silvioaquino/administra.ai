@@ -125,6 +125,9 @@ export default function PlanejamentoPage() {
   // Estado para controlar períodos de metas no header
   const [periodosSelecionados, setPeriodosSelecionados] = useState<PeriodoRefeicao[]>([])
 
+  // Mark-Up calculado ao vivo no card "Mark-Up e Precificação" (espelhado no card Indicadores)
+  const [markUpLive, setMarkUpLive] = useState(0)
+
   const handleTotalsChange = (salarios: number, provisoes: Array<{nome: string, valor: number}>) => {
     setSalariosTotal(salarios)
     setProvisoesDetalhadas(provisoes)
@@ -452,7 +455,6 @@ export default function PlanejamentoPage() {
       value: formatCurrency(indicadores.metaMensalTotal),
       icon: DollarSign,
       gradient: "from-emerald-500 to-emerald-600",
-      detail: `Almoço: 73% | Janta: 27%`,
     },
     {
       title: "Lucro Desejado",
@@ -463,14 +465,14 @@ export default function PlanejamentoPage() {
     },
     {
       title: "Mark-Up",
-      value: indicadores.markUp.toFixed(2),
+      value: markUpLive.toFixed(2),
       icon: Calculator,
       gradient: "from-orange-500 to-orange-600",
       detail: "Fator multiplicador",
     },
     {
       title: "CMV Máximo",
-      value: formatPercentage(indicadores.cmvMaximo),
+      value: formatPercentage(cmvCalculadoCard),
       icon: Percent,
       gradient: "from-purple-500 to-purple-600",
       detail: "Custo com Produção",
@@ -565,7 +567,7 @@ export default function PlanejamentoPage() {
             despesasVariaveisPct={calculoDV?.total ?? indicadores.pctVariaveis}
             metaMensalTotal={indicadores.metaMensalTotal}
             lucroDesejado={indicadores.lucroDesejado}
-            markUp={indicadores.markUp}
+            markUp={markUpLive}
             cmv={cmvCalculadoCard}
             pctFixas={pctDespesasFixasCard}
           />
@@ -576,7 +578,6 @@ export default function PlanejamentoPage() {
           <div className="flex gap-1 mb-4 flex-wrap">
             {periodosSelecionados.map((periodo) => {
               const config = PERIODOS_CONFIG.find(c => c.id === periodo)
-              const percentual = PERCENTUAIS_PADRAO[periodo] || 100
               const Icon = periodo === 'almoco' ? Sun : periodo === 'janta' ? Moon : Sun
 
               return (
@@ -590,7 +591,7 @@ export default function PlanejamentoPage() {
                   }`}
                 >
                   <Icon className="h-3 w-3" />
-                  {config?.shortLabel.toUpperCase()} ({percentual}%)
+                  {config?.shortLabel.toUpperCase()}
                 </button>
               )
             })}
@@ -739,6 +740,7 @@ export default function PlanejamentoPage() {
             markUp={indicadores.markUp}
             cmv={indicadores.cmvMaximo}
             pctFixas={pctDespesasFixasCard}
+            onMarkUpChange={setMarkUpLive}
           />
         </div>
       </div>
