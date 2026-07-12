@@ -6,18 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { CreditCard, Percent, Save } from "lucide-react"
+import { CreditCard, Percent, Save, Plus, Trash2, Building2 } from "lucide-react"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
+import { Maquininha } from "@/types/maquininhas"
 
-interface TaxasConfig {
+interface ConfiguracaoMaquininhas {
+  maquininhas: Maquininha[]
   distribuicaoVendas: { debito: number; credito: number; voucher: number }
-  distribuicaoMaquininhas: { infinitepay: number; stone: number; caixa: number }
-  taxas: {
-    debito: { infinitepay: number; stone: number; caixa: number }
-    credito: { infinitepay: number; stone: number; caixa: number }
-    voucher: number
-  }
-  aluguelMaquininhas: { stone1: number; stone2: number }
   manutencao: number
   simplesNacional: number
 }
@@ -32,14 +27,25 @@ interface ResultadosCalculo {
 }
 
 interface DespesasVariaveisConfigProps {
-  config: TaxasConfig
+  config: ConfiguracaoMaquininhas
   resultados: ResultadosCalculo
-  onUpdate: (config: TaxasConfig) => void
+  faturamentoBase: number
+  onUpdate: (config: ConfiguracaoMaquininhas) => void
+  onUpdateFaturamento: (valor: number) => void
   onSave: () => void
   saving?: boolean
 }
 
-export function DespesasVariaveisConfig({ config, resultados, onUpdate, onSave, saving }: DespesasVariaveisConfigProps) {
+export function DespesasVariaveisConfig({ 
+  config, 
+  resultados, 
+  faturamentoBase,
+  onUpdate, 
+  onUpdateFaturamento,
+  onSave, 
+  saving 
+}: DespesasVariaveisConfigProps) {
+  
   const atualizarCampo = (path: string, value: number) => {
     const partes = path.split(".")
     const novoEstado = { ...config }
@@ -51,12 +57,183 @@ export function DespesasVariaveisConfig({ config, resultados, onUpdate, onSave, 
     onUpdate(novoEstado)
   }
 
+  const atualizarMaquininha = (id: string, campo: keyof Maquininha, value: number | string | boolean) => {
+    const novoEstado = { ...config }
+    const index = novoEstado.maquininhas.findIndex(m => m.id === id)
+    if (index !== -1) {
+      novoEstado.maquininhas[index] = { ...novoEstado.maquininhas[index], [campo]: value }
+      onUpdate(novoEstado)
+    }
+  }
+
+  const adicionarMaquininha = () => {
+    const novaMaquininha: Maquininha = {
+      id: crypto.randomUUID(),
+      nome: `Nova Maquininha ${config.maquininhas.length + 1}`,
+      taxaDebito: 0,
+      taxaCredito: 0,
+      aluguel: 0,
+      ativo: true
+    }
+    onUpdate({
+      ...config,
+      maquininhas: [...config.maquininhas, novaMaquininha]
+    })
+  }
+
+  const removerMaquininha = (id: string) => {
+    if (config.maquininhas.filter(m => m.ativo).length <= 1) {
+      alert("Você precisa manter pelo menos uma maquininha ativa!")
+      return
+    }
+    onUpdate({
+      ...config,
+      maquininhas: config.maquininhas.map(m => 
+        m.id === id ? { ...m, ativo: false } : m
+      )
+    })
+  }
+
+  const excluirMaquininha = (id: string) => {
+    if (config.maquininhas.filter(m => m.ativo).length <= 1) {
+      alert("Você precisa manter pelo menos uma maquininha ativa!")
+      return
+    }
+    onUpdate({
+      ...config,
+      maquininhas: config.maquininhas.filter(m => m.id !== id)
+    })
+  }
+
   const somaVendas = config.distribuicaoVendas.debito + config.distribuicaoVendas.credito + config.distribuicaoVendas.voucher
-  const somaMaquininhas = config.distribuicaoMaquininhas.infinitepay + config.distribuicaoMaquininhas.stone + config.distribuicaoMaquininhas.caixa
+  const maquininhasAtivas = config.maquininhas.filter(m => m.ativo)
 
   return (
     <div className="space-y-6">
       <div className="grid gap-6 lg:grid-cols-2">
+        {/* Maquininhas */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Maquininhas
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                  ({maquininhasAtivas.length} ativa{maquininhasAtivas.length !== 1 ? 's' : ''})
+                </span>
+              </CardTitle>
+              <Button size="sm" onClick={adicionarMaquininha} className="bg-[#de4838] hover:bg-[#c73d2e]">
+                <Plus className="h-4 w-4 mr-1" />
+                Adicionar
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {config.maquininhas.map((maquina) => (
+                <div 
+                  key={maquina.id} 
+                  className={`border rounded-xl p-4 transition-all ${maquina.ativo ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-100 opacity-60'}`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={maquina.ativo}
+                        onChange={(e) => atualizarMaquininha(maquina.id, 'ativo', e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300 text-[#de4838] focus:ring-[#de4838]"
+                      />
+                      <Label className="text-sm font-medium text-gray-700">
+                        {maquina.ativo ? 'Ativa' : 'Inativa'}
+                      </Label>
+                    </div>
+                    <div className="flex gap-1">
+                      {maquina.ativo && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => removerMaquininha(maquina.id)}
+                          className="h-8 w-8 p-0 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50"
+                          title="Desativar maquininha"
+                        >
+                          <span className="text-xs">⏸</span>
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => excluirMaquininha(maquina.id)}
+                        className="h-8 w-8 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                        title="Excluir maquininha"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div>
+                      <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Nome</Label>
+                      <Input
+                        type="text"
+                        value={maquina.nome}
+                        onChange={(e) => atualizarMaquininha(maquina.id, 'nome', e.target.value)}
+                        className="rounded-lg border-gray-200 focus:ring-[#de4838] text-sm"
+                        placeholder="Nome da operadora"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Taxa Débito %</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={maquina.taxaDebito}
+                          onChange={(e) => atualizarMaquininha(maquina.id, 'taxaDebito', Number(e.target.value))}
+                          className="rounded-lg border-gray-200 focus:ring-[#de4838] text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Taxa Crédito %</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={maquina.taxaCredito}
+                          onChange={(e) => atualizarMaquininha(maquina.id, 'taxaCredito', Number(e.target.value))}
+                          className="rounded-lg border-gray-200 focus:ring-[#de4838] text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Aluguel (R$)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={maquina.aluguel}
+                        onChange={(e) => atualizarMaquininha(maquina.id, 'aluguel', Number(e.target.value))}
+                        className="rounded-lg border-gray-200 focus:ring-[#de4838] text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {maquininhasAtivas.length === 0 && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  Nenhuma maquininha ativa. Ative pelo menos uma para realizar os cálculos.
+                </AlertDescription>
+              </Alert>
+            )}
+            <Alert variant="info" className="mt-2">
+              <AlertDescription className="text-xs text-muted-foreground">
+                As maquininhas ativas terão distribuição igual nos cálculos. Para ajustar a distribuição,
+                ative/desative conforme necessário.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+
         {/* Distribuição das Vendas */}
         <Card>
           <CardHeader>
@@ -101,137 +278,12 @@ export function DespesasVariaveisConfig({ config, resultados, onUpdate, onSave, 
           </CardContent>
         </Card>
 
-        {/* Distribuição das Maquininhas */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Distribuição entre Maquininhas (%)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>InfinitePay</Label>
-              <Input
-                type="number"
-                step="1"
-                value={config.distribuicaoMaquininhas.infinitepay}
-                onChange={(e) => atualizarCampo("distribuicaoMaquininhas.infinitepay", Number(e.target.value))}
-              />
-            </div>
-            <div>
-              <Label>Stone</Label>
-              <Input
-                type="number"
-                step="1"
-                value={config.distribuicaoMaquininhas.stone}
-                onChange={(e) => atualizarCampo("distribuicaoMaquininhas.stone", Number(e.target.value))}
-              />
-            </div>
-            <div>
-              <Label>Caixa</Label>
-              <Input
-                type="number"
-                step="1"
-                value={config.distribuicaoMaquininhas.caixa}
-                onChange={(e) => atualizarCampo("distribuicaoMaquininhas.caixa", Number(e.target.value))}
-              />
-            </div>
-            <Alert variant={somaMaquininhas === 100 ? "success" : "destructive"}>
-              <AlertDescription>
-                Total: {somaMaquininhas}% {somaMaquininhas !== 100 && "(Deve ser 100%)"}
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-
-        {/* Taxas Débito */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Taxas Débito (%)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <Label>InfinitePay Débito</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={config.taxas.debito.infinitepay}
-                onChange={(e) => atualizarCampo("taxas.debito.infinitepay", Number(e.target.value))}
-              />
-            </div>
-            <div>
-              <Label>Stone Débito</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={config.taxas.debito.stone}
-                onChange={(e) => atualizarCampo("taxas.debito.stone", Number(e.target.value))}
-              />
-            </div>
-            <div>
-              <Label>Caixa Débito</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={config.taxas.debito.caixa}
-                onChange={(e) => atualizarCampo("taxas.debito.caixa", Number(e.target.value))}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Taxas Crédito */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Taxas Crédito (%)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <Label>InfinitePay Crédito</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={config.taxas.credito.infinitepay}
-                onChange={(e) => atualizarCampo("taxas.credito.infinitepay", Number(e.target.value))}
-              />
-            </div>
-            <div>
-              <Label>Stone Crédito</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={config.taxas.credito.stone}
-                onChange={(e) => atualizarCampo("taxas.credito.stone", Number(e.target.value))}
-              />
-            </div>
-            <div>
-              <Label>Caixa Crédito</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={config.taxas.credito.caixa}
-                onChange={(e) => atualizarCampo("taxas.credito.caixa", Number(e.target.value))}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Outras Taxas */}
         <Card>
           <CardHeader>
             <CardTitle>Outras Taxas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div>
-              <Label>Taxa Voucher (%)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={config.taxas.voucher}
-                onChange={(e) => atualizarCampo("taxas.voucher", Number(e.target.value))}
-              />
-            </div>
             <div>
               <Label>Manutenção (%)</Label>
               <Input
@@ -251,33 +303,27 @@ export function DespesasVariaveisConfig({ config, resultados, onUpdate, onSave, 
               />
             </div>
             <div className="pt-2 border-t">
-              <Label>Aluguel Stone 1 (R$)</Label>
+              <Label>Faturamento Base (R$)</Label>
               <Input
                 type="number"
-                step="0.01"
-                value={config.aluguelMaquininhas.stone1}
-                onChange={(e) => atualizarCampo("aluguelMaquininhas.stone1", Number(e.target.value))}
+                step="1000"
+                value={faturamentoBase}
+                onChange={(e) => onUpdateFaturamento(Number(e.target.value))}
               />
-            </div>
-            <div>
-              <Label>Aluguel Stone 2 (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={config.aluguelMaquininhas.stone2}
-                onChange={(e) => atualizarCampo("aluguelMaquininhas.stone2", Number(e.target.value))}
-              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Usado para calcular o percentual do aluguel das maquininhas
+              </p>
             </div>
           </CardContent>
         </Card>
 
         {/* Resultados */}
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-green-600">📈 RESULTADOS DOS CÁLCULOS</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               <div className="rounded-lg bg-blue-50 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Taxa Débito Média</p>
                 <p className="text-lg font-bold text-blue-600">{formatPercentage(resultados.debitoMedia)}</p>
@@ -290,12 +336,12 @@ export function DespesasVariaveisConfig({ config, resultados, onUpdate, onSave, 
                 <p className="text-xs text-muted-foreground">Taxa Média Geral</p>
                 <p className="text-lg font-bold text-yellow-600">{formatPercentage(resultados.taxaMediaGeral)}</p>
               </div>
-              <div className="rounded-lg bg-gray-50 p-2 text-center">
+              <div className="rounded-lg bg-gray-100 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Aluguel Total</p>
                 <p className="text-lg font-bold text-gray-600">{formatCurrency(resultados.aluguelTotal)}</p>
               </div>
-              <div className="rounded-lg bg-gray-50 p-2 text-center">
-                <p className="text-xs text-muted-foreground">Aluguel % (base R$30k)</p>
+              <div className="rounded-lg bg-gray-100 p-2 text-center">
+                <p className="text-xs text-muted-foreground">Aluguel % (base {formatCurrency(faturamentoBase)})</p>
                 <p className="text-lg font-bold text-gray-600">{formatPercentage(resultados.percentualAluguel)}</p>
               </div>
               <div className="rounded-lg bg-green-50 p-2 text-center">

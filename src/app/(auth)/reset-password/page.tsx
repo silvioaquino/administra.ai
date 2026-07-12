@@ -83,7 +83,7 @@ function ResetPasswordForm() {
   // Se não tem token e não está em sucesso, mostra erro
   if (!token && !success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden p-6 md:p-8">
             <Alert className="bg-red-50 border-red-200 rounded-xl mb-4">
@@ -114,7 +114,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -239,7 +239,7 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden p-6 md:p-8 text-center">
             <div className="animate-pulse">

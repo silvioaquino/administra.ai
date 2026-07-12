@@ -8,7 +8,8 @@ const PROVISOES_KEYS = [
   "decimo_terceiro",
   "ferias",
   "fgts",
-  "inss_patronal"
+  "inss_patronal",
+  "inss"
 ]
 
 export async function GET(request: NextRequest) {
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
       await prisma.provisaoFuncionario.upsert({
         where: {
           empresaId_userId_ano_provisao_funcionarioNome: {
-            empresaId: session.user.empresaId || "",
+            empresaId: session.user.empresaId || "sem-empresa",
             userId: session.user.id,
             ano,
             provisao,
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
           ativo,
         },
         create: {
-          empresaId: session.user.empresaId || "",
+          empresaId: session.user.empresaId || "sem-empresa",
           userId: session.user.id,
           ano,
           provisao,

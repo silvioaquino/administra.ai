@@ -109,14 +109,14 @@ export default function ConfiguracoesFluxoCaixaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
@@ -170,7 +170,7 @@ export default function ConfiguracoesFluxoCaixaPage() {
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
             <div className="p-0 overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-gray-100 border-b border-gray-200">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Mês</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">
@@ -199,7 +199,7 @@ export default function ConfiguracoesFluxoCaixaPage() {
                     const metaMensalDesp = meta.metaDespesasDiaria * meta.diasUteis;
                     
                     return (
-                      <tr key={meta.mes} className="border-b border-gray-100 hover:bg-gray-50">
+                      <tr key={meta.mes} className="border-b border-gray-100 hover:bg-gray-100">
                         <td className="px-4 py-3 font-medium text-gray-800">
                           {meses[meta.mes - 1]}
                         </td>
@@ -270,7 +270,7 @@ export default function ConfiguracoesFluxoCaixaPage() {
                     );
                   })}
                 </tbody>
-                <tfoot className="border-t-2 border-gray-200 bg-gray-50 font-bold">
+                <tfoot className="border-t-2 border-gray-200 bg-gray-100 font-bold">
                   <tr>
                     <td className="px-4 py-3">TOTAIS ANUAIS</td>
                     <td className="px-4 py-3 text-right">-</td>

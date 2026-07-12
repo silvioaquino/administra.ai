@@ -1,11 +1,11 @@
 // src/app/(dashboard)/planejamento/components/FolhaSalarialTable.tsx
 "use client"
 
-import React, { useState, useEffect, Fragment, useMemo } from "react"
+import React, { useState, useEffect, useMemo, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { formatCurrency } from "@/lib/utils"
-import { Users, Calculator, Settings, ChevronDown, ChevronRight, Save } from "lucide-react"
+import { Users, Calculator, Settings, ChevronDown, ChevronRight, Save, Loader2 } from "lucide-react"
 
 interface Funcionario {
   nome: string
@@ -24,6 +24,16 @@ interface FolhaSalarialTableProps {
   onEdit: () => void
   onConfigProvisoes: () => void
   onTotalsChange: (salariosTotal: number, provisoes: Array<{nome: string, valor: number}>) => void
+  onSaveTotals?: (totals: {
+    totalSalarios: number
+    totalDecimo: number
+    totalFerias: number
+    totalFgts: number
+    totalInss: number
+    totalInssPatronal: number
+    totalMensal: number
+    folhaEncargosPercentual: number
+  }) => void
 }
 
 // Configuração das provisões
@@ -89,13 +99,14 @@ const DEFAULT_PROVISOES_ATIVAS = {
   inss: true
 }
 
-export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, onTotalsChange }: FolhaSalarialTableProps) {
+export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, onTotalsChange, onSaveTotals }: FolhaSalarialTableProps) {
   const [provisoesAtivas, setProvisoesAtivas] = useState(DEFAULT_PROVISOES_ATIVAS)
   const [provisoesFuncionarios, setProvisoesFuncionarios] = useState<ProvisaoFuncionario[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
   const [anoReferencia] = useState(new Date().getFullYear())
+  const lastSavedTotalRef = useRef<number | null>(null)
 
   useEffect(() => {
     carregarProvisoes()
@@ -194,11 +205,28 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
   async function salvarTodasProvisoes() {
     setSaving(true)
     try {
+      // Gerar dados a partir dos funcionários atuais e provisões ativas
+      // Isso garante que todos os funcionários tenham suas provisões salvas
+      const dadosParaSalvar: any[] = []
+
+      for (const func of funcionarios) {
+        for (const provisaoKey of Object.keys(PROVISOES_CONFIG)) {
+          if (provisoesAtivas[provisaoKey as keyof typeof provisoesAtivas]) {
+            const statusExistente = getProvisaoStatus(func.nome, provisaoKey)
+            dadosParaSalvar.push({
+              funcionario_nome: func.nome,
+              provisao: provisaoKey,
+              ativo: statusExistente
+            })
+          }
+        }
+      }
+
       const response = await fetch("/api/planejamento/provisoes-funcionarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          dados: provisoesFuncionarios,
+          dados: dadosParaSalvar,
           ano: anoReferencia
         })
       })
@@ -291,6 +319,24 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
     onTotalsChange(salariosMemo, provisoesArray)
   }, [salariosMemo, provisoesArray, onTotalsChange])
 
+  // Salvar totalMensal automaticamente no backend (apenas se mudou)
+  useEffect(() => {
+    const totalArredondado = Math.round(totalMensal * 100) / 100
+    if (lastSavedTotalRef.current !== totalArredondado) {
+      lastSavedTotalRef.current = totalArredondado
+      onSaveTotals?.({
+        totalSalarios: totais.totalSalarios,
+        totalDecimo: totais.totalDecimo,
+        totalFerias: totais.totalFerias,
+        totalFgts: totais.totalFgts,
+        totalInss: totais.totalInss,
+        totalInssPatronal: totais.totalInssPatronal,
+        totalMensal: totalMensal,
+        folhaEncargosPercentual: 0
+      })
+    }
+  }, [totalMensal, totais, onSaveTotals])
+
   const toggleRow = (funcionarioNome: string) => {
     setExpandedRow(expandedRow === funcionarioNome ? null : funcionarioNome)
   }
@@ -340,7 +386,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
               disabled={saving}
               className="bg-[#de4838] hover:bg-[#c73d2e]"
             >
-              <Save className="mr-1 h-3 w-3" />
+              {saving ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Save className="mr-1 h-3 w-3" />}
               {saving ? "Salvando..." : "Salvar Todas"}
             </Button>
           </div>

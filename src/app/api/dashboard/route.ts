@@ -74,10 +74,13 @@ function getPeriodoRange(
     const inicio = new Date(ano, mes - 1, 1)
     const fim = new Date(ano, mes, 0, 23, 59, 59, 999)
 
+    const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+    const nomeMes = meses[inicio.getMonth()]
+
     return {
       inicio,
       fim,
-      label: inicio.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
+      label: `${nomeMes} ${ano}`
     }
   }
 

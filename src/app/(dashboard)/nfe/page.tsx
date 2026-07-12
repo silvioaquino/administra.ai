@@ -118,7 +118,7 @@ export default function NfePage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 ml-6 mr-6 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div>
@@ -149,7 +149,7 @@ export default function NfePage() {
 
       {/* Main Content */}
       <div className="container mx-auto p-6 max-w-7xl">
-        {/* Stats Cards com gradientes modernos - mantido igual */}
+        {/* Stats Cards com gradientes modernos - mantido igual 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {statsCards.map((card, idx) => (
             <Card
@@ -166,19 +166,19 @@ export default function NfePage() {
                 </div>
                 <p className="mt-1 text-xs opacity-80">{card.change}</p>
               </CardContent>
-              {/* Ícone decorativo de fundo */}
+              {/* Ícone decorativo de fundo /}
               <div className="absolute -bottom-4 -right-4 opacity-10">
                 <card.icon className="h-20 w-20" />
               </div>
             </Card>
           ))}
-        </div>
+        </div>*/}
 
         {/* Ações Rápidas */}
         <div className="mt-8 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-gray-800">Ações Rápidas</h2>
-            <Zap className="h-4 w-4 text-gray-400" />
+            <Zap className="h-4 w-4 text-gray-800" />
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {quickActions.map((action, index) => (
@@ -208,7 +208,7 @@ export default function NfePage() {
         <div className="mt-8 space-y-6">
           {/* Últimos Lançamentos */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-emerald-500" />
                 <h3 className="font-semibold text-gray-800">Últimos Lançamentos</h3>
@@ -240,7 +240,7 @@ export default function NfePage() {
               ) : (
                 <div className="divide-y divide-gray-100">
                   {lancamentos.map((lanc, index) => (
-                    <div key={lanc.id} className="group flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
+                    <div key={lanc.id} className="group flex items-center justify-between p-4 hover:bg-gray-100 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className={`rounded-full p-2 ${
                           lanc.tipo === "VENDA" 
@@ -278,7 +278,7 @@ export default function NfePage() {
 
           {/* Gestão de Produtos */}
           {/*<div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <Package className="h-5 w-5 text-amber-500" />
                 <h3 className="font-semibold text-gray-800">Gestão de Produtos</h3>
@@ -295,7 +295,7 @@ export default function NfePage() {
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full justify-start border-gray-200 hover:bg-gray-50 rounded-lg"
+                  className="w-full justify-start border-gray-200 hover:bg-gray-100 rounded-lg"
                   onClick={() => router.push("/nfe/produtos")}
                 >
                   <Package className="mr-2 h-4 w-4" />
@@ -314,7 +314,7 @@ export default function NfePage() {
 
           {/* Estatísticas do Dia */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-blue-500" />
                 <h3 className="font-semibold text-gray-800">Estatísticas do Dia</h3>

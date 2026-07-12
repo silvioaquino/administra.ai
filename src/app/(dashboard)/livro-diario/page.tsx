@@ -914,7 +914,7 @@ export default function LivroDiarioPage() {
 
     if (isLoading) {
       return (
-        <tr className="bg-gray-50">
+        <tr className="bg-gray-100">
           <td colSpan={11} className="px-4 py-4">
             <div className="flex justify-center items-center gap-2">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#de4838] border-t-transparent" />
@@ -1041,7 +1041,7 @@ export default function LivroDiarioPage() {
 
     // Para outros tipos de lançamento, mostrar informações básicas
     return (
-      <tr className="bg-gray-50">
+      <tr className="bg-gray-100">
         <td colSpan={11} className="px-4 py-3">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -1113,7 +1113,7 @@ export default function LivroDiarioPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 ml-6 mr-6 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div>
@@ -1157,20 +1157,20 @@ export default function LivroDiarioPage() {
           {cardsResumo.map((card, idx) => (
             <Card
               key={idx}
-              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white border-0 h-full min-h-[132px] sm:min-h-[150px]`}
+              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white border-0 h-full min-h-[92px] sm:min-h-[105px]`}
             >
-              <CardContent className="p-5">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium opacity-90">{card.title}</p>
-                  <card.icon className="h-5 w-5 opacity-80" />
+                  <p className="text-[11px] sm:text-sm font-medium opacity-90 leading-tight">{card.title}</p>
+                  <card.icon className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
                 </div>
-                <div className="mt-2 text-2xl font-bold">
+                <div className="mt-1 text-sm sm:text-xl font-bold leading-tight">
                   {card.value}
                 </div>
-                <p className="mt-1 text-xs opacity-80">{card.detail}</p>
+                <p className="mt-0.5 text-[10px] sm:text-xs opacity-80">{card.detail}</p>
               </CardContent>
-              <div className="absolute -bottom-4 -right-4 opacity-10">
-                <card.icon className="h-20 w-20" />
+              <div className="absolute -bottom-3 -right-3 opacity-10">
+                <card.icon className="h-12 w-12" />
               </div>
             </Card>
           ))}
@@ -1178,7 +1178,7 @@ export default function LivroDiarioPage() {
 
         {/* Filtros */}
         <div className="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-[#de4838]" />
               <h3 className="font-semibold text-gray-800">Filtros</h3>
@@ -1267,7 +1267,7 @@ export default function LivroDiarioPage() {
 
         {/* Tabela de Lançamentos */}
         <div className="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-[#de4838]" />
               <h3 className="font-semibold text-gray-800">Lançamentos</h3>
@@ -1276,7 +1276,7 @@ export default function LivroDiarioPage() {
           </div>
           <div className="p-0 overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gray-100 border-b border-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-left w-8"></th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
@@ -1332,7 +1332,7 @@ export default function LivroDiarioPage() {
                     return (
                       <React.Fragment key={lanc.id}>
                         <tr
-                          className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${rowStyle} ${canExpandRow ? "cursor-pointer" : ""}`}
+                          className={`border-b border-gray-100 hover:bg-gray-100 transition-colors ${rowStyle} ${canExpandRow ? "cursor-pointer" : ""}`}
                           role={canExpandRow ? "button" : undefined}
                           tabIndex={canExpandRow ? 0 : undefined}
                           aria-expanded={canExpandRow ? isExpanded : undefined}
@@ -1456,7 +1456,7 @@ export default function LivroDiarioPage() {
                 onClick={() => setTipoLancamento("comum")}
                 className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${tipoLancamento === "comum"
                     ? "bg-[#de4838] text-white border-[#de4838] shadow-sm"
-                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-100"
                   }`}
               >
                 <FileText className="h-4 w-4" />
@@ -1467,7 +1467,7 @@ export default function LivroDiarioPage() {
                 onClick={() => setTipoLancamento("boleto")}
                 className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${tipoLancamento === "boleto"
                     ? "bg-purple-600 text-white border-purple-600 shadow-sm"
-                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-100"
                   }`}
               >
                 <Barcode className="h-4 w-4" />
@@ -1502,7 +1502,7 @@ export default function LivroDiarioPage() {
                     <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Conta *</Label>
                     <div className="relative">
                       {loadingCategorias ? (
-                        <div className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-500">
+                        <div className="w-full rounded-lg border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm text-gray-500">
                           Carregando categorias...
                         </div>
                       ) : errorCategorias ? (
@@ -1579,7 +1579,7 @@ export default function LivroDiarioPage() {
 
             {/* Campos específicos para Folha de Pagamento */}
             {tipoLancamento === "folha" && (
-              <div className="space-y-4 border rounded-xl p-5 bg-gray-50">
+              <div className="space-y-4 border rounded-xl p-5 bg-gray-100">
                 <div className="flex items-center gap-2 text-indigo-600 font-semibold">
                   <Calculator className="h-4 w-4" />
                   <span>Cálculo da Folha de Pagamento</span>

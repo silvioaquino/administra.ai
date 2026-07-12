@@ -98,11 +98,10 @@ export default function NovaFichaTecnicaPage() {
   async function carregarPercentuaisDespesas() {
     try {
       const anoAtual = new Date().getFullYear()
-      const response = await fetch(`/api/planejamento/despesas-variaveis?ano=${anoAtual}`)
+      const response = await fetch(`/api/planejamento/indicadores-resumo?ano=${anoAtual}`)
       const data = await response.json()
-      if (data.success && data.dados) {
-        const total = data.dados.reduce((sum: number, item: any) => sum + (item.percentual || 0), 0)
-        setDespesasVariaveisPercentual(total)
+      if (data.success && data.despesasVariaveisPct != null) {
+        setDespesasVariaveisPercentual(data.despesasVariaveisPct)
       }
     } catch (error) {
       console.error("Erro ao carregar percentuais:", error)
@@ -246,7 +245,7 @@ export default function NovaFichaTecnicaPage() {
   const fichaSelecionada = fichas.find(f => f.id === selectedFichaId)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -279,7 +278,7 @@ export default function NovaFichaTecnicaPage() {
         <form id="ficha-form" onSubmit={handleSubmit} className="space-y-6">
           {/* Informações Básicas */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <h3 className="font-semibold text-gray-800">Informações Básicas</h3>
             </div>
             <div className="p-5 space-y-4">
@@ -338,13 +337,13 @@ export default function NovaFichaTecnicaPage() {
 
           {/* Ingredientes */}
           <div className="bg-white rounded-2xl shadow-sm">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <h3 className="font-semibold text-gray-800">Ingredientes</h3>
             </div>
             <div className="p-5 space-y-4">
               {/* Adicionar Produto */}
               <div className="rounded-xl border border-gray-200 overflow-hidden">
-                <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
+                <div className="bg-gray-100 px-4 py-3 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-[#de4838]" />
                     <h4 className="text-sm font-medium text-gray-700">Adicionar Produto</h4>
@@ -388,7 +387,7 @@ export default function NovaFichaTecnicaPage() {
                     </Button>
                   </div>
                   {produtoSelecionado && (
-                    <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
+                    <div className="text-xs text-gray-500 bg-gray-100 rounded-lg p-2">
                       Preço unitário: {formatCurrency(getPrecoProduto(produtoSelecionado))}
                     </div>
                   )}
@@ -397,7 +396,7 @@ export default function NovaFichaTecnicaPage() {
 
               {/* Adicionar Produto Acabado */}
               <div className="rounded-xl border border-gray-200 overflow-hidden">
-                <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
+                <div className="bg-gray-100 px-4 py-3 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <BookOpen className="h-4 w-4 text-[#de4838]" />
                     <h4 className="text-sm font-medium text-gray-700">Adicionar Produto Acabado (Ficha Técnica)</h4>
@@ -441,7 +440,7 @@ export default function NovaFichaTecnicaPage() {
                     </Button>
                   </div>
                   {fichaSelecionada && (
-                    <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
+                    <div className="text-xs text-gray-500 bg-gray-100 rounded-lg p-2">
                       Custo unitário: {formatCurrency(fichaSelecionada.custoTotal || 0)}
                     </div>
                   )}
@@ -454,7 +453,7 @@ export default function NovaFichaTecnicaPage() {
                 <div className="border rounded-xl border-gray-200 overflow-hidden">
                   <div className="max-h-64 overflow-y-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
+                      <thead className="bg-gray-100 border-b border-gray-200 sticky top-0">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ingrediente</th>
                           <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Qtd</th>
@@ -473,7 +472,7 @@ export default function NovaFichaTecnicaPage() {
                           </tr>
                         ) : (
                           ingredientes.map(ing => (
-                            <tr key={ing.id} className="border-b border-gray-100 hover:bg-gray-50">
+                            <tr key={ing.id} className="border-b border-gray-100 hover:bg-gray-100">
                               <td className="px-4 py-2">
                                 <div className="flex items-center gap-2">
                                   {ing.isProdutoAcabado ? (
@@ -509,7 +508,7 @@ export default function NovaFichaTecnicaPage() {
                           ))
                         )}
                       </tbody>
-                      <tfoot className="border-t-2 border-gray-200 bg-gray-50 sticky bottom-0">
+                      <tfoot className="border-t-2 border-gray-200 bg-gray-100 sticky bottom-0">
                         <tr className="font-semibold">
                           <td colSpan={3} className="px-4 py-3 text-right text-gray-700">Custo Total:</td>
                           <td className="px-4 py-3 text-right text-[#de4838] text-lg">{formatCurrency(custoTotal)}</td>
@@ -525,7 +524,7 @@ export default function NovaFichaTecnicaPage() {
 
           {/* Análise Financeira */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <Calculator className="h-5 w-5 text-[#de4838]" />
                 <h3 className="font-semibold text-gray-800">Análise Financeira</h3>

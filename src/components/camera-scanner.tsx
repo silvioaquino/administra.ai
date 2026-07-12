@@ -129,7 +129,7 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
       isProcessingRef.current = false;
       stopScanner();
     };
-  }, [scanMode, onScan, stopScanner]);
+  }, [scanMode, onScan]); // Removido stopScanner para evitar loop infinito
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">

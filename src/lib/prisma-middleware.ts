@@ -39,6 +39,7 @@ const MODELS_WITH_USER_ID = new Set([
   'TaxasCartaoConfig',
   'ProvisaoFuncionario',
   'MetaFluxoCaixa',
+  'PlanejamentoFolhaSalarial',
   'FluxoCaixaDiario',
   'PlanoContas',
   'FechamentoMensal',

@@ -243,7 +243,7 @@ export default function CaixaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       <div className="container mx-auto px-4 py-4">
         {caixaAberto && caixaAtual ? (
           <DashboardCaixa 

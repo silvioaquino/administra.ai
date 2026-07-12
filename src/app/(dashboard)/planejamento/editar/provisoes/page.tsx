@@ -126,14 +126,14 @@ export default function EditarProvisoesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -172,7 +172,7 @@ export default function EditarProvisoesPage() {
         </Alert>
 
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-[#de4838]" />
               <h3 className="font-semibold text-gray-800">Provisões por Funcionário</h3>
@@ -181,7 +181,7 @@ export default function EditarProvisoesPage() {
           <div className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-gray-100 border-b border-gray-200">
                   <tr className="border-b border-gray-200">
                     <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Provisão</th>
                     <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Funcionário</th>
@@ -207,7 +207,7 @@ export default function EditarProvisoesPage() {
                         const valorMensal = func.salario * prov.percentual
                         
                         return (
-                          <tr key={`${func.nome}-${prov.key}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                          <tr key={`${func.nome}-${prov.key}`} className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
                             {funcIdx === 0 && provIdx === 0 && (
                               <td className="px-4 py-2 align-middle" rowSpan={PROVISOES_CONFIG.length * funcionarios.length}>
                                 {/* Espaço reservado */}
@@ -231,7 +231,7 @@ export default function EditarProvisoesPage() {
                     </React.Fragment>
                   ))}
                 </tbody>
-                <tfoot className="border-t-2 border-gray-200 bg-gray-50">
+                <tfoot className="border-t-2 border-gray-200 bg-gray-100">
                   <tr className="font-semibold">
                     <td colSpan={3} className="px-4 py-3 text-right text-gray-800">TOTAL DA FOLHA:</td>
                     <td className="px-4 py-3 text-right text-[#de4838] text-lg">{formatCurrency(totalSalarios)}</td>

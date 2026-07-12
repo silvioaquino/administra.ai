@@ -130,6 +130,21 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Se 'conta' for um ID numérico, buscar o nome da conta
+    let nomeConta = conta.trim();
+    const contaId = parseInt(conta.trim());
+    if (!isNaN(contaId)) {
+      const contaEncontrada = await prisma.contaFinanceira.findFirst({
+        where: {
+          id: contaId,
+          empresaId,
+        },
+      });
+      if (contaEncontrada) {
+        nomeConta = contaEncontrada.nome;
+      }
+    }
     if (!descricao || !descricao.trim()) {
       return NextResponse.json(
         { error: "Descrição é obrigatória" },
@@ -157,7 +172,7 @@ export async function POST(request: NextRequest) {
       data: {
         empresaId,
         data: dataLancamento,
-        conta: conta.trim(),
+        conta: nomeConta,
         descricao: descricao.trim(),
         clienteFornecedor: cliente_fornecedor || null,
         entrada: entrada || 0,

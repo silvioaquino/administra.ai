@@ -246,7 +246,7 @@ export default function FechamentoMensalPage() {
 
     return (
       <React.Fragment key={linha.id}>
-        <tr className={`border-b border-gray-100 ${bgClass} hover:bg-gray-50 transition-colors`}>
+        <tr className={`border-b border-gray-100 ${bgClass} hover:bg-gray-100 transition-colors`}>
           <td className="px-4 py-3" style={{ paddingLeft: `${20 + nivel * 16}px` }}>
             <div className="flex items-center gap-2">
               {hasChildren && (
@@ -303,7 +303,7 @@ export default function FechamentoMensalPage() {
   const lucroLiquido = saldoRestante - capitalGiro - fundoInvestimento - provisoes;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div>
@@ -491,7 +491,7 @@ export default function FechamentoMensalPage() {
               {/* Lista de contas existentes */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {contas.map((conta) => (
-                  <div key={conta.id} className="border rounded-lg p-3 bg-gray-50">
+                  <div key={conta.id} className="border rounded-lg p-3 bg-gray-100">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <p className="font-medium text-gray-800">{conta.nome}</p>
@@ -523,7 +523,7 @@ export default function FechamentoMensalPage() {
                 ))}
 
                 {/* Conta Dinheiro */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 bg-white hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => {
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 bg-white hover:bg-gray-100 transition-colors cursor-pointer" onClick={() => {
                   const nome = prompt("Nome da nova conta:");
                   if (nome) {
                     const novoSaldo = parseFloat(prompt("Saldo inicial?", "0") || "0");
@@ -578,7 +578,7 @@ export default function FechamentoMensalPage() {
               {/* Lista de despesas fixas */}
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-100 border-b border-gray-200">
                     <tr>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Despesa</th>
                       <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Valor</th>
@@ -707,7 +707,7 @@ export default function FechamentoMensalPage() {
               <CardContent>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                    <thead className="bg-gray-100 border-b border-gray-200">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Descrição
@@ -836,7 +836,7 @@ export default function FechamentoMensalPage() {
               <CardContent>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                    <thead className="bg-gray-100 border-b border-gray-200">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Descrição
@@ -887,7 +887,7 @@ export default function FechamentoMensalPage() {
               <CardContent>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                    <thead className="bg-gray-100 border-b border-gray-200">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Mês</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Receita Bruta</th>
@@ -969,21 +969,21 @@ export default function FechamentoMensalPage() {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg">
                         <div>
                           <p className="font-medium text-gray-800">Capital de Giro</p>
                           <p className="text-sm text-gray-500">10% do saldo restante</p>
                         </div>
                         <p className="font-bold text-blue-600">{formatCurrency(capitalGiro)}</p>
                       </div>
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg">
                         <div>
                           <p className="font-medium text-gray-800">Fundo de Investimento</p>
                           <p className="text-sm text-gray-500">10% do saldo restante</p>
                         </div>
                         <p className="font-bold text-purple-600">{formatCurrency(fundoInvestimento)}</p>
                       </div>
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg">
                         <div>
                           <p className="font-medium text-gray-800">Provisões</p>
                           <p className="text-sm text-gray-500">Mínimo R$ 1.000 ou 5%</p>
@@ -1008,7 +1008,7 @@ export default function FechamentoMensalPage() {
 
         {/* Observações do Fechamento */}
         {fechamento?.observacao && (
-          <div className="mt-6 bg-gray-50 rounded-xl p-4 border border-gray-200">
+          <div className="mt-6 bg-gray-100 rounded-xl p-4 border border-gray-200">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Observações do Fechamento</p>
             <p className="text-sm text-gray-700 mt-1">{fechamento.observacao}</p>
           </div>

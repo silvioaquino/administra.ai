@@ -202,14 +202,14 @@ export default function PlanosPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Header */}
         <div className="mb-6">
@@ -385,7 +385,7 @@ export default function PlanosPage() {
           <div className="grid gap-6 md:grid-cols-2">
             {/* Cartão de Crédito */}
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5 text-blue-600" />
@@ -403,7 +403,7 @@ export default function PlanosPage() {
               </div>
               {false && (
                 <div className="p-5">
-                  <div className="rounded-xl bg-gray-50 p-3">
+                  <div className="rounded-xl bg-gray-100 p-3">
                     <p className="text-sm font-medium text-gray-800">**** **** **** 4242</p>
                     <p className="text-xs text-gray-500 mt-1">Vencimento: 12/2028</p>
                   </div>
@@ -416,7 +416,7 @@ export default function PlanosPage() {
 
             {/* Pix */}
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Zap className="h-5 w-5 text-emerald-600" />

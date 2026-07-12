@@ -2,6 +2,7 @@
 "use client"
 
 import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatPercentage } from "@/lib/utils"
 import { TrendingUp, Home, TrendingDown, Factory, DollarSign, Activity } from "lucide-react"
 
@@ -12,6 +13,8 @@ interface IndicadoresCardProps {
   lucroDesejado: number
   markUp: number
   cmv: number
+  pctFixas?: number
+  metaFaltando?: boolean
 }
 
 export function IndicadoresCard({
@@ -20,10 +23,35 @@ export function IndicadoresCard({
   metaMensalTotal,
   lucroDesejado,
   markUp,
-  cmv
+  cmv,
+  pctFixas: pctFixasProp,
+  metaFaltando = false
 }: IndicadoresCardProps) {
-  const totalFixas = despesasFixas.reduce((s, d) => s + d.valor, 0)
-  const pctFixas = metaMensalTotal > 0 ? (totalFixas / metaMensalTotal) * 100 : 0
+
+  if (metaFaltando) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-gray-100 p-3 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-[#de4838]" />
+            <h3 className="font-semibold text-gray-800 text-sm">Indicadores Ideais vs Atuais</h3>
+          </div>
+        </div>
+        <div className="p-4">
+          <Alert variant="warning">
+            <AlertDescription>
+              Defina a meta do mês atual (aba &quot;Metas Mensais&quot;) para visualizar CMV, Mark-up e demais indicadores.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    )
+  }
+  // Usar o valor da prop se fornecido, senão calcular
+  const pctFixas = pctFixasProp ?? (() => {
+    const totalFixas = despesasFixas.reduce((s, d) => s + d.valor, 0)
+    return metaMensalTotal > 0 ? (totalFixas / metaMensalTotal) * 100 : 0
+  })()
 
   const getStatusType = (valor: number, min: number, max: number): 'ideal' | 'abaixo' | 'acima' => {
     if (valor >= min && valor <= max) return 'ideal'
@@ -91,11 +119,11 @@ export function IndicadoresCard({
       cor: "danger",
       valor: pctFixas,
       unidade: "%",
-      min: 30,
-      max: 45,
+      min: 20,
+      max: 35,
       tooltip: "Ideal: entre 30% e 45% do faturamento",
-      getStatus: (v: number) => getStatusType(v, 30, 45),
-      isIdeal: (v: number) => v >= 30 && v <= 45
+      getStatus: (v: number) => getStatusType(v, 20, 35),
+      isIdeal: (v: number) => v >= 20 && v <= 35
     },
     {
       nome: "Despesas Variáveis",
@@ -104,10 +132,10 @@ export function IndicadoresCard({
       valor: despesasVariaveisPct,
       unidade: "%",
       min: 5,
-      max: 15,
-      tooltip: "Ideal: entre 5% e 15% do faturamento",
-      getStatus: (v: number) => getStatusType(v, 5, 15),
-      isIdeal: (v: number) => v >= 5 && v <= 15
+      max: 20,
+      tooltip: "Ideal: entre 5% e 20% do faturamento",
+      getStatus: (v: number) => getStatusType(v, 5, 20),
+      isIdeal: (v: number) => v >= 5 && v <= 20
     },
     {
       nome: "CMV (Custo Produção)",
@@ -148,20 +176,20 @@ export function IndicadoresCard({
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className="bg-gray-50 p-4 border-b border-gray-100">
+      <div className="bg-gray-100 p-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
-          <Activity className="h-5 w-5 text-[#de4838]" />
-          <h3 className="font-semibold text-gray-800">Indicadores Ideais vs Atuais</h3>
+          <Activity className="h-4 w-4 text-[#de4838]" />
+          <h3 className="font-semibold text-gray-800 text-sm">Indicadores Ideais vs Atuais</h3>
         </div>
       </div>
-      <div className="p-5">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="p-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {indicadores.map((ind) => {
             const status = ind.getStatus(ind.valor)
             const colors = getStatusColor(status)
             const Icon = ind.icone
             const isIdeal = status === 'ideal'
-            
+
             // Calcula percentual para a barra de progresso
             let percentual = 0
             if (ind.valor < ind.min) {
@@ -173,38 +201,38 @@ export function IndicadoresCard({
               percentual = ((ind.valor - ind.min) / (ind.max - ind.min)) * 100
             }
             percentual = Math.min(100, Math.max(0, percentual))
-            
+
             return (
-              <div 
-                key={ind.nome} 
-                className={`rounded-xl border ${colors.border} ${colors.bg} p-3 shadow-sm hover:shadow-md transition-all cursor-help h-full min-h-[160px] sm:min-h-[180px]`}
+              <div
+                key={ind.nome}
+                className={`rounded-lg border ${colors.border} ${colors.bg} p-2 shadow-sm hover:shadow-md transition-all cursor-help h-full min-h-[67px] sm:min-h-[76px]`}
                 title={ind.tooltip}
               >
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`p-1.5 rounded-lg ${colors.iconBg}`}>
-                      <Icon className={`h-4 w-4 ${colors.iconColor}`} />
+                <div className="mb-1 flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <div className={`p-1 rounded-md ${colors.iconBg}`}>
+                      <Icon className={`h-2 w-2 ${colors.iconColor}`} />
                     </div>
-                    <h6 className="font-semibold text-gray-800 text-[11px] sm:text-sm leading-tight">{ind.nome}</h6>
+                    <h6 className="font-semibold text-gray-800 text-[9px] sm:text-xs leading-tight">{ind.nome}</h6>
                   </div>
-                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] sm:text-xs font-medium ${colors.iconBg} ${colors.text}`}>
+                  <span className={`rounded-full px-1 py-0.5 text-[7px] sm:text-[8px] font-medium ${colors.iconBg} ${colors.text}`}>
                     Ideal: {ind.min}{ind.unidade} - {ind.max}{ind.unidade}
                   </span>
                 </div>
-                <div className="my-3 text-center">
-                  <span className={`text-2xl sm:text-3xl font-bold ${colors.text}`}>{ind.valor.toFixed(1)}</span>
-                  <span className="text-gray-500 ml-0.5 text-[10px] sm:text-xs">{ind.unidade}</span>
+                <div className="my-1 text-center">
+                  <span className={`text-sm sm:text-lg font-bold ${colors.text}`}>{ind.valor.toFixed(1)}</span>
+                  <span className="text-gray-500 ml-0.5 text-[8px] sm:text-[9px]">{ind.unidade}</span>
                 </div>
-                
+
                 {/* Custom Progress Bar */}
-                <div className={`w-full ${colors.progressBg} rounded-full h-2 overflow-hidden`}>
-                  <div 
+                <div className={`w-full ${colors.progressBg} rounded-full h-1 overflow-hidden`}>
+                  <div
                     className={`${colors.progressFill} h-full rounded-full transition-all duration-300`}
                     style={{ width: `${percentual}%` }}
                   />
                 </div>
-                
-                <div className="mt-2 flex justify-between text-xs">
+
+                <div className="mt-1 flex justify-between text-[8px] sm:text-[9px]">
                   <span className="text-gray-500">Min: {ind.min}{ind.unidade}</span>
                   <span className={`font-medium ${colors.statusColor}`}>
                     {colors.statusText}
@@ -216,16 +244,16 @@ export function IndicadoresCard({
           })}
 
           {/* Resumo da Saúde Financeira */}
-          <div className={`rounded-xl ${saude.bg} p-3 shadow-sm h-full min-h-[160px] sm:min-h-[180px]`}>
-            <h6 className="mb-3 font-semibold text-gray-800 flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              Resumo da Saúde Financeira
+          <div className={`rounded-lg ${saude.bg} p-2 shadow-sm h-full min-h-[67px] sm:min-h-[76px]`}>
+            <h6 className="mb-1 font-semibold text-gray-800 flex items-center gap-1 text-xs">
+              <Activity className="h-3 w-3" />
+              Resumo
             </h6>
             <div className="text-center">
-              <div className="text-5xl">{saude.icon}</div>
-              <div className={`mt-2 font-bold ${saude.color} text-[11px] sm:text-sm leading-tight`}>{saude.text}</div>
-              <div className="mt-2 text-[10px] sm:text-sm text-gray-500">
-                {indicadoresIdeais}/5 indicadores ideais
+              <div className="text-xl">{saude.icon}</div>
+              <div className={`mt-1 font-bold ${saude.color} text-[9px] sm:text-xs leading-tight`}>{saude.text}</div>
+              <div className="mt-1 text-[8px] sm:text-[9px] text-gray-500">
+                {indicadoresIdeais}/5 ideais
               </div>
             </div>
           </div>

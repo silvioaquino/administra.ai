@@ -8,16 +8,18 @@ interface IndicadoresCardProps {
   despesasVariaveisPct: number
   metaMensalTotal: number
   cmv: number
+  pctFixas?: number
 }
 
 export function IndicadoresCard({
   despesasFixas,
   despesasVariaveisPct,
   metaMensalTotal,
-  cmv
+  cmv,
+  pctFixas: pctFixasProp
 }: IndicadoresCardProps) {
   const totalFixas = despesasFixas.reduce((s, d) => s + d.valor, 0)
-  const pctFixas = metaMensalTotal > 0 ? (totalFixas / metaMensalTotal) * 100 : 0
+  const pctFixas = pctFixasProp ?? (metaMensalTotal > 0 ? (totalFixas / metaMensalTotal) * 100 : 0)
 
   const getStatusType = (valor: number, min: number, max: number): 'ideal' | 'abaixo' | 'acima' => {
     if (valor >= min && valor <= max) return 'ideal'
@@ -72,10 +74,10 @@ export function IndicadoresCard({
       icone: Home,
       valor: pctFixas,
       unidade: "%",
-      min: 30,
-      max: 45,
-      tooltip: "Ideal: entre 30% e 45% do faturamento",
-      getStatus: (v: number) => getStatusType(v, 30, 45),
+      min: 20,
+      max: 35,
+      tooltip: "Ideal: entre 20% e 35% do faturamento",
+      getStatus: (v: number) => getStatusType(v, 20, 35),
     },
     {
       nome: "Despesas Variáveis",
@@ -83,9 +85,9 @@ export function IndicadoresCard({
       valor: despesasVariaveisPct,
       unidade: "%",
       min: 5,
-      max: 15,
-      tooltip: "Ideal: entre 5% e 15% do faturamento",
-      getStatus: (v: number) => getStatusType(v, 5, 15),
+      max: 20,
+      tooltip: "Ideal: entre 5% e 20% do faturamento",
+      getStatus: (v: number) => getStatusType(v, 5, 20),
     },
     {
       nome: "CMV",
@@ -99,7 +101,7 @@ export function IndicadoresCard({
     }
   ]
 
-  const indicadoresIdeais = indicadores.filter(i => i.getStatus(i.valor) === 'ideal').length
+  const indicadoresIdeais = indicadores.filter(i => i.getStatus(i.valor ?? 0) === 'ideal').length
 
   const getSaudeFinanceira = () => {
     if (indicadoresIdeais >= 3) return { icon: "🟢", text: "Excelente!", color: "text-emerald-600", bg: "bg-emerald-50" }
@@ -112,7 +114,7 @@ export function IndicadoresCard({
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className="bg-gray-50 p-3 border-b border-gray-100">
+      <div className="bg-gray-100 p-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <Activity className="h-4 w-4 text-[#de4838]" />
           <h3 className="font-semibold text-gray-800 text-sm">Indicadores Financeiros</h3>
@@ -121,14 +123,16 @@ export function IndicadoresCard({
       <div className="p-3">
         <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-2 lg:grid-cols-4">
           {indicadores.map((ind) => {
-            const status = ind.getStatus(ind.valor)
+            const valor = ind.valor ?? 0
+            const status = ind.getStatus(valor)
             const colors = getStatusColor(status)
             const Icon = ind.icone
-            const percentual = Math.min(100, Math.max(0, ((ind.valor - ind.min) / (ind.max - ind.min)) * 100))
-            
+            const percentual = Math.min(100, Math.max(0, ((valor - ind.min) / (ind.max - ind.min)) * 100))
+            const displayValue = ind.valor == null ? "—" : ind.valor.toFixed(1)
+
             return (
-              <div 
-                key={ind.nome} 
+              <div
+                key={ind.nome}
                 className={`rounded-lg border ${colors.border} ${colors.bg} p-2 shadow-sm hover:shadow-md transition-all cursor-help min-h-[112px]`}
                 title={ind.tooltip}
               >
@@ -141,7 +145,7 @@ export function IndicadoresCard({
                   </div>
                 </div>
                 <div className="my-2 text-center">
-                  <span className={`text-xl sm:text-2xl font-bold ${colors.text}`}>{ind.valor.toFixed(1)}</span>
+                  <span className={`text-xl sm:text-2xl font-bold ${colors.text}`}>{displayValue}</span>
                   <span className="text-gray-500 ml-0.5 text-[10px] sm:text-xs">{ind.unidade}</span>
                 </div>
                 

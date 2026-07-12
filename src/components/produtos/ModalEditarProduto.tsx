@@ -302,7 +302,7 @@ export function ModalEditarProduto({ isOpen, onClose, produtoId, onSuccess }: Mo
                 type="text"
                 value={formatCurrency(valorTotalEstoque)}
                 disabled
-                className="rounded-lg bg-gray-50 border-gray-200 text-gray-600"
+                className="rounded-lg bg-gray-100 border-gray-200 text-gray-600"
               />
             </div>
           </div>

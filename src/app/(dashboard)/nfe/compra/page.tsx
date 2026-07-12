@@ -1,7 +1,7 @@
 // src/app/(dashboard)/nfe/compra/page.tsx
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Truck, Search, Save, AlertCircle, Package, Building2, Calendar, DollarSign, CheckCircle, Camera } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatCurrency } from "@/lib/utils"
 import { CameraScanner } from "@/components/camera-scanner"
+import { useContasFinanceiras } from "@/hooks/useContasFinanceiras"
 
 interface ProdutoNota {
   codigo: string
@@ -31,10 +32,22 @@ export default function CompraNfePage() {
   const [notaProcessada, setNotaProcessada] = useState<any>(null)
   const [produtos, setProdutos] = useState<ProdutoNota[]>([])
   const [showScanner, setShowScanner] = useState(false)
+
+  // Carregar contas financeiras da API
+  const { contas, loading: loadingContas } = useContasFinanceiras()
+
   const [formData, setFormData] = useState({
-    contaDespesa: "3.2.1 Compras de Mercadorias",
-    dataCompra: new Date().toISOString().split("T")[0]
+    contaDespesa: "",
+    dataCompra: new Date().toISOString().split("T")[0],
+    formaPagamento: "À vista"
   })
+
+  // Definir a primeira conta como padrão quando carregar
+  useEffect(() => {
+    if (contas.length > 0 && !formData.contaDespesa) {
+      setFormData(prev => ({ ...prev, contaDespesa: contas[0].id.toString() }))
+    }
+  }, [contas, formData.contaDespesa])
 
   function handleScanResult(result: string) {
     setUrl(result)
@@ -66,6 +79,10 @@ export default function CompraNfePage() {
           selecionado: true
         }))
         setProdutos(produtosComSelecao)
+        // Preencher data da compra com data de emissão da nota
+        if (data.data.data_emissao) {
+          setFormData(prev => ({ ...prev, dataCompra: data.data.data_emissao }))
+        }
       } else {
         throw new Error(data.error || "Erro ao processar nota")
       }
@@ -106,6 +123,10 @@ export default function CompraNfePage() {
           selecionado: true
         }))
         setProdutos(produtosComSelecao)
+        // Preencher data da compra com data de emissão da nota
+        if (data.data.data_emissao) {
+          setFormData(prev => ({ ...prev, dataCompra: data.data.data_emissao }))
+        }
       } else {
         throw new Error(data.error || "Erro ao processar nota")
       }
@@ -134,6 +155,7 @@ export default function CompraNfePage() {
 
     try {
       const valorTotal = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
+      const contaSelecionada = contas.find(c => c.id.toString() === formData.contaDespesa);
 
       // 1. Salvar a nota fiscal
       const notaResponse = await fetch("/api/nfe/salvar", {
@@ -144,7 +166,8 @@ export default function CompraNfePage() {
           produtos: produtosSelecionados,
           contaDespesa: formData.contaDespesa,
           dataCompra: formData.dataCompra,
-          valorTotal: valorTotal
+          valorTotal: valorTotal,
+          formaPagamento: formData.formaPagamento
         })
       })
 
@@ -168,7 +191,8 @@ export default function CompraNfePage() {
           entrada: 0,
           saida: valorTotal,
           tipo: "COMPRA",
-          notaFiscalId: notaFiscalId
+          notaFiscalId: notaFiscalId,
+          origemDestino: contaSelecionada?.nome || null
         })
       })
 
@@ -207,7 +231,7 @@ export default function CompraNfePage() {
   const valorTotalCompra = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -244,7 +268,7 @@ export default function CompraNfePage() {
           <div className="space-y-6">
             {/* Processar NFC-e Card */}
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <Truck className="h-5 w-5 text-[#de4838]" />
                   <h3 className="font-semibold text-gray-800">Processar NFC-e</h3>
@@ -299,14 +323,14 @@ export default function CompraNfePage() {
             {/* Informações da Compra */}
             {notaProcessada && (
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="bg-gray-50 p-4 border-b border-gray-100">
+                <div className="bg-gray-100 p-4 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-[#de4838]" />
                     <h3 className="font-semibold text-gray-800">Informações da Compra</h3>
                   </div>
                 </div>
                 <div className="p-6 space-y-4">
-                  <div className="rounded-lg bg-gray-50 p-4">
+                  <div className="rounded-lg bg-gray-100 p-4">
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Fornecedor</p>
                     <p className="text-sm font-medium text-gray-800 mt-1">{notaProcessada.nome_emitente || "Não informado"}</p>
                     <p className="text-xs text-gray-500 mt-0.5">CNPJ: {notaProcessada.cnpj_emitente || "Não informado"}</p>
@@ -320,12 +344,19 @@ export default function CompraNfePage() {
                           className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none"
                           value={formData.contaDespesa}
                           onChange={(e) => setFormData({ ...formData, contaDespesa: e.target.value })}
+                          disabled={loadingContas || contas.length === 0}
                         >
-                          <option value="3.2.1 Compras de Mercadorias">📦 Compras de Mercadorias</option>
-                          <option value="3.2.2 Compras de Insumos">🥩 Compras de Insumos</option>
-                          <option value="3.2.3 Compras de Embalagens">📦 Compras de Embalagens</option>
-                          <option value="3.2.4 Compras de Equipamentos">🔧 Compras de Equipamentos</option>
-                          <option value="3.2.5 Compras de Material Limpeza">🧹 Compras de Material Limpeza</option>
+                          {loadingContas ? (
+                            <option value="">Carregando contas...</option>
+                          ) : contas.length === 0 ? (
+                            <option value="">Nenhuma conta disponível</option>
+                          ) : (
+                            contas.map((conta) => (
+                              <option key={conta.id} value={conta.id.toString()}>
+                                {conta.nome}
+                              </option>
+                            ))
+                          )}
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                           <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
@@ -342,6 +373,28 @@ export default function CompraNfePage() {
                       />
                     </div>
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Forma de Pagamento</Label>
+                      <div className="relative">
+                        <select
+                          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none"
+                          value={formData.formaPagamento}
+                          onChange={(e) => setFormData({ ...formData, formaPagamento: e.target.value })}
+                        >
+                          <option value="À vista">À vista</option>
+                          <option value="Cartão de Crédito">Cartão de Crédito</option>
+                          <option value="Cartão de Débito">Cartão de Débito</option>
+                          <option value="PIX">PIX</option>
+                          <option value="Boleto">Boleto</option>
+                          <option value="Cheque">Cheque</option>
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                          <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -350,7 +403,7 @@ export default function CompraNfePage() {
           {/* Right Column - Preview */}
           <div className="lg:sticky lg:top-24 h-fit">
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <Package className="h-5 w-5 text-[#de4838]" />
                   <h3 className="font-semibold text-gray-800">Resumo da Operação</h3>
@@ -408,7 +461,7 @@ export default function CompraNfePage() {
         {produtos.length > 0 && (
           <div className="mt-8">
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-50 p-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-4 border-b border-gray-100">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-2">
                     <Package className="h-5 w-5 text-[#de4838]" />
@@ -432,7 +485,7 @@ export default function CompraNfePage() {
               </div>
               <div className="p-0 overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-100 border-b border-gray-200">
                     <tr>
                       <th className="px-4 py-3 text-left w-10"></th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
@@ -444,7 +497,7 @@ export default function CompraNfePage() {
                   </thead>
                   <tbody>
                     {produtos.map((produto, index) => (
-                      <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <tr key={index} className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
                         <td className="px-4 py-3">
                           <input
                             type="checkbox"
@@ -465,7 +518,7 @@ export default function CompraNfePage() {
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="bg-gray-50 border-t border-gray-200">
+                  <tfoot className="bg-gray-100 border-t border-gray-200">
                     <tr>
                       <td colSpan={5} className="px-4 py-4 text-right font-semibold text-gray-700">
                         Total da Compra:

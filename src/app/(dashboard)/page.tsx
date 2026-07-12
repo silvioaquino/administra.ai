@@ -66,6 +66,7 @@ interface IndicadoresFinanceiros {
   despesasVariaveisPct: number
   metaMensalTotal: number
   cmv: number
+  pctFixas: number
 }
 
 interface MetaItem {
@@ -129,7 +130,8 @@ export default function DashboardPage() {
     despesasFixas: [],
     despesasVariaveisPct: 0,
     metaMensalTotal: 0,
-    cmv: 0
+    cmv: 0,
+    pctFixas: 0
   })
 
   useEffect(() => {
@@ -238,7 +240,8 @@ export default function DashboardPage() {
           despesasFixas: data.despesasFixas ?? [],
           despesasVariaveisPct: data.despesasVariaveisPct ?? 0,
           metaMensalTotal: data.metaMensalTotal ?? 0,
-          cmv: data.cmv ?? 0
+          cmv: data.cmv ?? 0,
+          pctFixas: data.pctFixas ?? 0
         })
       }
     } catch (error) {
@@ -409,7 +412,7 @@ export default function DashboardPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-150 flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
       </div>
     )
@@ -471,7 +474,7 @@ export default function DashboardPage() {
   const lucroTotal = totalReceitasChart - totalDespesasChart
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#e5e7eb]">
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Header */}
         <div className="sticky top-0 z-10 ml-1 mb-5 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
@@ -503,18 +506,18 @@ export default function DashboardPage() {
         {/* Filtros */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
           <div className="py-3 px-5">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 <Filter className="h-4 w-4 text-[#de4838]" />
-                <h3 className="font-semibold text-gray-800 text-sm">Filtros</h3>
+                <h3 className="font-semibold text-gray-800 text-sm hidden sm:inline">Filtros</h3>
               </div>
-              
-              <div className="flex-1 flex flex-wrap items-center gap-2">
-                <div className="relative">
+
+              <div className="flex items-center gap-2 flex-grow min-w-0">
+                <div className="relative flex-shrink-0">
                   <select
                     value={periodo}
                     onChange={(e) => setPeriodo(e.target.value as PeriodoType)}
-                    className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8"
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8 min-w-[120px]"
                   >
                     {periodOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -526,26 +529,26 @@ export default function DashboardPage() {
                 </div>
 
                 {periodo === "especifico" && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <input
                       type="date"
                       value={dataInicio}
                       onChange={(e) => setDataInicio(e.target.value)}
-                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] min-w-[120px]"
                       placeholder="Início"
                     />
-                    <span className="text-gray-400">até</span>
+                    <span className="text-gray-400 flex-shrink-0">até</span>
                     <input
                       type="date"
                       value={dataFim}
                       onChange={(e) => setDataFim(e.target.value)}
-                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] min-w-[120px]"
                       placeholder="Fim"
                     />
                   </div>
                 )}
 
-                <div className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700">
+                <div className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 flex-shrink-0">
                   <CalendarRange className="h-4 w-4 inline mr-1" />
                   {periodoTexto}
                 </div>
@@ -559,20 +562,20 @@ export default function DashboardPage() {
           {statsCards.map((card, idx) => (
             <Card
               key={idx}
-              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white border-0 hover:scale-105 transition-transform duration-200 cursor-pointer h-full min-h-[132px] sm:min-h-[150px]`}
+              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white border-0 hover:scale-105 transition-transform duration-200 cursor-pointer h-full min-h-[92px] sm:min-h-[105px]`}
             >
-              <CardContent className="p-3 sm:p-5">
+              <CardContent className="p-2 sm:p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-[11px] sm:text-sm font-medium opacity-90 leading-tight">{card.title}</p>
-                  <card.icon className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
+                  <p className="text-[10px] sm:text-sm font-medium opacity-90 leading-tight">{card.title}</p>
+                  <card.icon className="h-3 w-3 sm:h-4 sm:w-4 opacity-80" />
                 </div>
-                <div className="mt-2 text-lg sm:text-2xl font-bold leading-tight">
+                <div className="mt-1 text-sm sm:text-xl font-bold leading-tight">
                   {card.value}
                 </div>
-                <p className="mt-1 text-[10px] sm:text-xs opacity-80">{card.detail}</p>
+                <p className="mt-0.5 text-[9px] sm:text-xs opacity-80">{card.detail}</p>
               </CardContent>
-              <div className="absolute -bottom-4 -right-4 opacity-10">
-                <card.icon className="h-20 w-20" />
+              <div className="absolute -bottom-3 -right-3 opacity-10">
+                <card.icon className="h-12 w-12" />
               </div>
             </Card>
           ))}
@@ -580,7 +583,7 @@ export default function DashboardPage() {
 
         {/* Metas */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="bg-gray-50 py-3 px-5 border-b border-gray-100">
+          <div className="bg-gray-100 py-3 px-5 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-[#de4838]" />
               <h3 className="font-semibold text-gray-800">Metas</h3>
@@ -708,17 +711,18 @@ export default function DashboardPage() {
 
         {/* Indicadores Financeiros */}
         <div className="mb-6">
-          <IndicadoresCard 
+          <IndicadoresCard
             despesasFixas={indicadores.despesasFixas}
             despesasVariaveisPct={indicadores.despesasVariaveisPct}
             metaMensalTotal={indicadores.metaMensalTotal}
             cmv={indicadores.cmv}
+            pctFixas={indicadores.pctFixas}
           />
         </div>
 
         {/* Gráfico de Receitas vs Despesas */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-[#de4838]" />
               <h3 className="font-semibold text-gray-800">Evolução Financeira</h3>
@@ -824,7 +828,7 @@ export default function DashboardPage() {
 
         {/* Produtividade por funcionário */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="bg-gray-50 p-4 border-b border-gray-100">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-[#de4838]" />
               <h3 className="font-semibold text-gray-800">Produtividade</h3>
@@ -839,7 +843,7 @@ export default function DashboardPage() {
         <div className="grid gap-6 md:grid-cols-2 mb-6">
           {/* Últimos Lançamentos */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-[#de4838]" />
                 <h3 className="font-semibold text-gray-800">Últimos Lançamentos</h3>
@@ -849,7 +853,7 @@ export default function DashboardPage() {
               <div className="space-y-3 max-h-80 overflow-y-auto">
                 {ultimosLancamentos.length > 0 ? (
                   ultimosLancamentos.map((lanc) => (
-                    <div key={lanc.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div key={lanc.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
                       <div className="flex items-center gap-3">
                         {getTipoIcon(lanc.entrada)}
                         <div>
@@ -875,7 +879,7 @@ export default function DashboardPage() {
 
           {/* Alertas */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
+            <div className="bg-gray-100 p-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-[#de4838]" />
                 <h3 className="font-semibold text-gray-800">Alertas</h3>
@@ -902,68 +906,50 @@ export default function DashboardPage() {
             </CardContent>
           </div>
         </div>
-
-        {/* Ações Rápidas e Informações do Sistema */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Ações Rápidas Card */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-[#de4838]" />
-                <h3 className="font-semibold text-gray-800">Ações Rápidas</h3>
-              </div>
-            </div>
-            <div className="p-5 space-y-3">
-              {quickActions.map((action, idx) => (
-                <Button 
-                  key={idx}
-                  variant={action.variant}
-                  className="w-full justify-between rounded-lg"
-                  onClick={() => router.push(action.route)}
-                >
-                  <span>{action.label}</span>
-                  <ArrowRight className="h-4 w-4 opacity-70" />
-                </Button>
-              ))}
+        {/* Informações do Sistema - Largura total */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <Store className="h-5 w-5 text-[#de4838]" />
+              <h3 className="font-semibold text-gray-800">Informações do Sistema</h3>
             </div>
           </div>
-
-          {/* Informações do Sistema */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-50 p-4 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <Store className="h-5 w-5 text-[#de4838]" />
-                <h3 className="font-semibold text-gray-800">Informações do Sistema</h3>
+          <div className="p-5 space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Coluna Esquerda */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-500">Status da assinatura:</span>
+                  <Badge className={isInTrial ? "bg-blue-100 text-blue-700 rounded-full" : "bg-emerald-100 text-emerald-700 rounded-full"}>
+                    {isInTrial ? "Período de teste" : session?.user?.subscriptionStatus === "active" ? "Ativa" : "Não ativa"}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-500">Fim do teste:</span>
+                  <span className="font-medium text-gray-700">{trialEndsAt ? new Date(trialEndsAt).toLocaleDateString("pt-BR") : "-"}</span>
+                </div>
+              </div>
+              {/* Coluna Direita */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-500">Total de Produtos:</span>
+                  <span className="font-medium text-gray-700">{stats.totalProdutos}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-500">Fichas Técnicas:</span>
+                  <span className="font-medium text-gray-700">{stats.totalFichas}</span>
+                </div>
               </div>
             </div>
-            <div className="p-5 space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-500">Status da assinatura:</span>
-                <Badge className={isInTrial ? "bg-blue-100 text-blue-700 rounded-full" : "bg-emerald-100 text-emerald-700 rounded-full"}>
-                  {isInTrial ? "Período de teste" : session?.user?.subscriptionStatus === "active" ? "Ativa" : "Não ativa"}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-500">Fim do teste:</span>
-                <span className="font-medium text-gray-700">{trialEndsAt ? new Date(trialEndsAt).toLocaleDateString("pt-BR") : "-"}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-500">Total de Produtos:</span>
-                <span className="font-medium text-gray-700">{stats.totalProdutos}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-500">Fichas Técnicas:</span>
-                <span className="font-medium text-gray-700">{stats.totalFichas}</span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-gray-500">Versão do sistema:</span>
-                <span className="font-medium text-gray-700">2.0.0</span>
-              </div>
+            <div className="flex justify-between items-center pt-2">
+              <span className="text-sm text-gray-500">Versão do sistema:</span>
+              <span className="font-medium text-gray-700">2.0.0</span>
             </div>
           </div>
         </div>
 
         {/* Dica rápida */}
+
         <div className="mt-6 bg-gradient-to-r from-[#de4838]/5 to-transparent rounded-xl p-4 border border-[#de4838]/10">
           <div className="flex items-start gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#de4838]/10">

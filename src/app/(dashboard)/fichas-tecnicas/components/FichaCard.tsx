@@ -154,7 +154,7 @@ export function FichaCard({ ficha, onEdit, onRefresh }: FichaCardProps) {
 
         {/* Ingredientes preview */}
         {ingredientesPreview && (
-          <div className="mb-4 text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
+          <div className="mb-4 text-xs text-gray-500 bg-gray-100 rounded-lg p-2">
             <span className="font-medium text-gray-600">Ingredientes:</span> {ingredientesPreview}
           </div>
         )}
