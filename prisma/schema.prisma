@@ -245,6 +245,8 @@ model LivroDiario {
   updatedAt         DateTime    @updatedAt @map("updated_at")
   empresaId         String
   origemDestino     String?     @map("origem_destino")
+  status            String      @default("PENDENTE")
+  dataPagamento     DateTime?   @map("data_pagamento")
   boletos           Boleto[]
   empresa           Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   notaFiscal        NotaFiscal? @relation(fields: [notaFiscalId], references: [id])
@@ -254,6 +256,7 @@ model LivroDiario {
   @@index([userId, conta])
   @@index([userId, tipo])
   @@index([userId, origemDestino])
+  @@index([userId, status])
   @@index([empresaId])
   @@map("livro_diario")
 }

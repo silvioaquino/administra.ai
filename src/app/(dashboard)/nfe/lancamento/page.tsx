@@ -108,6 +108,7 @@ export default function LancamentoManualPage() {
           saida: formData.tipoLancamento === "COMPRA" ? valorTotal : 0,
           tipo: formData.tipoLancamento,
           origemDestino: formData.origemDestino || null, // NOVO CAMPO
+          formaPagamento: formData.formaPagamento
         }),
       });
 

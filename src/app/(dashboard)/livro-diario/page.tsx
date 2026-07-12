@@ -88,6 +88,7 @@ interface Lancamento {
   statusBoleto: string | null
   dataVencimento: string | null
   dataPagamento: string | null
+  status?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -737,28 +738,34 @@ export default function LivroDiarioPage() {
     }
   }
 
-  // Marcar boleto como pago
+  // Marcar boleto ou lançamento como pago
   const handlePagarBoleto = async () => {
-    if (!lancamentoParaPagar || !lancamentoParaPagar.boletoId) return
+    if (!lancamentoParaPagar) return
+
+    const isBoleto = !!lancamentoParaPagar.boletoId
+    const url = isBoleto
+      ? `/api/boletos/${lancamentoParaPagar.boletoId}/pagar`
+      : `/api/livro-diario/${lancamentoParaPagar.id}/pagar`
 
     try {
-      const response = await fetch(`/api/boletos/${lancamentoParaPagar.boletoId}/pagar`, {
+      const response = await fetch(url, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dataPagamento })
       })
 
       if (response.ok) {
-        alert("Boleto marcado como pago!")
+        alert(isBoleto ? "Boleto marcado como pago!" : "Lançamento marcado como pago!")
         setPagamentoModalOpen(false)
         setLancamentoParaPagar(null)
         carregarDados()
       } else {
-        alert("Erro ao marcar boleto como pago")
+        const erro = await response.json().catch(() => ({}))
+        alert(erro.error || "Erro ao marcar como pago")
       }
     } catch (error) {
       console.error("Erro:", error)
-      alert("Erro ao marcar boleto como pago")
+      alert("Erro ao marcar como pago")
     }
   }
 
@@ -1386,6 +1393,16 @@ export default function LivroDiarioPage() {
                               </div>
                             ) : isFolhaLanc ? (
                               <Badge className="bg-indigo-100 text-indigo-700">Processada</Badge>
+                            ) : lanc.status === "PAGO" ? (
+                              <div className="flex items-center justify-center gap-1">
+                                <CheckCircle className="h-4 w-4 text-emerald-600" />
+                                <Badge className="bg-emerald-100 text-emerald-700">Pago</Badge>
+                              </div>
+                            ) : lanc.status === "PENDENTE" ? (
+                              <div className="flex items-center justify-center gap-1">
+                                <Clock className="h-4 w-4 text-amber-600" />
+                                <Badge className="bg-amber-100 text-amber-700">Pendente</Badge>
+                              </div>
                             ) : (
                               <span className="text-gray-400 text-xs">-</span>
                             )}
@@ -1393,6 +1410,15 @@ export default function LivroDiarioPage() {
                           <td className="px-4 py-3 text-center">
                             <div className="flex justify-center gap-1">
                               {podePagar && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setLancamentoParaPagar(lanc); setPagamentoModalOpen(true); }}
+                                  className="p-1 text-emerald-500 hover:bg-emerald-100 rounded-lg transition-colors"
+                                  title="Marcar como Pago"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </button>
+                              )}
+                              {!isBoletoLanc && lanc.status === "PENDENTE" && (
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setLancamentoParaPagar(lanc); setPagamentoModalOpen(true); }}
                                   className="p-1 text-emerald-500 hover:bg-emerald-100 rounded-lg transition-colors"

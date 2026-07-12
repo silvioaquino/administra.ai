@@ -132,7 +132,8 @@ export default function NfeXmlPage() {
           entrada: 0,
           saida: valorTotal,
           tipo: "COMPRA",
-          origemDestino: contaSelecionada?.nome || null
+          origemDestino: contaSelecionada?.nome || null,
+          origemXml: true
         })
       })
 

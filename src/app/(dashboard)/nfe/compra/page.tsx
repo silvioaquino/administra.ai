@@ -197,7 +197,8 @@ export default function CompraNfePage() {
           saida: valorTotal,
           tipo: "COMPRA",
           notaFiscalId: notaFiscalId,
-          origemDestino: contaSelecionada?.nome || null
+          origemDestino: contaSelecionada?.nome || null,
+          formaPagamento: formData.formaPagamento
         })
       })
 
