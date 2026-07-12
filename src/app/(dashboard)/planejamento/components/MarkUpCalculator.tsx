@@ -1,7 +1,6 @@
 // src/app/(dashboard)/planejamento/components/MarkUpCalculator.tsx
 "use client"
 
-import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -9,40 +8,33 @@ import { formatCurrency, formatPercentage } from "@/lib/utils"
 import { Calculator, TrendingUp, DollarSign, Factory } from "lucide-react"
 
 interface MarkUpCalculatorProps {
-  despesasFixasTotal: number
   despesasVariaveisPct: number
-  metaMensalTotal: number
   lucroDesejado: number
   markUp: number
   cmv: number
   pctFixas?: number
-  onMarkUpChange?: (markUp: number) => void
+  metaFaltando?: boolean
+  onLucroChange?: (value: number) => void
+  onLucroSave?: (value: number) => void
 }
 
 export function MarkUpCalculator({
-  despesasFixasTotal,
   despesasVariaveisPct,
-  metaMensalTotal,
-  lucroDesejado: lucroDesejadoInicial,
-  markUp: markUpInicial,
-  cmv: cmvInicial,
+  lucroDesejado,
+  markUp,
+  cmv,
   pctFixas: pctFixasProp,
-  onMarkUpChange,
+  metaFaltando = false,
+  onLucroChange,
+  onLucroSave,
 }: MarkUpCalculatorProps) {
-  const [lucroDesejado, setLucroDesejado] = useState(lucroDesejadoInicial)
-
-  // Usa o percentual passado (espelha o card Despesas Fixas); senão calcula do total
-  const pctFixas = pctFixasProp ?? (metaMensalTotal > 0 ? (despesasFixasTotal / metaMensalTotal) * 100 : 0)
-  const cmvCalculado = 100 - (pctFixas + despesasVariaveisPct + lucroDesejado)
-  const markUpCalculado = cmvCalculado > 0 ? 100 / cmvCalculado : 0
-
-  // Sobe o Mark-Up calculado para o card "Indicadores Ideais vs Atuais" sempre que mudar
-  useEffect(() => {
-    onMarkUpChange?.(markUpCalculado)
-  }, [markUpCalculado, onMarkUpChange])
+  // Valores vêm diretamente da API (fonte única de verdade), espelhando o Dashboard.
+  const pctFixas = pctFixasProp ?? 0
+  const cmvExibido = metaFaltando ? 0 : Math.max(0, cmv)
+  const markUpExibido = metaFaltando ? 0 : markUp
 
   function aplicarMarkUp() {
-    alert(`Mark-Up de ${markUpCalculado.toFixed(4)} aplicado!\n\nPreço de Venda = Custo do Produto × Mark-Up`)
+    alert(`Mark-Up de ${markUpExibido.toFixed(4)} aplicado!\n\nPreço de Venda = Custo do Produto × Mark-Up`)
   }
 
   return (
@@ -62,19 +54,25 @@ export function MarkUpCalculator({
               type="number"
               step="0.5"
               value={lucroDesejado}
-              onChange={(e) => setLucroDesejado(parseFloat(e.target.value))}
-              className="mt-1 rounded-lg border-gray-300 focus:ring-[#de4838]"
+              onChange={(e) => onLucroChange?.(Number(e.target.value) || 0)}
+              onBlur={(e) => onLucroSave?.(Number(e.target.value) || 0)}
+              className="mt-1 rounded-lg border-gray-300 bg-white focus:ring-[#de4838]"
             />
           </div>
+          {metaFaltando && (
+            <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-700">
+              Defina a meta do mês atual (aba Metas Mensais) para visualizar Mark-Up e CMV.
+            </div>
+          )}
           <div>
             <label className="text-sm font-medium text-gray-700">Mark-Up Calculado</label>
             <div className="mt-1 flex gap-2">
-              <Input 
-                value={markUpCalculado.toFixed(4)} 
-                readOnly 
+              <Input
+                value={markUpExibido.toFixed(4)}
+                readOnly
                 className="bg-gray-100 rounded-lg border-gray-200 font-mono"
               />
-              <Button 
+              <Button
                 onClick={aplicarMarkUp}
                 className="bg-[#de4838] hover:bg-[#c73d2e] rounded-lg"
               >
@@ -102,7 +100,7 @@ export function MarkUpCalculator({
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl bg-blue-50 p-3 text-center">
               <p className="text-xs text-gray-500 mb-1">CMV Calculado</p>
-              <p className="text-xl font-bold text-blue-600">{formatPercentage(Math.max(0, cmvCalculado))}</p>
+              <p className="text-xl font-bold text-blue-600">{formatPercentage(cmvExibido)}</p>
               <p className="text-xs text-gray-400 mt-1">= 100% - (Fixas% + Variáveis% + Lucro%)</p>
             </div>
             <div className="rounded-xl bg-amber-50 p-3 text-center">
@@ -111,14 +109,14 @@ export function MarkUpCalculator({
               <p className="text-xs text-gray-400 mt-1">Margem Ideal entre 35% e 45%</p>
             </div>
           </div>
-          
+
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-xs mb-1">
                 <span className="text-gray-600">CMV</span>
-                <span className="font-medium text-blue-600">{formatPercentage(Math.max(0, cmvCalculado))}</span>
+                <span className="font-medium text-blue-600">{formatPercentage(cmvExibido)}</span>
               </div>
-              <Progress value={Math.max(0, cmvCalculado)} className="h-2" />
+              <Progress value={cmvExibido} className="h-2" />
             </div>
             <div>
               <div className="flex justify-between text-xs mb-1">

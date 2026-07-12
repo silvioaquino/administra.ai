@@ -66,6 +66,7 @@ interface IndicadoresFinanceiros {
   despesasVariaveisPct: number
   metaMensalTotal: number
   cmv: number
+  pctFixas: number
 }
 
 interface MetaItem {
@@ -129,7 +130,8 @@ export default function DashboardPage() {
     despesasFixas: [],
     despesasVariaveisPct: 0,
     metaMensalTotal: 0,
-    cmv: 0
+    cmv: 0,
+    pctFixas: 0
   })
 
   useEffect(() => {
@@ -238,7 +240,8 @@ export default function DashboardPage() {
           despesasFixas: data.despesasFixas ?? [],
           despesasVariaveisPct: data.despesasVariaveisPct ?? 0,
           metaMensalTotal: data.metaMensalTotal ?? 0,
-          cmv: data.cmv ?? 0
+          cmv: data.cmv ?? 0,
+          pctFixas: data.pctFixas ?? 0
         })
       }
     } catch (error) {
@@ -708,11 +711,12 @@ export default function DashboardPage() {
 
         {/* Indicadores Financeiros */}
         <div className="mb-6">
-          <IndicadoresCard 
+          <IndicadoresCard
             despesasFixas={indicadores.despesasFixas}
             despesasVariaveisPct={indicadores.despesasVariaveisPct}
             metaMensalTotal={indicadores.metaMensalTotal}
             cmv={indicadores.cmv}
+            pctFixas={indicadores.pctFixas}
           />
         </div>
 

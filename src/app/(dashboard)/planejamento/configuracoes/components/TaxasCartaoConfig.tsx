@@ -17,7 +17,6 @@ interface TaxasConfig {
     credito: { infinitepay: number; stone: number; caixa: number }
     voucher: number
   }
-  aluguelMaquininhas: { stone1: number; stone2: number }
   manutencao: number
   simplesNacional: number
 }
@@ -248,24 +247,6 @@ export function TaxasCartaoConfig({ config, resultados, onUpdate, onSave, saving
                 step="0.1"
                 value={config.simplesNacional}
                 onChange={(e) => atualizarCampo("simplesNacional", Number(e.target.value))}
-              />
-            </div>
-            <div className="pt-2 border-t">
-              <Label>Aluguel Stone 1 (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={config.aluguelMaquininhas.stone1}
-                onChange={(e) => atualizarCampo("aluguelMaquininhas.stone1", Number(e.target.value))}
-              />
-            </div>
-            <div>
-              <Label>Aluguel Stone 2 (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={config.aluguelMaquininhas.stone2}
-                onChange={(e) => atualizarCampo("aluguelMaquininhas.stone2", Number(e.target.value))}
               />
             </div>
           </CardContent>

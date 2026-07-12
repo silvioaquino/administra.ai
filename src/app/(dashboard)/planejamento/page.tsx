@@ -10,7 +10,6 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
-import { calcularTotalDespesasVariaveis } from "@/lib/calculoDespesasVariaveis"
 import { toast } from 'sonner'
 
 // Components
@@ -85,6 +84,7 @@ export default function PlanejamentoPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [anoAtual, setAnoAtual] = useState(new Date().getFullYear())
+  const [indicadoresRefresh, setIndicadoresRefresh] = useState(0)
   const [metasMensais, setMetasMensais] = useState<MetaFaturamentoRow[]>([])
   const [acompanhamentos, setAcompanhamentos] = useState<Acompanhamento[]>([])
   const [despesasFixas, setDespesasFixas] = useState<DespesaFixa[]>([])
@@ -117,16 +117,15 @@ export default function PlanejamentoPage() {
     cmvMaximo: 0,
     pctFixas: 0,
     pctVariaveis: 0,
+    despesasVariaveisBase: 0,
     totalDespesasVariaveis: 0,
     despesasFixas: [] as DespesaFixa[],
-    folhaEncargosPercentual: 0
+    folhaEncargosPercentual: 0,
+    metaFaltando: false
   })
 
   // Estado para controlar períodos de metas no header
   const [periodosSelecionados, setPeriodosSelecionados] = useState<PeriodoRefeicao[]>([])
-
-  // Mark-Up calculado ao vivo no card "Mark-Up e Precificação" (espelhado no card Indicadores)
-  const [markUpLive, setMarkUpLive] = useState(0)
 
   const handleTotalsChange = (salarios: number, provisoes: Array<{nome: string, valor: number}>) => {
     setSalariosTotal(salarios)
@@ -166,6 +165,8 @@ export default function PlanejamentoPage() {
           ...totals
         })
       })
+      // Recalcular indicadores (cards Indicadores, CMV Máximo e Distribuição %)
+      setIndicadoresRefresh((k) => k + 1)
     } catch (error) {
       console.error("Erro ao salvar totais da folha:", error)
     }
@@ -183,26 +184,8 @@ export default function PlanejamentoPage() {
         setPeriodosSelecionados(['turnoUnico'])
       }
 
-      // 1. Carregar indicadores da API (inclui despesas fixas, variáveis, metas, etc)
-      const indicadoresResponse = await fetch(`/api/planejamento/indicadores-resumo?ano=${anoAtual}`)
-      const indicadoresData = await indicadoresResponse.json()
-
-      if (indicadoresData.success) {
-
-        setIndicadores({
-          metaMensalTotal: indicadoresData.metaMensalTotal || 0,
-          lucroDesejado: indicadoresData.lucroDesejado || 15,
-          markUp: indicadoresData.markUp || 0,
-          cmvMaximo: indicadoresData.cmv || 0,
-          pctFixas: indicadoresData.pctFixas || 0,
-          pctVariaveis: indicadoresData.despesasVariaveisPct || 0,
-          totalDespesasVariaveis: indicadoresData.totalDespesasVariaveis || 0,
-          despesasFixas: indicadoresData.despesasFixas || [],
-          folhaEncargosPercentual: indicadoresData.folhaEncargosPercentual || 0
-        })
-
-        setDespesasFixas(indicadoresData.despesasFixas || [])
-      }
+      // 1. Indicadores são buscados por um useEffect dedicado (abaixo),
+      // sincronizado com os cards Indicadores, CMV Máximo e Distribuição %.
 
       // 2. Carregar metas mensais (nova API planejamento-financeiro)
       const metasResponse = await fetch(`/api/planejamento-financeiro/faturamento?ano=${anoAtual}`)
@@ -274,12 +257,35 @@ export default function PlanejamentoPage() {
       console.error("Erro ao carregar dados:", error)
     } finally {
       setLoading(false)
+      setIndicadoresRefresh((k) => k + 1)
     }
   }, [anoAtual])
 
   useEffect(() => {
     carregarDados()
   }, [carregarDados])
+
+  // Busca os indicadores da API sempre que o refresh muda ou o ano muda.
+  // Centraliza a fonte de verdade para os cards Indicadores, CMV Máximo e
+  // Distribuição %, evitando que fiquem defasados em relação à busca do card Distribuição.
+  useEffect(() => {
+    let cancelado = false
+    async function buscarIndicadores() {
+      try {
+        const response = await fetch(`/api/planejamento/indicadores-resumo?ano=${anoAtual}`)
+        const data = await response.json()
+        if (!cancelado && data.success) {
+          aplicarIndicadores(data)
+        }
+      } catch (error) {
+        console.error("Erro ao carregar indicadores:", error)
+      }
+    }
+    buscarIndicadores()
+    return () => {
+      cancelado = true
+    }
+  }, [indicadoresRefresh, anoAtual])
 
   // Sincronizar activeTab com os períodos selecionados
   useEffect(() => {
@@ -306,6 +312,44 @@ export default function PlanejamentoPage() {
     } catch (error) {
       console.error("Erro ao sincronizar:", error)
       alert("❌ Erro ao sincronizar dados")
+    }
+  }
+
+  // Aplica os indicadores vindos da API (fonte única de verdade) no estado
+  function aplicarIndicadores(data: any) {
+    setIndicadores({
+      metaMensalTotal: data.metaMensalTotal || 0,
+      lucroDesejado: data.lucroDesejado || 15,
+      markUp: data.markUp || 0,
+      cmvMaximo: data.cmv || 0,
+      pctFixas: data.pctFixas || 0,
+      pctVariaveis: data.despesasVariaveisPct || 0,
+      despesasVariaveisBase: data.despesasVariaveisBase || 0,
+      totalDespesasVariaveis: data.totalDespesasVariaveis || 0,
+      despesasFixas: data.despesasFixas || [],
+      folhaEncargosPercentual: data.folhaEncargosPercentual || 0,
+      metaFaltando: !!data.metaFaltando
+    })
+    setDespesasFixas(data.despesasFixas || [])
+  }
+
+  // Atualização otimista do lucro desejado (resposta imediata na UI)
+  function handleLucroChange(value: number) {
+    setIndicadores(prev => ({ ...prev, lucroDesejado: value }))
+  }
+
+  // Persiste o lucro desejado e recalcula os indicadores a partir da API
+  async function handleLucroSave(value: number) {
+    try {
+      await fetch("/api/planejamento/lucro-desejado", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ano: anoAtual, lucroDesejado: value })
+      })
+      setIndicadoresRefresh((k) => k + 1)
+    } catch (error) {
+      console.error("Erro ao salvar lucro desejado:", error)
+      toast.error("Erro ao salvar o lucro desejado")
     }
   }
 
@@ -344,47 +388,11 @@ export default function PlanejamentoPage() {
     router.push(rota)
   }
 
-  // Encargos da folha salarial (mesmos componentes usados na tela de edição)
+  // Encargos da folha salarial (usado no card Despesas Variáveis)
   const encargosFolha =
     folhaSalarialTotais.totalDecimo + folhaSalarialTotais.totalFerias +
     folhaSalarialTotais.totalFgts + folhaSalarialTotais.totalInss +
     folhaSalarialTotais.totalInssPatronal
-
-  // Espelha o cálculo de ResultadosTaxas (sem aluguel): base de impostos/taxas + % folha (encargos)
-  const calculoDV = despesasVariaveisData?.config
-    ? calcularTotalDespesasVariaveis({
-        maquininhas: despesasVariaveisData.config.maquininhas,
-        distribuicaoVendas: despesasVariaveisData.config.distribuicaoVendas,
-        outrasTaxas: {
-          voucher: despesasVariaveisData.config.taxaVoucher,
-          simplesNacional: despesasVariaveisData.config.simplesNacional,
-          manutencao: despesasVariaveisData.config.manutencao,
-        },
-        faturamentoBase: despesasVariaveisData.faturamentoBase || indicadores.metaMensalTotal,
-        folhaSalarialTotalMensal: encargosFolha,
-      })
-    : null
-
-  // Percentual de Despesas Fixas espelhado do card DespesasFixasTable:
-  // (soma das despesas fixas + aluguel das maquininhas + total de salários) / meta do período atual
-  const aluguelMaquininhas = (despesasVariaveisData?.config?.maquininhas || [])
-    .filter((m) => m.ativo)
-    .reduce((sum, m) => sum + (m.aluguel || 0), 0)
-
-  const totalDespesasFixasCard =
-    (indicadores.despesasFixas || []).reduce((sum, d) => sum + (d.valor || 0), 0) +
-    aluguelMaquininhas +
-    (folhaSalarialTotais.totalSalarios || 0)
-
-  const metaTotalTab = indicadores.metaMensalTotal * (PERCENTUAIS_PADRAO[activeTab] || 100) / 100
-
-  const pctDespesasFixasCard = metaTotalTab > 0
-    ? Math.min((totalDespesasFixasCard / metaTotalTab) * 100, 10000)
-    : 0
-
-  // CMV calculado espelhado do card MarkUpCalculator (Custo Máximo com Produção):
-  // 100% - (Fixas% + Variáveis% + Lucro%)
-  const cmvCalculadoCard = 100 - (pctDespesasFixasCard + (calculoDV?.total ?? indicadores.pctVariaveis) + indicadores.lucroDesejado)
 
   const togglePeriodo = (periodo: PeriodoRefeicao) => {
     setPeriodosSelecionados(prev => {
@@ -465,14 +473,14 @@ export default function PlanejamentoPage() {
     },
     {
       title: "Mark-Up",
-      value: markUpLive.toFixed(2),
+      value: indicadores.metaFaltando ? "—" : indicadores.markUp.toFixed(2),
       icon: Calculator,
       gradient: "from-orange-500 to-orange-600",
       detail: "Fator multiplicador",
     },
     {
       title: "CMV Máximo",
-      value: formatPercentage(cmvCalculadoCard),
+      value: indicadores.metaFaltando ? "—" : formatPercentage(indicadores.cmvMaximo),
       icon: Percent,
       gradient: "from-purple-500 to-purple-600",
       detail: "Custo com Produção",
@@ -564,12 +572,13 @@ export default function PlanejamentoPage() {
         <div className="mt-8">
           <IndicadoresCard
             despesasFixas={indicadores.despesasFixas}
-            despesasVariaveisPct={calculoDV?.total ?? indicadores.pctVariaveis}
+            despesasVariaveisPct={indicadores.pctVariaveis}
             metaMensalTotal={indicadores.metaMensalTotal}
             lucroDesejado={indicadores.lucroDesejado}
-            markUp={markUpLive}
-            cmv={cmvCalculadoCard}
-            pctFixas={pctDespesasFixasCard}
+            markUp={indicadores.markUp}
+            cmv={indicadores.cmvMaximo}
+            pctFixas={indicadores.pctFixas}
+            metaFaltando={indicadores.metaFaltando}
           />
         </div>
 
@@ -606,7 +615,7 @@ export default function PlanejamentoPage() {
                 periodoAtual={activeTab}
                 percentualPeriodoSalvo={percentuaisPeriodos[activeTab]}
                 maquininhas={despesasVariaveisData?.config?.maquininhas || []}
-                totalSalarios={folhaSalarialTotais.totalSalarios}
+                totalSalarios={salariosTotal}
                 onSalvar={async (despesas, ano, _mes, percentualPeriodo) => {
                   try {
                     // 1. Salvar despesas fixas
@@ -652,7 +661,7 @@ export default function PlanejamentoPage() {
               />
               <div className="space-y-6">
                 <DespesasVariaveisTable
-                  percentual={calculoDV?.base ?? (indicadores.pctVariaveis || 0)}
+                  percentual={indicadores.despesasVariaveisBase ?? indicadores.pctVariaveis}
                   metaMensalTotal={despesasVariaveisData?.faturamentoBase || indicadores.metaMensalTotal}
                   title="Despesas Variáveis"
                   onEdit={() => navegarPara("/planejamento/editar/despesas-variaveis")}
@@ -660,10 +669,8 @@ export default function PlanejamentoPage() {
                 />
                 <GraficosDistribuicao
                   tipo={((activeTab === 'turnoUnico' || activeTab === 'cafe') ? 'almoco' : activeTab) as 'almoco' | 'janta'}
-                  despesasFixasPct={pctDespesasFixasCard}
-                  despesasVariaveisPct={calculoDV?.total ?? indicadores.pctVariaveis}
-                  lucroDesejado={indicadores.lucroDesejado}
-                  cmv={cmvCalculadoCard}
+                  ano={anoAtual}
+                  refreshKey={indicadoresRefresh}
                 />
               </div>
             </div>
@@ -733,14 +740,14 @@ export default function PlanejamentoPage() {
         {/* Mark-Up & Custos */}
         <div className="mt-8">
           <MarkUpCalculator
-            despesasFixasTotal={indicadores.despesasFixas.reduce((s, d) => s + d.valor, 0)}
-            despesasVariaveisPct={calculoDV?.total ?? indicadores.pctVariaveis}
-            metaMensalTotal={indicadores.metaMensalTotal}
+            despesasVariaveisPct={indicadores.pctVariaveis}
             lucroDesejado={indicadores.lucroDesejado}
             markUp={indicadores.markUp}
             cmv={indicadores.cmvMaximo}
-            pctFixas={pctDespesasFixasCard}
-            onMarkUpChange={setMarkUpLive}
+            pctFixas={indicadores.pctFixas}
+            metaFaltando={indicadores.metaFaltando}
+            onLucroChange={handleLucroChange}
+            onLucroSave={handleLucroSave}
           />
         </div>
       </div>

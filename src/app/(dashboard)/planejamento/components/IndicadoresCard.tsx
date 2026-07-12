@@ -2,6 +2,7 @@
 "use client"
 
 import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatPercentage } from "@/lib/utils"
 import { TrendingUp, Home, TrendingDown, Factory, DollarSign, Activity } from "lucide-react"
 
@@ -13,6 +14,7 @@ interface IndicadoresCardProps {
   markUp: number
   cmv: number
   pctFixas?: number
+  metaFaltando?: boolean
 }
 
 export function IndicadoresCard({
@@ -22,8 +24,29 @@ export function IndicadoresCard({
   lucroDesejado,
   markUp,
   cmv,
-  pctFixas: pctFixasProp
+  pctFixas: pctFixasProp,
+  metaFaltando = false
 }: IndicadoresCardProps) {
+
+  if (metaFaltando) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-gray-100 p-3 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-[#de4838]" />
+            <h3 className="font-semibold text-gray-800 text-sm">Indicadores Ideais vs Atuais</h3>
+          </div>
+        </div>
+        <div className="p-4">
+          <Alert variant="warning">
+            <AlertDescription>
+              Defina a meta do mês atual (aba &quot;Metas Mensais&quot;) para visualizar CMV, Mark-up e demais indicadores.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    )
+  }
   // Usar o valor da prop se fornecido, senão calcular
   const pctFixas = pctFixasProp ?? (() => {
     const totalFixas = despesasFixas.reduce((s, d) => s + d.valor, 0)
@@ -109,10 +132,10 @@ export function IndicadoresCard({
       valor: despesasVariaveisPct,
       unidade: "%",
       min: 5,
-      max: 25,
-      tooltip: "Ideal: entre 5% e 15% do faturamento",
-      getStatus: (v: number) => getStatusType(v, 5, 25),
-      isIdeal: (v: number) => v >= 5 && v <= 25
+      max: 20,
+      tooltip: "Ideal: entre 5% e 20% do faturamento",
+      getStatus: (v: number) => getStatusType(v, 5, 20),
+      isIdeal: (v: number) => v >= 5 && v <= 20
     },
     {
       nome: "CMV (Custo Produção)",

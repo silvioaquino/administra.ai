@@ -150,7 +150,6 @@ export async function POST(request: NextRequest) {
         credito: { infinitepay: 3.15, stone: 6.44, caixa: 5.78 },
         voucher: 7.0
       },
-      aluguelMaquininhas: { stone1: 59.90, stone2: 19.90 },
       manutencao: 1.0,
       simplesNacional: 8.0
     }

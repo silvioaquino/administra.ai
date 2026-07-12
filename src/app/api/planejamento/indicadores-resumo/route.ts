@@ -3,63 +3,20 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { calcularTotalDespesasVariaveis } from "@/lib/calculoDespesasVariaveis"
 
-// Função para calcular despesas variáveis (compatível com nova estrutura)
-function calcularDespesasVariaveis(config: any, faturamentoBase: number) {
-  // Suportar ambas as estruturas: com outrasTaxas OU sem (campos diretos)
-  const outrasTaxas = config.outrasTaxas || {
-    voucher: config.taxaVoucher || 7.0,
-    simplesNacional: config.simplesNacional || 0,
-    manutencao: config.manutencao || 0
-  }
+interface DespesasVariaveisDados {
+  maquininhas?: Array<{ id?: string; nome?: string; taxaDebito: number; taxaCredito: number; aluguel: number; ativo: boolean }>
+  distribuicaoVendas?: { debito: number; credito: number; voucher: number }
+  taxaVoucher?: number
+  simplesNacional?: number
+  manutencao?: number
+}
 
-  const maquininhasAtivas = config.maquininhas?.filter((m: any) => m.ativo) ?? []
-
-  if (maquininhasAtivas.length === 0) {
-    return {
-      debitoMedia: 0,
-      creditoMedia: 0,
-      taxaMediaGeral: 0,
-      aluguelTotal: 0,
-      percentualAluguel: 0,
-      totalDespesasVariaveis: 0
-    }
-  }
-
-  // Distribuição igual entre maquininhas ativas
-  const distribuicaoMaquininhas = 100 / maquininhasAtivas.length
-
-  let debitoMedia = 0
-  let creditoMedia = 0
-  let aluguelTotal = 0
-
-  for (const maquina of maquininhasAtivas) {
-    const peso = distribuicaoMaquininhas / 100
-    debitoMedia += maquina.taxaDebito * peso
-    creditoMedia += maquina.taxaCredito * peso
-    aluguelTotal += maquina.aluguel
-  }
-
-  const distribuicao = config.distribuicaoVendas || { debito: 0, credito: 0, voucher: 0 }
-  const percDebito = (distribuicao.debito || 0) / 100
-  const percCredito = (distribuicao.credito || 0) / 100
-  const percVoucher = (distribuicao.voucher || 0) / 100
-
-  // Taxa voucher padrão
-  const taxaVoucher = outrasTaxas.voucher || 7.0
-
-  const taxaMediaGeral = (debitoMedia * percDebito) + (creditoMedia * percCredito) + (taxaVoucher * percVoucher)
-  const percentualAluguel = faturamentoBase > 0 ? (aluguelTotal / faturamentoBase) * 100 : 0
-  const totalDespesasVariaveis = (outrasTaxas.simplesNacional || 0) + taxaMediaGeral + (outrasTaxas.manutencao || 0) + percentualAluguel
-
-  return {
-    debitoMedia,
-    creditoMedia,
-    taxaMediaGeral,
-    aluguelTotal,
-    percentualAluguel,
-    totalDespesasVariaveis
-  }
+interface ConfigMaquininhas {
+  maquininhas: Array<{ taxaDebito: number; taxaCredito: number; aluguel: number; ativo: boolean }>
+  distribuicaoVendas: { debito: number; credito: number; voucher: number }
+  outrasTaxas: { voucher: number; simplesNacional: number; manutencao: number }
 }
 
 export async function GET(request: Request) {
@@ -86,9 +43,20 @@ export async function GET(request: Request) {
       }
     })
 
-    // Usar metaTotal diretamente se disponível
-    const metaMensalTotal = metaAtual?.metaTotal || 0
-    const lucroDesejado = 15 // Valor padrão (não está no PlanejamentoFaturamentoNovo)
+    // Usar metaTotal diretamente se disponível.
+    // Sem "default silencioso": se o mês atual não tem meta, sinaliza metaFaltando (item 3).
+    const metaDefinida = !!metaAtual && (Number(metaAtual.metaTotal) || 0) > 0
+    const metaMensalTotal = metaDefinida ? Number(metaAtual!.metaTotal) : 0
+
+    // Ler lucroDesejado persistido (ano-escopo) — elimina o magic number 15
+    const lucroConfig = await prisma.planejamentoConfig.findFirst({
+      where: {
+        userId,
+        tipo: "lucro_desejado",
+        anoReferencia: ano
+      }
+    })
+    const lucroDesejado = (lucroConfig?.dados as { lucroDesejado?: number } | null)?.lucroDesejado ?? 15
 
     // 2. Buscar despesas fixas (DA NOVA TABELA primeiro, depois fallback para tabela antiga)
     const despesasFixasNova = await prisma.planejamentoDespesaFixaNovo.findMany({
@@ -137,75 +105,111 @@ export async function GET(request: Request) {
       }
     }
 
-    // 3. Buscar configuração de despesas variáveis (usando API NOVA)
-    const taxasResponse = await fetch(
-      `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/planejamento-financeiro/despesas-variaveis?ano=${ano}&mes=${mesAtual}`,
-      {
-        headers: {
-          cookie: request.headers.get('cookie') || ''
+    // 3. Folha salarial (total de salários + encargos) — fonte enriquecida dos indicadores
+    const folha = await prisma.planejamentoFolhaSalarial.findUnique({
+      where: {
+        empresaId_userId_anoReferencia: {
+          empresaId,
+          userId,
+          anoReferencia: ano
         }
       }
-    )
-    const taxasData = await taxasResponse.json()
-
-    // Configuração padrão com estrutura compatível para DespesasVariaveisTable
-    const configMaquininhas = taxasData.success && taxasData.dados ? {
-      maquininhas: taxasData.dados.config?.maquininhas || [],
-      distribuicaoVendas: taxasData.dados.config?.distribuicaoVendas || { debito: 40, credito: 50, voucher: 10 },
-      outrasTaxas: {
-        voucher: taxasData.dados.config?.taxaVoucher || 7.0,
-        simplesNacional: taxasData.dados.config?.simplesNacional || 0,
-        manutencao: taxasData.dados.config?.manutencao || 0
-      }
-    } : {
-      maquininhas: [
-        { id: "1", nome: "InfinitePay", taxaDebito: 1.37, taxaCredito: 3.15, aluguel: 0, ativo: true },
-        { id: "2", nome: "Stone", taxaDebito: 2.34, taxaCredito: 6.44, aluguel: 79.80, ativo: true },
-        { id: "3", nome: "Caixa", taxaDebito: 4.48, taxaCredito: 5.78, aluguel: 0, ativo: true },
-      ],
-      distribuicaoVendas: { debito: 40, credito: 50, voucher: 10 },
-      outrasTaxas: {
-        voucher: 7.0,
-        simplesNacional: 8.0,
-        manutencao: 1.0
-      }
-    }
-
-    // 4. Calcular despesas variáveis usando a MESMA função do page.tsx
-    // Usar meta do mês atual
-    const referenciaCalculo = metaMensalTotal || 52000
-    const despesasVariaveisCalculadas = calcularDespesasVariaveis(configMaquininhas, referenciaCalculo)
-    const despesasVariaveisPct = despesasVariaveisCalculadas.totalDespesasVariaveis
-
-    // 5. Calcular percentual de despesas fixas
-    // Usar a mesma referência (meta do mês atual ou 52000 como fallback)
-    const totalFixas = despesasFixas.reduce((sum, d) => sum + Number(d.valor ?? 0), 0)
-    const pctFixas = referenciaCalculo > 0 ? (totalFixas / referenciaCalculo) * 100 : 0
-
-    // 6. Calcular CMV e Mark-Up
-    const cmv = 100 - (pctFixas + despesasVariaveisPct + lucroDesejado)
-    const markUp = cmv > 0 ? 100 / cmv : 0
-
-    console.log("📊 Indicadores calculados:", {
-      totalFixas,
-      referenciaCalculo,
-      pctFixas: pctFixas.toFixed(2) + '%',
-      despesasVariaveisPct: despesasVariaveisPct.toFixed(2) + '%',
-      totalDespesasVariaveis: despesasVariaveisCalculadas.totalDespesasVariaveis,
-      lucroDesejado,
-      cmv: cmv.toFixed(2) + '%',
-      markUp: markUp.toFixed(2)
     })
+    const totalSalarios = Number(folha?.totalSalarios) || 0
+    const encargosFolha =
+      (Number(folha?.totalDecimo) || 0) +
+      (Number(folha?.totalFerias) || 0) +
+      (Number(folha?.totalFgts) || 0) +
+      (Number(folha?.totalInss) || 0) +
+      (Number(folha?.totalInssPatronal) || 0)
+
+    // 4. Buscar configuração de despesas variáveis DIRETAMENTE do banco
+    // (autônomo — sem fetch interno a outra API)
+    const dvConfig = await prisma.planejamentoConfig.findFirst({
+      where: {
+        userId,
+        tipo: "despesas_variaveis",
+        anoReferencia: ano
+      }
+    })
+    const dvResultado = await prisma.despesasVariaveisResultado.findFirst({
+      where: {
+        userId,
+        ano,
+        mes: mesAtual
+      }
+    })
+
+    // Configuração padrão (mantém fallback caso não haja config salva)
+    const dvDados = (dvConfig?.dados as DespesasVariaveisDados) || {}
+    const configMaquininhas: ConfigMaquininhas = dvConfig?.dados
+      ? {
+          maquininhas: dvDados.maquininhas || [],
+          distribuicaoVendas: dvDados.distribuicaoVendas || { debito: 40, credito: 50, voucher: 10 },
+          outrasTaxas: {
+            voucher: dvDados.taxaVoucher ?? 7.0,
+            simplesNacional: dvDados.simplesNacional ?? 0,
+            manutencao: dvDados.manutencao ?? 0
+          }
+        }
+      : {
+          maquininhas: [
+            { id: "1", nome: "InfinitePay", taxaDebito: 1.37, taxaCredito: 3.15, aluguel: 0, ativo: true },
+            { id: "2", nome: "Stone", taxaDebito: 2.34, taxaCredito: 6.44, aluguel: 79.80, ativo: true },
+            { id: "3", nome: "Caixa", taxaDebito: 4.48, taxaCredito: 5.78, aluguel: 0, ativo: true },
+          ],
+          distribuicaoVendas: { debito: 40, credito: 50, voucher: 10 },
+          outrasTaxas: {
+            voucher: 7.0,
+            simplesNacional: 8.0,
+            manutencao: 1.0
+          }
+        }
+
+    // 5. Cálculo enriquecido (mesma fonte das telas) -------------------------
+    // % Fixas inclui aluguel das máquinas + salários sobre a meta mensal total
+    const aluguelMaquininhas = configMaquininhas.maquininhas
+      .filter((m) => m.ativo)
+      .reduce((sum, m) => sum + (m.aluguel || 0), 0)
+
+    const totalFixas = despesasFixas.reduce((sum, d) => sum + Number(d.valor ?? 0), 0)
+    const totalDespesasFixas = totalFixas + aluguelMaquininhas + totalSalarios
+    const pctFixas = metaMensalTotal > 0 ? (totalDespesasFixas / metaMensalTotal) * 100 : 0
+
+    // Despesas variáveis incluem encargos da folha salarial (espelha o client).
+    // faturamentoBase vem do resultado salvo (ou da meta mensal como fallback).
+    const faturamentoBase = dvResultado?.faturamentoBase != null
+      ? Number(dvResultado.faturamentoBase)
+      : metaMensalTotal
+    const calculoDV = calcularTotalDespesasVariaveis({
+      maquininhas: configMaquininhas.maquininhas,
+      distribuicaoVendas: configMaquininhas.distribuicaoVendas,
+      outrasTaxas: configMaquininhas.outrasTaxas,
+      faturamentoBase,
+      folhaSalarialTotalMensal: encargosFolha
+    })
+    const folhaEncargosPercentual = metaMensalTotal > 0 ? (encargosFolha / metaMensalTotal) * 100 : 0
+    const despesasVariaveisPct = calculoDV.total
+    const despesasVariaveisBase = calculoDV.base
+
+    // 6. Calcular CMV e Mark-Up (espelha o card Mark-Up e Precificação)
+    // Se a meta do mês não está definida, não calcula (evita default silencioso de 0)
+    const cmv = metaDefinida ? Math.max(0, 100 - (pctFixas + despesasVariaveisPct + lucroDesejado)) : null
+    const markUp = metaDefinida && cmv !== null && cmv > 0 ? 100 / cmv : null
 
     return NextResponse.json({
       success: true,
+      metaFaltando: !metaDefinida,
       despesasFixas: despesasFixas.map(d => ({ nome: d.nome, valor: Number(d.valor) })),
       despesasVariaveisPct,
-      totalDespesasVariaveis: despesasVariaveisCalculadas.totalDespesasVariaveis,
-      metaMensalTotal: referenciaCalculo,
-      cmv: Math.max(0, cmv),
+      despesasVariaveisBase,
+      totalDespesasVariaveis: calculoDV.total,
+      metaMensalTotal,
+      cmv: cmv === null ? null : Math.max(0, cmv),
       pctFixas,
-      markUp
+      markUp,
+      lucroDesejado,
+      folhaEncargosPercentual
     })
 
   } catch (error) {

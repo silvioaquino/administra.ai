@@ -98,11 +98,10 @@ export default function NovaFichaTecnicaPage() {
   async function carregarPercentuaisDespesas() {
     try {
       const anoAtual = new Date().getFullYear()
-      const response = await fetch(`/api/planejamento/despesas-variaveis?ano=${anoAtual}`)
+      const response = await fetch(`/api/planejamento/indicadores-resumo?ano=${anoAtual}`)
       const data = await response.json()
-      if (data.success && data.dados) {
-        const total = data.dados.reduce((sum: number, item: any) => sum + (item.percentual || 0), 0)
-        setDespesasVariaveisPercentual(total)
+      if (data.success && data.despesasVariaveisPct != null) {
+        setDespesasVariaveisPercentual(data.despesasVariaveisPct)
       }
     } catch (error) {
       console.error("Erro ao carregar percentuais:", error)
