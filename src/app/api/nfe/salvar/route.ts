@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { ProductNormalizationService } from '@/lib/services/product-normalization.service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,6 +43,30 @@ export async function POST(request: NextRequest) {
     const [year, month, day] = nota.data_emissao.split('-').map(Number)
     const dataEmissao = new Date(year, month - 1, day)
 
+    // Normalizar produtos (GTIN -> Open Food Facts -> fallback local).
+    // Isolado da transação: qualquer falha NÃO bloqueia o salvamento da nota.
+    const produtosNormalizados = produtos.map((p: any) =>
+      ProductNormalizationService.fallbackLocal({
+        descricao: p.descricao,
+        codigoBarras: p.codigoBarras,
+        unidade: p.unidade,
+      })
+    )
+    try {
+      const normalizados = await ProductNormalizationService.normalizarLote(
+        produtos.map((p: any) => ({
+          descricao: p.descricao,
+          codigoBarras: p.codigoBarras,
+          unidade: p.unidade,
+        }))
+      )
+      normalizados.forEach((n, i) => {
+        produtosNormalizados[i] = n
+      })
+    } catch (error) {
+      console.warn('[NFe] Normalização falhou; usando fallback local para todos os itens', error)
+    }
+
     // Criar a nota fiscal com produtos e pagamento
     const notaFiscal = await prisma.notaFiscal.create({
       data: {
@@ -55,20 +80,31 @@ export async function POST(request: NextRequest) {
         nomeEmitente: nota.nome_emitente,
         valorTotal: valorTotal || nota.valor_total,
         produtos: {
-          create: produtos.map((p: any) => ({
-            userId: userId,
-            empresaId: empresaId,
-            codigo: p.codigo || '',
-            descricao: p.descricao,
-            unidade: p.unidade || 'UN',
-            quantidade: p.quantidade || 0,
-            valorUnitario: p.valor_unitario || 0,
-            valorTotal: p.valor_total || 0,
-            fornecedor: nota.nome_emitente || '',
-            dataCompra: new Date(dataCompra),
-            precoVenda: (p.valor_unitario || 0) * 1.3,
-            formaPagamento: formaPagamento || 'À vista'
-          }))
+          create: produtos.map((p: any, i: number) => {
+            const n = produtosNormalizados[i]
+            return {
+              userId: userId,
+              empresaId: empresaId,
+              codigo: p.codigo || '',
+              descricao: p.descricao,
+              codigoBarras: n.codigoBarras || p.codigoBarras || null,
+              nomeNormalizado: n.nomeNormalizado,
+              marca: n.marca,
+              categoriaSugestao: n.categoria,
+              unidadeMedida: n.unidade,
+              fonteDados: n.fonteDados,
+              precisaRevisao: n.precisaRevisao,
+              normalizadoEm: n.normalizadoEm,
+              unidade: p.unidade || 'UN',
+              quantidade: p.quantidade || 0,
+              valorUnitario: p.valor_unitario || 0,
+              valorTotal: p.valor_total || 0,
+              fornecedor: nota.nome_emitente || '',
+              dataCompra: new Date(dataCompra),
+              precoVenda: (p.valor_unitario || 0) * 1.3,
+              formaPagamento: formaPagamento || 'À vista',
+            }
+          })
         },
         pagamentos: {
           create: [{

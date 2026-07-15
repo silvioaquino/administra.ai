@@ -1,0 +1,50 @@
+
+> administra.ai@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.10 C:/Dev.em.Transição/Sistemas/Sistema-Administra.ai/administra.ai
+
+ ❯ src/__tests__/unit/conversion.service.test.ts (0 test)
+ ❯ src/__tests__/unit/local-normalizer.test.ts (6 tests | 1 failed) 55ms
+     × remove unidade/quantidade e aplica Title Case 32ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/unit/conversion.service.test.ts [ src/__tests__/unit/conversion.service.test.ts ]
+ReferenceError: describe is not defined
+ ❯ src/__tests__/unit/conversion.service.test.ts:3:1
+      1| import { ConversionService } from '@/lib/services/conversion.service'
+      2|
+      3| describe('ConversionService', () => {
+       | ^
+      4|   describe('convertToGrams', () => {
+      5|     it('should convert KG to grams', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/unit/local-normalizer.test.ts > local-normalizer > remove unidade/quantidade e aplica Title Case
+AssertionError: expected 'Sabão Em Pó' to be 'Sabão Pó' // Object.is equality
+
+Expected: "Sabão Pó"
+Received: "Sabão Em Pó"
+
+ ❯ src/__tests__/unit/local-normalizer.test.ts:12:45
+     10|   it('remove unidade/quantidade e aplica Title Case', () => {
+     11|     expect(limparTexto('LEITE INTEGRAL 1L')).toBe('Leite Integral')
+     12|     expect(limparTexto('SABÃO EM PÓ 500G')).toBe('Sabão Pó')
+       |                                             ^
+     13|   })
+     14|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 4 passed (6)
+      Tests  1 failed | 29 passed (30)
+   Start at  17:27:40
+   Duration  4.99s (transform 2.68s, setup 0ms, import 2.33s, tests 3.12s, environment 3ms)
+

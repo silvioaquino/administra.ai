@@ -10,6 +10,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
+import { UnitQuantityInput } from "@/components/fichas-tecnicas/UnitQuantityInput"
+import { CostBreakdown } from "@/components/fichas-tecnicas/CostBreakdown"
+import { ConversionService } from "@/lib/services/conversion.service"
+import { UnitType } from "@/types/ficha-tecnica"
 
 interface Produto {
   id: number
@@ -19,6 +23,9 @@ interface Produto {
   preco_venda: number
   unidade: string
   quantidade: number
+  valorUnitario: number
+  pesoUnitario?: number
+  densidade?: number
 }
 
 interface Ficha {
@@ -61,6 +68,7 @@ export default function EditarFichaTecnicaPage() {
   const [selectedProdutoId, setSelectedProdutoId] = useState("")
   const [selectedFichaId, setSelectedFichaId] = useState("")
   const [quantidade, setQuantidade] = useState(1)
+  const [unidadeReceita, setUnidadeReceita] = useState<UnitType>('UN')
 
   const [despesasFixasPercentual, setDespesasFixasPercentual] = useState(25)
   const [despesasVariaveisPercentual, setDespesasVariaveisPercentual] = useState(10.87)
@@ -126,7 +134,10 @@ export default function EditarFichaTecnicaPage() {
       if (data.success) {
         const produtosFormatados = data.data.map((p: any) => ({
           ...p,
-          precoVenda: p.precoVenda || p.preco_venda || 0
+          precoVenda: p.precoVenda || p.preco_venda || 0,
+          valorUnitario: Number(p.valorUnitario) || 0,
+          pesoUnitario: p.pesoUnitario != null ? Number(p.pesoUnitario) : undefined,
+          densidade: p.densidade != null ? Number(p.densidade) : undefined,
         }))
         setProdutos(produtosFormatados)
       }
@@ -173,15 +184,33 @@ export default function EditarFichaTecnicaPage() {
     const produto = produtos.find(p => p.id === parseInt(selectedProdutoId))
     if (!produto) return
 
-    const valorUnitario = produto.precoVenda || produto.preco_venda || 0
-    const custo = quantidade * valorUnitario
+    const valorUnitario = Number(produto.valorUnitario) || 0
+
+    let custo: number
+    try {
+      const result = ConversionService.calculateConsumption(
+        quantidade,
+        unidadeReceita,
+        {
+          purchaseUnit: (produto.unidade as UnitType) || 'UN',
+          purchaseQuantity: Number(produto.quantidade) || 1,
+          unitPrice: valorUnitario,
+          pesoUnitario: produto.pesoUnitario ? Number(produto.pesoUnitario) : undefined,
+          densidade: produto.densidade ? Number(produto.densidade) : undefined,
+        }
+      )
+      custo = result.cost
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Erro ao calcular custo do ingrediente")
+      return
+    }
 
     const novoIngrediente: Ingrediente = {
       id: Date.now().toString(),
       produtoId: produto.id,
       nome: produto.nome || produto.descricao,
       quantidade,
-      unidade: produto.unidade || "UN",
+      unidade: unidadeReceita,
       valorUnitario,
       custo,
       isProdutoAcabado: false
@@ -190,6 +219,7 @@ export default function EditarFichaTecnicaPage() {
     setIngredientes([...ingredientes, novoIngrediente])
     setSelectedProdutoId("")
     setQuantidade(1)
+    setUnidadeReceita('UN')
   }
 
   function adicionarProdutoAcabado() {
@@ -230,6 +260,51 @@ export default function EditarFichaTecnicaPage() {
 
   const custoTotal = ingredientes.reduce((sum, i) => sum + i.custo, 0)
   const custoPorPorcao = custoTotal / formData.rendimentoPorcoes
+
+  const custoItems = ingredientes
+    .map((ing) => {
+      if (ing.isProdutoAcabado || !ing.produtoId) {
+        return {
+          itemId: ing.id,
+          productName: ing.nome,
+          quantity: ing.quantidade,
+          unitUsed: ing.unidade,
+          packagesUsed: ing.quantidade,
+          cost: ing.custo,
+          isFractional: false,
+          formatted: { grams: "-", packages: `${ing.quantidade} ${ing.unidade}`, cost: formatCurrency(ing.custo) },
+        }
+      }
+      const prod = produtos.find((p) => p.id === ing.produtoId)
+      if (!prod) return null
+      try {
+        const r = ConversionService.calculateConsumption(
+          ing.quantidade,
+          (ing.unidade as UnitType) || "UN",
+          {
+            purchaseUnit: (prod.unidade as UnitType) || "UN",
+            purchaseQuantity: Number(prod.quantidade) || 1,
+            unitPrice: Number(prod.valorUnitario) || 0,
+            pesoUnitario: prod.pesoUnitario ? Number(prod.pesoUnitario) : undefined,
+            densidade: prod.densidade ? Number(prod.densidade) : undefined,
+          }
+        )
+        return {
+          itemId: ing.id,
+          productName: ing.nome,
+          quantity: ing.quantidade,
+          unitUsed: ing.unidade,
+          packagesUsed: r.packagesUsed,
+          cost: r.cost,
+          isFractional: r.isFractional,
+          formatted: r.formatted,
+        }
+      } catch {
+        return null
+      }
+    })
+    .filter((i): i is NonNullable<typeof i> => i !== null)
+
   const lucro = formData.precoVenda - custoPorPorcao - (formData.precoVenda * despesasFixasPercentual / 100) - (formData.precoVenda * despesasVariaveisPercentual / 100)
   const margem = formData.precoVenda > 0 ? (lucro / formData.precoVenda) * 100 : 0
   
@@ -413,7 +488,11 @@ export default function EditarFichaTecnicaPage() {
                     <select
                       className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
                       value={selectedProdutoId}
-                      onChange={(e) => setSelectedProdutoId(e.target.value)}
+                      onChange={(e) => {
+                        setSelectedProdutoId(e.target.value)
+                        const p = produtos.find(prod => prod.id === parseInt(e.target.value))
+                        setUnidadeReceita((p?.unidade as UnitType) || 'UN')
+                      }}
                     >
                       <option value="">Selecione um produto...</option>
                       {produtos.map((prod) => (
@@ -426,7 +505,21 @@ export default function EditarFichaTecnicaPage() {
                       <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  {produtoSelecionado ? (
+                    <UnitQuantityInput
+                      value={{ quantity: quantidade, unit: unidadeReceita }}
+                      onChange={({ quantity, unit }) => { setQuantidade(quantity); setUnidadeReceita(unit) }}
+                      product={{
+                        id: produtoSelecionado.id,
+                        descricao: produtoSelecionado.nome || produtoSelecionado.descricao,
+                        unidade: produtoSelecionado.unidade || 'UN',
+                        quantidade: produtoSelecionado.quantidade || 1,
+                        valorUnitario: produtoSelecionado.valorUnitario || 0,
+                        pesoUnitario: produtoSelecionado.pesoUnitario,
+                        densidade: produtoSelecionado.densidade,
+                      }}
+                    />
+                  ) : (
                     <Input
                       type="number"
                       step="0.001"
@@ -435,16 +528,16 @@ export default function EditarFichaTecnicaPage() {
                       onChange={(e) => setQuantidade(parseFloat(e.target.value))}
                       className="flex-1 rounded-lg border-gray-200 focus:ring-[#de4838]"
                     />
-                    <Button 
-                      type="button" 
-                      onClick={adicionarIngrediente} 
-                      disabled={!selectedProdutoId}
-                      className="bg-[#de4838] hover:bg-[#c73d2e] rounded-lg"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Adicionar
-                    </Button>
-                  </div>
+                  )}
+                  <Button
+                    type="button"
+                    onClick={adicionarIngrediente}
+                    disabled={!selectedProdutoId}
+                    className="bg-[#de4838] hover:bg-[#c73d2e] rounded-lg"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Adicionar
+                  </Button>
                   {produtoSelecionado && (
                     <div className="text-xs text-gray-500 bg-gray-100 rounded-lg p-2">
                       Preço unitário: {formatCurrency(getPrecoProduto(produtoSelecionado))}
@@ -580,6 +673,18 @@ export default function EditarFichaTecnicaPage() {
               </div>
             </div>
           </div>
+
+          {/* Detalhamento de Custos */}
+          {ingredientes.length > 0 && (
+            <div className="mt-6">
+              <CostBreakdown
+                items={custoItems}
+                totalCost={custoTotal}
+                costPerPortion={custoPorPorcao}
+                rendimento={formData.rendimentoPorcoes}
+              />
+            </div>
+          )}
 
           {/* Análise Financeira */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">

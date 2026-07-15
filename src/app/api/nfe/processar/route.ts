@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { ProductNormalizationService } from '@/lib/services/product-normalization.service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -109,6 +110,9 @@ function extrairDadosDoXML(xml: string) {
     const descricao = extractTag(prodSection, 'xProd')
     const ncm = extractTag(prodSection, 'NCM')
     const unidade = extractTag(prodSection, 'uCom') || extractTag(prodSection, 'uTrib') || 'UN'
+    const cEAN = extractTag(prodSection, 'cEAN')
+    const cEANTrib = extractTag(prodSection, 'cEANTrib')
+    const codigoBarras = ProductNormalizationService.validarGtin(cEAN) ?? ProductNormalizationService.validarGtin(cEANTrib)
     const quantidade = extractNumber(prodSection, 'qCom') || extractNumber(prodSection, 'qTrib')
     const valorUnitario = extractNumber(prodSection, 'vUnCom') || extractNumber(prodSection, 'vUnTrib')
     const valorTotalProduto = extractNumber(prodSection, 'vProd')
@@ -117,6 +121,7 @@ function extrairDadosDoXML(xml: string) {
       produtos.push({
         codigo,
         descricao,
+        codigoBarras,
         ncm,
         unidade,
         quantidade,

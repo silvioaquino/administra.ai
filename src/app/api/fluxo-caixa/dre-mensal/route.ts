@@ -217,28 +217,35 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    // Agrupar produtos por descrição com valores por mês
-    const produtosAgrupados: Record<string, { id: number; descricao: string; valoresPorMes: Record<number, number>; origem: string }[]> = {};
+    // Agrupar produtos pelo nome normalizado (nomeNormalizado do banco),
+    // de modo que produtos iguais com descrições diferentes sejam unificados.
+    // Produtos sem nomeNormalizado são marcados como "não agrupados" (agrupado: false).
+    const produtosAgrupados: Record<string, { id: number; descricao: string; valoresPorMes: Record<number, number>; origem: string; agrupado: boolean }[]> = {};
     for (const produto of produtos) {
       if (produto.dataCompra) {
         const mes = produto.dataCompra.getMonth() + 1;
         const valor = Number(produto.valorTotal || 0);
-        const descricaoNormalizada = produto.descricao.trim().toLowerCase();
+        const nomeNormalizado = produto.nomeNormalizado?.trim();
+        const agrupado = Boolean(nomeNormalizado);
+        // Agrupados: uma chave por nome normalizado.
+        // Não agrupados: chave única por produto (não unifica com ninguém).
+        const chaveAgrupamento = agrupado ? nomeNormalizado! : `__nao-agrupado-${produto.id}`;
 
-        if (!produtosAgrupados[descricaoNormalizada]) {
-          produtosAgrupados[descricaoNormalizada] = [];
+        if (!produtosAgrupados[chaveAgrupamento]) {
+          produtosAgrupados[chaveAgrupamento] = [];
         }
 
-        // Encontrar se já existe um registro para essa descrição
-        let registro = produtosAgrupados[descricaoNormalizada][0];
+        // Encontrar se já existe um registro para essa chave
+        let registro = produtosAgrupados[chaveAgrupamento][0];
         if (!registro) {
           registro = {
             id: produto.id,
-            descricao: produto.descricao,
+            descricao: nomeNormalizado || produto.descricao,
             valoresPorMes: {},
-            origem: produto.notaFiscalId ? 'NFC-e' : 'Manual'
+            origem: produto.notaFiscalId ? 'NFC-e' : 'Manual',
+            agrupado,
           };
-          produtosAgrupados[descricaoNormalizada][0] = registro;
+          produtosAgrupados[chaveAgrupamento][0] = registro;
         }
 
         // Somar valor ao mês correspondente
@@ -246,8 +253,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Converter para array
-    const produtosPorMes = Object.values(produtosAgrupados).map(arr => arr[0]);
+    // Converter para array: agrupados primeiro, depois os não agrupados
+    const produtosPorMes = Object.values(produtosAgrupados)
+      .map(arr => arr[0])
+      .sort((a, b) => Number(b.agrupado) - Number(a.agrupado));
 
     // Adicionar Análise Vertical e Horizontal
     dreMensal.forEach((mes, idx) => {

@@ -19,6 +19,8 @@ import {
   Download,
   Filter,
   Plus,
+  Check,
+  X,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
+import { limparTexto } from '@/lib/services/local-normalizer';
 import { DreItem, DreResponse, DreMeses } from '@/types/dre';
 import { Input } from '@/components/ui/input';
 import {
@@ -80,9 +83,8 @@ interface DreMensal {
 interface ProdutoInsumo {
   id: number;
   descricao: string;
-  valor: number;
-  dataCompra: string;
   origem: string;
+  agrupado: boolean;
   valoresPorMes: Record<number, number>;
 }
 
@@ -251,7 +253,10 @@ export default function FluxoCaixaPage() {
     previsao: 0,
     realizado: 0,
   });
-  const [produtosPorMes, setProdutosPorMes] = useState<Record<number, ProdutoInsumo[]>>({});
+  const [produtosPorMes, setProdutosPorMes] = useState<ProdutoInsumo[]>([]);
+  const [editandoNormalizacao, setEditandoNormalizacao] = useState<number | null>(null);
+  const [valorNormalizacao, setValorNormalizacao] = useState('');
+  const [salvandoNormalizacao, setSalvandoNormalizacao] = useState(false);
 
   useEffect(() => {
     carregarDados();
@@ -363,6 +368,121 @@ export default function FluxoCaixaPage() {
   };
 
   const kpis = calcularKPIs();
+
+  // Separar insumos agrupados (com nomeNormalizado) dos não agrupados
+  const insumosAgrupados = produtosPorMes.filter((p) => p.agrupado);
+  const insumosNaoAgrupados = produtosPorMes.filter((p) => !p.agrupado);
+
+  const renderLinhaInsumo = (produto: ProdutoInsumo) => {
+    const total = Object.values(produto.valoresPorMes || {}).reduce(
+      (acc, v) => acc + v,
+      0
+    );
+    const editando = editandoNormalizacao === produto.id;
+
+    return (
+      <tr key={produto.id} className="border-b border-gray-100 hover:bg-gray-100">
+        <td className="px-4 py-2 text-xs font-medium">
+          {editando ? (
+            <Input
+              value={valorNormalizacao}
+              onChange={(e) => setValorNormalizacao(e.target.value)}
+              className="h-7 text-xs"
+              autoFocus
+            />
+          ) : (
+            produto.descricao
+          )}
+        </td>
+        <td className="px-2 py-2 text-xs text-center">
+          <Badge variant="outline" className="text-[10px]">{produto.origem}</Badge>
+        </td>
+        {meses.map((_, idx) => {
+          const mesNum = idx + 1;
+          const valor = produto.valoresPorMes?.[mesNum] || 0;
+          const isMesAtual = idx === mesAtual - 1;
+          return (
+            <td key={idx} className={`px-2 py-2 text-xs text-center min-w-[84px] ${isMesAtual ? 'bg-red-200 text-gray-800' : ''}`}>
+              {hideValues ? '••••' : formatCurrency(valor)}
+            </td>
+          );
+        })}
+        <td className="px-2 py-2 text-xs text-center font-semibold">
+          {hideValues ? '••••' : formatCurrency(total)}
+        </td>
+        <td className="px-2 py-2 text-center">
+          {editando ? (
+            <div className="flex items-center justify-center gap-1">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => confirmarNormalizacao(produto)}
+                disabled={salvandoNormalizacao || !valorNormalizacao.trim()}
+                className="h-7 w-7 text-green-600 hover:bg-green-50"
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={cancelarNormalizacao}
+                disabled={salvandoNormalizacao}
+                className="h-7 w-7 text-gray-500 hover:bg-gray-100"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => iniciarNormalizacao(produto)}
+              className="rounded-lg border-gray-200 hover:bg-gray-100 text-xs"
+            >
+              Normalizar
+            </Button>
+          )}
+        </td>
+      </tr>
+    );
+  };
+
+  const iniciarNormalizacao = (produto: ProdutoInsumo) => {
+    setEditandoNormalizacao(produto.id);
+    setValorNormalizacao(limparTexto(produto.descricao) || produto.descricao);
+  };
+
+  const cancelarNormalizacao = () => {
+    setEditandoNormalizacao(null);
+    setValorNormalizacao('');
+  };
+
+  const confirmarNormalizacao = async (produto: ProdutoInsumo) => {
+    const nome = valorNormalizacao.trim();
+    if (!nome) return;
+    setSalvandoNormalizacao(true);
+    try {
+      const response = await fetch(`/api/produtos/${produto.id}/normalizacao`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nomeNormalizado: nome,
+          marca: null,
+          categoriaSugestao: null,
+          unidadeMedida: null,
+        }),
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Falha ao normalizar');
+      setEditandoNormalizacao(null);
+      setValorNormalizacao('');
+      carregarDados();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Erro ao normalizar produto');
+    } finally {
+      setSalvandoNormalizacao(false);
+    }
+  };
 
   // Exportar para CSV
   const exportCSV = () => {
@@ -571,10 +691,10 @@ export default function FluxoCaixaPage() {
           </div>
 
           <ScrollArea className="h-[700px]">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead className="bg-emerald-200 border-b border-gray-200 sticky top-0 z-10">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-800 uppercase w-[280px]">DESPESAS</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-bold text-gray-800 uppercase w-[196px]">DESPESAS</th>
                   <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase">PREVISÃO</th>
                   {meses.map((mes, idx) => (
                     <th key={idx} className={`px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase ${idx === mesAtual - 1 ? 'bg-red-200' : ''}`}>
@@ -596,7 +716,9 @@ export default function FluxoCaixaPage() {
                     </td>
                   </tr>
                 ) : (
-                  dreData.map((item) => {
+                  dreData
+                    .filter((item) => !item.id.startsWith('produto-'))
+                    .map((item) => {
                     const isHeader = item.nivel === 0 && (item.tipo === 'receita' || item.tipo === 'despesa');
                     const isCategoryHeader = item.isHeader === true;
                     const isCalcRow = item.isCalcRow === true;
@@ -633,12 +755,12 @@ export default function FluxoCaixaPage() {
 
                     return (
                       <tr key={item.id} className={`${rowClass} transition-colors cursor-pointer`}>
-                        <td className="px-4 py-2 text-sm">
+                        <td className="px-4 py-2 text-xs">
                           <span className={isHeader || isCategoryHeader || isSubtotal ? 'font-bold' : 'font-medium'}>
                             {item.nome}
                           </span>
                         </td>
-                        <td className={`px-2 py-2 text-sm text-center ${isCalcRow ? 'font-semibold' : ''}`}>
+                        <td className={`px-2 py-2 text-xs text-center ${isCalcRow ? 'font-semibold' : ''}`}>
                           {isTotal ? (
                             <span className="font-bold">R$ 0,00</span>
                           ) : editing?.itemId === item.id ? (
@@ -676,7 +798,7 @@ export default function FluxoCaixaPage() {
                           const isMesAtual = idx === mesAtual - 1;
 
                           return (
-                            <td key={idx} className={`px-2 py-2 text-sm text-center min-w-[120px] ${isMesAtual ? 'bg-red-200 text-gray-800' : ''} ${isCalcRow ? 'font-semibold' : ''}`}>
+                            <td key={idx} className={`px-2 py-2 text-xs text-center min-w-[84px] ${isMesAtual ? 'bg-red-200 text-gray-800' : ''} ${isCalcRow ? 'font-semibold' : ''}`}>
                               {isTotal ? (
                                 <span className={`font-bold ${isMesAtual ? 'text-gray-800' : 'text-white'}`}>R$ 0,00</span>
                               ) : hideValues ? (
@@ -687,15 +809,72 @@ export default function FluxoCaixaPage() {
                             </td>
                           );
                         })}
-                        <td className="px-2 py-2 text-sm text-center">
+                        <td className="px-2 py-2 text-xs text-center">
                           {isTotal ? '-' : hideValues ? '••••' : `${item.av.toFixed(2)}%`}
                         </td>
-                        <td className="px-2 py-2 text-sm text-center">
+                        <td className="px-2 py-2 text-xs text-center">
                           {isTotal ? '-' : hideValues ? '••••' : `${item.ah.toFixed(2)}%`}
                         </td>
                       </tr>
                     );
                   })
+                )}
+              </tbody>
+            </table>
+          </ScrollArea>
+        </div>
+
+        {/* Lista de Produtos/Insumos agrupados por nome normalizado */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+          <div className="p-4 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-[#de4838]" />
+                <h3 className="font-semibold text-gray-800">Produtos / Insumos Agrupados - {anoAtual}</h3>
+              </div>
+              <div className="text-xs text-gray-500">
+                <Filter className="h-4 w-4 inline mr-1" />
+                <span>
+                  {insumosAgrupados.length} agrupados · {insumosNaoAgrupados.length} não agrupados
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <ScrollArea className="h-[500px]">
+            <table className="w-full text-xs">
+              <thead className="bg-blue-200 border-b border-gray-200 sticky top-0 z-10">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-800 uppercase w-[196px]">PRODUTO / INSUMO</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase">ORIGEM</th>
+                  {meses.map((mes, idx) => (
+                    <th key={idx} className={`px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase min-w-[84px] ${idx === mesAtual - 1 ? 'bg-red-200' : ''}`}>
+                      {mes.substring(0, 3)}
+                    </th>
+                  ))}
+                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase">TOTAL</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase">AÇÃO</th>
+                </tr>
+              </thead>
+              <tbody>
+                {produtosPorMes.length === 0 ? (
+                  <tr>
+                    <td colSpan={16} className="py-10 text-center text-sm text-gray-500">
+                      Nenhum produto/insumo encontrado para {anoAtual}.
+                    </td>
+                  </tr>
+                ) : (
+                  <>
+                    {insumosAgrupados.map(renderLinhaInsumo)}
+                    {insumosNaoAgrupados.length > 0 && (
+                      <tr>
+                        <td colSpan={16} className="bg-amber-100 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-amber-800">
+                          Não agrupados ({insumosNaoAgrupados.length})
+                        </td>
+                      </tr>
+                    )}
+                    {insumosNaoAgrupados.map(renderLinhaInsumo)}
+                  </>
                 )}
               </tbody>
             </table>

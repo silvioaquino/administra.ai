@@ -26,7 +26,8 @@ import {
   LayoutDashboard,
   Calculator,
   Receipt,
-  TrendingUp
+  TrendingUp,
+  CheckCircle2
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
@@ -82,6 +83,7 @@ export default function DashboardLayout({
     { icon: CreditCard, label: "Fechamento Mensal", href: "/fechamento-mensal", badge: null },
     { icon: CreditCard, label: "Abrir/Fechar Caixa Diário", href: "/caixa", badge: null },
     
+
   ]
 
   const configItems = [
