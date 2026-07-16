@@ -77,6 +77,7 @@ export async function PUT(
 
   try {
     const { id } = await params
+    const empresaId = session.user.empresaId
     const body = await request.json()
     const {
       nome,
@@ -144,7 +145,9 @@ export async function PUT(
             unidade: ing.unidade,
             valorUnitario: ing.valorUnitario,
             custo: ing.custo,
-            isProdutoAcabado: ing.isProdutoAcabado || false
+            isProdutoAcabado: ing.isProdutoAcabado || false,
+            empresaId,
+            userId: session.user.id
           }))
         })
       }

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { ProductNormalizationService } from '@/lib/services/product-normalization.service'
+import { ConversionService } from '@/lib/services/conversion.service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -99,6 +100,7 @@ export async function POST(request: NextRequest) {
               quantidade: p.quantidade || 0,
               valorUnitario: p.valor_unitario || 0,
               valorTotal: p.valor_total || 0,
+              pesoUnitario: ConversionService.toGrams(n.quantidade ?? undefined, n.unidade) ?? 0,
               fornecedor: nota.nome_emitente || '',
               dataCompra: new Date(dataCompra),
               precoVenda: (p.valor_unitario || 0) * 1.3,

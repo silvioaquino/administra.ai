@@ -14,6 +14,12 @@ export class ConversionService {
   /**
    * Converte qualquer unidade para gramas
    */
+  // Unidades contáveis (peça, caixa, pacote, dúzia): equivalem a UN,
+  // exigem peso unitário para conversão em gramas.
+  private static readonly COUNTABLE_UNITS = new Set<string>([
+    'UN', 'PC', 'PCT', 'CX', 'PT', 'DZ', 'UND',
+  ])
+
   static convertToGrams(
     value: number,
     unit: UnitType,
@@ -22,41 +28,65 @@ export class ConversionService {
   ): number {
     if (value <= 0) throw new Error('Quantidade deve ser maior que zero')
 
-    if (unit === 'UN') {
+    // Normaliza o caso (ex.: "un"/"Un" da NFe) para bater com os mapas.
+    const u = (unit || '').toUpperCase() as UnitType
+
+    if (this.COUNTABLE_UNITS.has(u)) {
       if (!pesoUnitario || pesoUnitario <= 0) {
-        throw new Error('Produto em UN precisa ter peso unitário definido')
+        throw new Error(`Produto em ${u} precisa ter peso unitário definido`)
       }
       return value * pesoUnitario
     }
 
-    if (unit === 'L' || unit === 'ML') {
-      const factor = CONVERSION_TO_GRAMS[unit] || 1
+    if (u === 'L' || u === 'ML') {
+      const factor = CONVERSION_TO_GRAMS[u] || 1
       const density = densidade || 1
       return value * factor * density
     }
 
-    const factor = CONVERSION_TO_GRAMS[unit]
+    const factor = CONVERSION_TO_GRAMS[u]
     if (factor === null || factor === undefined) {
-      throw new Error(`Unidade ${unit} não suportada`)
+      throw new Error(`Unidade ${u} não suportada`)
     }
     return value * factor
   }
 
   /**
-   * Calcula o consumo de um item da ficha
+   * Converte uma quantidade+unidade (ex.: 400 "G", 1 "KG") para gramas.
+   * Usado para derivar o pesoUnitario a partir do peso de pacote da Open Food Facts.
+   * Retorna null se a unidade não for massa/volume convertível.
+   */
+  static toGrams(
+    value: number | null | undefined,
+    unit: string | null | undefined,
+    densidade = 1,
+  ): number | null {
+    if (!value || value <= 0) return null
+    const normalized = (unit || '').toUpperCase() as UnitType
+    const factor = CONVERSION_TO_GRAMS[normalized]
+    if (factor === null || factor === undefined) return null
+    return value * factor * densidade
+  }
+
+  /**
+   * Calcula o consumo (em gramas e custo) de um item da ficha.
+   *
+   * O modelo de dados do produto NÃO possui um campo de "tamanho de embalagem":
+   * a embalagem é sempre 1 unidade de compra (1 KG, 1 G, 1 UN...). Portanto o
+   * custo é o preço de 1 unidade de compra (unitPrice = valorUnitario do produto)
+   * dividido pelos gramas de 1 unidade.
    */
   static calculateConsumption(
     quantity: number,
     unitUsed: UnitType,
     product: {
       purchaseUnit: UnitType
-      purchaseQuantity: number
       unitPrice: number
       pesoUnitario?: number
       densidade?: number
     }
   ): ConversionResult {
-    // 1. Converter quantidade usada para gramas
+    // 1. Quantidade usada na receita -> gramas
     const gramsUsed = this.convertToGrams(
       quantity,
       unitUsed,
@@ -64,35 +94,35 @@ export class ConversionService {
       product.densidade
     )
 
-    // 2. Converter unidade de compra para gramas
-    const gramsPerPackage = this.convertToGrams(
-      product.purchaseQuantity,
+    // 2. Gramas de 1 unidade de compra (embalagem = 1 unidade)
+    const gramsPerUnit = this.convertToGrams(
+      1,
       product.purchaseUnit,
       product.pesoUnitario,
       product.densidade
     )
 
-    // 3. Calcular quantos pacotes foram usados
-    const packagesUsed = gramsUsed / gramsPerPackage
+    // 3. Quantas unidades de compra foram usadas
+    const unitsUsed = gramsUsed / gramsPerUnit
 
-    // 4. Calcular custo
-    const cost = packagesUsed * product.unitPrice
+    // 4. Custo = unidades usadas × custo de 1 unidade (valorUnitario)
+    const cost = unitsUsed * product.unitPrice
 
     // 5. Verificar se é fracionado
-    const isFractional = packagesUsed % 1 !== 0
+    const isFractional = unitsUsed % 1 !== 0
     const fractionalAlert = isFractional
-      ? `Usou ${packagesUsed.toFixed(3)} ${this.getUnitLabel(product.purchaseUnit)} de ${product.purchaseQuantity}${product.purchaseUnit}`
+      ? `Usou ${unitsUsed.toFixed(3)} ${this.getUnitLabel(product.purchaseUnit)} de ${product.purchaseUnit}`
       : undefined
 
     return {
       gramsUsed,
-      packagesUsed,
+      packagesUsed: unitsUsed,
       cost,
       isFractional,
       fractionalAlert,
       formatted: {
         grams: `${gramsUsed.toFixed(0)}g`,
-        packages: `${packagesUsed.toFixed(3)} ${this.getUnitLabel(product.purchaseUnit)}`,
+        packages: `${unitsUsed.toFixed(3)} ${this.getUnitLabel(product.purchaseUnit)}`,
         cost: `R$ ${cost.toFixed(2)}`,
       },
     }

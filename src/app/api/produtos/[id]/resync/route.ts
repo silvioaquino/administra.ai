@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { ProductNormalizationService } from '@/lib/services/product-normalization.service'
+import { ConversionService } from '@/lib/services/conversion.service'
 
 // POST /api/produtos/[id]/resync
 // Força nova consulta à Open Food Facts (bypass de cache) e persiste o resultado.
@@ -35,6 +36,14 @@ export async function POST(
       { bypassCache: true }
     )
 
+    // Deriva o peso unitário (gramas) a partir do peso de pacote da OFF.
+    // Só sobrescreve quando a OFF retorna um peso válido, preservando
+    // qualquer peso manual já cadastrado.
+    const pesoUnitario = ConversionService.toGrams(
+      normalized.quantidade ?? undefined,
+      normalized.unidade,
+    )
+
     const produto = await prisma.produto.update({
       where: { id: produtoId },
       data: {
@@ -46,6 +55,7 @@ export async function POST(
         fonteDados: normalized.fonteDados,
         precisaRevisao: normalized.precisaRevisao,
         normalizadoEm: normalized.normalizadoEm,
+        ...(pesoUnitario !== null ? { pesoUnitario } : {}),
       },
     })
 

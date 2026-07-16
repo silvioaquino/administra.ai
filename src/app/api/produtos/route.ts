@@ -42,7 +42,10 @@ export async function GET(request: NextRequest) {
     const produtosConvertidos = produtos.map(prod => ({
       id: prod.id,
       descricao: prod.descricao,
+      nomeNormalizado: prod.nomeNormalizado,
       unidade: prod.unidade,
+      pesoUnitario: prod.pesoUnitario ? Number(prod.pesoUnitario) : 0,
+      densidade: prod.densidade ? Number(prod.densidade) : 1,
       preco_venda: prod.precoVenda ? Number(prod.precoVenda) : 0,
       quantidade: prod.quantidade ? Number(prod.quantidade) : 0,
       fornecedor: prod.fornecedor,
@@ -131,7 +134,10 @@ export async function POST(request: NextRequest) {
     const produtoResponse = {
       id: produto.id,
       descricao: produto.descricao,
+      nomeNormalizado: produto.nomeNormalizado,
       unidade: produto.unidade,
+      pesoUnitario: produto.pesoUnitario ? Number(produto.pesoUnitario) : 0,
+      densidade: produto.densidade ? Number(produto.densidade) : 1,
       preco_venda: produto.precoVenda ? Number(produto.precoVenda) : 0,
       quantidade: produto.quantidade ? Number(produto.quantidade) : 0,
       fornecedor: produto.fornecedor,
@@ -231,7 +237,10 @@ export async function PUT(request: NextRequest) {
     const produtoResponse = {
       id: produto.id,
       descricao: produto.descricao,
+      nomeNormalizado: produto.nomeNormalizado,
       unidade: produto.unidade,
+      pesoUnitario: produto.pesoUnitario ? Number(produto.pesoUnitario) : 0,
+      densidade: produto.densidade ? Number(produto.densidade) : 1,
       preco_venda: produto.precoVenda ? Number(produto.precoVenda) : 0,
       quantidade: produto.quantidade ? Number(produto.quantidade) : 0,
       fornecedor: produto.fornecedor,

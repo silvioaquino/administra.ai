@@ -197,7 +197,9 @@ export async function POST(request: NextRequest) {
             unidade: ing.unidade,
             valorUnitario: ing.valorUnitario,
             custo: ing.custo,
-            isProdutoAcabado: ing.isProdutoAcabado || false
+            isProdutoAcabado: ing.isProdutoAcabado || false,
+            empresaId,
+            userId: session.user.id,
           }))
         }
       },

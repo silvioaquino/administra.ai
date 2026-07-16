@@ -19,6 +19,7 @@ interface Produto {
   id: number
   nome: string
   descricao: string
+  nomeNormalizado?: string
   precoVenda: number
   preco_venda: number
   unidade: string
@@ -66,8 +67,10 @@ export default function NovaFichaTecnicaPage() {
   const [quantidade, setQuantidade] = useState(1)
   const [unidadeReceita, setUnidadeReceita] = useState<UnitType>('UN')
 
-  const [despesasFixasPercentual, setDespesasFixasPercentual] = useState(25)
-  const [despesasVariaveisPercentual, setDespesasVariaveisPercentual] = useState(10.87)
+  const [despesasFixasPercentual, setDespesasFixasPercentual] = useState(0)
+  const [despesasVariaveisPercentual, setDespesasVariaveisPercentual] = useState(0)
+  const [markup, setMarkup] = useState(0)
+  const [metaFaltando, setMetaFaltando] = useState(false)
 
   useEffect(() => {
     carregarProdutos()
@@ -83,11 +86,22 @@ export default function NovaFichaTecnicaPage() {
         const produtosFormatados = data.data.map((p: any) => ({
           ...p,
           precoVenda: p.precoVenda || p.preco_venda || 0,
-          valorUnitario: Number(p.valorUnitario) || 0,
+          valorUnitario: Number(p.valor_unitario) || Number(p.valorUnitario) || 0,
           pesoUnitario: p.pesoUnitario != null ? Number(p.pesoUnitario) : undefined,
           densidade: p.densidade != null ? Number(p.densidade) : undefined,
         }))
-        setProdutos(produtosFormatados)
+        // Manter apenas o lançamento mais recente de cada produto.
+        // A API já vem ordenada por createdAt desc, então a 1ª ocorrência é a mais nova.
+        const chavesVistas = new Set<string>()
+        const produtosUnicos = produtosFormatados.filter((p: Produto) => {
+          const chave = (p.nomeNormalizado || p.descricao || String(p.id))
+            .trim()
+            .toLowerCase()
+          if (chavesVistas.has(chave)) return false
+          chavesVistas.add(chave)
+          return true
+        })
+        setProdutos(produtosUnicos)
       }
     } catch (error) {
       console.error("Erro ao carregar produtos:", error)
@@ -111,8 +125,11 @@ export default function NovaFichaTecnicaPage() {
       const anoAtual = new Date().getFullYear()
       const response = await fetch(`/api/planejamento/indicadores-resumo?ano=${anoAtual}`)
       const data = await response.json()
-      if (data.success && data.despesasVariaveisPct != null) {
-        setDespesasVariaveisPercentual(data.despesasVariaveisPct)
+      if (data.success) {
+        if (data.markUp != null) setMarkup(data.markUp)
+        if (data.pctFixas != null) setDespesasFixasPercentual(data.pctFixas)
+        if (data.despesasVariaveisPct != null) setDespesasVariaveisPercentual(data.despesasVariaveisPct)
+        setMetaFaltando(!!data.metaFaltando)
       }
     } catch (error) {
       console.error("Erro ao carregar percentuais:", error)
@@ -141,7 +158,6 @@ export default function NovaFichaTecnicaPage() {
         unidadeReceita,
         {
           purchaseUnit: (produto.unidade as UnitType) || 'UN',
-          purchaseQuantity: Number(produto.quantidade) || 1,
           unitPrice: valorUnitario,
           pesoUnitario: produto.pesoUnitario ? Number(produto.pesoUnitario) : undefined,
           densidade: produto.densidade ? Number(produto.densidade) : undefined,
@@ -156,7 +172,7 @@ export default function NovaFichaTecnicaPage() {
     const novoIngrediente: Ingrediente = {
       id: Date.now().toString(),
       produtoId: produto.id,
-      nome: produto.nome || produto.descricao,
+      nome: produto.nomeNormalizado || produto.descricao,
       quantidade,
       unidade: unidadeReceita,
       valorUnitario,
@@ -231,7 +247,6 @@ export default function NovaFichaTecnicaPage() {
           (ing.unidade as UnitType) || "UN",
           {
             purchaseUnit: (prod.unidade as UnitType) || "UN",
-            purchaseQuantity: Number(prod.quantidade) || 1,
             unitPrice: Number(prod.valorUnitario) || 0,
             pesoUnitario: prod.pesoUnitario ? Number(prod.pesoUnitario) : undefined,
             densidade: prod.densidade ? Number(prod.densidade) : undefined,
@@ -256,7 +271,7 @@ export default function NovaFichaTecnicaPage() {
   const lucro = formData.precoVenda - custoPorPorcao - (formData.precoVenda * despesasFixasPercentual / 100) - (formData.precoVenda * despesasVariaveisPercentual / 100)
   const margem = formData.precoVenda > 0 ? (lucro / formData.precoVenda) * 100 : 0
   
-  const precoSugerido = custoPorPorcao / (1 - (despesasFixasPercentual + despesasVariaveisPercentual + 20) / 100)
+  const precoSugerido = markup > 0 ? custoPorPorcao * markup : 0
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -311,9 +326,9 @@ export default function NovaFichaTecnicaPage() {
     }
   }
 
-  const getPrecoProduto = (produto: Produto | undefined) => {
+  const getCustoUnitario = (produto: Produto | undefined) => {
     if (!produto) return 0
-    return produto.precoVenda || produto.preco_venda || 0
+    return produto.valorUnitario || 0
   }
 
   const produtoSelecionado = produtos.find(p => p.id === parseInt(selectedProdutoId))
@@ -432,13 +447,13 @@ export default function NovaFichaTecnicaPage() {
                       onChange={(e) => {
                         setSelectedProdutoId(e.target.value)
                         const p = produtos.find(prod => prod.id === parseInt(e.target.value))
-                        setUnidadeReceita((p?.unidade as UnitType) || 'UN')
+                        setUnidadeReceita(((p?.unidade || 'UN') as string).toUpperCase() as UnitType)
                       }}
                     >
                       <option value="">Selecione um produto...</option>
                       {produtos.map((prod) => (
                         <option key={prod.id} value={prod.id}>
-                          {prod.nome || prod.descricao} - {formatCurrency(getPrecoProduto(prod))}/{prod.unidade || "UN"} (Estoque: {prod.quantidade || 0})
+                          {prod.nomeNormalizado || prod.descricao}
                         </option>
                       ))}
                     </select>
@@ -452,7 +467,7 @@ export default function NovaFichaTecnicaPage() {
                       onChange={({ quantity, unit }) => { setQuantidade(quantity); setUnidadeReceita(unit) }}
                       product={{
                         id: produtoSelecionado.id,
-                        descricao: produtoSelecionado.nome || produtoSelecionado.descricao,
+                        descricao: produtoSelecionado.nomeNormalizado || produtoSelecionado.descricao,
                         unidade: produtoSelecionado.unidade || 'UN',
                         quantidade: produtoSelecionado.quantidade || 1,
                         valorUnitario: produtoSelecionado.valorUnitario || 0,
@@ -481,7 +496,7 @@ export default function NovaFichaTecnicaPage() {
                   </Button>
                   {produtoSelecionado && (
                     <div className="text-xs text-gray-500 bg-gray-100 rounded-lg p-2">
-                      Preço unitário: {formatCurrency(getPrecoProduto(produtoSelecionado))}
+                      Custo unitário: {formatCurrency(getCustoUnitario(produtoSelecionado))}
                     </div>
                   )}
                 </div>
@@ -654,10 +669,22 @@ export default function NovaFichaTecnicaPage() {
                   </div>
                   <div className="rounded-xl bg-blue-50 p-4">
                     <p className="text-sm font-medium text-blue-700 mb-1">Preço Sugerido</p>
-                    <p className="text-2xl font-bold text-blue-600">{formatCurrency(precoSugerido)}</p>
-                    <p className="text-xs text-blue-600 mt-1">
-                      Baseado em custo + 20% de lucro + {despesasFixasPercentual + despesasVariaveisPercentual}% de despesas
-                    </p>
+                    {metaFaltando ? (
+                      <p className="text-sm text-blue-600 mt-1">
+                        Defina a meta do mês atual no Planejamento para calcular o mark-up sugerido.
+                      </p>
+                    ) : markup > 0 ? (
+                      <>
+                        <p className="text-2xl font-bold text-blue-600">{formatCurrency(precoSugerido)}</p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          Custo × Mark-up de {markup.toFixed(2)}x (da página Planejamento)
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-blue-600 mt-1">
+                        Carregando mark-up do Planejamento...
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">

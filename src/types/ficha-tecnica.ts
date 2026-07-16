@@ -21,6 +21,5 @@ export interface ItemCalculation extends ConversionResult {
   quantity: number
   unitUsed: UnitType
   purchaseUnit: UnitType
-  purchaseQuantity: number
   unitPrice: number
 }

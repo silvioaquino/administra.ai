@@ -32,7 +32,6 @@ export async function calculateRecipeCost(fichaId: string) {
         (item.unidade as UnitType) || 'UN',
         {
           purchaseUnit: (product.unidade as UnitType) || 'UN',
-          purchaseQuantity: Number(product.quantidade) || 1,
           unitPrice: Number(product.valorUnitario) || 0,
           pesoUnitario: product.pesoUnitario ? Number(product.pesoUnitario) : undefined,
           densidade: product.densidade ? Number(product.densidade) : undefined,
@@ -46,7 +45,6 @@ export async function calculateRecipeCost(fichaId: string) {
         quantity: item.quantidade,
         unitUsed: (item.unidade as UnitType) || 'UN',
         purchaseUnit: (product.unidade as UnitType) || 'UN',
-        purchaseQuantity: Number(product.quantidade) || 1,
         unitPrice: Number(product.valorUnitario) || 0,
         ...result,
       }

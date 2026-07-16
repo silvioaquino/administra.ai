@@ -30,6 +30,8 @@ export async function GET(
       id: produto.id,
       descricao: produto.descricao,
       unidade: produto.unidade,
+      pesoUnitario: produto.pesoUnitario ? Number(produto.pesoUnitario) : 0,
+      densidade: produto.densidade ? Number(produto.densidade) : 1,
       preco_venda: produto.precoVenda ? Number(produto.precoVenda) : 0,
       quantidade: produto.quantidade ? Number(produto.quantidade) : 0,
       fornecedor: produto.fornecedor,
@@ -78,6 +80,9 @@ export async function PUT(
     const precoVenda = body.preco_venda !== undefined ? Number(body.preco_venda) : Number(existingProduto.precoVenda)
     const valorUnitario = body.valor_unitario !== undefined ? Number(body.valor_unitario) : Number(existingProduto.valorUnitario)
     const valorTotal = body.valor_total !== undefined ? Number(body.valor_total) : (quantidade * precoVenda)
+    const pesoUnitario = body.pesoUnitario !== undefined
+      ? (body.pesoUnitario === null || body.pesoUnitario === '' ? null : Number(body.pesoUnitario))
+      : existingProduto.pesoUnitario
 
     // Corrigir data para não usar UTC
     let dataCompraDate: Date | undefined
@@ -98,6 +103,7 @@ export async function PUT(
         codigo: body.codigo !== undefined ? body.codigo : existingProduto.codigo,
         valorUnitario: valorUnitario,
         valorTotal: valorTotal,
+        pesoUnitario: pesoUnitario,
       }
     })
 
@@ -105,6 +111,8 @@ export async function PUT(
       id: produto.id,
       descricao: produto.descricao,
       unidade: produto.unidade,
+      pesoUnitario: produto.pesoUnitario ? Number(produto.pesoUnitario) : 0,
+      densidade: produto.densidade ? Number(produto.densidade) : 1,
       preco_venda: produto.precoVenda ? Number(produto.precoVenda) : 0,
       quantidade: produto.quantidade ? Number(produto.quantidade) : 0,
       fornecedor: produto.fornecedor,

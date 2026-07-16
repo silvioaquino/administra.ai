@@ -5,7 +5,6 @@ import { ConversionResult, UnitType } from '@/types/ficha-tecnica'
 
 interface ProductInput {
   purchaseUnit: UnitType
-  purchaseQuantity: number
   unitPrice: number
   pesoUnitario?: number
   densidade?: number

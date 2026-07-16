@@ -42,6 +42,12 @@ export async function PATCH(
     if (typeof body.unidadeMedida === 'string') {
       data.unidadeMedida = body.unidadeMedida.trim() || null
     }
+    if (body.pesoUnitario !== undefined) {
+      const peso = body.pesoUnitario === null || body.pesoUnitario === ''
+        ? null
+        : Number(body.pesoUnitario)
+      data.pesoUnitario = peso !== null && Number.isFinite(peso) && peso > 0 ? peso : null
+    }
 
     const produto = await prisma.produto.update({ where: { id: produtoId }, data })
     normalizationMetrics.recordManualCorrection()

@@ -25,30 +25,46 @@ describe('ConversionService', () => {
   })
 
   describe('calculateConsumption', () => {
-    it('should calculate consumption correctly', () => {
-      const result = ConversionService.calculateConsumption(2.5, 'KG', {
-        purchaseUnit: 'G',
-        purchaseQuantity: 400,
-        unitPrice: 5.00
+    it('should calculate cost from cost-per-unit (1 purchase unit = 1 package)', () => {
+      // 100g de açúcar, custo R$2,99 por KG
+      const result = ConversionService.calculateConsumption(100, 'G', {
+        purchaseUnit: 'KG',
+        unitPrice: 2.99
       })
 
-      expect(result.gramsUsed).toBe(2500)
-      expect(result.packagesUsed).toBe(6.25)
-      expect(result.cost).toBe(31.25)
+      expect(result.gramsUsed).toBe(100)
+      expect(result.packagesUsed).toBeCloseTo(0.1, 5)
+      expect(result.cost).toBeCloseTo(0.299, 5)
       expect(result.isFractional).toBe(true)
-      expect(result.fractionalAlert).toContain('6.25')
+      expect(result.fractionalAlert).toContain('0.100')
     })
 
-    it('should not be fractional when exact', () => {
-      const result = ConversionService.calculateConsumption(800, 'G', {
-        purchaseUnit: 'G',
-        purchaseQuantity: 400,
-        unitPrice: 5.00
+    it('should be exact when using a whole purchase unit', () => {
+      // 1 KG de açúcar, custo R$2,99 por KG
+      const result = ConversionService.calculateConsumption(1000, 'G', {
+        purchaseUnit: 'KG',
+        unitPrice: 2.99
       })
 
-      expect(result.packagesUsed).toBe(2)
+      expect(result.gramsUsed).toBe(1000)
+      expect(result.packagesUsed).toBe(1)
+      expect(result.cost).toBe(2.99)
       expect(result.isFractional).toBe(false)
       expect(result.fractionalAlert).toBeUndefined()
+    })
+
+    it('should convert UN items using pesoUnitario', () => {
+      // 300g de ovo, R$0,50 por ovo (60g cada) -> 5 ovos -> R$2,50
+      const result = ConversionService.calculateConsumption(300, 'G', {
+        purchaseUnit: 'UN',
+        unitPrice: 0.5,
+        pesoUnitario: 60
+      })
+
+      expect(result.gramsUsed).toBe(300)
+      expect(result.packagesUsed).toBe(5)
+      expect(result.cost).toBe(2.5)
+      expect(result.isFractional).toBe(false)
     })
   })
 })

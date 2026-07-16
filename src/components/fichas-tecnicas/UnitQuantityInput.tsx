@@ -64,7 +64,6 @@ export function UnitQuantityInput({
         unit,
         {
           purchaseUnit: (product.unidade as UnitType) || 'UN',
-          purchaseQuantity: Number(product.quantidade) || 1,
           unitPrice: Number(product.valorUnitario) || 0,
           pesoUnitario: product.pesoUnitario ? Number(product.pesoUnitario) : undefined,
           densidade: product.densidade ? Number(product.densidade) : undefined,
