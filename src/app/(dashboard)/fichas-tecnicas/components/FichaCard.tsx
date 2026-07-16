@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Edit, Trash2, TrendingUp, TrendingDown, AlertCircle, Calendar, DollarSign, Package } from "lucide-react"
+import { Edit, Trash2, Calendar } from "lucide-react"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
 
 interface FichaTecnica {
@@ -18,69 +18,29 @@ interface FichaTecnica {
   custoPorPorcao: number
   margem: number
   rendimentoPorcoes: number
-  ingredientes: string | any[] | object // CORREÇÃO: Aceitar diferentes tipos
   modoPreparo: string
   updatedAt: string
 }
 
 interface FichaCardProps {
   ficha: FichaTecnica
+  margemMinima: number
   onEdit: () => void
   onRefresh: () => void
 }
 
-export function FichaCard({ ficha, onEdit, onRefresh }: FichaCardProps) {
+export function FichaCard({ ficha, margemMinima, onEdit, onRefresh }: FichaCardProps) {
   const [deleting, setDeleting] = useState(false)
 
+  // Limite de "Atenção" sincronizado com a margem de lucro desejada no Planejamento.
+  // margem < margemMinima => Atenção (vermelho); entre margemMinima e 50 => Boa; >= 50 => Excelente.
   const getMargemClass = () => {
-    if (ficha.margem >= 50) return { bg: "bg-emerald-500", text: "Excelente" }
-    if (ficha.margem >= 30) return { bg: "bg-amber-500", text: "Boa" }
+    if (ficha.margem >= 50) return { bg: "bg-lime-400", text: "Excelente" }
+    if (ficha.margem >= margemMinima) return { bg: "bg-emerald-500", text: "Boa" }
     return { bg: "bg-red-500", text: "Atenção" }
   }
 
   const margemStatus = getMargemClass()
-
-  // Função segura para obter o preview dos ingredientes
-  const getIngredientesPreview = () => {
-    if (!ficha.ingredientes) return ""
-    
-    // Se for string, tenta fazer parse
-    if (typeof ficha.ingredientes === 'string') {
-      try {
-        const ingredientes = JSON.parse(ficha.ingredientes)
-        if (Array.isArray(ingredientes) && ingredientes.length > 0) {
-          const preview = ingredientes.slice(0, 2).map((i: any) => i.nome).join(", ")
-          if (ingredientes.length > 2) return `${preview} +${ingredientes.length - 2}`
-          return preview
-        }
-        return ficha.ingredientes.substring(0, 60)
-      } catch (e) {
-        return ficha.ingredientes.substring(0, 60)
-      }
-    }
-    
-    // Se for array
-    if (Array.isArray(ficha.ingredientes)) {
-      if (ficha.ingredientes.length === 0) return ""
-      const preview = ficha.ingredientes.slice(0, 2).map((i: any) => i.nome).join(", ")
-      if (ficha.ingredientes.length > 2) return `${preview} +${ficha.ingredientes.length - 2}`
-      return preview
-    }
-    
-    // Se for objeto
-    if (typeof ficha.ingredientes === 'object') {
-      try {
-        const str = JSON.stringify(ficha.ingredientes)
-        return str.substring(0, 60)
-      } catch {
-        return ""
-      }
-    }
-    
-    return ""
-  }
-
-  const ingredientesPreview = getIngredientesPreview()
 
   const dataAtualizacao = new Date(ficha.updatedAt).toLocaleDateString("pt-BR")
 
@@ -116,9 +76,9 @@ export function FichaCard({ ficha, onEdit, onRefresh }: FichaCardProps) {
       <div className="p-5">
         {/* Header */}
         <div className="mb-4 pr-24">
-          <h3 className="font-semibold text-gray-800 text-lg leading-tight line-clamp-1">{ficha.nome}</h3>
+          <h3 className="font-semibold text-gray-800 text-lg leading-tight">{ficha.nome}</h3>
           <div className="flex items-center gap-2 mt-1">
-            <Badge variant="outline" className="bg-gray-100 text-gray-600 border-0 text-xs">
+            <Badge variant="outline" className="bg-amber-300 text-gray-600 border-0 text-xs">
               {ficha.categoria}
             </Badge>
             <Badge variant="outline" className="bg-gray-100 text-gray-600 border-0 text-xs">
@@ -151,13 +111,6 @@ export function FichaCard({ ficha, onEdit, onRefresh }: FichaCardProps) {
           </div>
           <Progress value={Math.min(ficha.margem, 100)} className="h-2" />
         </div>
-
-        {/* Ingredientes preview */}
-        {ingredientesPreview && (
-          <div className="mb-4 text-xs text-gray-500 bg-gray-100 rounded-lg p-2">
-            <span className="font-medium text-gray-600">Ingredientes:</span> {ingredientesPreview}
-          </div>
-        )}
 
         {/* Atualização */}
         <div className="mb-4 flex items-center gap-1 text-xs text-gray-400">

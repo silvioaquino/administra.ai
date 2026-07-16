@@ -31,6 +31,7 @@ interface Produto {
 interface Ficha {
   id: string
   nome: string
+  categoria?: string
   custoTotal: number
   precoVenda: number
 }
@@ -75,6 +76,11 @@ export default function EditarFichaTecnicaPage() {
   const [markup, setMarkup] = useState(0)
   const [metaFaltando, setMetaFaltando] = useState(false)
 
+  // Categorias disponíveis (carregadas das fichas existentes) + opção de criar nova.
+  const [categorias, setCategorias] = useState<string[]>(["Almoço", "Janta"])
+  const [showNovaCategoria, setShowNovaCategoria] = useState(false)
+  const [novaCategoria, setNovaCategoria] = useState("")
+
   useEffect(() => {
     carregarDados()
   }, [])
@@ -108,6 +114,11 @@ export default function EditarFichaTecnicaPage() {
           rendimentoPorcoes: ficha.rendimentoPorcoes,
           modoPreparo: ficha.modoPreparo || ""
         })
+        // Garante que a categoria atual (mesmo que personalizada) apareça no select,
+        // já que carregarFichas exclui esta própria ficha da listagem.
+        if (ficha.categoria) {
+          setCategorias((prev) => prev.some(c => c.toLowerCase() === ficha.categoria.toLowerCase()) ? prev : [...prev, ficha.categoria])
+        }
         
         // Parse dos ingredientes - pode vir como string ou já como array
         if (ficha.ingredientes) {
@@ -154,6 +165,17 @@ export default function EditarFichaTecnicaPage() {
       const data = await response.json()
       if (data.success) {
         setFichas(data.data.filter((f: any) => f.id !== fichaId))
+        // Coleta as categorias já utilizadas para popular o select dinamicamente.
+        const catsUnicas = Array.from(
+          new Set(
+            (data.data as Array<{ categoria?: string }>)
+              .map((f) => f.categoria)
+              .filter((c): c is string => typeof c === "string" && c.trim().length > 0)
+          )
+        )
+        if (catsUnicas.length > 0) {
+          setCategorias((prev) => Array.from(new Set([...prev, ...catsUnicas])))
+        }
       }
     } catch (error) {
       console.error("Erro ao carregar fichas:", error)
@@ -260,6 +282,21 @@ export default function EditarFichaTecnicaPage() {
 
   function removerIngrediente(id: string) {
     setIngredientes(ingredientes.filter(i => i.id !== id))
+  }
+
+  function confirmarNovaCategoria() {
+    const cat = novaCategoria.trim()
+    if (!cat) {
+      alert("Informe o nome da categoria")
+      return
+    }
+    const jaExiste = categorias.some(c => c.toLowerCase() === cat.toLowerCase())
+    if (!jaExiste) {
+      setCategorias([...categorias, cat])
+    }
+    setFormData({ ...formData, categoria: cat })
+    setShowNovaCategoria(false)
+    setNovaCategoria("")
   }
 
   const custoTotal = ingredientes.reduce((sum, i) => sum + i.custo, 0)
@@ -437,16 +474,59 @@ export default function EditarFichaTecnicaPage() {
                   <div className="relative">
                     <select
                       className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
-                      value={formData.categoria}
-                      onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
+                      value={showNovaCategoria ? "__nova__" : formData.categoria}
+                      onChange={(e) => {
+                        if (e.target.value === "__nova__") {
+                          setShowNovaCategoria(true)
+                          setNovaCategoria("")
+                        } else {
+                          setShowNovaCategoria(false)
+                          setFormData({ ...formData, categoria: e.target.value })
+                        }
+                      }}
                     >
-                      <option value="Almoço">Almoço</option>
-                      <option value="Janta">Janta</option>
+                      {categorias.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                      <option value="__nova__">+ Adicionar nova categoria</option>
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                       <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </div>
                   </div>
+                  {showNovaCategoria && (
+                    <div className="mt-2 flex gap-2">
+                      <Input
+                        autoFocus
+                        value={novaCategoria}
+                        onChange={(e) => setNovaCategoria(e.target.value)}
+                        placeholder="Nome da nova categoria"
+                        className="rounded-lg border-gray-200 focus:ring-[#de4838]"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            confirmarNovaCategoria()
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        onClick={confirmarNovaCategoria}
+                        className="bg-[#de4838] hover:bg-[#c73d2e] rounded-lg"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Adicionar
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => { setShowNovaCategoria(false); setNovaCategoria("") }}
+                        className="rounded-lg border-gray-200 hover:border-gray-300"
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Rendimento (porções)</Label>

@@ -31,6 +31,8 @@ export default function FichasTecnicasPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [categoriaFiltro, setCategoriaFiltro] = useState("")
+  // Margem de lucro alvo definida no Planejamento (padrão 15%). Usada como limite de "Atenção" nos cards.
+  const [lucroDesejado, setLucroDesejado] = useState(15)
   const [stats, setStats] = useState({
     total: 0,
     margemMedia: 0,
@@ -40,7 +42,21 @@ export default function FichasTecnicasPage() {
 
   useEffect(() => {
     carregarFichas()
+    carregarLucroDesejado()
   }, [])
+
+  async function carregarLucroDesejado() {
+    try {
+      const ano = new Date().getFullYear()
+      const response = await fetch(`/api/planejamento/lucro-desejado?ano=${ano}`)
+      const data = await response.json()
+      if (data.success) {
+        setLucroDesejado(data.lucroDesejado ?? 15)
+      }
+    } catch (error) {
+      console.error("Erro ao carregar lucro desejado:", error)
+    }
+  }
 
   async function carregarFichas() {
     try {
@@ -77,6 +93,11 @@ export default function FichasTecnicasPage() {
     const matchCategoria = categoriaFiltro ? f.categoria === categoriaFiltro : true
     return matchSearch && matchCategoria
   })
+
+  // Categorias presentes nas fichas (para o filtro refletir categorias personalizadas).
+  const categoriasUnicas = Array.from(
+    new Set(fichas.map(f => f.categoria).filter((c): c is string => typeof c === "string" && c.trim().length > 0))
+  ).sort()
 
   const cardsStats = [
     {
@@ -189,8 +210,9 @@ export default function FichasTecnicasPage() {
                     className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8 min-w-[120px]"
                   >
                     <option value="">Todos</option>
-                    <option value="Almoço">Almoço</option>
-                    <option value="Janta">Janta</option>
+                    {categoriasUnicas.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                     <svg className="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
@@ -207,11 +229,11 @@ export default function FichasTecnicasPage() {
         </div>
 
         {/* Alertas de Margem Baixa */}
-        {fichas.some(f => f.margem < 30) && (
+        {fichas.some(f => f.margem < lucroDesejado) && (
           <Alert className="mt-4 bg-amber-50 border-amber-200 rounded-xl">
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-sm text-amber-700">
-              Algumas fichas técnicas têm margem de lucro abaixo de 30%. Revise os custos ou preços de venda.
+              Algumas fichas técnicas têm margem de lucro abaixo de {formatPercentage(lucroDesejado)} (margem alvo do Planejamento). Revise os custos ou preços de venda.
             </AlertDescription>
           </Alert>
         )}
@@ -245,6 +267,7 @@ export default function FichasTecnicasPage() {
                 <FichaCard
                   key={ficha.id}
                   ficha={ficha}
+                  margemMinima={lucroDesejado}
                   onEdit={() => router.push(`/fichas-tecnicas/${ficha.id}/edit`)}
                   onRefresh={carregarFichas}
                 />

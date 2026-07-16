@@ -132,14 +132,6 @@ export async function GET(request: Request) {
         anoReferencia: ano
       }
     })
-    const dvResultado = await prisma.despesasVariaveisResultado.findFirst({
-      where: {
-        userId,
-        ano,
-        mes: mesAtual
-      }
-    })
-
     // Configuração padrão (mantém fallback caso não haja config salva)
     const dvDados = (dvConfig?.dados as DespesasVariaveisDados) || {}
     const configMaquininhas: ConfigMaquininhas = dvConfig?.dados
@@ -168,10 +160,13 @@ export async function GET(request: Request) {
 
     // 5. Cálculo enriquecido (mesma fonte das telas) -------------------------
     // % Fixas inclui aluguel das máquinas + salários sobre a meta mensal total.
-    // faturamentoBase vem do resultado salvo (ou da meta mensal como fallback).
-    const faturamentoBase = dvResultado?.faturamentoBase != null
-      ? Number(dvResultado.faturamentoBase)
-      : metaMensalTotal
+    // faturamentoBase vem da MESMA fonte viva que o client (tabela nova
+    // planejamentoFaturamentoNovo), eliminando a divergência com a tabela
+    // legada despesasVariaveisResultado (valor congelado / default 52000).
+    const faturamentoBase = metaDefinida
+      ? Number(metaAtual!.metaTotal) ||
+        Number(metaAtual!.metaDiaria ?? 0) * Number(metaAtual!.diasTrabalhados ?? 26)
+      : 0
 
     const resultado = calcularIndicadores({
       metaMensalTotal,
