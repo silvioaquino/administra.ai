@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { calcularDREAno } from "@/lib/dre-calculator";
 
 // POST - Sincronizar dados do livro diário para o fluxo de caixa
 export async function POST(request: NextRequest) {
@@ -78,9 +79,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Recalcular o DRE real do ano (popula dreResultado com dados reais)
+    let dreMsg = "";
+    try {
+      await calcularDREAno(empresaId, session.user.id, ano);
+      dreMsg = " e DRE recalculado";
+    } catch (dreErr) {
+      console.error("Erro ao recalcular DRE:", dreErr);
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Sincronizados ${Object.keys(fluxoPorDia).length} dias`,
+      message: `Sincronizados ${Object.keys(fluxoPorDia).length} dias${dreMsg}`,
     });
   } catch (error) {
     console.error("Erro ao sincronizar fluxo de caixa:", error);

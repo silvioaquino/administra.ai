@@ -172,6 +172,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Realizado = soma de TODAS as receitas reais do livro diário
+    // (tipo VENDA/RECEITA), independente do código da conta.
+    const realizadoPorMes: Record<number, number> = {};
+    for (let i = 1; i <= 12; i++) realizadoPorMes[i] = 0;
+    for (const lanc of lancamentos) {
+      const mes = lanc.data.getMonth() + 1;
+      if (lanc.tipo === 'VENDA' || lanc.tipo === 'RECEITA') {
+        realizadoPorMes[mes] += Number(lanc.entrada || 0);
+      }
+    }
+
     // Construir estrutura DRE mensal
     const meses = [
       'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -192,7 +203,7 @@ export async function GET(request: NextRequest) {
         mes: mesNum,
         nome: mesNome,
         previsao: previsaoTotal,
-        realizado: valoresPorMes[mesNum]['3.1'] || 0,
+        realizado: realizadoPorMes[mesNum] || 0,
         // Total de custos com produtos/insumos (código 4.2)
         cmv: totalInsumos || valoresPorMes[mesNum]['4.2'] || 0,
         // Detalhamento dos códigos específicos
