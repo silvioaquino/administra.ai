@@ -404,6 +404,24 @@ model DespesaFixa {
   @@map("despesas_fixas")
 }
 
+model DistribuicaoLucro {
+  id                Int      @id @default(autoincrement())
+  empresaId         String   @map("empresa_id")
+  userId            String   @map("user_id")
+  fechamentoMensalId Int?    @map("fechamento_mensal_id")
+  ano               Int
+  mes               Int
+  nome              String
+  percentual        Decimal  @db.Decimal(5, 2)
+  valor             Decimal  @db.Decimal(10, 2)
+  contaId           Int?     @map("conta_id")
+  pago              Boolean  @default(false)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@index([empresaId, ano, mes])
+  @@map("distribuicoes_lucro")
+}
+
 model DespesaVariavel {
   id         Int      @id @default(autoincrement())
   userId     String

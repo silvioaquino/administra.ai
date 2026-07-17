@@ -10,13 +10,15 @@ interface SaldosContasTabProps {
   contas: ContaSaldo[];
   despesas?: DespesaFechamento[];
   onChange: (contas: ContaSaldo[]) => void;
+  onSalvar?: (id: number, saldoInicial: number) => void;
 }
 
-export function SaldosContasTab({ contas, despesas = [], onChange }: SaldosContasTabProps) {
+export function SaldosContasTab({ contas, despesas = [], onChange, onSalvar }: SaldosContasTabProps) {
   const [editandoId, setEditandoId] = useState<number | null>(null);
 
   const atualizarSaldo = (id: number, saldo: number) => {
     onChange(contas.map(c => c.id === id ? { ...c, saldoAtual: saldo } : c));
+    if (onSalvar) onSalvar(id, saldo);
   };
 
   const calcularSobra = (conta: ContaSaldo) => {

@@ -14,7 +14,6 @@ import {
   EyeOff,
   Lock,
   Unlock,
-  RefreshCw,
   ChevronRight,
   ChevronDown,
   BarChart3,
@@ -22,6 +21,7 @@ import {
   AlertCircle,
   Edit,
   Plus,
+  CheckCircle,
   ChevronDown as ChevronDownIcon,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +32,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DespesasTab } from "./components/tabs/DespesasTab";
 import { FolhaPagamentoTab } from "./components/tabs/FolhaPagamentoTab";
 import { SaldosContasTab } from "./components/tabs/SaldosContasTab";
+import { DistribuicaoLucroTab } from "./components/tabs/DistribuicaoLucroTab";
+import { ModalEditarConta, type ContaParaEditar } from "./components/modais/ModalEditarConta";
+import { ModalNovaConta } from "./components/modais/ModalNovaConta";
 import { formatCurrency, formatPercentage, formatDate } from "@/lib/utils";
 import type { FuncionarioFechamento, DespesaFechamento, ContaSaldo } from "@/types/fechamento";
 
@@ -67,7 +70,10 @@ export default function FechamentoMensalPage() {
   const [contas, setContas] = useState<ContaSaldo[]>([]);
   const [despesas, setDespesas] = useState<DespesaFechamento[]>([]);
   const [funcionarios, setFuncionarios] = useState<FuncionarioFechamento[]>([]);
-  const [despesasFixas, setDespesasFixas] = useState<any[]>([]);
+  const [mostrarPagas, setMostrarPagas] = useState(false);
+  const [contaEditando, setContaEditando] = useState<ContaSaldo | null>(null);
+  const [modalEditarOpen, setModalEditarOpen] = useState(false);
+  const [modalNovaOpen, setModalNovaOpen] = useState(false);
 
   // Estados para controle de seções expansíveis
   const [sectionsExpanded, setSectionsExpanded] = useState({
@@ -107,29 +113,34 @@ export default function FechamentoMensalPage() {
         setFechamento(fechamentoData.data);
       }
 
-      const contasResponse = await fetch(`/api/contas-financeiras?userId=current-user`);
+      const contasResponse = await fetch(`/api/contas-financeiras`);
       const contasData = await contasResponse.json();
       if (contasData.success) {
         setContas(contasData.data.map((c: any) => ({
           id: c.id,
           nome: c.nome,
           saldoAtual: Number(c.saldoAtual || 0),
-          saldoAnterior: Number(c.saldoAnterior || c.saldoAtual || 0),
+          saldoAnterior: Number(c.saldoInicial || 0),
           despesas: 0,
           sobra: Number(c.saldoAtual || 0),
+          saldoInicial: Number(c.saldoInicial || 0),
+          tipo: c.tipo || "CONTA_CORRENTE",
         })));
       }
 
-      const despesasResponse = await fetch(`/api/livro-diario?ano=${anoAtual}&mes=${mesAtual}&tipo=DESPESA`);
+      const despesasResponse = await fetch(`/api/fechamento-mensal/despesas-pendentes?ano=${anoAtual}&mes=${mesAtual}&incluirPagas=true`);
       const despesasData = await despesasResponse.json();
       if (despesasData.success) {
-        setDespesas(despesasData.data || []);
-      }
-
-      const despesasFixasResponse = await fetch(`/api/despesas-fixas`);
-      const despesasFixasData = await despesasFixasResponse.json();
-      if (despesasFixasData.success) {
-        setDespesasFixas(despesasFixasData.data || []);
+        setDespesas((despesasData.data || []).map((d: any) => ({
+          id: String(d.id),
+          nome: d.nome,
+          valor: Number(d.valor),
+          dataVencimento: d.vencimento,
+          status: d.status,
+          contaId: d.contaId ?? undefined,
+          origem: d.origem,
+          contaNome: d.contaNome,
+        })));
       }
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -216,6 +227,45 @@ export default function FechamentoMensalPage() {
         alert("❌ Erro ao reabrir mês");
       }
     }
+  };
+
+  const marcarPago = async (d: DespesaFechamento) => {
+    try {
+      if (d.origem === "FIXA") {
+        await fetch(`/api/despesas-fixas/${Number(d.id)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "PAGO" }),
+        });
+      } else {
+        await fetch(`/api/livro-diario/${Number(d.id)}/pagar`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dataPagamento: new Date().toISOString() }),
+        });
+      }
+      carregarDados();
+    } catch {
+      alert("Erro ao marcar como pago");
+    }
+  };
+
+  const salvarConta = async (id: number, dados: { nome: string; saldoInicial: number; tipo: string }) => {
+    await fetch(`/api/fechamento-mensal/contas/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dados),
+    });
+    carregarDados();
+  };
+
+  const criarConta = async (dados: { nome: string; saldoInicial: number; tipo: string }) => {
+    await fetch(`/api/contas-financeiras`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dados),
+    });
+    carregarDados();
   };
 
   const toggleGroup = (groupId: string) => {
@@ -341,13 +391,11 @@ export default function FechamentoMensalPage() {
   const isFechado = fechamento?.status === "FECHADO";
 
   const saldoTotal = contas.reduce((sum, c) => sum + (c.saldoAtual || 0), 0);
-  const totalDespesas = despesas.reduce((sum, d) => sum + Number(d.valor || 0), 0);
-  const saldoRestante = saldoTotal - totalDespesas;
 
-  const capitalGiro = saldoRestante * 0.10;
-  const fundoInvestimento = saldoRestante * 0.10;
-  const provisoes = Math.max(1000, saldoRestante * 0.05);
-  const lucroLiquido = saldoRestante - capitalGiro - fundoInvestimento - provisoes;
+  const listaDespesas = mostrarPagas
+    ? despesas
+    : despesas.filter((d) => d.status !== "PAGO");
+  const despesasPendentes = despesas.filter((d) => d.status !== "PAGO");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -549,13 +597,8 @@ export default function FechamentoMensalPage() {
                           size="sm"
                           className="p-1 h-7 w-7 rounded-lg hover:bg-gray-200"
                           onClick={() => {
-                            const novoSaldo = prompt("Digite o novo saldo:", conta.saldoAtual.toString());
-                            if (novoSaldo !== null) {
-                              const saldo = parseFloat(novoSaldo);
-                              if (!isNaN(saldo)) {
-                                setContas(contas.map(c => c.id === conta.id ? { ...c, saldoAtual: saldo } : c));
-                              }
-                            }
+                            setContaEditando(conta);
+                            setModalEditarOpen(true);
                           }}
                         >
                           <Edit className="h-3 w-3 text-gray-400" />
@@ -565,24 +608,9 @@ export default function FechamentoMensalPage() {
                   </div>
                 ))}
 
-                <div 
+                <div
                   className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-white hover:bg-gray-50 transition-colors cursor-pointer flex items-center justify-center flex-col gap-2"
-                  onClick={() => {
-                    const nome = prompt("Nome da nova conta:");
-                    if (nome) {
-                      const novoSaldo = parseFloat(prompt("Saldo inicial?", "0") || "0");
-                      if (!isNaN(novoSaldo)) {
-                        setContas([...contas, {
-                          id: Date.now(),
-                          nome,
-                          saldoAtual: novoSaldo,
-                          saldoAnterior: novoSaldo,
-                          despesas: 0,
-                          sobra: novoSaldo,
-                        }]);
-                      }
-                    }
-                  }}
+                  onClick={() => setModalNovaOpen(true)}
                 >
                   <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
                     <Plus className="h-5 w-5 text-emerald-600" />
@@ -604,13 +632,23 @@ export default function FechamentoMensalPage() {
           )}
         </div>
 
-        {/* Seção: Despesas Fixas */}
+        {/* Seção: Despesas Pendentes do Mês */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden transition-all duration-200 hover:shadow-md mb-6">
-          <SectionHeader 
-            title="Despesas Fixas do Mês" 
-            icon={DollarSign} 
+          <SectionHeader
+            title="Despesas Pendentes do Mês"
+            icon={DollarSign}
             section="fixedExpenses"
-            badge={`${despesasFixas.length} itens`}
+            badge={`${despesasPendentes.length} pendentes`}
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMostrarPagas(!mostrarPagas)}
+                className="rounded-full border-gray-200 hover:bg-gray-100 text-xs"
+              >
+                {mostrarPagas ? "Ocultar pagas" : "Mostrar pagas"}
+              </Button>
+            }
           />
           {sectionsExpanded.fixedExpenses && (
             <div className="p-4 md:p-5 pt-0 border-t border-gray-100">
@@ -623,64 +661,67 @@ export default function FechamentoMensalPage() {
                       <th className="px-3 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Venc.</th>
                       <th className="px-3 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Conta</th>
                       <th className="px-3 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-3 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {despesasFixas.length === 0 ? (
+                    {listaDespesas.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-8 text-center text-gray-500">
+                        <td colSpan={6} className="py-8 text-center text-gray-500">
                           <DollarSign className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                          Nenhuma despesa fixa cadastrada.
+                          Nenhuma despesa pendente neste mês.
                         </td>
                       </tr>
                     ) : (
-                      despesasFixas.map((despesa) => (
-                        <tr key={despesa.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                          <td className="px-3 py-2.5 font-medium text-gray-800">{despesa.nome}</td>
+                      listaDespesas.map((d) => (
+                        <tr key={`${d.origem}-${d.id}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                          <td className="px-3 py-2.5 font-medium text-gray-800">{d.nome}</td>
                           <td className="px-3 py-2.5 text-right text-gray-700 font-mono">
-                            {hideValues ? "••••••" : formatCurrency(despesa.valor)}
+                            {hideValues ? "••••••" : formatCurrency(d.valor)}
                           </td>
                           <td className="px-3 py-2.5 text-center text-gray-600 hidden sm:table-cell">
-                            {new Date(despesa.vencimento).toLocaleDateString()}
+                            {new Date(d.dataVencimento).toLocaleDateString()}
                           </td>
-                          <td className="px-3 py-2.5 text-center hidden md:table-cell">
-                            {despesa.contaId ? (
-                              <span className="text-xs text-gray-600">
-                                {contas.find(c => c.id === despesa.contaId)?.nome || "Conta " + despesa.contaId}
-                              </span>
+                          <td className="px-3 py-2.5 text-center hidden md:table-cell text-xs text-gray-600">
+                            {d.contaNome || "—"}
+                          </td>
+                          <td className="px-3 py-2.5 text-center">
+                            {d.status === "PAGO" ? (
+                              <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Pago</span>
                             ) : (
-                              <span className="text-xs text-gray-400">Não definida</span>
+                              <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">Pendente</span>
                             )}
                           </td>
                           <td className="px-3 py-2.5 text-center">
-                            <input
-                              type="checkbox"
-                              checked={despesa.status === "PAGO"}
-                              onChange={(e) => {
-                                setDespesasFixas(prev => prev.map(d =>
-                                  d.id === despesa.id
-                                    ? { ...d, status: e.target.checked ? "PAGO" : "PENDENTE" }
-                                    : d
-                                ));
-                              }}
-                              className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                            />
+                            {d.status !== "PAGO" ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => marcarPago(d)}
+                                className="rounded-full border-emerald-500 text-emerald-600 hover:bg-emerald-50 text-xs"
+                              >
+                                <CheckCircle className="mr-1 h-3 w-3" />
+                                Pagar
+                              </Button>
+                            ) : (
+                              <CheckCircle className="h-4 w-4 text-emerald-500 mx-auto" />
+                            )}
                           </td>
                         </tr>
                       ))
                     )}
                   </tbody>
-                  {despesasFixas.length > 0 && (
+                  {listaDespesas.length > 0 && (
                     <tfoot className="border-t-2 border-gray-200 bg-gray-100/80">
                       <tr>
                         <td colSpan={2} className="px-3 py-3 text-right font-semibold text-gray-700">
                           Total:
                         </td>
                         <td className="px-3 py-3 text-right font-bold text-red-600 hidden sm:table-cell">
-                          {hideValues ? "••••••" : formatCurrency(despesasFixas.reduce((sum, d) => sum + d.valor, 0))}
+                          {hideValues ? "••••••" : formatCurrency(listaDespesas.reduce((sum, d) => sum + d.valor, 0))}
                         </td>
-                        <td colSpan={2} className="px-3 py-3 text-right font-bold text-red-600 sm:hidden">
-                          {hideValues ? "••••••" : formatCurrency(despesasFixas.reduce((sum, d) => sum + d.valor, 0))}
+                        <td colSpan={4} className="px-3 py-3 text-right font-bold text-red-600">
+                          {hideValues ? "••••••" : formatCurrency(listaDespesas.reduce((sum, d) => sum + d.valor, 0))}
                         </td>
                       </tr>
                     </tfoot>
@@ -828,8 +869,8 @@ export default function FechamentoMensalPage() {
               <CardContent className="p-4 md:p-5">
                 <DespesasTab
                   despesas={despesas}
-                  onChange={setDespesas}
-                  contasIds={contas.map(c => c.id)}
+                  contas={contas.map(c => ({ id: c.id, nome: c.nome }))}
+                  onRecarregar={carregarDados}
                 />
               </CardContent>
             </Card>
@@ -873,6 +914,10 @@ export default function FechamentoMensalPage() {
                   contas={contas}
                   despesas={despesas}
                   onChange={setContas}
+                  onSalvar={(id, saldoInicial) => {
+                    const c = contas.find(x => x.id === id);
+                    if (c) salvarConta(id, { nome: c.nome, saldoInicial, tipo: c.tipo || "CONTA_CORRENTE" });
+                  }}
                 />
               </CardContent>
             </Card>
@@ -983,77 +1028,11 @@ export default function FechamentoMensalPage() {
 
           {/* Tab - Distribuição de Lucros */}
           <TabsContent value="fechamento" className="mt-6">
-            <div className="grid gap-6">
-              {/* Resultados do Fechamento */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-4 text-white shadow-lg shadow-blue-500/20">
-                  <p className="text-xs opacity-90">Saldo Total</p>
-                  <p className="text-lg font-bold mt-1">
-                    {hideValues ? "••••••" : formatCurrency(saldoTotal)}
-                  </p>
-                </div>
-                <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl p-4 text-white shadow-lg shadow-emerald-500/20">
-                  <p className="text-xs opacity-90">Capital Giro (10%)</p>
-                  <p className="text-lg font-bold mt-1">
-                    {hideValues ? "••••••" : formatCurrency(capitalGiro)}
-                  </p>
-                </div>
-                <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl p-4 text-white shadow-lg shadow-purple-500/20">
-                  <p className="text-xs opacity-90">Fundo Invest. (10%)</p>
-                  <p className="text-lg font-bold mt-1">
-                    {hideValues ? "••••••" : formatCurrency(fundoInvestimento)}
-                  </p>
-                </div>
-                <div className={`bg-gradient-to-br ${lucroLiquido >= 0 ? "from-indigo-500 to-indigo-700" : "from-orange-500 to-orange-700"} rounded-xl p-4 text-white shadow-lg ${lucroLiquido >= 0 ? "shadow-indigo-500/20" : "shadow-orange-500/20"}`}>
-                  <p className="text-xs opacity-90">Lucro Líquido</p>
-                  <p className="text-lg font-bold mt-1">
-                    {hideValues ? "••••••" : formatCurrency(lucroLiquido)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Distribuição de Lucros */}
-              <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gray-50/80 border-b border-gray-100">
-                  <CardTitle className="text-lg">Distribuição de Lucros</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 md:p-5">
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                        <div>
-                          <p className="font-medium text-gray-800">Capital de Giro</p>
-                          <p className="text-xs text-gray-500">10% do saldo restante</p>
-                        </div>
-                        <p className="font-bold text-blue-600">{formatCurrency(capitalGiro)}</p>
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                        <div>
-                          <p className="font-medium text-gray-800">Fundo de Investimento</p>
-                          <p className="text-xs text-gray-500">10% do saldo restante</p>
-                        </div>
-                        <p className="font-bold text-purple-600">{formatCurrency(fundoInvestimento)}</p>
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                        <div>
-                          <p className="font-medium text-gray-800">Provisões</p>
-                          <p className="text-xs text-gray-500">Mínimo R$ 1.000 ou 5%</p>
-                        </div>
-                        <p className="font-bold text-amber-600">{formatCurrency(provisoes)}</p>
-                      </div>
-                    </div>
-                    <div className="border-t-2 border-gray-200 pt-4 mt-2">
-                      <div className="flex justify-between items-center">
-                        <p className="font-semibold text-lg text-gray-800">Lucro Líquido Distribuído</p>
-                        <p className={`text-2xl font-bold ${lucroLiquido >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                          {formatCurrency(lucroLiquido)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <DistribuicaoLucroTab
+              ano={anoAtual}
+              mes={mesAtual}
+              contas={contas.map(c => ({ id: c.id, nome: c.nome }))}
+            />
           </TabsContent>
         </Tabs>
 
@@ -1088,6 +1067,19 @@ export default function FechamentoMensalPage() {
             </Button>
           )}
         </div>
+
+        {/* Modais de contas */}
+        <ModalEditarConta
+          conta={contaEditando as ContaParaEditar | null}
+          open={modalEditarOpen}
+          onClose={() => { setModalEditarOpen(false); setContaEditando(null); }}
+          onSave={async (id, dados) => { await salvarConta(id, dados); }}
+        />
+        <ModalNovaConta
+          open={modalNovaOpen}
+          onClose={() => setModalNovaOpen(false)}
+          onSave={async (dados) => { await criarConta(dados); }}
+        />
       </div>
     </div>
   );
