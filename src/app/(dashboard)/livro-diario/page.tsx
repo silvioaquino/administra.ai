@@ -8,8 +8,6 @@ import {
   BookOpen,
   Plus,
   RefreshCw,
-  Search,
-  Eraser,
   DollarSign,
   TrendingUp,
   TrendingDown,
@@ -639,35 +637,37 @@ export default function LivroDiarioPage() {
         lancamentosData = [...lancamentosData, ...lancamentosMocados]
       }*/}
 
+      const hoje = new Date()
+      hoje.setHours(0, 0, 0, 0)
+
+      const lancamentosAtualizados = lancamentosData.map((lanc: Lancamento) => {
+        if (lanc.statusBoleto === "PAGO" || lanc.dataPagamento) {
+          return { ...lanc, statusBoleto: "PAGO" }
+        }
+        if (lanc.dataVencimento) {
+          const vencimento = new Date(lanc.dataVencimento)
+          vencimento.setHours(0, 0, 0, 0)
+          if (vencimento < hoje) {
+            return { ...lanc, statusBoleto: "VENCIDO" }
+          }
+        }
+        return lanc
+      })
+
       if (lancamentosRes.ok) {
-        const hoje = new Date()
-        hoje.setHours(0, 0, 0, 0)
-
-        const lancamentosAtualizados = lancamentosData.map((lanc: Lancamento) => {
-          if (lanc.statusBoleto === "PAGO" || lanc.dataPagamento) {
-            return { ...lanc, statusBoleto: "PAGO" }
-          }
-          if (lanc.dataVencimento) {
-            const vencimento = new Date(lanc.dataVencimento)
-            vencimento.setHours(0, 0, 0, 0)
-            if (vencimento < hoje) {
-              return { ...lanc, statusBoleto: "VENCIDO" }
-            }
-          }
-          return lanc
-        })
-
         setLancamentos(lancamentosAtualizados)
         setNotasCache(new Map())
         setExpandedRows(new Set())
       }
 
       if (resumoRes.ok) {
-        const boletosPendentes = lancamentosData.filter((l: Lancamento) =>
-          l.boletoId && (!l.statusBoleto || l.statusBoleto === "PENDENTE") && !l.dataPagamento
+        const boletosPendentes = lancamentosAtualizados.filter((l: Lancamento) =>
+          (l.boletoId !== null || l.statusBoleto !== null) &&
+          (!l.statusBoleto || l.statusBoleto === "PENDENTE") &&
+          !l.dataPagamento
         )
-        const boletosVencidos = lancamentosData.filter((l: Lancamento) =>
-          l.boletoId && l.statusBoleto === "VENCIDO"
+        const boletosVencidos = lancamentosAtualizados.filter((l: Lancamento) =>
+          (l.boletoId !== null || l.statusBoleto !== null) && l.statusBoleto === "VENCIDO"
         )
         const valorPendente = boletosPendentes.reduce((sum: number, l: Lancamento) => sum + l.saida, 0)
         const totalFolha = lancamentosData
@@ -937,12 +937,35 @@ export default function LivroDiarioPage() {
 
   const limparFiltros = () => {
     setFiltros({
-      dataInicio: obterDataHoje(),
+      dataInicio: obterPrimeiroDiaMes(),
       dataFim: obterDataHoje(),
       conta: "",
       tipo: "",
       statusBoleto: ""
     })
+  }
+
+  // Aplica um período rápido (Hoje / Semanal / Quinzenal) e recarrega
+  const aplicarPeriodo = (periodo: "hoje" | "semanal" | "quinzenal") => {
+    const formatar = (d: Date) => {
+      const ano = d.getFullYear()
+      const mes = String(d.getMonth() + 1).padStart(2, "0")
+      const dia = String(d.getDate()).padStart(2, "0")
+      return `${ano}-${mes}-${dia}`
+    }
+    const hoje = new Date()
+    const dataFim = formatar(hoje)
+    let dataInicio = dataFim
+    if (periodo === "semanal") {
+      const d = new Date(hoje)
+      d.setDate(d.getDate() - 6)
+      dataInicio = formatar(d)
+    } else if (periodo === "quinzenal") {
+      const d = new Date(hoje)
+      d.setDate(d.getDate() - 14)
+      dataInicio = formatar(d)
+    }
+    setFiltros(prev => ({ ...prev, dataInicio, dataFim }))
   }
 
   const getTipoBadge = (tipo: string) => {
@@ -1307,14 +1330,18 @@ export default function LivroDiarioPage() {
                 </div>
               </div>
             </div>
-            <div className="flex gap-3 mt-5">
-              <Button onClick={() => carregarDados()} className="flex-1 bg-[#de4838] hover:bg-[#c73d2e] rounded-lg">
-                <Search className="mr-2 h-4 w-4" />
-                Filtrar
+            <div className="grid grid-cols-4 gap-2 mt-5">
+              <Button onClick={() => aplicarPeriodo("hoje")} className="w-full bg-[#de4838] hover:bg-[#c73d2e] rounded-lg">
+                Hoje
               </Button>
-              <Button variant="outline" onClick={limparFiltros} className="flex-1 border-gray-200 hover:bg-gray-100 rounded-lg">
-                <Eraser className="mr-2 h-4 w-4" />
-                Limpar Filtros
+              <Button onClick={() => aplicarPeriodo("semanal")} className="w-full bg-[#de4838] hover:bg-[#c73d2e] rounded-lg">
+                Semanal
+              </Button>
+              <Button onClick={() => aplicarPeriodo("quinzenal")} className="w-full bg-[#de4838] hover:bg-[#c73d2e] rounded-lg">
+                Quinzenal
+              </Button>
+              <Button variant="outline" onClick={limparFiltros} className="w-full border-gray-200 hover:bg-gray-100 rounded-lg">
+                Limpar
               </Button>
             </div>
           </div>
@@ -1340,7 +1367,7 @@ export default function LivroDiarioPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[145px]">Fornecedor</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[100px]">Entrada</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[100px]">Saída</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[96px]">Tipo</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[77px]">Tipo</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[115px]">Status</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[108px]">Ações</th>
                 </tr>
