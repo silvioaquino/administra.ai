@@ -127,27 +127,49 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
     }
   }
 
-  function carregarProvisoesAtivas() {
-    const saved = localStorage.getItem("provisoesAtivas")
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        // Mescla com os valores padrão para garantir que todas as chaves existam
-        setProvisoesAtivas(prev => ({ ...DEFAULT_PROVISOES_ATIVAS, ...prev, ...parsed }))
-      } catch (e) {
-        console.error("Erro ao carregar provisões ativas:", e)
-        // Em caso de erro, usa os valores padrão
-        setProvisoesAtivas(DEFAULT_PROVISOES_ATIVAS)
-      }
+  async function carregarProvisoesAtivas() {
+    // Fonte de verdade: banco (planejamentoConfig). Fallback: localStorage e, por fim, defaults.
+    let doBanco: any = null
+    try {
+      const res = await fetch("/api/planejamento/folha-provisoes-ativas")
+      const json = await res.json()
+      if (json.success && json.provisoesAtivas) doBanco = json.provisoesAtivas
+    } catch (e) {
+      console.error("Erro ao carregar provisões ativas do banco:", e)
     }
+
+    let doLocal: any = null
+    try {
+      const saved = localStorage.getItem("provisoesAtivas")
+      if (saved) doLocal = JSON.parse(saved)
+    } catch (e) {
+      console.error("Erro ao ler provisões ativas locais:", e)
+    }
+
+    setProvisoesAtivas(prev => ({
+      ...DEFAULT_PROVISOES_ATIVAS,
+      ...(doBanco || {}),
+      ...(doLocal || {}),
+      ...prev,
+    }))
   }
 
-  function salvarProvisoesAtivas(novasProvisoesAtivas: typeof DEFAULT_PROVISOES_ATIVAS) {
+  async function salvarProvisoesAtivas(novasProvisoesAtivas: typeof DEFAULT_PROVISOES_ATIVAS) {
     setProvisoesAtivas(novasProvisoesAtivas)
     try {
       localStorage.setItem("provisoesAtivas", JSON.stringify(novasProvisoesAtivas))
     } catch (e) {
-      console.error("Erro ao salvar provisões ativas:", e)
+      console.error("Erro ao salvar provisões ativas locais:", e)
+    }
+    // Persiste no banco para o recálculo server-side usar os mesmos switches.
+    try {
+      await fetch("/api/planejamento/folha-provisoes-ativas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provisoesAtivas: novasProvisoesAtivas }),
+      })
+    } catch (e) {
+      console.error("Erro ao salvar provisões ativas no banco:", e)
     }
   }
 

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { recalcularFolhaSalarial, garantirFolhaAno } from "@/lib/folha"
+import { calcularDREAno } from "@/lib/dre-calculator"
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -13,35 +15,56 @@ export async function GET(request: NextRequest) {
   const empresaId = session.user.empresaId || "sem-empresa"
   const { searchParams } = new URL(request.url)
   const ano = parseInt(searchParams.get("ano") || new Date().getFullYear().toString())
+  const mesParam = searchParams.get("mes")
+  const mes = mesParam ? parseInt(mesParam) : null
 
   try {
-    const folha = await prisma.planejamentoFolhaSalarial.findUnique({
-      where: {
-        empresaId_userId_anoReferencia: {
-          empresaId,
-          userId,
-          anoReferencia: ano
-        }
-      }
-    })
+    // Garante que o mês atual (e eventuais ausentes) estejam salvos/atualizados.
+    await garantirFolhaAno(empresaId, userId, ano)
 
-    if (!folha) {
-      return NextResponse.json({ success: true, dados: null })
+    if (mes) {
+      const folha = await prisma.planejamentoFolhaSalarial.findUnique({
+        where: {
+          empresaId_userId_anoReferencia_mes: { empresaId, userId, anoReferencia: ano, mes },
+        },
+      })
+      if (!folha) {
+        return NextResponse.json({ success: true, dados: null })
+      }
+      return NextResponse.json({
+        success: true,
+        dados: {
+          totalSalarios: Number(folha.totalSalarios),
+          totalDecimo: Number(folha.totalDecimo),
+          totalFerias: Number(folha.totalFerias),
+          totalFgts: Number(folha.totalFgts),
+          totalInss: Number(folha.totalInss),
+          totalInssPatronal: Number(folha.totalInssPatronal),
+          totalMensal: Number(folha.totalMensal),
+          folhaEncargosPercentual: folha.folhaEncargosPercentual,
+        },
+      })
     }
 
-    return NextResponse.json({
-      success: true,
-      dados: {
-        totalSalarios: Number(folha.totalSalarios),
-        totalDecimo: Number(folha.totalDecimo),
-        totalFerias: Number(folha.totalFerias),
-        totalFgts: Number(folha.totalFgts),
-        totalInss: Number(folha.totalInss),
-        totalInssPatronal: Number(folha.totalInssPatronal),
-        totalMensal: Number(folha.totalMensal),
-        folhaEncargosPercentual: folha.folhaEncargosPercentual
-      }
+    // Sem mês: retorna as 12 linhas do ano (índice por mês).
+    const folhas = await prisma.planejamentoFolhaSalarial.findMany({
+      where: { empresaId, userId, anoReferencia: ano },
+      orderBy: { mes: "asc" },
     })
+    const porMes: Record<number, any> = {}
+    for (const f of folhas) {
+      porMes[f.mes] = {
+        totalSalarios: Number(f.totalSalarios),
+        totalDecimo: Number(f.totalDecimo),
+        totalFerias: Number(f.totalFerias),
+        totalFgts: Number(f.totalFgts),
+        totalInss: Number(f.totalInss),
+        totalInssPatronal: Number(f.totalInssPatronal),
+        totalMensal: Number(f.totalMensal),
+        folhaEncargosPercentual: f.folhaEncargosPercentual,
+      }
+    }
+    return NextResponse.json({ success: true, dados: porMes })
   } catch (error) {
     console.error("Erro ao buscar folha salarial:", error)
     return NextResponse.json(
@@ -58,55 +81,24 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const {
-      ano,
-      totalSalarios,
-      totalDecimo,
-      totalFerias,
-      totalFgts,
-      totalInss,
-      totalInssPatronal,
-      totalMensal,
-      folhaEncargosPercentual
-    } = await request.json()
+    const body = await request.json().catch(() => ({}))
+    const ano = parseInt(body.ano || new Date().getFullYear().toString())
 
     const userId = session.user.id
     const empresaId = session.user.empresaId || "sem-empresa"
 
-    const folha = await prisma.planejamentoFolhaSalarial.upsert({
-      where: {
-        empresaId_userId_anoReferencia: {
-          empresaId,
-          userId,
-          anoReferencia: ano
-        }
-      },
-      update: {
-        totalSalarios,
-        totalDecimo,
-        totalFerias,
-        totalFgts,
-        totalInss,
-        totalInssPatronal,
-        totalMensal,
-        folhaEncargosPercentual
-      },
-      create: {
-        empresaId,
-        userId,
-        anoReferencia: ano,
-        totalSalarios: totalSalarios || 0,
-        totalDecimo: totalDecimo || 0,
-        totalFerias: totalFerias || 0,
-        totalFgts: totalFgts || 0,
-        totalInss: totalInss || 0,
-        totalInssPatronal: totalInssPatronal || 0,
-        totalMensal: totalMensal || 0,
-        folhaEncargosPercentual: folhaEncargosPercentual || 0
-      }
-    })
+    // Recálculo server-side a partir de funcionários + provisões (fonte única).
+    // Os totais enviados pelo cliente são ignorados — o servidor recomputa.
+    await recalcularFolhaSalarial(empresaId, userId, ano)
 
-    return NextResponse.json({ success: true, dados: folha })
+    // Reagrega o DRE (Fluxo de Caixa) com a folha atualizada.
+    try {
+      await calcularDREAno(empresaId, userId, ano)
+    } catch (dreErr) {
+      console.error("Erro ao recalcular DRE após folha:", dreErr)
+    }
+
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Erro ao salvar folha salarial:", error)
     return NextResponse.json(

@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { calcularIndicadores } from "@/lib/planejamento/calcularIndicadores"
+import { garantirFolhaAno } from "@/lib/folha"
 
 interface DespesasVariaveisDados {
   maquininhas?: Array<{ id?: string; nome?: string; taxaDebito: number; taxaCredito: number; aluguel: number; ativo: boolean }>
@@ -105,16 +106,24 @@ export async function GET(request: Request) {
       }
     }
 
-    // 3. Folha salarial (total de salários + encargos) — fonte enriquecida dos indicadores
-    const folha = await prisma.planejamentoFolhaSalarial.findUnique({
-      where: {
-        empresaId_userId_anoReferencia: {
-          empresaId,
-          userId,
-          anoReferencia: ano
-        }
-      }
-    })
+    // 3. Folha salarial (total de salários + encargos) — fonte enriquecida dos indicadores.
+    // Garante que o mês atual esteja salvo (snapshot) e lê o registro do mês corrente.
+    await garantirFolhaAno(empresaId, userId, ano)
+    const folha =
+      (await prisma.planejamentoFolhaSalarial.findUnique({
+        where: {
+          empresaId_userId_anoReferencia_mes: {
+            empresaId,
+            userId,
+            anoReferencia: ano,
+            mes: mesAtual,
+          },
+        },
+      })) ||
+      (await prisma.planejamentoFolhaSalarial.findFirst({
+        where: { empresaId, userId, anoReferencia: ano },
+        orderBy: { mes: "asc" },
+      }))
     const totalSalarios = Number(folha?.totalSalarios) || 0
     const encargosFolha =
       (Number(folha?.totalDecimo) || 0) +

@@ -21,13 +21,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const ano = parseInt(searchParams.get('ano') || new Date().getFullYear().toString());
 
-    // Garantir que o ano esteja calculado (first-load / após nova categoria)
-    const existentes = await prisma.dreResultado.count({
-      where: { empresaId, userId: session.user.id, ano },
-    });
-    if (existentes === 0) {
-      await calcularDREAno(empresaId, session.user.id, ano);
-    }
+    // Recalcular o DRE a cada carga para refletir a folha/provisões atuais
+    // (garantirFolhaAno roda dentro de calcularDREAno, cobrindo virada de mês).
+    await calcularDREAno(empresaId, session.user.id, ano);
 
     const [nodes, resultados, previsoes] = await Promise.all([
       obterNodes(empresaId),

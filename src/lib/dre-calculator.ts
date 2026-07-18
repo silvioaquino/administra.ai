@@ -23,6 +23,7 @@ import {
   type DreNo,
   type DreFonte,
 } from '@/lib/dre-template';
+import { garantirFolhaAno } from '@/lib/folha';
 
 const ZEROS = (): number[] => new Array(12).fill(0);
 
@@ -115,18 +116,6 @@ function despesasFixasPorNome(
   return r;
 }
 
-/** Salários de funcionários repetidos em todos os meses (folha mensal). */
-function salariosPorMes(funcionarios: Array<{ salario: number | null }>): number[] {
-  const total = funcionarios.reduce((s, f) => s + (Number(f.salario) || 0), 0);
-  return new Array(12).fill(total);
-}
-
-/** Provisões anuais distribuídas uniformemente nos 12 meses. */
-function provisaoPorMes(valorAnual: number): number[] {
-  const m = valorAnual / 12;
-  return new Array(12).fill(m);
-}
-
 /** Retiradas (saídas não operacionais) por dataRetirada. */
 function retiradasPorMes(retiradas: Array<{ valor: number; dataRetirada: Date }>): number[] {
   const r = ZEROS();
@@ -160,7 +149,6 @@ export async function montarDRE(
     lancamentos,
     produtos,
     despesasFixas,
-    funcionarios,
     folha,
     retiradas,
     metas,
@@ -177,11 +165,7 @@ export async function montarDRE(
       where: { empresaId, vencimento: { gte: inicio, lte: fim } },
       include: { conta: { select: { nome: true } } },
     }),
-    prisma.funcionario.findMany({
-      where: { empresaId },
-      select: { salario: true },
-    }),
-    prisma.planejamentoFolhaSalarial.findFirst({
+    prisma.planejamentoFolhaSalarial.findMany({
       where: { empresaId, anoReferencia: ano },
     }),
     prisma.retirada.findMany({
@@ -193,18 +177,39 @@ export async function montarDRE(
 
   const livro = classificarLivro(lancamentos as any, nodes);
   const insumos = insumosPorMes(produtos as any);
-  const salarios = salariosPorMes(funcionarios as any);
   const retird = retiradasPorMes(retiradas as any);
-  const folhaTotal = folha as any;
+  const folhaMeses = (folha as any[]) || [];
 
-  // Provisões anuais (distribuídas /12) por código de linha
-  const provisoesMap: Record<string, number> = {
-    '5.4.1': folhaTotal?.totalFerias ?? 0,
-    '5.4.2': (folhaTotal?.totalFerias ?? 0) / 3,
-    '5.4.3': folhaTotal?.totalFgts ?? 0,
-    '5.4.4': folhaTotal?.totalInss ?? 0,
-    '5.4.5': folhaTotal?.totalDecimo ?? 0,
-    '5.4.6': folhaTotal?.totalInssPatronal ?? 0,
+  // Índice mês -> registro da folha salarial (1 linha por mês/ano).
+  const folhaPorMes: Record<number, any> = {};
+  folhaMeses.forEach((f) => {
+    folhaPorMes[f.mes] = f;
+  });
+
+  // Valor da linha de provisão para um mês específico.
+  // Os totais em planejamentoFolhaSalarial JÁ SÃO mensais (rateados por 12 no
+  // FolhaSalarialTable). totalFerias inclui o 1/3 (salário * 1,3333 / 12):
+  // separamos em 5.4.1 (base 1x) e 5.4.2 (1/3) para não duplicar no total de 5.4.
+  const valorProvisaoLinha = (codigo: string, folhaMes: any): number => {
+    if (!folhaMes) return 0;
+    const feriasTotal = Number(folhaMes.totalFerias) || 0;
+    const feriasBase = feriasTotal / 1.3333;
+    switch (codigo) {
+      case '5.4.1':
+        return feriasBase;
+      case '5.4.2':
+        return feriasTotal - feriasBase;
+      case '5.4.3':
+        return Number(folhaMes.totalFgts) || 0;
+      case '5.4.4':
+        return Number(folhaMes.totalInss) || 0;
+      case '5.4.5':
+        return Number(folhaMes.totalDecimo) || 0;
+      case '5.4.6':
+        return Number(folhaMes.totalInssPatronal) || 0;
+      default:
+        return 0;
+    }
   };
 
   // ---- Folhas ----
@@ -220,12 +225,15 @@ export async function montarDRE(
         case 'despesasFixas':
           v = despesasFixasPorNome(despesasFixas as any, n.nome);
           break;
-        case 'pessoal':
-          v = [...salarios];
+        case 'provisoes': {
+          // Cada mês recebe o valor da folha salva para aquele mês (já mensal).
+          const arr = new Array(12).fill(0);
+          for (let m = 1; m <= 12; m++) {
+            arr[m - 1] = valorProvisaoLinha(n.codigo, folhaPorMes[m]);
+          }
+          v = arr;
           break;
-        case 'provisoes':
-          v = provisaoPorMes(provisoesMap[n.codigo] ?? 0);
-          break;
+        }
         case 'retiradas':
           v = [...retird];
           break;
@@ -340,10 +348,12 @@ export async function calcularDREAno(
   ano: number
   ): Promise<void> {
   const nodes = await obterNodes(empresaId);
+  // Garante que a folha salarial tenha linhas para todos os meses (e o mês
+  // atual refrescado) antes de montar o DRE — evita valores obsoletos/ausentes.
+  await garantirFolhaAno(empresaId, userId, ano);
   const { valores } = await montarDRE(empresaId, userId, ano);
 
   const receitaBrutaAnual = (valores['3.1'] ?? ZEROS()).reduce((s, v) => s + v, 0);
-  const codigos = nodes.map((n) => n.codigo);
 
   const rows: Array<{
     empresaId: string;
@@ -375,10 +385,20 @@ export async function calcularDREAno(
     }
   }
 
-  // Remove apenas as linhas gerenciadas por este DRE (preserva o
-  // DRE de 5 linhas do fechamento-mensal, que usa outros códigos).
+  // Remove todas as linhas gerenciadas por este DRE para o ano, recriando
+  // em seguida. Preserva o DRE de 5 linhas do fechamento-mensal
+  // (RECEITA_BRUTA, CMV, LUCRO_BRUTO, DESPESAS_OPERACIONAIS, LUCRO_LIQUIDO),
+  // que usa outros códigos e não deve ser tocado aqui. Isso também elimina
+  // linhas stale cujo código saiu do template (ex.: "5.3.3 Pro-Labore").
+  const LINHAS_FECHAMENTO = [
+    'RECEITA_BRUTA',
+    'CMV',
+    'LUCRO_BRUTO',
+    'DESPESAS_OPERACIONAIS',
+    'LUCRO_LIQUIDO',
+  ];
   await prisma.dreResultado.deleteMany({
-    where: { empresaId, userId, ano, linha: { in: codigos } },
+    where: { empresaId, userId, ano, NOT: { linha: { in: LINHAS_FECHAMENTO } } },
   });
   if (rows.length > 0) {
     await prisma.dreResultado.createMany({ data: rows });

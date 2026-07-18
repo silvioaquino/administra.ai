@@ -120,9 +120,8 @@ export const DRE_TEMPLATE: DreNo[] = [
   { codigo: '5.2.12', nome: 'Acertos', nivel: 2, tipo: 'despesa', fonte: 'livro' },
 
   { codigo: '5.3', nome: 'Despesas com Pessoal', nivel: 1, tipo: 'despesa', isHeader: true, calc: { tipo: 'sum' } },
-  { codigo: '5.3.1', nome: 'Salários de Funcionários', nivel: 2, tipo: 'despesa', fonte: 'pessoal' },
+  { codigo: '5.3.1', nome: 'Salários de Funcionários', nivel: 2, tipo: 'despesa', fonte: 'livro' },
   { codigo: '5.3.2', nome: 'Adiantamento de Salários', nivel: 2, tipo: 'despesa', fonte: 'livro' },
-  { codigo: '5.3.3', nome: 'Pro-Labore', nivel: 2, tipo: 'despesa', fonte: 'livro' },
   { codigo: '5.3.4', nome: 'Bolsa de Estágio', nivel: 2, tipo: 'despesa', fonte: 'livro' },
   { codigo: '5.3.5', nome: 'Vale Transporte', nivel: 2, tipo: 'despesa', fonte: 'livro' },
   { codigo: '5.3.6', nome: 'Rescisão', nivel: 2, tipo: 'despesa', fonte: 'livro' },

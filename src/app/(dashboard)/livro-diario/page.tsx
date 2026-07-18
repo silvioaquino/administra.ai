@@ -92,6 +92,20 @@ interface Lancamento {
   updatedAt: string
 }
 
+interface FolhaItemDetalhe {
+  nome: string
+  salario: number
+  adiantamento: number
+  salarioRestante: number
+}
+
+interface FolhaDetalhe {
+  tipo: "adiantamento" | "salario"
+  pct: number
+  itens: FolhaItemDetalhe[]
+  total: number
+}
+
 // Tipo para as opções de conta do select
 interface ContaOption {
   codigo: string;
@@ -367,6 +381,8 @@ export default function LivroDiarioPage() {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
   const [notasCache, setNotasCache] = useState<Map<number, NotaFiscal>>(new Map())
   const [loadingNotas, setLoadingNotas] = useState<Set<number>>(new Set())
+  const [folhaCache, setFolhaCache] = useState<Map<number, FolhaDetalhe>>(new Map())
+  const [loadingFolha, setLoadingFolha] = useState<Set<number>>(new Set())
   const [mostrarExemplos, setMostrarExemplos] = useState(true)
 
   // Hook para categorias dinâmicas
@@ -466,15 +482,74 @@ export default function LivroDiarioPage() {
     return lancamento.boletoId !== null || lancamento.statusBoleto !== null
   }
 
-  // Verificar se pode expandir (nota fiscal ou boleto)
+  // Verificar se pode expandir (nota fiscal, boleto ou folha de pagamento)
   const canExpand = (lancamento: Lancamento) => {
-    return isNotaFiscal(lancamento) || isBoleto(lancamento)
+    return isNotaFiscal(lancamento) || isBoleto(lancamento) || isFolhaPagamento(lancamento)
   }
 
   // Verificar se é folha de pagamento
   const isFolhaPagamento = (lancamento: Lancamento) => {
     return lancamento.descricao.toLowerCase().includes("folha de pagamento") ||
       lancamento.conta === "4.1.6 Despesas com Pessoal"
+  }
+
+  // Extrair o tipo (adiantamento ou salario restante) pela descricao
+  const extrairTipoFolha = (descricao: string): "adiantamento" | "salario" | null => {
+    const d = descricao.toLowerCase()
+    if (d.startsWith("adiantamento salarial")) return "adiantamento"
+    if (d.startsWith("salário (restante)") || d.startsWith("salario (restante)")) return "salario"
+    return null
+  }
+
+  // Buscar detalhes da folha (funcionarios e valores) ao expandir
+  const buscarDetalhesFolha = async (lancamento: Lancamento) => {
+    const id = lancamento.id
+
+    if (expandedRows.has(id)) {
+      toggleRowExpand(id)
+      return
+    }
+    if (folhaCache.has(id)) {
+      toggleRowExpand(id)
+      return
+    }
+    if (loadingFolha.has(id)) return
+
+    setLoadingFolha(prev => new Set(prev).add(id))
+
+    try {
+      const tipo = extrairTipoFolha(lancamento.descricao) || "salario"
+      const match = lancamento.descricao.match(/(\d{2})\/(\d{4})/)
+      const ano = match ? parseInt(match[2]) : new Date().getFullYear()
+      const mes = match ? parseInt(match[1]) : new Date().getMonth() + 1
+
+      const res = await fetch(
+        `/api/planejamento/folha-pagamento-config/funcionarios?ano=${ano}&mes=${mes}`
+      )
+      const data = await res.json()
+      if (data.success) {
+        const itens: FolhaItemDetalhe[] = (data.itens || []).map((i: any) => ({
+          nome: i.nome,
+          salario: Number(i.salario),
+          adiantamento: Number(i.adiantamento),
+          salarioRestante: Number(i.salarioRestante),
+        }))
+        const total =
+          tipo === "adiantamento"
+            ? itens.reduce((s: number, i: FolhaItemDetalhe) => s + i.adiantamento, 0)
+            : itens.reduce((s: number, i: FolhaItemDetalhe) => s + i.salarioRestante, 0)
+        setFolhaCache(prev => new Map(prev).set(id, { tipo, pct: data.pct, itens, total }))
+      }
+    } catch (error) {
+      console.error("Erro ao buscar detalhes da folha:", error)
+    } finally {
+      setLoadingFolha(prev => {
+        const n = new Set(prev)
+        n.delete(id)
+        return n
+      })
+      toggleRowExpand(id)
+    }
   }
 
   // Calcular total da folha com encargos
@@ -984,6 +1059,76 @@ export default function LivroDiarioPage() {
     return conta.replace(/^\d+(\.\d+)*\s+/, "")
   }
 
+  // Linha expandida com o detalhe da folha (adiantamento/salário por funcionário)
+  const FolhaExpandedRow = ({ lancamento }: { lancamento: Lancamento }) => {
+    const detalhe = folhaCache.get(lancamento.id)
+    const isLoading = loadingFolha.has(lancamento.id)
+    const tipo = extrairTipoFolha(lancamento.descricao) || "salario"
+
+    if (isLoading) {
+      return (
+        <tr className="bg-indigo-50">
+          <td colSpan={10} className="px-4 py-4">
+            <div className="flex justify-center items-center gap-2">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+              <span className="text-sm text-gray-500">Carregando detalhes da folha...</span>
+            </div>
+          </td>
+        </tr>
+      )
+    }
+
+    const titulo = tipo === "adiantamento" ? "Adiantamento Salarial" : "Salário (restante)"
+
+    return (
+      <tr className="bg-indigo-50">
+        <td colSpan={10} className="px-4 py-3">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-indigo-600" />
+              <span className="font-semibold text-indigo-800">{titulo}</span>
+              <Badge variant="outline" className="ml-2">{(detalhe?.pct ?? 0)}% do salário</Badge>
+            </div>
+            {detalhe?.itens && detalhe.itens.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-indigo-100/50 text-gray-600">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs uppercase tracking-wider">Funcionário</th>
+                      <th className="px-3 py-2 text-right text-xs uppercase tracking-wider">Salário</th>
+                      <th className="px-3 py-2 text-right text-xs uppercase tracking-wider">Adiantamento</th>
+                      <th className="px-3 py-2 text-right text-xs uppercase tracking-wider">Salário Restante</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detalhe.itens.map((item: FolhaItemDetalhe, idx: number) => (
+                      <tr key={idx} className="border-t border-indigo-100">
+                        <td className="px-3 py-2 text-gray-800">{item.nome}</td>
+                        <td className="px-3 py-2 text-right text-gray-600">{formatCurrency(item.salario)}</td>
+                        <td className="px-3 py-2 text-right text-indigo-700 font-medium">{formatCurrency(item.adiantamento)}</td>
+                        <td className="px-3 py-2 text-right text-gray-800 font-medium">{formatCurrency(item.salarioRestante)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t-2 border-indigo-200 font-semibold">
+                      <td className="px-3 py-2 text-indigo-800">Total</td>
+                      <td className="px-3 py-2" />
+                      <td className="px-3 py-2 text-right text-indigo-700">{formatCurrency(detalhe.itens.reduce((s: number, i: FolhaItemDetalhe) => s + i.adiantamento, 0))}</td>
+                      <td className="px-3 py-2 text-right text-indigo-800">{formatCurrency(detalhe.itens.reduce((s: number, i: FolhaItemDetalhe) => s + i.salarioRestante, 0))}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">Sem funcionários cadastrados para este mês.</p>
+            )}
+          </div>
+        </td>
+      </tr>
+    )
+  }
+
   // Componente da linha expandida com produtos
   const ExpandedRowContent = ({ lancamento }: { lancamento: Lancamento }) => {
     const nota = notasCache.get(lancamento.id)
@@ -1418,13 +1563,13 @@ export default function LivroDiarioPage() {
                           tabIndex={canExpandRow ? 0 : undefined}
                           aria-expanded={canExpandRow ? isExpanded : undefined}
                           aria-label={canExpandRow ? `Expandir detalhes de ${lanc.descricao}` : undefined}
-                          onClick={canExpandRow ? () => buscarNotaFiscal(lanc) : undefined}
+                          onClick={canExpandRow ? () => isFolhaLanc ? buscarDetalhesFolha(lanc) : buscarNotaFiscal(lanc) : undefined}
                           onKeyDown={(e) => {
                             if (!canExpandRow) return
                             if ((e.target as HTMLElement).closest("button")) return
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault()
-                              buscarNotaFiscal(lanc)
+                              isFolhaLanc ? buscarDetalhesFolha(lanc) : buscarNotaFiscal(lanc)
                             }
                           }}
                         >
@@ -1464,8 +1609,6 @@ export default function LivroDiarioPage() {
                                 {getBoletoStatusIcon(boletoStatus, lanc.dataPagamento)}
                                 {getBoletoStatusBadge(boletoStatus, lanc.dataPagamento)}
                               </div>
-                            ) : isFolhaLanc ? (
-                              <Badge className="bg-indigo-100 text-indigo-700">Processada</Badge>
                             ) : lanc.status === "PAGO" ? (
                               <div className="flex items-center justify-center gap-1">
                                 <CheckCircle className="h-4 w-4 text-emerald-600" />
@@ -1519,6 +1662,7 @@ export default function LivroDiarioPage() {
                         </tr>
 
                         {isExpanded && isNota && <ExpandedRowContent lancamento={lanc} />}
+                        {isExpanded && isFolhaLanc && <FolhaExpandedRow lancamento={lanc} />}
                       </React.Fragment>
                     )
                   })

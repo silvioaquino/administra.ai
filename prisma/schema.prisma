@@ -48,6 +48,7 @@ model User {
   produtosVenda                   ProdutoVenda[]
   produtos                        Produto[]
   provisoesFuncionarios           ProvisaoFuncionario[]
+  folhaPagamentoConfig           FolhaPagamentoConfig[]
   retiradas                       Retirada[]
   subscription                    Subscription?
   taxasCartaoConfig               TaxasCartaoConfig?
@@ -110,6 +111,7 @@ model Empresa {
   despesasVariaveisResultados     DespesasVariaveisResultado[]
   dreResultados                   DreResultado[]
   user                            User                              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folhaPagamentoConfig           FolhaPagamentoConfig[]
   fechamentoMensal                FechamentoMensal[]
   fichasItens                     FichaItem[]
   fichasTecnicas                  FichaTecnica[]
@@ -455,6 +457,29 @@ model Funcionario {
   @@index([userId])
   @@index([empresaId])
   @@map("funcionarios")
+}
+
+model FolhaPagamentoConfig {
+  id                      Int      @id @default(autoincrement())
+  empresaId               String   @map("empresa_id")
+  userId                  String   @map("user_id")
+  ano                     Int
+  mes                     Int
+  diaAdiantamento        Int      @default(15) @map("dia_adiantamento")
+  percentualAdiantamento Decimal  @default(40) @db.Decimal(5, 2) @map("percentual_adiantamento")
+  diaSalario              Int      @default(5)  @map("dia_salario")
+  totalSalarios           Decimal  @default(0)  @db.Decimal(10, 2) @map("total_salarios")
+  valorAdiantamento      Decimal  @default(0)  @db.Decimal(10, 2) @map("valor_adiantamento")
+  valorSalario            Decimal  @default(0)  @db.Decimal(10, 2) @map("valor_salario")
+  funcionariosSnapshot   Json?    @map("funcionarios_snapshot")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+  empresa                 Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, userId, ano, mes])
+  @@index([empresaId, ano, mes])
+  @@map("folha_pagamento_config")
 }
 
 model TaxasCartaoConfig {
@@ -896,6 +921,7 @@ model PlanejamentoFolhaSalarial {
   empresaId             String   @map("empresa_id")
   userId                String   @map("user_id")
   anoReferencia         Int      @map("ano_referencia")
+  mes                   Int      @default(1) @map("mes")
   totalSalarios         Decimal  @default(0) @map("total_salarios") @db.Decimal(10, 2)
   totalDecimo           Decimal  @default(0) @map("total_decimo") @db.Decimal(10, 2)
   totalFerias           Decimal  @default(0) @map("total_ferias") @db.Decimal(10, 2)
@@ -909,8 +935,8 @@ model PlanejamentoFolhaSalarial {
   empresa               Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([empresaId, userId, anoReferencia])
-  @@index([userId, anoReferencia])
+  @@unique([empresaId, userId, anoReferencia, mes])
+  @@index([userId, anoReferencia, mes])
   @@index([empresaId])
   @@map("planejamento_folha_salarial")
 }

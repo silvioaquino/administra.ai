@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { recalcularFolhaSalarial } from "@/lib/folha"
+import { calcularDREAno } from "@/lib/dre-calculator"
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -111,6 +113,14 @@ export async function POST(request: NextRequest) {
         anoReferencia: ano
       }
     })
+
+    // Recalcular a folha salarial (mês a mês) e o DRE com os novos salários.
+    try {
+      await recalcularFolhaSalarial(empresaId, session.user.id, ano)
+      await calcularDREAno(empresaId, session.user.id, ano)
+    } catch (recalcErr) {
+      console.error("Erro ao recalcular folha/DRE após funcionários:", recalcErr)
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -204,20 +204,27 @@ export default function PlanejamentoPage() {
         setSalariosTotal(totalSalarios)
       }
 
-      // 4.5 Carregar totais da folha salarial (nova API)
+      // 4.5 Carregar totais da folha salarial (salvos mês a mês); usa o mês atual.
       const folhaResponse = await fetch(`/api/planejamento/folha-salarial?ano=${anoAtual}`)
       const folhaData = await folhaResponse.json()
       if (folhaData.success && folhaData.dados) {
-        setFolhaSalarialTotais({
-          totalSalarios: folhaData.dados.totalSalarios || 0,
-          totalDecimo: folhaData.dados.totalDecimo || 0,
-          totalFerias: folhaData.dados.totalFerias || 0,
-          totalFgts: folhaData.dados.totalFgts || 0,
-          totalInss: folhaData.dados.totalInss || 0,
-          totalInssPatronal: folhaData.dados.totalInssPatronal || 0,
-          totalMensal: folhaData.dados.totalMensal || 0,
-          folhaEncargosPercentual: folhaData.dados.folhaEncargosPercentual || 0
-        })
+        const mesAtualFolha = new Date().getMonth() + 1
+        const f =
+          folhaData.dados[mesAtualFolha] ||
+          Object.values(folhaData.dados)[0] ||
+          null
+        if (f) {
+          setFolhaSalarialTotais({
+            totalSalarios: f.totalSalarios || 0,
+            totalDecimo: f.totalDecimo || 0,
+            totalFerias: f.totalFerias || 0,
+            totalFgts: f.totalFgts || 0,
+            totalInss: f.totalInss || 0,
+            totalInssPatronal: f.totalInssPatronal || 0,
+            totalMensal: f.totalMensal || 0,
+            folhaEncargosPercentual: f.folhaEncargosPercentual || 0
+          })
+        }
       }
 
       // 5. Carregar despesas variáveis (nova API planejamento-financeiro)

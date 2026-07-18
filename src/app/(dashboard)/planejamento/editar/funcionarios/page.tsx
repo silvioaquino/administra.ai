@@ -3,11 +3,12 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Plus, Trash2, Save, RefreshCw, Users } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, Save, RefreshCw, Users, CalendarClock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatCurrency } from "@/lib/utils"
+import { useDebounce } from "@/hooks/useDebounce"
 
 interface Funcionario {
   id?: number
@@ -15,8 +16,19 @@ interface Funcionario {
   salario: number
 }
 
+interface FolhaConfig {
+  diaAdiantamento: number
+  percentualAdiantamento: number
+  diaSalario: number
+}
+
 const FUNCIONARIOS_PADRAO: Funcionario[] = [
   { nome: "Pro-Labore(add seu Nome)", salario: 1302 },
+]
+
+const MESES = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ]
 
 export default function EditarFuncionariosPage() {
@@ -25,41 +37,109 @@ export default function EditarFuncionariosPage() {
   const [saving, setSaving] = useState(false)
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([])
   const [anoReferencia, setAnoReferencia] = useState(new Date().getFullYear())
+  const [mesReferencia, setMesReferencia] = useState(new Date().getMonth() + 1)
+  const [config, setConfig] = useState<FolhaConfig>({
+    diaAdiantamento: 15,
+    percentualAdiantamento: 40,
+    diaSalario: 5,
+  })
+  const [configCarregada, setConfigCarregada] = useState(false)
 
   useEffect(() => {
-    carregarFuncionarios()
-  }, [anoReferencia])
+    carregarDados()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [anoReferencia, mesReferencia])
 
-  async function carregarFuncionarios() {
+  // Persistência automática da configuração (salva a cada mudança e ao trocar de mês)
+  const debouncedConfig = useDebounce(config, 800)
+  useEffect(() => {
+    if (!configCarregada) return
+    salvarConfig(debouncedConfig)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedConfig, configCarregada])
+
+  async function carregarDados() {
     setLoading(true)
     try {
-      const response = await fetch(`/api/planejamento/funcionarios?ano=${anoReferencia}`)
-      const data = await response.json()
-      if (data.success && data.dados && data.dados.length > 0) {
-        setFuncionarios(data.dados)
+      const [resFunc, resConfig] = await Promise.all([
+        fetch(`/api/planejamento/funcionarios?ano=${anoReferencia}`),
+        fetch(`/api/planejamento/folha-pagamento-config?ano=${anoReferencia}&mes=${mesReferencia}`),
+      ])
+
+      const dataFunc = await resFunc.json()
+      if (dataFunc.success && dataFunc.dados && dataFunc.dados.length > 0) {
+        setFuncionarios(dataFunc.dados)
       } else {
         setFuncionarios([...FUNCIONARIOS_PADRAO])
       }
+
+      const dataConfig = await resConfig.json()
+      if (dataConfig.success && dataConfig.dados) {
+        setConfig({
+          diaAdiantamento: dataConfig.dados.diaAdiantamento,
+          percentualAdiantamento: dataConfig.dados.percentualAdiantamento,
+          diaSalario: dataConfig.dados.diaSalario,
+        })
+      }
+      setConfigCarregada(true)
     } catch (error) {
-      console.error("Erro ao carregar funcionários:", error)
+      console.error("Erro ao carregar dados:", error)
       setFuncionarios([...FUNCIONARIOS_PADRAO])
     } finally {
       setLoading(false)
     }
   }
 
-  async function salvarFuncionarios() {
-    setSaving(true)
+  async function salvarConfig(cfg: FolhaConfig) {
     try {
-      const response = await fetch("/api/planejamento/funcionarios", {
+      const total = funcionarios.reduce((sum, f) => sum + (Number(f.salario) || 0), 0)
+      await fetch("/api/planejamento/folha-pagamento-config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          dados: funcionarios,
-          ano: anoReferencia
-        })
+          ano: anoReferencia,
+          mes: mesReferencia,
+          diaAdiantamento: cfg.diaAdiantamento,
+          percentualAdiantamento: cfg.percentualAdiantamento,
+          diaSalario: cfg.diaSalario,
+          totalSalarios: total,
+          funcionarios: funcionarios.map(f => ({ nome: f.nome, salario: Number(f.salario) || 0 })),
+        }),
       })
-      const data = await response.json()
+    } catch (error) {
+      console.error("Erro ao salvar config de pagamento:", error)
+    }
+  }
+
+  async function salvarFuncionarios() {
+    setSaving(true)
+    try {
+      const total = funcionarios.reduce((sum, f) => sum + (Number(f.salario) || 0), 0)
+      const [resFunc] = await Promise.all([
+        fetch("/api/planejamento/funcionarios", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            dados: funcionarios,
+            ano: anoReferencia,
+          }),
+        }),
+        fetch("/api/planejamento/folha-pagamento-config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ano: anoReferencia,
+            mes: mesReferencia,
+            diaAdiantamento: config.diaAdiantamento,
+            percentualAdiantamento: config.percentualAdiantamento,
+            diaSalario: config.diaSalario,
+            totalSalarios: total,
+            funcionarios: funcionarios.map(f => ({ nome: f.nome, salario: Number(f.salario) || 0 })),
+          }),
+        }),
+      ])
+
+      const data = await resFunc.json()
       if (data.success) {
         alert("Funcionários salvos com sucesso!")
         router.push("/planejamento")
@@ -104,7 +184,13 @@ export default function EditarFuncionariosPage() {
     setFuncionarios(novos)
   }
 
-  const totalSalarios = funcionarios.reduce((sum, f) => sum + f.salario, 0)
+  function atualizarConfig(campo: keyof FolhaConfig, valor: string) {
+    setConfig(c => ({ ...c, [campo]: Number(valor) || 0 }))
+  }
+
+  const totalSalarios = funcionarios.reduce((sum, f) => sum + (Number(f.salario) || 0), 0)
+  const valorAdiantamento = Math.round((totalSalarios * config.percentualAdiantamento) / 100 * 100) / 100
+  const valorSalario = Math.round((totalSalarios - valorAdiantamento) * 100) / 100
 
   if (loading) {
     return (
@@ -119,9 +205,9 @@ export default function EditarFuncionariosPage() {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => router.back()}
             className="rounded-full hover:bg-gray-100"
           >
@@ -133,6 +219,20 @@ export default function EditarFuncionariosPage() {
           </div>
         </div>
         <div className="flex gap-2">
+          <div className="relative">
+            <select
+              className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8"
+              value={mesReferencia}
+              onChange={(e) => setMesReferencia(Number(e.target.value))}
+            >
+              {MESES.map((nome, i) => (
+                <option key={i + 1} value={i + 1}>{nome}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+              <svg className="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            </div>
+          </div>
           <div className="relative">
             <select
               className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8"
@@ -159,6 +259,61 @@ export default function EditarFuncionariosPage() {
           </AlertDescription>
         </Alert>
 
+        {/* Configuração de Pagamento */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+          <div className="bg-gray-100 p-4 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <CalendarClock className="h-5 w-5 text-[#de4838]" />
+              <h3 className="font-semibold text-gray-800">Configuração de Pagamento</h3>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Define o adiantamento e o pagamento do restante do salário para {MESES[mesReferencia - 1]}/{anoReferencia}.
+              Salvo automaticamente e mês a mês.
+            </p>
+          </div>
+          <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                Dia do Adiantamento
+              </label>
+              <Input
+                type="number"
+                min={1}
+                max={31}
+                value={config.diaAdiantamento}
+                onChange={(e) => atualizarConfig("diaAdiantamento", e.target.value)}
+                className="h-9 rounded-lg border-gray-200 focus:ring-[#de4838]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                Percentual do Adiantamento (%)
+              </label>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={config.percentualAdiantamento}
+                onChange={(e) => atualizarConfig("percentualAdiantamento", e.target.value)}
+                className="h-9 rounded-lg border-gray-200 focus:ring-[#de4838]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                Dia do Salário (restante)
+              </label>
+              <Input
+                type="number"
+                min={1}
+                max={31}
+                value={config.diaSalario}
+                onChange={(e) => atualizarConfig("diaSalario", e.target.value)}
+                className="h-9 rounded-lg border-gray-200 focus:ring-[#de4838]"
+              />
+            </div>
+          </div>
+        </div>
+
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <div className="bg-gray-100 p-4 border-b border-gray-100">
             <div className="flex items-center justify-between flex-wrap gap-3">
@@ -167,18 +322,18 @@ export default function EditarFuncionariosPage() {
                 <h3 className="font-semibold text-gray-800">Lista de Funcionários</h3>
               </div>
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={resetarPadrao}
                   className="rounded-lg border-gray-200 hover:border-[#de4838]"
                 >
                   <RefreshCw className="mr-2 h-3 w-3" />
                   Restaurar Padrão
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={adicionarFuncionario}
                   className="rounded-lg border-gray-200 hover:border-[#de4838]"
                 >
@@ -218,10 +373,10 @@ export default function EditarFuncionariosPage() {
                         />
                       </td>
                       <td className="px-4 py-2 text-center">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => removerFuncionario(idx)} 
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removerFuncionario(idx)}
                           className="h-8 w-8 p-0 rounded-lg hover:bg-red-50"
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />
@@ -236,21 +391,35 @@ export default function EditarFuncionariosPage() {
                     <td className="px-4 py-3 text-right text-[#de4838] text-lg">{formatCurrency(totalSalarios)}</td>
                     <td className="px-4 py-3"></td>
                   </tr>
+                  <tr className="font-semibold text-gray-700">
+                    <td className="px-4 py-2">
+                      ADIANTAMENTO ({config.percentualAdiantamento}%) — dia {config.diaAdiantamento}
+                    </td>
+                    <td className="px-4 py-2 text-right text-[#de4838]">{formatCurrency(valorAdiantamento)}</td>
+                    <td className="px-4 py-2"></td>
+                  </tr>
+                  <tr className="font-semibold text-gray-700">
+                    <td className="px-4 py-2">
+                      SALÁRIO (restante) — dia {config.diaSalario}
+                    </td>
+                    <td className="px-4 py-2 text-right">{formatCurrency(valorSalario)}</td>
+                    <td className="px-4 py-2"></td>
+                  </tr>
                 </tfoot>
               </table>
             </div>
 
             <div className="mt-6 flex gap-3">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 className="flex-1 rounded-lg border-gray-200 hover:bg-gray-100"
                 onClick={() => router.back()}
               >
                 Cancelar
               </Button>
-              <Button 
-                onClick={salvarFuncionarios} 
+              <Button
+                onClick={salvarFuncionarios}
                 className="flex-1 bg-[#de4838] hover:bg-[#c73d2e] rounded-lg"
                 disabled={saving}
               >
