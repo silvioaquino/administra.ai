@@ -41,7 +41,7 @@ export default function DashboardLayout({
   const router = useRouter()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [empresaNome, setEmpresaNome] = useState<string>("Administra.ai")
+  const [empresaNome, setEmpresaNome] = useState<string>("SeuGerente")
 
   // Buscar nome da empresa no banco de dados
   useEffect(() => {
@@ -75,22 +75,21 @@ export default function DashboardLayout({
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/", badge: null },
+    { icon: TrendingUp, label: "Planejamento", href: "/planejamento", badge: null },
     { icon: ShoppingBag, label: "Registros NFEs", href: "/nfe", badge: null },
     { icon: Calculator, label: "Fichas Técnicas", href: "/fichas-tecnicas", badge: null },
-    { icon: TrendingUp, label: "Planejamento", href: "/planejamento", badge: null },
     { icon: Receipt, label: "Livro Diário", href: "/livro-diario", badge: null },
     { icon: Ticket, label: "Fluxo de Caixa / DRE", href: "/fluxo-caixa", badge: null },
     { icon: Truck, label: "Contas bancárias", href: "/contas-bancarias", badge: null },
-    { icon: CreditCard, label: "Fechamento Mensal", href: "/fechamento-mensal", badge: null },
     { icon: CreditCard, label: "Abrir/Fechar Caixa Diário", href: "/caixa", badge: null },
-    
+        { icon: CreditCard, label: "Fechamento Mensal", href: "/fechamento-mensal", badge: null },
 
   ]
 
   const configItems = [
     { icon: Store, label: "Minha loja", href: "/config/loja", badge: null },
     { icon: Store, label: "Gerenciamento de Planos", href: "/config/planos", badge: null },
-    { icon: Plug, label: "Integrações", href: "/config/integracoes", badge: null },
+    //{ icon: Plug, label: "Integrações", href: "/config/integracoes", badge: null },
   ]
 
   const isAdmin = session?.user?.role === "ADMIN"

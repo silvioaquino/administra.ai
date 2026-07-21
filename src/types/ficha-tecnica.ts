@@ -5,6 +5,9 @@ export interface ConversionResult {
   gramsUsed: number
   packagesUsed: number
   cost: number
+  costWithoutCorrection: number
+  fatorCorrecao: number
+  perdaValor: number
   isFractional: boolean
   fractionalAlert?: string
   formatted: {

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Emporio do Sabor - Sistema de Gestão",
+  title: "SeuGerente - Sistema de Gestão",
   description: "Sistema completo de gestão para restaurantes e estabelecimentos",
 };
 

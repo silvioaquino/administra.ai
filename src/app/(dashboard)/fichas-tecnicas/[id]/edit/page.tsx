@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { ArrowLeft, Save, Plus, Trash2, Calculator, Package, BookOpen, AlertCircle, ChevronDown, X } from "lucide-react"
+import { ArrowLeft, Save, Plus, Trash2, Calculator, Package, BookOpen, AlertCircle, ChevronDown, X, Pencil, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -45,6 +45,9 @@ interface Ingrediente {
   valorUnitario: number
   custo: number
   isProdutoAcabado: boolean
+  pesoBruto?: number
+  pesoLiquido?: number
+  fatorCorrecao?: number
 }
 
 export default function EditarFichaTecnicaPage() {
@@ -70,11 +73,21 @@ export default function EditarFichaTecnicaPage() {
   const [selectedFichaId, setSelectedFichaId] = useState("")
   const [quantidade, setQuantidade] = useState(1)
   const [unidadeReceita, setUnidadeReceita] = useState<UnitType>('UN')
+  const [pesoBruto, setPesoBruto] = useState(0)
+  const [pesoLiquido, setPesoLiquido] = useState(0)
+
+  // Estados de edição inline de ingredientes já adicionados
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editQtd, setEditQtd] = useState(1)
+  const [editUnidade, setEditUnidade] = useState<UnitType>('UN')
+  const [editPesoBruto, setEditPesoBruto] = useState(0)
+  const [editPesoLiquido, setEditPesoLiquido] = useState(0)
 
   const [despesasFixasPercentual, setDespesasFixasPercentual] = useState(0)
   const [despesasVariaveisPercentual, setDespesasVariaveisPercentual] = useState(0)
   const [markup, setMarkup] = useState(0)
   const [metaFaltando, setMetaFaltando] = useState(false)
+  const [fatorOscilacao, setFatorOscilacao] = useState(0)
 
   const [categorias, setCategorias] = useState<string[]>(["Almoço", "Janta"])
   const [showNovaCategoria, setShowNovaCategoria] = useState(false)
@@ -121,6 +134,7 @@ export default function EditarFichaTecnicaPage() {
           rendimentoPorcoes: ficha.rendimentoPorcoes || 1,
           modoPreparo: ficha.modoPreparo || ""
         })
+        setFatorOscilacao(Number(ficha.fatorOscilacao) || 0)
         if (ficha.categoria) {
           setCategorias((prev) => prev.some(c => c.toLowerCase() === ficha.categoria.toLowerCase()) ? prev : [...prev, ficha.categoria])
         }
@@ -132,7 +146,12 @@ export default function EditarFichaTecnicaPage() {
               parsed = JSON.parse(parsed)
             }
             if (Array.isArray(parsed)) {
-              setIngredientes(parsed)
+              setIngredientes(parsed.map((ing: any) => ({
+                ...ing,
+                pesoBruto: ing.pesoBruto != null ? Number(ing.pesoBruto) : undefined,
+                pesoLiquido: ing.pesoLiquido != null ? Number(ing.pesoLiquido) : undefined,
+                fatorCorrecao: ing.fatorCorrecao != null ? Number(ing.fatorCorrecao) : 1,
+              })))
             }
           } catch (e) {
             console.error("Erro ao parsear ingredientes:", e)
@@ -151,8 +170,8 @@ export default function EditarFichaTecnicaPage() {
       if (data.success) {
         const produtosFormatados = data.data.map((p: any) => ({
           ...p,
-          precoVenda: p.precoVenda || p.preco_venda || 0,
-          valorUnitario: Number(p.valorUnitario) || 0,
+          precoVenda: Number(p.precoVenda) || Number(p.preco_venda) || 0,
+          valorUnitario: Number(p.valor_unitario) || Number(p.valorUnitario) || 0,
           pesoUnitario: p.pesoUnitario != null ? Number(p.pesoUnitario) : undefined,
           densidade: p.densidade != null ? Number(p.densidade) : undefined,
         }))
@@ -216,6 +235,9 @@ export default function EditarFichaTecnicaPage() {
 
     const valorUnitario = Number(produto.valorUnitario) || 0
 
+    const temFC = pesoBruto > 0 && pesoLiquido > 0
+    const fatorCorrecao = temFC ? pesoBruto / pesoLiquido : 1
+
     let custo: number
     try {
       const result = ConversionService.calculateConsumption(
@@ -226,6 +248,7 @@ export default function EditarFichaTecnicaPage() {
           unitPrice: valorUnitario,
           pesoUnitario: produto.pesoUnitario ? Number(produto.pesoUnitario) : undefined,
           densidade: produto.densidade ? Number(produto.densidade) : undefined,
+          fatorCorrecao,
         }
       )
       custo = result.cost
@@ -242,13 +265,18 @@ export default function EditarFichaTecnicaPage() {
       unidade: unidadeReceita,
       valorUnitario,
       custo,
-      isProdutoAcabado: false
+      isProdutoAcabado: false,
+      pesoBruto: temFC ? pesoBruto : undefined,
+      pesoLiquido: temFC ? pesoLiquido : undefined,
+      fatorCorrecao,
     }
 
     setIngredientes([...ingredientes, novoIngrediente])
     setSelectedProdutoId("")
     setQuantidade(1)
     setUnidadeReceita('UN')
+    setPesoBruto(0)
+    setPesoLiquido(0)
   }
 
   function adicionarProdutoAcabado() {
@@ -287,6 +315,73 @@ export default function EditarFichaTecnicaPage() {
     setIngredientes(ingredientes.filter(i => i.id !== id))
   }
 
+  // Recalcula o custo de um ingrediente a partir de novos valores de
+  // quantidade/unidade/fator, reutilizando a mesma lógica de adicionar.
+  function recalcularCustoIngrediente(
+    ing: Ingrediente,
+    novaQtd: number,
+    novaUnidade: UnitType,
+    novoPesoBruto?: number,
+    novoPesoLiquido?: number
+  ): { custo: number; fatorCorrecao: number } {
+    // Produto acabado (ficha): custo = quantidade × custo unitário da ficha
+    if (ing.isProdutoAcabado || !ing.produtoId) {
+      return { custo: novaQtd * (ing.valorUnitario || 0), fatorCorrecao: 1 }
+    }
+
+    const prod = produtos.find(p => p.id === ing.produtoId)
+    if (!prod) return { custo: ing.custo, fatorCorrecao: ing.fatorCorrecao ?? 1 }
+
+    const temFC = (novoPesoBruto ?? 0) > 0 && (novoPesoLiquido ?? 0) > 0
+    const fatorCorrecao = temFC ? novoPesoBruto! / novoPesoLiquido! : 1
+
+    try {
+      const result = ConversionService.calculateConsumption(
+        novaQtd,
+        novaUnidade,
+        {
+          purchaseUnit: (prod.unidade as UnitType) || 'UN',
+          unitPrice: Number(prod.valorUnitario) || 0,
+          pesoUnitario: prod.pesoUnitario ? Number(prod.pesoUnitario) : undefined,
+          densidade: prod.densidade ? Number(prod.densidade) : undefined,
+          fatorCorrecao,
+        }
+      )
+      return { custo: result.cost, fatorCorrecao }
+    } catch {
+      return { custo: ing.custo, fatorCorrecao }
+    }
+  }
+
+  function iniciarEdicaoIngrediente(ing: Ingrediente) {
+    setEditingId(ing.id)
+    setEditQtd(ing.quantidade)
+    setEditUnidade((ing.unidade as UnitType) || 'UN')
+    setEditPesoBruto(ing.pesoBruto ?? 0)
+    setEditPesoLiquido(ing.pesoLiquido ?? 0)
+  }
+
+  function salvarEdicaoIngrediente(ing: Ingrediente) {
+    const { custo, fatorCorrecao } = recalcularCustoIngrediente(
+      ing, editQtd, editUnidade, editPesoBruto, editPesoLiquido
+    )
+    const temFC = editPesoBruto > 0 && editPesoLiquido > 0
+    setIngredientes(prev => prev.map(i => i.id === ing.id ? {
+      ...i,
+      quantidade: editQtd,
+      unidade: editUnidade,
+      custo,
+      pesoBruto: temFC ? editPesoBruto : undefined,
+      pesoLiquido: temFC ? editPesoLiquido : undefined,
+      fatorCorrecao,
+    } : i))
+    setEditingId(null)
+  }
+
+  function cancelarEdicaoIngrediente() {
+    setEditingId(null)
+  }
+
   function confirmarNovaCategoria() {
     const cat = novaCategoria.trim()
     if (!cat) {
@@ -303,7 +398,9 @@ export default function EditarFichaTecnicaPage() {
   }
 
   const custoTotal = ingredientes.reduce((sum, i) => sum + i.custo, 0)
-  const custoPorPorcao = custoTotal / formData.rendimentoPorcoes
+  const valorOscilacao = custoTotal * (fatorOscilacao / 100)
+  const custoFinal = custoTotal + valorOscilacao
+  const custoPorPorcao = custoFinal / formData.rendimentoPorcoes
 
   const custoItems = ingredientes
     .map((ing) => {
@@ -330,6 +427,7 @@ export default function EditarFichaTecnicaPage() {
             unitPrice: Number(prod.valorUnitario) || 0,
             pesoUnitario: prod.pesoUnitario ? Number(prod.pesoUnitario) : undefined,
             densidade: prod.densidade ? Number(prod.densidade) : undefined,
+            fatorCorrecao: ing.fatorCorrecao ?? 1,
           }
         )
         return {
@@ -389,9 +487,10 @@ export default function EditarFichaTecnicaPage() {
           nome: formData.nome,
           categoria: formData.categoria,
           precoVenda: formData.precoVenda,
-          custoTotal: custoTotal,
+          custoTotal: custoFinal,
           custoPorPorcao: custoPorPorcao,
           margem: margem,
+          fatorOscilacao,
           rendimentoPorcoes: formData.rendimentoPorcoes,
           ingredientes: ingredientesString,
           modoPreparo: formData.modoPreparo
@@ -617,6 +716,25 @@ export default function EditarFichaTecnicaPage() {
                   </div>
                 </div>
                 <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Fator de Oscilação (%)
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">%</span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={fatorOscilacao}
+                      onChange={(e) => setFatorOscilacao(parseFloat(e.target.value) || 0)}
+                      className="pl-8 rounded-xl border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent transition-all"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Margem de segurança para variação de preços (opcional). Ex.: 10 adiciona 10% ao custo final.
+                  </p>
+                </div>
+                <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Modo de Preparo</Label>
                   <Textarea
                     value={formData.modoPreparo}
@@ -685,6 +803,42 @@ export default function EditarFichaTecnicaPage() {
                               densidade: produtoSelecionado.densidade,
                             }}
                           />
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                                Peso Bruto (g)
+                              </Label>
+                              <Input
+                                type="number"
+                                step="0.001"
+                                min="0"
+                                placeholder="Ex: 1000"
+                                value={pesoBruto || ''}
+                                onChange={(e) => setPesoBruto(parseFloat(e.target.value) || 0)}
+                                className="rounded-lg border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                                Peso Líquido (g)
+                              </Label>
+                              <Input
+                                type="number"
+                                step="0.001"
+                                min="0"
+                                placeholder="Ex: 700"
+                                value={pesoLiquido || ''}
+                                onChange={(e) => setPesoLiquido(parseFloat(e.target.value) || 0)}
+                                className="rounded-lg border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent"
+                              />
+                            </div>
+                          </div>
+                          {pesoBruto > 0 && pesoLiquido > 0 && (
+                            <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 flex items-center justify-between">
+                              <span>Fator de correção (perda):</span>
+                              <span className="font-semibold">{(pesoBruto / pesoLiquido).toFixed(2)}x</span>
+                            </div>
+                          )}
                           <div className="text-xs text-gray-500 bg-gray-100 rounded-lg p-2 flex items-center justify-between">
                             <span>Custo unitário:</span>
                             <span className="font-medium text-gray-700">{formatCurrency(getCustoUnitario(produtoSelecionado))}</span>
@@ -781,6 +935,7 @@ export default function EditarFichaTecnicaPage() {
                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Qtd</th>
                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Valor Unit.</th>
                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Custo</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Fator</th>
                             <th className="px-4 py-3 text-center w-10"></th>
                           </tr>
                         </thead>
@@ -794,7 +949,10 @@ export default function EditarFichaTecnicaPage() {
                               </td>
                             </tr>
                           ) : (
-                            ingredientes.map(ing => (
+                            ingredientes.map(ing => {
+                              const editando = editingId === ing.id
+                              const podeEditarFator = !ing.isProdutoAcabado && !!ing.produtoId
+                              return (
                               <tr key={ing.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
                                 <td className="px-4 py-2.5">
                                   <div className="flex items-center gap-2">
@@ -814,34 +972,138 @@ export default function EditarFichaTecnicaPage() {
                                   </div>
                                 </td>
                                 <td className="px-4 py-2.5 text-right font-mono text-gray-600 whitespace-nowrap">
-                                  {ing.quantidade.toFixed(3)} {ing.unidade}
+                                  {editando ? (
+                                    <div className="flex flex-col items-end gap-1">
+                                      <div className="flex items-center gap-1">
+                                        <input
+                                          type="number"
+                                          step="0.001"
+                                          min="0"
+                                          value={editQtd || ''}
+                                          onChange={(e) => setEditQtd(parseFloat(e.target.value) || 0)}
+                                          className="w-20 h-8 rounded-lg border border-gray-200 px-2 text-right text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                                        />
+                                        {ing.isProdutoAcabado ? (
+                                          <span className="text-xs text-gray-400 px-1">UN</span>
+                                        ) : (
+                                          <select
+                                            value={editUnidade}
+                                            onChange={(e) => setEditUnidade(e.target.value as UnitType)}
+                                            className="h-8 rounded-lg border border-gray-200 px-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                                          >
+                                            {['G', 'KG', 'MG', 'L', 'ML', 'UN'].map(u => (
+                                              <option key={u} value={u}>{u}</option>
+                                            ))}
+                                          </select>
+                                        )}
+                                      </div>
+                                      {podeEditarFator && (
+                                        <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                                          <input
+                                            type="number"
+                                            step="0.001"
+                                            min="0"
+                                            placeholder="Bruto"
+                                            value={editPesoBruto || ''}
+                                            onChange={(e) => setEditPesoBruto(parseFloat(e.target.value) || 0)}
+                                            className="w-16 h-7 rounded-md border border-gray-200 px-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                                          />
+                                          <input
+                                            type="number"
+                                            step="0.001"
+                                            min="0"
+                                            placeholder="Líq."
+                                            value={editPesoLiquido || ''}
+                                            onChange={(e) => setEditPesoLiquido(parseFloat(e.target.value) || 0)}
+                                            className="w-16 h-7 rounded-md border border-gray-200 px-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <>{ing.quantidade.toFixed(3)} {ing.unidade}</>
+                                  )}
                                 </td>
                                 <td className="px-4 py-2.5 text-right font-mono text-gray-600 hidden sm:table-cell">
                                   {formatCurrency(ing.valorUnitario)}
                                 </td>
                                 <td className="px-4 py-2.5 text-right font-mono font-medium text-gray-800 whitespace-nowrap">
-                                  {formatCurrency(ing.custo)}
+                                  {editando && podeEditarFator
+                                    ? formatCurrency(
+                                        recalcularCustoIngrediente(
+                                          ing, editQtd, editUnidade, editPesoBruto, editPesoLiquido
+                                        ).custo
+                                      )
+                                    : formatCurrency(ing.custo)}
+                                </td>
+                                <td className="px-4 py-2.5 text-right font-mono text-amber-600 whitespace-nowrap hidden md:table-cell">
+                                  {editando && podeEditarFator
+                                    ? (editPesoBruto > 0 && editPesoLiquido > 0
+                                        ? `${(editPesoBruto / editPesoLiquido).toFixed(2)}x`
+                                        : '-')
+                                    : (ing.pesoBruto && ing.pesoLiquido
+                                        ? `${(ing.fatorCorrecao ?? 1).toFixed(2)}x`
+                                        : '-')}
                                 </td>
                                 <td className="px-4 py-2.5 text-center">
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removerIngrediente(ing.id)}
-                                    className="h-8 w-8 p-0 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors"
-                                  >
-                                    <Trash2 className="h-4 w-4 text-red-400 hover:text-red-600" />
-                                  </Button>
+                                  {editando ? (
+                                    <div className="flex items-center justify-center gap-1">
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => salvarEdicaoIngrediente(ing)}
+                                        className="h-8 w-8 p-0 rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                                        title="Salvar"
+                                      >
+                                        <Check className="h-4 w-4 text-emerald-500" />
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={cancelarEdicaoIngrediente}
+                                        className="h-8 w-8 p-0 rounded-lg hover:bg-gray-100 transition-colors"
+                                        title="Cancelar"
+                                      >
+                                        <X className="h-4 w-4 text-gray-400" />
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center justify-center gap-1">
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => iniciarEdicaoIngrediente(ing)}
+                                        className="h-8 w-8 p-0 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                        title="Editar quantidade"
+                                      >
+                                        <Pencil className="h-4 w-4 text-blue-400" />
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removerIngrediente(ing.id)}
+                                        className="h-8 w-8 p-0 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors"
+                                        title="Remover"
+                                      >
+                                        <Trash2 className="h-4 w-4 text-red-400 hover:text-red-600" />
+                                      </Button>
+                                    </div>
+                                  )}
                                 </td>
                               </tr>
-                            ))
+                              )
+                            })
                           )}
                         </tbody>
                         {ingredientes.length > 0 && (
                           <tfoot className="border-t-2 border-gray-200 bg-gray-100/80 sticky bottom-0">
                             <tr className="font-semibold">
                               <td colSpan={3} className="px-4 py-3 text-right text-gray-700 hidden sm:table-cell">
-                                Custo Total:
+                                Custo dos Ingredientes:
                               </td>
                               <td colSpan={2} className="px-4 py-3 text-right text-[#de4838] text-lg">
                                 {formatCurrency(custoTotal)}
@@ -870,7 +1132,7 @@ export default function EditarFichaTecnicaPage() {
                 <div className="p-4 md:p-5 pt-0 border-t border-gray-100">
                   <CostBreakdown
                     items={custoItems}
-                    totalCost={custoTotal}
+                    totalCost={custoFinal}
                     costPerPortion={custoPorPorcao}
                     rendimento={formData.rendimentoPorcoes}
                   />
@@ -932,8 +1194,18 @@ export default function EditarFichaTecnicaPage() {
                   </div>
                   <div className="space-y-2.5 bg-gray-50 rounded-xl p-4 border border-gray-100">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Custo Total da Ficha:</span>
+                      <span className="text-gray-500">Custo dos Ingredientes:</span>
                       <span className="font-medium text-gray-700">{formatCurrency(custoTotal)}</span>
+                    </div>
+                    {fatorOscilacao > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Fator de Oscilação ({formatPercentage(fatorOscilacao)}):</span>
+                        <span className="font-medium text-emerald-600">+ {formatCurrency(valorOscilacao)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
+                      <span className="font-semibold text-gray-700">Custo Final:</span>
+                      <span className="font-bold text-[#de4838]">{formatCurrency(custoFinal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Custo por Porção:</span>

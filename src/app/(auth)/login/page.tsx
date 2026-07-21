@@ -72,7 +72,7 @@ export default function LoginPage() {
             <div className="h-22 w-22 rounded-2xl bg-gradient-to-br  flex items-center justify-center shadow-lg overflow-hidden">
               <Image
                 src="/logo1.png"
-                alt="Logo KaiUp.ai"
+                alt="Logo SeuGerente"
                 width={80}
                 height={80}
                 className="object-contain rounded-2xl"

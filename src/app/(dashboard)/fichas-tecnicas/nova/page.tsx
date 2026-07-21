@@ -46,6 +46,9 @@ interface Ingrediente {
   valorUnitario: number
   custo: number
   isProdutoAcabado: boolean
+  pesoBruto?: number
+  pesoLiquido?: number
+  fatorCorrecao?: number
 }
 
 export default function NovaFichaTecnicaPage() {
@@ -67,11 +70,14 @@ export default function NovaFichaTecnicaPage() {
   const [selectedFichaId, setSelectedFichaId] = useState("")
   const [quantidade, setQuantidade] = useState(1)
   const [unidadeReceita, setUnidadeReceita] = useState<UnitType>('UN')
+  const [pesoBruto, setPesoBruto] = useState(0)
+  const [pesoLiquido, setPesoLiquido] = useState(0)
 
   const [despesasFixasPercentual, setDespesasFixasPercentual] = useState(0)
   const [despesasVariaveisPercentual, setDespesasVariaveisPercentual] = useState(0)
   const [markup, setMarkup] = useState(0)
   const [metaFaltando, setMetaFaltando] = useState(false)
+  const [fatorOscilacao, setFatorOscilacao] = useState(0)
 
   const [categorias, setCategorias] = useState<string[]>(["Almoço", "Janta"])
   const [showNovaCategoria, setShowNovaCategoria] = useState(false)
@@ -172,6 +178,10 @@ export default function NovaFichaTecnicaPage() {
 
     const valorUnitario = Number(produto.valorUnitario) || 0
 
+    // Fator de correção = peso bruto ÷ peso líquido (perda no pré-preparo)
+    const temFC = pesoBruto > 0 && pesoLiquido > 0
+    const fatorCorrecao = temFC ? pesoBruto / pesoLiquido : 1
+
     let custo: number
     try {
       const result = ConversionService.calculateConsumption(
@@ -182,6 +192,7 @@ export default function NovaFichaTecnicaPage() {
           unitPrice: valorUnitario,
           pesoUnitario: produto.pesoUnitario ? Number(produto.pesoUnitario) : undefined,
           densidade: produto.densidade ? Number(produto.densidade) : undefined,
+          fatorCorrecao,
         }
       )
       custo = result.cost
@@ -198,13 +209,18 @@ export default function NovaFichaTecnicaPage() {
       unidade: unidadeReceita,
       valorUnitario,
       custo,
-      isProdutoAcabado: false
+      isProdutoAcabado: false,
+      pesoBruto: temFC ? pesoBruto : undefined,
+      pesoLiquido: temFC ? pesoLiquido : undefined,
+      fatorCorrecao,
     }
 
     setIngredientes([...ingredientes, novoIngrediente])
     setSelectedProdutoId("")
     setQuantidade(1)
     setUnidadeReceita('UN')
+    setPesoBruto(0)
+    setPesoLiquido(0)
   }
 
   function adicionarProdutoAcabado() {
@@ -259,7 +275,9 @@ export default function NovaFichaTecnicaPage() {
   }
 
   const custoTotal = ingredientes.reduce((sum, i) => sum + i.custo, 0)
-  const custoPorPorcao = custoTotal / formData.rendimentoPorcoes
+  const valorOscilacao = custoTotal * (fatorOscilacao / 100)
+  const custoFinal = custoTotal + valorOscilacao
+  const custoPorPorcao = custoFinal / formData.rendimentoPorcoes
 
   const custoItems = ingredientes
     .map((ing) => {
@@ -286,6 +304,7 @@ export default function NovaFichaTecnicaPage() {
             unitPrice: Number(prod.valorUnitario) || 0,
             pesoUnitario: prod.pesoUnitario ? Number(prod.pesoUnitario) : undefined,
             densidade: prod.densidade ? Number(prod.densidade) : undefined,
+            fatorCorrecao: ing.fatorCorrecao ?? 1,
           }
         )
         return {
@@ -337,9 +356,10 @@ export default function NovaFichaTecnicaPage() {
           nome: formData.nome,
           categoria: formData.categoria,
           precoVenda: formData.precoVenda,
-          custoTotal: custoTotal,
+          custoTotal: custoFinal,
           custoPorPorcao: custoPorPorcao,
           margem: margem,
+          fatorOscilacao,
           rendimentoPorcoes: formData.rendimentoPorcoes,
           ingredientes: ingredientesString,
           modoPreparo: formData.modoPreparo
@@ -562,6 +582,25 @@ export default function NovaFichaTecnicaPage() {
                   </div>
                 </div>
                 <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Fator de Oscilação (%)
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">%</span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={fatorOscilacao}
+                      onChange={(e) => setFatorOscilacao(parseFloat(e.target.value) || 0)}
+                      className="pl-8 rounded-xl border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent transition-all"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Margem de segurança para variação de preços (opcional). Ex.: 10 adiciona 10% ao custo final.
+                  </p>
+                </div>
+                <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Modo de Preparo</Label>
                   <Textarea
                     value={formData.modoPreparo}
@@ -630,6 +669,42 @@ export default function NovaFichaTecnicaPage() {
                               densidade: produtoSelecionado.densidade,
                             }}
                           />
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                                Peso Bruto (g)
+                              </Label>
+                              <Input
+                                type="number"
+                                step="0.001"
+                                min="0"
+                                placeholder="Ex: 1000"
+                                value={pesoBruto || ''}
+                                onChange={(e) => setPesoBruto(parseFloat(e.target.value) || 0)}
+                                className="rounded-lg border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                                Peso Líquido (g)
+                              </Label>
+                              <Input
+                                type="number"
+                                step="0.001"
+                                min="0"
+                                placeholder="Ex: 700"
+                                value={pesoLiquido || ''}
+                                onChange={(e) => setPesoLiquido(parseFloat(e.target.value) || 0)}
+                                className="rounded-lg border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent"
+                              />
+                            </div>
+                          </div>
+                          {pesoBruto > 0 && pesoLiquido > 0 && (
+                            <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 flex items-center justify-between">
+                              <span>Fator de correção (perda):</span>
+                              <span className="font-semibold">{(pesoBruto / pesoLiquido).toFixed(2)}x</span>
+                            </div>
+                          )}
                           <div className="text-xs text-gray-500 bg-gray-100 rounded-lg p-2 flex items-center justify-between">
                             <span>Custo unitário:</span>
                             <span className="font-medium text-gray-700">{formatCurrency(getCustoUnitario(produtoSelecionado))}</span>
@@ -726,6 +801,7 @@ export default function NovaFichaTecnicaPage() {
                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Qtd</th>
                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Valor Unit.</th>
                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Custo</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Fator</th>
                             <th className="px-4 py-3 text-center w-10"></th>
                           </tr>
                         </thead>
@@ -767,6 +843,11 @@ export default function NovaFichaTecnicaPage() {
                                 <td className="px-4 py-2.5 text-right font-mono font-medium text-gray-800 whitespace-nowrap">
                                   {formatCurrency(ing.custo)}
                                 </td>
+                                <td className="px-4 py-2.5 text-right font-mono text-amber-600 whitespace-nowrap hidden md:table-cell">
+                                  {ing.pesoBruto && ing.pesoLiquido
+                                    ? `${(ing.fatorCorrecao ?? 1).toFixed(2)}x`
+                                    : '-'}
+                                </td>
                                 <td className="px-4 py-2.5 text-center">
                                   <Button
                                     type="button"
@@ -786,7 +867,7 @@ export default function NovaFichaTecnicaPage() {
                           <tfoot className="border-t-2 border-gray-200 bg-gray-100/80 sticky bottom-0">
                             <tr className="font-semibold">
                               <td colSpan={3} className="px-4 py-3 text-right text-gray-700 hidden sm:table-cell">
-                                Custo Total:
+                                Custo dos Ingredientes:
                               </td>
                               <td colSpan={2} className="px-4 py-3 text-right text-[#de4838] text-lg">
                                 {formatCurrency(custoTotal)}
@@ -815,7 +896,7 @@ export default function NovaFichaTecnicaPage() {
                 <div className="p-4 md:p-5 pt-0 border-t border-gray-100">
                   <CostBreakdown
                     items={custoItems}
-                    totalCost={custoTotal}
+                    totalCost={custoFinal}
                     costPerPortion={custoPorPorcao}
                     rendimento={formData.rendimentoPorcoes}
                   />
@@ -877,8 +958,18 @@ export default function NovaFichaTecnicaPage() {
                   </div>
                   <div className="space-y-2.5 bg-gray-50 rounded-xl p-4 border border-gray-100">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Custo Total da Ficha:</span>
+                      <span className="text-gray-500">Custo dos Ingredientes:</span>
                       <span className="font-medium text-gray-700">{formatCurrency(custoTotal)}</span>
+                    </div>
+                    {fatorOscilacao > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Fator de Oscilação ({formatPercentage(fatorOscilacao)}):</span>
+                        <span className="font-medium text-emerald-600">+ {formatCurrency(valorOscilacao)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
+                      <span className="font-semibold text-gray-700">Custo Final:</span>
+                      <span className="font-bold text-[#de4838]">{formatCurrency(custoFinal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Custo por Porção:</span>

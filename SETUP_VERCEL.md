@@ -1,4 +1,4 @@
-# Deploy na Vercel - Administra.ai
+# Deploy na Vercel - SeuGerente
 
 ## Visão Geral
 
@@ -34,7 +34,7 @@ Na Vercel, vá em **Settings > Environment Variables** e configure:
 | `STRIPE_WEBHOOK_SECRET` | `whsec_...` | Secret | Webhook do Stripe |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_test_...` | Secret | Chave pública do Stripe |
 | `RESEND_API_KEY` | `re_...` | Secret | API do Resend (emails) |
-| `EMAIL_FROM` | `KaiUp Software <...>` | Secret | Email remetente |
+| `EMAIL_FROM` | `Kaiup Software <noreply@seugerente.com.br>` | Secret | Email remetente (empresa Kaiup Software) |
 
 ### 3. Configurar Webhook do Stripe
 
@@ -150,7 +150,7 @@ feature/SilvioAquino → PR → develop (staging) → PR → main (produção)
 ```
 
 ### Para abrir o PR manualmente:
-1. Acesse: https://github.com/silvioaquino/administra.ai/pull/new/feature/SilvioAquino
+1. Acesse: https://github.com/silvioaquino/seugerente/pull/new/feature/SilvioAquino
 2. Base: `develop`
 3. Crie o PR e aguarde review
 

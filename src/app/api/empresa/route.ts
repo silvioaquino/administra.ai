@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       success: true,
       empresa: {
         id: session.user.id,
-        nome: empresa?.nome || session.user.name || "Administra.ai",
+        nome: empresa?.nome || session.user.name || "SeuGerente",
         whatsapp: empresa?.whatsapp || "",
         segmento: empresa?.segmento || "",
         cep: empresa?.cep || "",

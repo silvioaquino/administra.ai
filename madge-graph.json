@@ -1,0 +1,1189 @@
+{
+  "__tests__/unit/conversion.service.test.ts": [
+    "lib/services/conversion.service.ts"
+  ],
+  "__tests__/unit/gtin-validation.test.ts": [
+    "lib/services/product-normalization.service.ts"
+  ],
+  "__tests__/unit/local-normalizer.test.ts": [
+    "lib/services/local-normalizer.ts"
+  ],
+  "__tests__/unit/open-food-facts.service.test.ts": [
+    "lib/cache/produto-cache.service.ts",
+    "lib/config/open-food-facts.config.ts",
+    "lib/services/open-food-facts.service.ts"
+  ],
+  "__tests__/unit/product-normalization.service.test.ts": [
+    "lib/cache/produto-cache.service.ts",
+    "lib/services/open-food-facts.service.ts",
+    "lib/services/product-normalization.service.ts"
+  ],
+  "__tests__/unit/produto-cache.service.test.ts": [
+    "lib/cache/produto-cache.service.ts"
+  ],
+  "app/(auth)/forgot-password/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx"
+  ],
+  "app/(auth)/layout.tsx": [],
+  "app/(auth)/login/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx"
+  ],
+  "app/(auth)/register/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx"
+  ],
+  "app/(auth)/reset-password/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx"
+  ],
+  "app/(dashboard)/admin/components/AdminDashboard.tsx": [
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/admin/page.tsx": [
+    "app/(dashboard)/admin/components/AdminDashboard.tsx",
+    "lib/admin.ts",
+    "lib/prisma-admin.ts"
+  ],
+  "app/(dashboard)/caixa/page.tsx": [
+    "app/(dashboard)/components/caixa/DashboardCaixa.tsx",
+    "app/(dashboard)/components/caixa/TelaInicial.tsx",
+    "app/(dashboard)/components/caixa/modais/ModalAbrirCaixa.tsx",
+    "app/(dashboard)/components/caixa/modais/ModalConsultaCaixa.tsx",
+    "app/(dashboard)/components/caixa/modais/ModalDetalhesRetirada.tsx",
+    "app/(dashboard)/components/caixa/modais/ModalDetalhesVenda.tsx",
+    "app/(dashboard)/components/caixa/modais/ModalFecharCaixa.tsx",
+    "app/(dashboard)/components/caixa/modais/ModalPreviewImpressao.tsx",
+    "types/caixa.ts"
+  ],
+  "app/(dashboard)/components/IndicadoresCard.tsx": [],
+  "app/(dashboard)/components/caixa/DashboardCaixa.tsx": [
+    "app/(dashboard)/components/caixa/modais/ModalDetalhesRetirada.tsx",
+    "app/(dashboard)/components/caixa/modais/ModalDetalhesVenda.tsx",
+    "app/(dashboard)/components/caixa/modais/ModalFecharCaixa.tsx",
+    "app/(dashboard)/components/caixa/modais/ModalPreviewImpressao.tsx",
+    "lib/utils.ts",
+    "types/caixa.ts"
+  ],
+  "app/(dashboard)/components/caixa/TelaInicial.tsx": [
+    "components/ui/button.tsx"
+  ],
+  "app/(dashboard)/components/caixa/impressao/ComprovanteTermico.tsx": [
+    "lib/utils.ts",
+    "types/caixa.ts"
+  ],
+  "app/(dashboard)/components/caixa/modais/ModalAbrirCaixa.tsx": [],
+  "app/(dashboard)/components/caixa/modais/ModalConsultaCaixa.tsx": [
+    "lib/utils.ts",
+    "types/caixa.ts"
+  ],
+  "app/(dashboard)/components/caixa/modais/ModalDetalhesRetirada.tsx": [
+    "lib/utils.ts",
+    "types/caixa.ts"
+  ],
+  "app/(dashboard)/components/caixa/modais/ModalDetalhesVenda.tsx": [
+    "lib/utils.ts",
+    "types/caixa.ts"
+  ],
+  "app/(dashboard)/components/caixa/modais/ModalFecharCaixa.tsx": [
+    "lib/utils.ts",
+    "types/caixa.ts"
+  ],
+  "app/(dashboard)/components/caixa/modais/ModalPreviewImpressao.tsx": [
+    "app/(dashboard)/components/caixa/impressao/ComprovanteTermico.tsx",
+    "types/caixa.ts"
+  ],
+  "app/(dashboard)/components/onboarding/OnboardingButton.tsx": [
+    "app/(dashboard)/components/onboarding/OnboardingGuide.tsx",
+    "components/ui/button.tsx"
+  ],
+  "app/(dashboard)/components/onboarding/OnboardingGuide.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/progress.tsx"
+  ],
+  "app/(dashboard)/components/onboarding/OnboardingHighlight.tsx": [
+    "components/ui/button.tsx"
+  ],
+  "app/(dashboard)/components/onboarding/onboardingSteps.ts": [
+    "app/(dashboard)/components/onboarding/OnboardingHighlight.tsx"
+  ],
+  "app/(dashboard)/config/loja/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/badge.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/dialog.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "components/ui/select.tsx",
+    "components/ui/separator.tsx",
+    "components/ui/switch.tsx",
+    "components/ui/tabs.tsx",
+    "components/ui/textarea.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/config/planos/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/badge.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/separator.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/contas-bancarias/[id]/editar/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx"
+  ],
+  "app/(dashboard)/contas-bancarias/[id]/movimentacoes/page.tsx": [
+    "components/ui/badge.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/contas-bancarias/components/TransferenciaForm.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/contas-bancarias/nova/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx"
+  ],
+  "app/(dashboard)/contas-bancarias/page.tsx": [
+    "app/(dashboard)/contas-bancarias/components/TransferenciaForm.tsx",
+    "components/ui/badge.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/dialog.tsx",
+    "components/ui/dropdown-menu.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/fechamento-mensal/components/modais/ModalEditarConta.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/dialog.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx"
+  ],
+  "app/(dashboard)/fechamento-mensal/components/modais/ModalNovaConta.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/dialog.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx"
+  ],
+  "app/(dashboard)/fechamento-mensal/components/tabs/DespesasTab.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "components/ui/select.tsx",
+    "components/ui/table.tsx",
+    "lib/validations/fechamento.ts",
+    "types/fechamento.ts"
+  ],
+  "app/(dashboard)/fechamento-mensal/components/tabs/DistribuicaoLucroTab.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/fechamento-mensal/components/tabs/FolhaPagamentoTab.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "types/fechamento.ts"
+  ],
+  "app/(dashboard)/fechamento-mensal/components/tabs/SaldosContasTab.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "types/fechamento.ts"
+  ],
+  "app/(dashboard)/fechamento-mensal/page.tsx": [
+    "app/(dashboard)/fechamento-mensal/components/modais/ModalEditarConta.tsx",
+    "app/(dashboard)/fechamento-mensal/components/modais/ModalNovaConta.tsx",
+    "app/(dashboard)/fechamento-mensal/components/tabs/DespesasTab.tsx",
+    "app/(dashboard)/fechamento-mensal/components/tabs/DistribuicaoLucroTab.tsx",
+    "app/(dashboard)/fechamento-mensal/components/tabs/FolhaPagamentoTab.tsx",
+    "app/(dashboard)/fechamento-mensal/components/tabs/SaldosContasTab.tsx",
+    "components/ui/alert.tsx",
+    "components/ui/badge.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/tabs.tsx",
+    "lib/utils.ts",
+    "types/fechamento.ts"
+  ],
+  "app/(dashboard)/fechamento-mensal/plano-contas/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/badge.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx"
+  ],
+  "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx": [
+    "components/fichas-tecnicas/CostBreakdown.tsx",
+    "components/fichas-tecnicas/UnitQuantityInput.tsx",
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "components/ui/textarea.tsx",
+    "lib/services/conversion.service.ts",
+    "lib/utils.ts",
+    "types/ficha-tecnica.ts"
+  ],
+  "app/(dashboard)/fichas-tecnicas/components/FichaCard.tsx": [
+    "components/ui/badge.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/progress.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/fichas-tecnicas/components/FormIngrediente.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "lib/services/conversion.service.ts",
+    "lib/utils.ts",
+    "types/ficha-tecnica.ts"
+  ],
+  "app/(dashboard)/fichas-tecnicas/components/ListaIngredientes.tsx": [
+    "components/ui/button.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/fichas-tecnicas/hooks/useFichasTecnicas.ts": [],
+  "app/(dashboard)/fichas-tecnicas/nova/page.tsx": [
+    "components/fichas-tecnicas/CostBreakdown.tsx",
+    "components/fichas-tecnicas/UnitQuantityInput.tsx",
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "components/ui/textarea.tsx",
+    "lib/services/conversion.service.ts",
+    "lib/utils.ts",
+    "types/ficha-tecnica.ts"
+  ],
+  "app/(dashboard)/fichas-tecnicas/page.tsx": [
+    "app/(dashboard)/fichas-tecnicas/components/FichaCard.tsx",
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/fluxo-caixa/configuracoes/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/fluxo-caixa/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/badge.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/dialog.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "components/ui/scroll-area.tsx",
+    "components/ui/select.tsx",
+    "lib/services/local-normalizer.ts",
+    "lib/utils.ts",
+    "types/dre.ts"
+  ],
+  "app/(dashboard)/layout.tsx": [
+    "components/ui/badge.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/livro-diario/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/badge.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/dialog.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "hooks/useCategorias.ts",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/nfe/compra/page.tsx": [
+    "components/camera-scanner.tsx",
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "hooks/useContasFinanceiras.ts",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/nfe/lancamento/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "hooks/useContasFinanceiras.ts",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/nfe/page.tsx": [
+    "components/ui/badge.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/progress.tsx",
+    "components/ui/separator.tsx",
+    "components/ui/tabs.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/nfe/produtos/[ id ]/edit/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx"
+  ],
+  "app/(dashboard)/nfe/produtos/normalizacao/page.tsx": [
+    "components/ui/badge.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/nfe/produtos/novo/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx"
+  ],
+  "app/(dashboard)/nfe/produtos/page.tsx": [
+    "components/produtos/ModalEditarProduto.tsx",
+    "components/produtos/ModalNovoProduto.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/nfe/xml/page.tsx": [
+    "components/camera-scanner.tsx",
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "hooks/useContasFinanceiras.ts",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/page.tsx": [
+    "app/(dashboard)/components/IndicadoresCard.tsx",
+    "components/produtividade-chart.tsx",
+    "components/ui/alert.tsx",
+    "components/ui/badge.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento-financeiro/components/DespesasFixasTable.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento-financeiro/components/DespesasVariaveisCard.tsx": [
+    "components/ui/button.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento-financeiro/components/DistribuicaoVendas.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx"
+  ],
+  "app/(dashboard)/planejamento-financeiro/components/MaquininhasConfig.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "components/ui/switch.tsx"
+  ],
+  "app/(dashboard)/planejamento-financeiro/components/MetaFaturamentoTable.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento-financeiro/components/OutrasTaxas.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx"
+  ],
+  "app/(dashboard)/planejamento-financeiro/components/ResultadosTaxas.tsx": [
+    "components/ui/card.tsx",
+    "lib/calculoDespesasVariaveis.ts",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento-financeiro/editar/taxas/page.tsx": [
+    "app/(dashboard)/planejamento-financeiro/components/ResultadosTaxas.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "components/ui/switch.tsx"
+  ],
+  "app/(dashboard)/planejamento-financeiro/page.tsx": [
+    "app/(dashboard)/planejamento-financeiro/components/DespesasFixasTable.tsx",
+    "app/(dashboard)/planejamento-financeiro/components/DespesasVariaveisCard.tsx",
+    "app/(dashboard)/planejamento-financeiro/components/MetaFaturamentoTable.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/components/DespesasFixasTable.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/components/DespesasVariaveisTable.tsx": [
+    "components/ui/button.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/components/FolhaSalarialTable.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/switch.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/components/GraficosDistribuicao.tsx": [
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/components/IndicadoresCard.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/progress.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/components/MarkUpCalculator.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/progress.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/components/ResultadosTaxas.tsx": [
+    "components/ui/card.tsx",
+    "lib/calculoDespesasVariaveis.ts",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/components/TabelaAcompanhamento.tsx": [
+    "components/ui/progress.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/components/TabelaMetasMensais.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/configuracoes/components/DespesasFixasConfig.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/configuracoes/components/DespesasVariaveisConfig.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "lib/utils.ts",
+    "types/maquininhas.ts"
+  ],
+  "app/(dashboard)/planejamento/configuracoes/components/FuncionariosConfig.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/configuracoes/components/MetasMensaisConfig.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/configuracoes/components/ProvisoesConfig.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/switch.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/configuracoes/components/TaxasCartaoConfig.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/editar/despesas-fixas/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/editar/despesas-variaveis/page.tsx": [
+    "app/(dashboard)/planejamento/components/ResultadosTaxas.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "components/ui/switch.tsx"
+  ],
+  "app/(dashboard)/planejamento/editar/funcionarios/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "hooks/useDebounce.ts",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/editar/metas-mensais/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/editar/provisoes/page.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/switch.tsx",
+    "lib/utils.ts"
+  ],
+  "app/(dashboard)/planejamento/hooks/usePlanejamentoData.ts": [],
+  "app/(dashboard)/planejamento/page.tsx": [
+    "app/(dashboard)/planejamento/components/DespesasFixasTable.tsx",
+    "app/(dashboard)/planejamento/components/DespesasVariaveisTable.tsx",
+    "app/(dashboard)/planejamento/components/FolhaSalarialTable.tsx",
+    "app/(dashboard)/planejamento/components/GraficosDistribuicao.tsx",
+    "app/(dashboard)/planejamento/components/IndicadoresCard.tsx",
+    "app/(dashboard)/planejamento/components/MarkUpCalculator.tsx",
+    "app/(dashboard)/planejamento/components/TabelaAcompanhamento.tsx",
+    "app/(dashboard)/planejamento/components/TabelaMetasMensais.tsx",
+    "components/ui/button.tsx",
+    "components/ui/card.tsx",
+    "lib/planejamento/calcularIndicadores.ts",
+    "lib/utils.ts"
+  ],
+  "app/OLDpage.tsx": [
+    "app/(dashboard)/page.tsx"
+  ],
+  "app/api/admin/dashboard/route.ts": [
+    "lib/admin.ts",
+    "lib/prisma-admin.ts"
+  ],
+  "app/api/admin/planos/[id]/route.ts": [
+    "lib/admin.ts",
+    "lib/prisma-admin.ts"
+  ],
+  "app/api/admin/planos/route.ts": [
+    "lib/admin.ts",
+    "lib/prisma-admin.ts"
+  ],
+  "app/api/auth/[...nextauth]/route.ts": [
+    "lib/auth.ts"
+  ],
+  "app/api/auth/forgot-password/route.ts": [
+    "lib/prisma.ts"
+  ],
+  "app/api/auth/register/route.ts": [
+    "lib/prisma.ts"
+  ],
+  "app/api/auth/reset-password/route.ts": [
+    "lib/prisma.ts"
+  ],
+  "app/api/boletos/[id]/pagar/route.ts": [
+    "lib/prisma.ts"
+  ],
+  "app/api/boletos/[id]/route.ts": [
+    "lib/prisma.ts"
+  ],
+  "app/api/boletos/route.ts": [
+    "lib/prisma.ts"
+  ],
+  "app/api/caixa/consulta/route.ts": [
+    "lib/prisma.ts"
+  ],
+  "app/api/caixa/fechar/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma-middleware.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/caixa/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma-middleware.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/categorias/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/config/entrega/route.ts": [
+    "lib/auth.ts"
+  ],
+  "app/api/config/horarios/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/config/pagamentos/route.ts": [
+    "lib/auth.ts"
+  ],
+  "app/api/contas-financeiras/[id]/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/contas-financeiras/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/dashboard/produtividade/mensal/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/dashboard/produtividade/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/dashboard/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/despesas-fixas/[id]/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/despesas-fixas/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/dre/route.ts": [
+    "lib/auth.ts",
+    "lib/dre-calculator.ts",
+    "lib/dre-template.ts",
+    "lib/prisma.ts",
+    "types/dre.ts"
+  ],
+  "app/api/empresa/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fechamento-mensal/calcular/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fechamento-mensal/contas/[id]/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fechamento-mensal/despesas-pendentes/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fechamento-mensal/distribuicao/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fechamento-mensal/dre/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fechamento-mensal/exportar-excel/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fechamento-mensal/fechar/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fechamento-mensal/gerar-pdf/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fechamento-mensal/reabrir/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fechamento-mensal/status/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fichas-tecnicas/[id]/calculate/route.ts": [
+    "lib/services/recipe-cost.service.ts"
+  ],
+  "app/api/fichas-tecnicas/[id]/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fichas-tecnicas/atualizar-por-produto/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fichas-tecnicas/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fluxo-caixa/diario/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fluxo-caixa/dre-mensal/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fluxo-caixa/dre-previsao/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fluxo-caixa/insumos/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fluxo-caixa/metas/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fluxo-caixa/resumo-mensal/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fluxo-caixa/sincronizar-insumos/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/fluxo-caixa/sincronizar/route.ts": [
+    "lib/auth.ts",
+    "lib/dre-calculator.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/livro-diario/[id]/pagar/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/livro-diario/resumo/grafico/route.ts": [
+    "lib/auth.ts"
+  ],
+  "app/api/livro-diario/resumo/saldo/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/livro-diario/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/nfe/processar/route.ts": [
+    "lib/auth.ts",
+    "lib/services/product-normalization.service.ts"
+  ],
+  "app/api/nfe/salvar/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts",
+    "lib/services/conversion.service.ts",
+    "lib/services/product-normalization.service.ts"
+  ],
+  "app/api/notas/[id]/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/notas/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/onboarding/status/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento-financeiro/acompanhamento/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento-financeiro/despesas-fixas/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento-financeiro/despesas-variaveis/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento-financeiro/faturamento/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento-financeiro/sync-from-lancamentos/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/acompanhamento/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/acompanhamento/sync-from-lancamentos/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/despesas-fixas/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/despesas-variaveis/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/folha-pagamento-config/funcionarios/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/folha-pagamento-config/route.ts": [
+    "lib/auth.ts",
+    "lib/folha-lancamentos.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/folha-provisoes-ativas/route.ts": [
+    "lib/auth.ts",
+    "lib/folha.ts"
+  ],
+  "app/api/planejamento/folha-salarial/route.ts": [
+    "lib/auth.ts",
+    "lib/dre-calculator.ts",
+    "lib/folha.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/funcionarios/route.ts": [
+    "lib/auth.ts",
+    "lib/dre-calculator.ts",
+    "lib/folha.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/indicadores-resumo/route.ts": [
+    "lib/auth.ts",
+    "lib/folha.ts",
+    "lib/planejamento/calcularIndicadores.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/lucro-desejado/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/metas/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/percentuais-periodos/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/periodos-selecionados/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/provisoes-funcionarios/route.ts": [
+    "lib/auth.ts",
+    "lib/dre-calculator.ts",
+    "lib/folha.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/planejamento/taxas-cartao/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/produtos/[id]/normalizacao/route.ts": [
+    "lib/auth.ts",
+    "lib/monitoring/normalization-metrics.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/produtos/[id]/resync/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts",
+    "lib/services/conversion.service.ts",
+    "lib/services/product-normalization.service.ts"
+  ],
+  "app/api/produtos/[id]/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/produtos/batch/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/produtos/revisao/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/produtos/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/retiradas/[id]/route.ts": [
+    "lib/prisma.ts"
+  ],
+  "app/api/retiradas/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/vendas/[id]/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/vendas/manuais/[id]/route.ts": [
+    "lib/prisma.ts"
+  ],
+  "app/api/vendas/manuais/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/vendas/route.ts": [
+    "lib/auth.ts",
+    "lib/prisma.ts"
+  ],
+  "app/api/webhook/cardapio-ai/route.ts": [
+    "lib/prisma.ts"
+  ],
+  "app/globals.css": [],
+  "app/layout.tsx": [
+    "app/globals.css",
+    "components/providers/AuthProvider.tsx"
+  ],
+  "components/camera-scanner.tsx": [
+    "components/ui/button.tsx"
+  ],
+  "components/fichas-tecnicas/ConversionTooltip.tsx": [
+    "components/ui/tooltip.tsx"
+  ],
+  "components/fichas-tecnicas/CostBreakdown.tsx": [
+    "components/ui/badge.tsx",
+    "components/ui/card.tsx",
+    "components/ui/table.tsx"
+  ],
+  "components/fichas-tecnicas/UnitQuantityInput.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/input.tsx",
+    "components/ui/select.tsx",
+    "hooks/useDebounce.ts",
+    "lib/services/conversion.service.ts",
+    "types/ficha-tecnica.ts"
+  ],
+  "components/layout/Sidebar.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/layout/Topbar.tsx": [
+    "components/ui/button.tsx",
+    "lib/utils.ts"
+  ],
+  "components/produtividade-chart.tsx": [],
+  "components/produtos/ModalEditarProduto.tsx": [
+    "components/ui/alert.tsx",
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "components/ui/modal.tsx"
+  ],
+  "components/produtos/ModalNovoProduto.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/label.tsx",
+    "components/ui/modal.tsx"
+  ],
+  "components/produtos/UnitBadge.tsx": [
+    "components/ui/badge.tsx"
+  ],
+  "components/providers/AuthProvider.tsx": [],
+  "components/ui/alert.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/avatar.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/badge.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/button.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/card.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/checkbox.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/dialog.tsx": [
+    "components/ui/button.tsx",
+    "lib/utils.ts"
+  ],
+  "components/ui/dropdown-menu.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/input.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/label.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/modal.tsx": [
+    "components/ui/button.tsx"
+  ],
+  "components/ui/progress.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/radio-group.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/scroll-area.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/select.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/separator.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/sheet.tsx": [
+    "components/ui/button.tsx",
+    "lib/utils.ts"
+  ],
+  "components/ui/sidebar.tsx": [
+    "components/ui/button.tsx",
+    "components/ui/input.tsx",
+    "components/ui/separator.tsx",
+    "components/ui/sheet.tsx",
+    "components/ui/skeleton.tsx",
+    "components/ui/tooltip.tsx",
+    "hooks/use-mobile.ts",
+    "lib/utils.ts"
+  ],
+  "components/ui/skeleton.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/switch.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/table.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/tabs.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/textarea.tsx": [
+    "lib/utils.ts"
+  ],
+  "components/ui/tooltip.tsx": [
+    "lib/utils.ts"
+  ],
+  "hooks/use-mobile.ts": [],
+  "hooks/useCategorias.ts": [
+    "types/categorias.ts"
+  ],
+  "hooks/useContasFinanceiras.ts": [],
+  "hooks/useDebounce.ts": [],
+  "hooks/useOnboarding.ts": [],
+  "hooks/useUnitConversion.ts": [
+    "lib/services/conversion.service.ts",
+    "types/ficha-tecnica.ts"
+  ],
+  "lib/admin.ts": [
+    "lib/auth.ts"
+  ],
+  "lib/auth.ts": [
+    "lib/prisma.ts"
+  ],
+  "lib/cache/produto-cache.service.ts": [
+    "lib/config/open-food-facts.config.ts",
+    "types/produto-normalizacao.ts"
+  ],
+  "lib/calculoDespesasVariaveis.ts": [],
+  "lib/config/open-food-facts.config.ts": [],
+  "lib/dre-calculator.ts": [
+    "lib/dre-template.ts",
+    "lib/folha.ts",
+    "lib/prisma.ts"
+  ],
+  "lib/dre-template.ts": [],
+  "lib/email.ts": [],
+  "lib/folha-lancamentos.ts": [
+    "lib/dre-calculator.ts",
+    "lib/prisma.ts"
+  ],
+  "lib/folha.ts": [
+    "lib/prisma.ts"
+  ],
+  "lib/monitoring/normalization-metrics.ts": [
+    "types/produto-normalizacao.ts"
+  ],
+  "lib/planejamento/calcularIndicadores.ts": [
+    "lib/calculoDespesasVariaveis.ts"
+  ],
+  "lib/prisma-admin.ts": [],
+  "lib/prisma-middleware.ts": [
+    "lib/auth.ts"
+  ],
+  "lib/prisma.ts": [
+    "lib/prisma-middleware.ts"
+  ],
+  "lib/services/conversion.service.ts": [
+    "types/ficha-tecnica.ts"
+  ],
+  "lib/services/local-normalizer.ts": [
+    "lib/config/open-food-facts.config.ts",
+    "types/produto-normalizacao.ts"
+  ],
+  "lib/services/open-food-facts.service.ts": [
+    "lib/cache/produto-cache.service.ts",
+    "lib/config/open-food-facts.config.ts",
+    "lib/monitoring/normalization-metrics.ts",
+    "lib/services/rate-limiter.ts",
+    "types/produto-normalizacao.ts"
+  ],
+  "lib/services/product-normalization.service.ts": [
+    "lib/cache/produto-cache.service.ts",
+    "lib/monitoring/normalization-metrics.ts",
+    "lib/services/local-normalizer.ts",
+    "lib/services/open-food-facts.service.ts",
+    "types/produto-normalizacao.ts"
+  ],
+  "lib/services/rate-limiter.ts": [],
+  "lib/services/recipe-cost.service.ts": [
+    "lib/prisma.ts",
+    "lib/services/conversion.service.ts",
+    "types/ficha-tecnica.ts"
+  ],
+  "lib/stripe.ts": [],
+  "lib/utils.ts": [],
+  "lib/validations/fechamento.ts": [],
+  "lib/validations/ficha-tecnica.schema.ts": [],
+  "middleware.ts": [],
+  "types/caixa.ts": [],
+  "types/categorias.ts": [],
+  "types/dre.ts": [],
+  "types/fechamento.ts": [],
+  "types/ficha-tecnica.ts": [],
+  "types/index.ts": [],
+  "types/maquininhas.ts": [],
+  "types/next-auth.d.ts": [],
+  "types/produto-normalizacao.ts": []
+}

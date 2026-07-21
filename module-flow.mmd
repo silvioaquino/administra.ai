@@ -1,0 +1,33 @@
+graph TD
+  classDef core fill:#1e293b,stroke:#de4838,color:#fff;
+  classDef cycle fill:#7f1d1d,stroke:#fca5a5,color:#fff;
+  Auth["Auth"]
+  NFe["NFe"]
+  FichasTecnicas["FichasTecnicas"]
+  Planejamento["Planejamento"]
+  Financeiro["Financeiro"]
+  AdminConfig["Admin/Config"]
+  DashboardHome["DashboardHome"]
+  Auth -->|3| Admin/Config
+  FichasTecnicas -->|2| NFe
+  FichasTecnicas -->|3| Planejamento
+  Financeiro -.->|3| NFe
+  Financeiro -->|1| Planejamento
+  NFe -.->|7| Financeiro
+  DashboardHome -->|1| FichasTecnicas
+  DashboardHome -->|1| NFe
+  DashboardHome -->|2| Planejamento
+
+  %% Core compartilhado por todos (ui/*, lib/utils, prisma, AuthProvider)
+  CORE["CORE: ui/* + lib/utils + prisma + AuthProvider"]:::core
+  Auth --> CORE
+  NFe --> CORE
+  FichasTecnicas --> CORE
+  Planejamento --> CORE
+  Financeiro --> CORE
+  AdminConfig --> CORE
+  DashboardHome --> CORE
+
+  %% CICLO DE MÓDULO: NFe <-> Financeiro
+  NFe:::cycle
+  Financeiro:::cycle

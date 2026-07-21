@@ -42,6 +42,21 @@ type PlanWithDetails = Plan & {
 
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json }
 
+// Lista de módulos do menu do sistema (mesma lista da Sidebar)
+const menuOptions = [
+  "Dashboard",
+  "Notas Fiscais",
+  "Livro Diário",
+  "Planejamento",
+  "Fichas Técnicas",
+  "Contas Bancárias",
+  "Fluxo de Caixa",
+  "Fechamento Mensal",
+  "Notas Processadas",
+  "Abertura/Fechamento Caixa Diário",
+  "Integração com o Cardapio.ai",
+];
+
 // Dados mockados para desenvolvimento (substituir pela API real)
 const mockPlans: PlanWithDetails[] = [
   {
@@ -156,6 +171,10 @@ export default function PlanosPage() {
       setSubscription(mockSubscription);
     }
   }, [session]);
+
+  // Exibe apenas o plano PDV+Robô na tela; os demais planos permanecem no array (mockPlans) para uso futuro
+  const activePlanId = "plan_robot";
+  const visiblePlans = plans.filter((p) => p.id === activePlanId);
 
   const isInTrial = session?.user?.isInTrial;
   const trialEndsAt = session?.user?.trialEndsAt ? new Date(session.user.trialEndsAt) : null;
@@ -291,8 +310,8 @@ export default function PlanosPage() {
         </div>
 
         {/* Grid de Planos */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-10">
-          {plans.map((plan) => {
+        <div className="flex justify-center mb-10">
+          {visiblePlans.map((plan) => {
             const isCurrentPlan = currentPlan?.id === plan.id;
             const periodPrice = getPriceForPeriod(plan);
             const originalPrice = getOriginalPriceForPeriod(plan);
@@ -302,7 +321,7 @@ export default function PlanosPage() {
               <div
                 key={plan.id}
                 className={cn(
-                  "relative bg-white rounded-2xl shadow-sm overflow-hidden transition-all duration-200 flex flex-col",
+                  "relative w-full max-w-xl bg-white rounded-2xl shadow-sm overflow-hidden transition-all duration-200 flex flex-col",
                   isCurrentPlan ? "ring-2 ring-[#de4838] shadow-md" : "hover:shadow-md",
                   plan.popular && !isCurrentPlan && "border-2 border-[#de4838]/20"
                 )}
@@ -325,9 +344,8 @@ export default function PlanosPage() {
                 )}>
                   <h3 className="text-xl font-bold text-gray-800">{plan.name}</h3>
                   <p className="text-sm text-gray-500 mt-1 min-h-[40px]">
-                    {plan.name === "PDV Básico" && "Venda para entrega, retirada, balcão, mesa e agendado."}
-                    {plan.name === "PDV+Robô" && "Tudo do PDV + Robô de pedidos e acesso ao pagamento online."}
-                    {plan.name === "PDV Integrado" && "O plano mais completo. Integração com iFood + Robô de pedidos."}
+                    {plan.name === "Plano Básico" && "Venda para entrega, retirada, balcão, mesa e agendado."}
+                    {plan.name === "Plano Robô" && "Tudo do PDV + Robô de pedidos e acesso ao pagamento online."}
                   </p>
                   <div className="mt-4">
                     <div className="flex items-baseline gap-1">
@@ -348,15 +366,12 @@ export default function PlanosPage() {
                 {/* Features */}
                 <div className="flex-1 p-5">
                   <ul className="space-y-2">
-                    {(plan.features as string[]).slice(0, 8).map((feature, idx) => (
+                    {menuOptions.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-sm">
                         <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                        <span className="text-gray-600">{feature}</span>
+                        <span className="text-gray-600">{item}</span>
                       </li>
                     ))}
-                    {(plan.features as string[]).length > 8 && (
-                      <li className="text-xs text-gray-400 pt-2">+{(plan.features as string[]).length - 8} outros recursos</li>
-                    )}
                   </ul>
                 </div>
 

@@ -1,0 +1,1658 @@
+{
+  "totalPages": 37,
+  "totalApiRoutes": 91,
+  "pages": [
+    "app/(auth)/forgot-password/page.tsx",
+    "app/(auth)/login/page.tsx",
+    "app/(auth)/register/page.tsx",
+    "app/(auth)/reset-password/page.tsx",
+    "app/(dashboard)/admin/page.tsx",
+    "app/(dashboard)/caixa/page.tsx",
+    "app/(dashboard)/config/loja/page.tsx",
+    "app/(dashboard)/config/planos/page.tsx",
+    "app/(dashboard)/contas-bancarias/[id]/editar/page.tsx",
+    "app/(dashboard)/contas-bancarias/[id]/movimentacoes/page.tsx",
+    "app/(dashboard)/contas-bancarias/nova/page.tsx",
+    "app/(dashboard)/contas-bancarias/page.tsx",
+    "app/(dashboard)/fechamento-mensal/page.tsx",
+    "app/(dashboard)/fechamento-mensal/plano-contas/page.tsx",
+    "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx",
+    "app/(dashboard)/fichas-tecnicas/nova/page.tsx",
+    "app/(dashboard)/fichas-tecnicas/page.tsx",
+    "app/(dashboard)/fluxo-caixa/configuracoes/page.tsx",
+    "app/(dashboard)/fluxo-caixa/page.tsx",
+    "app/(dashboard)/livro-diario/page.tsx",
+    "app/(dashboard)/nfe/compra/page.tsx",
+    "app/(dashboard)/nfe/lancamento/page.tsx",
+    "app/(dashboard)/nfe/page.tsx",
+    "app/(dashboard)/nfe/produtos/[ id ]/edit/page.tsx",
+    "app/(dashboard)/nfe/produtos/normalizacao/page.tsx",
+    "app/(dashboard)/nfe/produtos/novo/page.tsx",
+    "app/(dashboard)/nfe/produtos/page.tsx",
+    "app/(dashboard)/nfe/xml/page.tsx",
+    "app/(dashboard)/page.tsx",
+    "app/(dashboard)/planejamento-financeiro/editar/taxas/page.tsx",
+    "app/(dashboard)/planejamento-financeiro/page.tsx",
+    "app/(dashboard)/planejamento/editar/despesas-fixas/page.tsx",
+    "app/(dashboard)/planejamento/editar/despesas-variaveis/page.tsx",
+    "app/(dashboard)/planejamento/editar/funcionarios/page.tsx",
+    "app/(dashboard)/planejamento/editar/metas-mensais/page.tsx",
+    "app/(dashboard)/planejamento/editar/provisoes/page.tsx",
+    "app/(dashboard)/planejamento/page.tsx"
+  ],
+  "pageDeps": {
+    "app/(auth)/forgot-password/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(auth)/login/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(auth)/register/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(auth)/reset-password/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/admin/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [],
+      "component": [
+        "app/(dashboard)/admin/components/AdminDashboard.tsx"
+      ],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/admin.ts",
+        "lib/prisma-admin.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/caixa/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [],
+      "component": [
+        "app/(dashboard)/components/caixa/DashboardCaixa.tsx",
+        "app/(dashboard)/components/caixa/TelaInicial.tsx",
+        "app/(dashboard)/components/caixa/modais/ModalAbrirCaixa.tsx",
+        "app/(dashboard)/components/caixa/modais/ModalConsultaCaixa.tsx",
+        "app/(dashboard)/components/caixa/modais/ModalDetalhesRetirada.tsx",
+        "app/(dashboard)/components/caixa/modais/ModalDetalhesVenda.tsx",
+        "app/(dashboard)/components/caixa/modais/ModalFecharCaixa.tsx",
+        "app/(dashboard)/components/caixa/modais/ModalPreviewImpressao.tsx"
+      ],
+      "hook": [],
+      "service": [],
+      "lib": [],
+      "layout": [],
+      "provider": [],
+      "other": [
+        "types/caixa.ts"
+      ]
+    },
+    "app/(dashboard)/config/loja/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/badge.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/dialog.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx",
+        "components/ui/select.tsx",
+        "components/ui/separator.tsx",
+        "components/ui/switch.tsx",
+        "components/ui/tabs.tsx",
+        "components/ui/textarea.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/config/planos/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/badge.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/separator.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/contas-bancarias/[id]/editar/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/contas-bancarias/[id]/movimentacoes/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/badge.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/contas-bancarias/nova/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/contas-bancarias/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/badge.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/dialog.tsx",
+        "components/ui/dropdown-menu.tsx"
+      ],
+      "component": [
+        "app/(dashboard)/contas-bancarias/components/TransferenciaForm.tsx"
+      ],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/fechamento-mensal/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/badge.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/tabs.tsx"
+      ],
+      "component": [
+        "app/(dashboard)/fechamento-mensal/components/modais/ModalEditarConta.tsx",
+        "app/(dashboard)/fechamento-mensal/components/modais/ModalNovaConta.tsx",
+        "app/(dashboard)/fechamento-mensal/components/tabs/DespesasTab.tsx",
+        "app/(dashboard)/fechamento-mensal/components/tabs/DistribuicaoLucroTab.tsx",
+        "app/(dashboard)/fechamento-mensal/components/tabs/FolhaPagamentoTab.tsx",
+        "app/(dashboard)/fechamento-mensal/components/tabs/SaldosContasTab.tsx"
+      ],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": [
+        "types/fechamento.ts"
+      ]
+    },
+    "app/(dashboard)/fechamento-mensal/plano-contas/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/badge.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx",
+        "components/ui/textarea.tsx"
+      ],
+      "component": [
+        "components/fichas-tecnicas/CostBreakdown.tsx",
+        "components/fichas-tecnicas/UnitQuantityInput.tsx"
+      ],
+      "hook": [],
+      "service": [
+        "lib/services/conversion.service.ts"
+      ],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": [
+        "types/ficha-tecnica.ts"
+      ]
+    },
+    "app/(dashboard)/fichas-tecnicas/nova/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx",
+        "components/ui/textarea.tsx"
+      ],
+      "component": [
+        "components/fichas-tecnicas/CostBreakdown.tsx",
+        "components/fichas-tecnicas/UnitQuantityInput.tsx"
+      ],
+      "hook": [],
+      "service": [
+        "lib/services/conversion.service.ts"
+      ],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": [
+        "types/ficha-tecnica.ts"
+      ]
+    },
+    "app/(dashboard)/fichas-tecnicas/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx"
+      ],
+      "component": [
+        "app/(dashboard)/fichas-tecnicas/components/FichaCard.tsx"
+      ],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/fluxo-caixa/configuracoes/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/fluxo-caixa/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/badge.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/dialog.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx",
+        "components/ui/scroll-area.tsx",
+        "components/ui/select.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [
+        "lib/services/local-normalizer.ts"
+      ],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": [
+        "types/dre.ts"
+      ]
+    },
+    "app/(dashboard)/livro-diario/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/badge.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/dialog.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [],
+      "hook": [
+        "hooks/useCategorias.ts"
+      ],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/nfe/compra/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [
+        "components/camera-scanner.tsx"
+      ],
+      "hook": [
+        "hooks/useContasFinanceiras.ts"
+      ],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/nfe/lancamento/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [],
+      "hook": [
+        "hooks/useContasFinanceiras.ts"
+      ],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/nfe/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/badge.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/progress.tsx",
+        "components/ui/separator.tsx",
+        "components/ui/tabs.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/nfe/produtos/[ id ]/edit/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/nfe/produtos/normalizacao/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/badge.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/nfe/produtos/novo/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/nfe/produtos/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/button.tsx",
+        "components/ui/input.tsx"
+      ],
+      "component": [
+        "components/produtos/ModalEditarProduto.tsx",
+        "components/produtos/ModalNovoProduto.tsx"
+      ],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/nfe/xml/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [
+        "components/camera-scanner.tsx"
+      ],
+      "hook": [
+        "hooks/useContasFinanceiras.ts"
+      ],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/badge.tsx",
+        "components/ui/button.tsx",
+        "components/ui/card.tsx"
+      ],
+      "component": [
+        "app/(dashboard)/components/IndicadoresCard.tsx",
+        "components/produtividade-chart.tsx"
+      ],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/planejamento-financeiro/editar/taxas/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx",
+        "components/ui/switch.tsx"
+      ],
+      "component": [
+        "app/(dashboard)/planejamento-financeiro/components/ResultadosTaxas.tsx"
+      ],
+      "hook": [],
+      "service": [],
+      "lib": [],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/planejamento-financeiro/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/button.tsx",
+        "components/ui/card.tsx"
+      ],
+      "component": [
+        "app/(dashboard)/planejamento-financeiro/components/DespesasFixasTable.tsx",
+        "app/(dashboard)/planejamento-financeiro/components/DespesasVariaveisCard.tsx",
+        "app/(dashboard)/planejamento-financeiro/components/MetaFaturamentoTable.tsx"
+      ],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/planejamento/editar/despesas-fixas/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/planejamento/editar/despesas-variaveis/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/button.tsx",
+        "components/ui/card.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx",
+        "components/ui/switch.tsx"
+      ],
+      "component": [
+        "app/(dashboard)/planejamento/components/ResultadosTaxas.tsx"
+      ],
+      "hook": [],
+      "service": [],
+      "lib": [],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/planejamento/editar/funcionarios/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx"
+      ],
+      "component": [],
+      "hook": [
+        "hooks/useDebounce.ts"
+      ],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/planejamento/editar/metas-mensais/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/planejamento/editar/provisoes/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/alert.tsx",
+        "components/ui/button.tsx",
+        "components/ui/switch.tsx"
+      ],
+      "component": [],
+      "hook": [],
+      "service": [],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    },
+    "app/(dashboard)/planejamento/page.tsx": {
+      "page": [],
+      "api": [],
+      "ui": [
+        "components/ui/button.tsx",
+        "components/ui/card.tsx"
+      ],
+      "component": [
+        "app/(dashboard)/planejamento/components/DespesasFixasTable.tsx",
+        "app/(dashboard)/planejamento/components/DespesasVariaveisTable.tsx",
+        "app/(dashboard)/planejamento/components/FolhaSalarialTable.tsx",
+        "app/(dashboard)/planejamento/components/GraficosDistribuicao.tsx",
+        "app/(dashboard)/planejamento/components/IndicadoresCard.tsx",
+        "app/(dashboard)/planejamento/components/MarkUpCalculator.tsx",
+        "app/(dashboard)/planejamento/components/TabelaAcompanhamento.tsx",
+        "app/(dashboard)/planejamento/components/TabelaMetasMensais.tsx"
+      ],
+      "hook": [],
+      "service": [
+        "lib/planejamento/calcularIndicadores.ts"
+      ],
+      "lib": [
+        "lib/utils.ts"
+      ],
+      "layout": [],
+      "provider": [],
+      "other": []
+    }
+  },
+  "sharedRanked": [
+    {
+      "module": "components/ui/button.tsx",
+      "count": 35,
+      "pages": [
+        "app/(auth)/forgot-password/page.tsx",
+        "app/(auth)/login/page.tsx",
+        "app/(auth)/register/page.tsx",
+        "app/(auth)/reset-password/page.tsx",
+        "app/(dashboard)/config/loja/page.tsx",
+        "app/(dashboard)/config/planos/page.tsx",
+        "app/(dashboard)/contas-bancarias/[id]/editar/page.tsx",
+        "app/(dashboard)/contas-bancarias/[id]/movimentacoes/page.tsx",
+        "app/(dashboard)/contas-bancarias/nova/page.tsx",
+        "app/(dashboard)/contas-bancarias/page.tsx",
+        "app/(dashboard)/fechamento-mensal/page.tsx",
+        "app/(dashboard)/fechamento-mensal/plano-contas/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/nova/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/page.tsx",
+        "app/(dashboard)/fluxo-caixa/configuracoes/page.tsx",
+        "app/(dashboard)/fluxo-caixa/page.tsx",
+        "app/(dashboard)/livro-diario/page.tsx",
+        "app/(dashboard)/nfe/compra/page.tsx",
+        "app/(dashboard)/nfe/lancamento/page.tsx",
+        "app/(dashboard)/nfe/page.tsx",
+        "app/(dashboard)/nfe/produtos/[ id ]/edit/page.tsx",
+        "app/(dashboard)/nfe/produtos/normalizacao/page.tsx",
+        "app/(dashboard)/nfe/produtos/novo/page.tsx",
+        "app/(dashboard)/nfe/produtos/page.tsx",
+        "app/(dashboard)/nfe/xml/page.tsx",
+        "app/(dashboard)/page.tsx",
+        "app/(dashboard)/planejamento-financeiro/editar/taxas/page.tsx",
+        "app/(dashboard)/planejamento-financeiro/page.tsx",
+        "app/(dashboard)/planejamento/editar/despesas-fixas/page.tsx",
+        "app/(dashboard)/planejamento/editar/despesas-variaveis/page.tsx",
+        "app/(dashboard)/planejamento/editar/funcionarios/page.tsx",
+        "app/(dashboard)/planejamento/editar/metas-mensais/page.tsx",
+        "app/(dashboard)/planejamento/editar/provisoes/page.tsx",
+        "app/(dashboard)/planejamento/page.tsx"
+      ]
+    },
+    {
+      "module": "components/ui/input.tsx",
+      "count": 27,
+      "pages": [
+        "app/(auth)/forgot-password/page.tsx",
+        "app/(auth)/login/page.tsx",
+        "app/(auth)/register/page.tsx",
+        "app/(auth)/reset-password/page.tsx",
+        "app/(dashboard)/config/loja/page.tsx",
+        "app/(dashboard)/contas-bancarias/[id]/editar/page.tsx",
+        "app/(dashboard)/contas-bancarias/[id]/movimentacoes/page.tsx",
+        "app/(dashboard)/contas-bancarias/nova/page.tsx",
+        "app/(dashboard)/fechamento-mensal/plano-contas/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/nova/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/page.tsx",
+        "app/(dashboard)/fluxo-caixa/configuracoes/page.tsx",
+        "app/(dashboard)/fluxo-caixa/page.tsx",
+        "app/(dashboard)/livro-diario/page.tsx",
+        "app/(dashboard)/nfe/compra/page.tsx",
+        "app/(dashboard)/nfe/lancamento/page.tsx",
+        "app/(dashboard)/nfe/produtos/[ id ]/edit/page.tsx",
+        "app/(dashboard)/nfe/produtos/normalizacao/page.tsx",
+        "app/(dashboard)/nfe/produtos/novo/page.tsx",
+        "app/(dashboard)/nfe/produtos/page.tsx",
+        "app/(dashboard)/nfe/xml/page.tsx",
+        "app/(dashboard)/planejamento-financeiro/editar/taxas/page.tsx",
+        "app/(dashboard)/planejamento/editar/despesas-fixas/page.tsx",
+        "app/(dashboard)/planejamento/editar/despesas-variaveis/page.tsx",
+        "app/(dashboard)/planejamento/editar/funcionarios/page.tsx",
+        "app/(dashboard)/planejamento/editar/metas-mensais/page.tsx"
+      ]
+    },
+    {
+      "module": "components/ui/alert.tsx",
+      "count": 26,
+      "pages": [
+        "app/(auth)/forgot-password/page.tsx",
+        "app/(auth)/login/page.tsx",
+        "app/(auth)/register/page.tsx",
+        "app/(auth)/reset-password/page.tsx",
+        "app/(dashboard)/config/loja/page.tsx",
+        "app/(dashboard)/config/planos/page.tsx",
+        "app/(dashboard)/contas-bancarias/[id]/editar/page.tsx",
+        "app/(dashboard)/contas-bancarias/nova/page.tsx",
+        "app/(dashboard)/fechamento-mensal/page.tsx",
+        "app/(dashboard)/fechamento-mensal/plano-contas/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/nova/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/page.tsx",
+        "app/(dashboard)/fluxo-caixa/configuracoes/page.tsx",
+        "app/(dashboard)/fluxo-caixa/page.tsx",
+        "app/(dashboard)/livro-diario/page.tsx",
+        "app/(dashboard)/nfe/compra/page.tsx",
+        "app/(dashboard)/nfe/lancamento/page.tsx",
+        "app/(dashboard)/nfe/produtos/[ id ]/edit/page.tsx",
+        "app/(dashboard)/nfe/produtos/novo/page.tsx",
+        "app/(dashboard)/nfe/xml/page.tsx",
+        "app/(dashboard)/page.tsx",
+        "app/(dashboard)/planejamento/editar/despesas-fixas/page.tsx",
+        "app/(dashboard)/planejamento/editar/funcionarios/page.tsx",
+        "app/(dashboard)/planejamento/editar/metas-mensais/page.tsx",
+        "app/(dashboard)/planejamento/editar/provisoes/page.tsx"
+      ]
+    },
+    {
+      "module": "lib/utils.ts",
+      "count": 24,
+      "pages": [
+        "app/(dashboard)/config/loja/page.tsx",
+        "app/(dashboard)/config/planos/page.tsx",
+        "app/(dashboard)/contas-bancarias/[id]/movimentacoes/page.tsx",
+        "app/(dashboard)/contas-bancarias/page.tsx",
+        "app/(dashboard)/fechamento-mensal/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/nova/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/page.tsx",
+        "app/(dashboard)/fluxo-caixa/configuracoes/page.tsx",
+        "app/(dashboard)/fluxo-caixa/page.tsx",
+        "app/(dashboard)/livro-diario/page.tsx",
+        "app/(dashboard)/nfe/compra/page.tsx",
+        "app/(dashboard)/nfe/lancamento/page.tsx",
+        "app/(dashboard)/nfe/page.tsx",
+        "app/(dashboard)/nfe/produtos/normalizacao/page.tsx",
+        "app/(dashboard)/nfe/produtos/page.tsx",
+        "app/(dashboard)/nfe/xml/page.tsx",
+        "app/(dashboard)/page.tsx",
+        "app/(dashboard)/planejamento-financeiro/page.tsx",
+        "app/(dashboard)/planejamento/editar/despesas-fixas/page.tsx",
+        "app/(dashboard)/planejamento/editar/funcionarios/page.tsx",
+        "app/(dashboard)/planejamento/editar/metas-mensais/page.tsx",
+        "app/(dashboard)/planejamento/editar/provisoes/page.tsx",
+        "app/(dashboard)/planejamento/page.tsx"
+      ]
+    },
+    {
+      "module": "components/ui/label.tsx",
+      "count": 22,
+      "pages": [
+        "app/(auth)/forgot-password/page.tsx",
+        "app/(auth)/login/page.tsx",
+        "app/(auth)/register/page.tsx",
+        "app/(auth)/reset-password/page.tsx",
+        "app/(dashboard)/config/loja/page.tsx",
+        "app/(dashboard)/contas-bancarias/[id]/editar/page.tsx",
+        "app/(dashboard)/contas-bancarias/[id]/movimentacoes/page.tsx",
+        "app/(dashboard)/contas-bancarias/nova/page.tsx",
+        "app/(dashboard)/fechamento-mensal/plano-contas/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/nova/page.tsx",
+        "app/(dashboard)/fluxo-caixa/configuracoes/page.tsx",
+        "app/(dashboard)/fluxo-caixa/page.tsx",
+        "app/(dashboard)/livro-diario/page.tsx",
+        "app/(dashboard)/nfe/compra/page.tsx",
+        "app/(dashboard)/nfe/lancamento/page.tsx",
+        "app/(dashboard)/nfe/produtos/[ id ]/edit/page.tsx",
+        "app/(dashboard)/nfe/produtos/novo/page.tsx",
+        "app/(dashboard)/nfe/xml/page.tsx",
+        "app/(dashboard)/planejamento-financeiro/editar/taxas/page.tsx",
+        "app/(dashboard)/planejamento/editar/despesas-fixas/page.tsx",
+        "app/(dashboard)/planejamento/editar/despesas-variaveis/page.tsx"
+      ]
+    },
+    {
+      "module": "components/ui/card.tsx",
+      "count": 20,
+      "pages": [
+        "app/(auth)/register/page.tsx",
+        "app/(dashboard)/config/loja/page.tsx",
+        "app/(dashboard)/config/planos/page.tsx",
+        "app/(dashboard)/contas-bancarias/[id]/movimentacoes/page.tsx",
+        "app/(dashboard)/contas-bancarias/page.tsx",
+        "app/(dashboard)/fechamento-mensal/page.tsx",
+        "app/(dashboard)/fechamento-mensal/plano-contas/page.tsx",
+        "app/(dashboard)/fluxo-caixa/configuracoes/page.tsx",
+        "app/(dashboard)/fluxo-caixa/page.tsx",
+        "app/(dashboard)/livro-diario/page.tsx",
+        "app/(dashboard)/nfe/compra/page.tsx",
+        "app/(dashboard)/nfe/lancamento/page.tsx",
+        "app/(dashboard)/nfe/page.tsx",
+        "app/(dashboard)/nfe/produtos/[ id ]/edit/page.tsx",
+        "app/(dashboard)/nfe/xml/page.tsx",
+        "app/(dashboard)/page.tsx",
+        "app/(dashboard)/planejamento-financeiro/editar/taxas/page.tsx",
+        "app/(dashboard)/planejamento-financeiro/page.tsx",
+        "app/(dashboard)/planejamento/editar/despesas-variaveis/page.tsx",
+        "app/(dashboard)/planejamento/page.tsx"
+      ]
+    },
+    {
+      "module": "components/ui/badge.tsx",
+      "count": 11,
+      "pages": [
+        "app/(dashboard)/config/loja/page.tsx",
+        "app/(dashboard)/config/planos/page.tsx",
+        "app/(dashboard)/contas-bancarias/[id]/movimentacoes/page.tsx",
+        "app/(dashboard)/contas-bancarias/page.tsx",
+        "app/(dashboard)/fechamento-mensal/page.tsx",
+        "app/(dashboard)/fechamento-mensal/plano-contas/page.tsx",
+        "app/(dashboard)/fluxo-caixa/page.tsx",
+        "app/(dashboard)/livro-diario/page.tsx",
+        "app/(dashboard)/nfe/page.tsx",
+        "app/(dashboard)/nfe/produtos/normalizacao/page.tsx",
+        "app/(dashboard)/page.tsx"
+      ]
+    },
+    {
+      "module": "components/ui/dialog.tsx",
+      "count": 4,
+      "pages": [
+        "app/(dashboard)/config/loja/page.tsx",
+        "app/(dashboard)/contas-bancarias/page.tsx",
+        "app/(dashboard)/fluxo-caixa/page.tsx",
+        "app/(dashboard)/livro-diario/page.tsx"
+      ]
+    },
+    {
+      "module": "components/ui/switch.tsx",
+      "count": 4,
+      "pages": [
+        "app/(dashboard)/config/loja/page.tsx",
+        "app/(dashboard)/planejamento-financeiro/editar/taxas/page.tsx",
+        "app/(dashboard)/planejamento/editar/despesas-variaveis/page.tsx",
+        "app/(dashboard)/planejamento/editar/provisoes/page.tsx"
+      ]
+    },
+    {
+      "module": "components/ui/separator.tsx",
+      "count": 3,
+      "pages": [
+        "app/(dashboard)/config/loja/page.tsx",
+        "app/(dashboard)/config/planos/page.tsx",
+        "app/(dashboard)/nfe/page.tsx"
+      ]
+    },
+    {
+      "module": "components/ui/tabs.tsx",
+      "count": 3,
+      "pages": [
+        "app/(dashboard)/config/loja/page.tsx",
+        "app/(dashboard)/fechamento-mensal/page.tsx",
+        "app/(dashboard)/nfe/page.tsx"
+      ]
+    },
+    {
+      "module": "components/ui/textarea.tsx",
+      "count": 3,
+      "pages": [
+        "app/(dashboard)/config/loja/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/nova/page.tsx"
+      ]
+    },
+    {
+      "module": "hooks/useContasFinanceiras.ts",
+      "count": 3,
+      "pages": [
+        "app/(dashboard)/nfe/compra/page.tsx",
+        "app/(dashboard)/nfe/lancamento/page.tsx",
+        "app/(dashboard)/nfe/xml/page.tsx"
+      ]
+    },
+    {
+      "module": "components/ui/select.tsx",
+      "count": 2,
+      "pages": [
+        "app/(dashboard)/config/loja/page.tsx",
+        "app/(dashboard)/fluxo-caixa/page.tsx"
+      ]
+    },
+    {
+      "module": "components/fichas-tecnicas/CostBreakdown.tsx",
+      "count": 2,
+      "pages": [
+        "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/nova/page.tsx"
+      ]
+    },
+    {
+      "module": "components/fichas-tecnicas/UnitQuantityInput.tsx",
+      "count": 2,
+      "pages": [
+        "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/nova/page.tsx"
+      ]
+    },
+    {
+      "module": "lib/services/conversion.service.ts",
+      "count": 2,
+      "pages": [
+        "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/nova/page.tsx"
+      ]
+    },
+    {
+      "module": "types/ficha-tecnica.ts",
+      "count": 2,
+      "pages": [
+        "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx",
+        "app/(dashboard)/fichas-tecnicas/nova/page.tsx"
+      ]
+    },
+    {
+      "module": "components/camera-scanner.tsx",
+      "count": 2,
+      "pages": [
+        "app/(dashboard)/nfe/compra/page.tsx",
+        "app/(dashboard)/nfe/xml/page.tsx"
+      ]
+    }
+  ],
+  "importedBy": {
+    "app/(auth)/forgot-password/page.tsx": [],
+    "app/(auth)/login/page.tsx": [],
+    "app/(auth)/register/page.tsx": [],
+    "app/(auth)/reset-password/page.tsx": [],
+    "app/(dashboard)/admin/page.tsx": [],
+    "app/(dashboard)/caixa/page.tsx": [],
+    "app/(dashboard)/config/loja/page.tsx": [],
+    "app/(dashboard)/config/planos/page.tsx": [],
+    "app/(dashboard)/contas-bancarias/[id]/editar/page.tsx": [],
+    "app/(dashboard)/contas-bancarias/[id]/movimentacoes/page.tsx": [],
+    "app/(dashboard)/contas-bancarias/nova/page.tsx": [],
+    "app/(dashboard)/contas-bancarias/page.tsx": [],
+    "app/(dashboard)/fechamento-mensal/page.tsx": [],
+    "app/(dashboard)/fechamento-mensal/plano-contas/page.tsx": [],
+    "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx": [],
+    "app/(dashboard)/fichas-tecnicas/nova/page.tsx": [],
+    "app/(dashboard)/fichas-tecnicas/page.tsx": [],
+    "app/(dashboard)/fluxo-caixa/configuracoes/page.tsx": [],
+    "app/(dashboard)/fluxo-caixa/page.tsx": [],
+    "app/(dashboard)/livro-diario/page.tsx": [],
+    "app/(dashboard)/nfe/compra/page.tsx": [],
+    "app/(dashboard)/nfe/lancamento/page.tsx": [],
+    "app/(dashboard)/nfe/page.tsx": [],
+    "app/(dashboard)/nfe/produtos/[ id ]/edit/page.tsx": [],
+    "app/(dashboard)/nfe/produtos/normalizacao/page.tsx": [],
+    "app/(dashboard)/nfe/produtos/novo/page.tsx": [],
+    "app/(dashboard)/nfe/produtos/page.tsx": [],
+    "app/(dashboard)/nfe/xml/page.tsx": [],
+    "app/(dashboard)/page.tsx": [],
+    "app/(dashboard)/planejamento-financeiro/editar/taxas/page.tsx": [],
+    "app/(dashboard)/planejamento-financeiro/page.tsx": [],
+    "app/(dashboard)/planejamento/editar/despesas-fixas/page.tsx": [],
+    "app/(dashboard)/planejamento/editar/despesas-variaveis/page.tsx": [],
+    "app/(dashboard)/planejamento/editar/funcionarios/page.tsx": [],
+    "app/(dashboard)/planejamento/editar/metas-mensais/page.tsx": [],
+    "app/(dashboard)/planejamento/editar/provisoes/page.tsx": [],
+    "app/(dashboard)/planejamento/page.tsx": []
+  },
+  "apiUsage": {
+    "app/(auth)/forgot-password/page.tsx": [
+      "/api/auth/forgot-password"
+    ],
+    "app/(auth)/login/page.tsx": [],
+    "app/(auth)/register/page.tsx": [
+      "/api/auth/register"
+    ],
+    "app/(auth)/reset-password/page.tsx": [
+      "/api/auth/reset-password"
+    ],
+    "app/(dashboard)/admin/page.tsx": [],
+    "app/(dashboard)/caixa/page.tsx": [
+      "/api/caixa",
+      "/api/vendas?caixaId=${caixaId}",
+      "/api/retiradas?caixaId=${caixaId}",
+      "/api/vendas/manuais?caixaId=${caixaId}",
+      "/api/caixa/consulta?data=${data}",
+      "/api/retiradas",
+      "/api/caixa/fechar",
+      "/api/vendas/${vendaId}",
+      "/api/retiradas/${retiradaId}"
+    ],
+    "app/(dashboard)/config/loja/page.tsx": [
+      "/api/empresa",
+      "/api/config/horarios",
+      "/api/config/pagamentos",
+      "/api/config/entrega",
+      "/api/auth/register-user",
+      "/api/auth/users/${id}"
+    ],
+    "app/(dashboard)/config/planos/page.tsx": [],
+    "app/(dashboard)/contas-bancarias/nova/page.tsx": [
+      "/api/contas-financeiras"
+    ],
+    "app/(dashboard)/contas-bancarias/page.tsx": [
+      "/api/contas-financeiras",
+      "/api/contas-financeiras/${id}"
+    ],
+    "app/(dashboard)/contas-bancarias/[id]/editar/page.tsx": [
+      "/api/contas-financeiras/${contaId}"
+    ],
+    "app/(dashboard)/contas-bancarias/[id]/movimentacoes/page.tsx": [
+      "/api/contas-financeiras/${contaId}"
+    ],
+    "app/(dashboard)/fechamento-mensal/page.tsx": [
+      "/api/fechamento-mensal/dre?ano=${anoAtual}&mes=${mesAtual}",
+      "/api/fechamento-mensal/dre?ano=${anoAtual}&acumulado=true",
+      "/api/fechamento-mensal/status?ano=${anoAtual}&mes=${mesAtual}",
+      "/api/contas-financeiras",
+      "/api/fechamento-mensal/despesas-pendentes?ano=${anoAtual}&mes=${mesAtual}&incluirPagas=true",
+      "/api/fechamento-mensal/gerar-pdf?ano=${anoAtual}&mes=${mesAtual}",
+      "/api/fechamento-mensal/exportar-excel?ano=${anoAtual}&mes=${mesAtual}",
+      "/api/fechamento-mensal/fechar",
+      "/api/fechamento-mensal/reabrir",
+      "/api/fechamento-mensal/contas/${id}"
+    ],
+    "app/(dashboard)/fechamento-mensal/plano-contas/page.tsx": [
+      "/api/fechamento-mensal/plano-contas",
+      "/api/fechamento-mensal/plano-contas/${editandoId}",
+      "/api/fechamento-mensal/plano-contas/${id}"
+    ],
+    "app/(dashboard)/fichas-tecnicas/nova/page.tsx": [
+      "/api/produtos?limit=500",
+      "/api/fichas-tecnicas",
+      "/api/planejamento/indicadores-resumo?ano=${anoAtual}"
+    ],
+    "app/(dashboard)/fichas-tecnicas/page.tsx": [
+      "/api/planejamento/lucro-desejado?ano=${ano}",
+      "/api/fichas-tecnicas"
+    ],
+    "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx": [
+      "/api/fichas-tecnicas/${fichaId}",
+      "/api/produtos?limit=500",
+      "/api/fichas-tecnicas",
+      "/api/planejamento/indicadores-resumo?ano=${anoAtual}"
+    ],
+    "app/(dashboard)/fluxo-caixa/configuracoes/page.tsx": [
+      "/api/fluxo-caixa/metas?ano=${anoAtual}",
+      "/api/fluxo-caixa/metas"
+    ],
+    "app/(dashboard)/fluxo-caixa/page.tsx": [
+      "/api/fluxo-caixa/metas?ano=${anoAtual}&mes=${mesAtual}",
+      "/api/dre?ano=${anoAtual}",
+      "/api/fluxo-caixa/dre-mensal?ano=${anoAtual}",
+      "/api/fluxo-caixa/sincronizar?ano=${anoAtual}",
+      "/api/produtos/${produto.id}/normalizacao",
+      "/api/categorias",
+      "/api/fluxo-caixa/dre-previsao"
+    ],
+    "app/(dashboard)/livro-diario/page.tsx": [
+      "/api/contas-financeiras",
+      "/api/planejamento/folha-pagamento-config/funcionarios?ano=${ano}&mes=${mes}",
+      "/api/notas/${lancamento.notaFiscalId}",
+      "/api/notas?limit=100",
+      "/api/notas/${nota.id}",
+      "/api/livro-diario/resumo/saldo",
+      "/api/boletos",
+      "/api/livro-diario?id=${editandoId}",
+      "/api/livro-diario",
+      "/api/boletos/${lancamentoParaPagar.boletoId}/pagar",
+      "/api/livro-diario/${lancamentoParaPagar.id}/pagar",
+      "/api/livro-diario?id=${id}"
+    ],
+    "app/(dashboard)/nfe/compra/page.tsx": [
+      "/api/nfe/processar",
+      "/api/nfe/salvar",
+      "/api/livro-diario"
+    ],
+    "app/(dashboard)/nfe/lancamento/page.tsx": [
+      "/api/produtos?limit=500",
+      "/api/livro-diario",
+      "/api/produtos/${produtoSelecionado.id}"
+    ],
+    "app/(dashboard)/nfe/page.tsx": [
+      "/api/livro-diario?data_inicio=${hoje}&data_fim=${hoje}&limit=10"
+    ],
+    "app/(dashboard)/nfe/produtos/normalizacao/page.tsx": [
+      "/api/produtos/${item.id}/normalizacao",
+      "/api/produtos/${item.id}/resync"
+    ],
+    "app/(dashboard)/nfe/produtos/novo/page.tsx": [
+      "/api/produtos"
+    ],
+    "app/(dashboard)/nfe/produtos/page.tsx": [
+      "/api/produtos"
+    ],
+    "app/(dashboard)/nfe/produtos/[ id ]/edit/page.tsx": [
+      "/api/produtos/${produtoId}"
+    ],
+    "app/(dashboard)/nfe/xml/page.tsx": [
+      "/api/nfe/processar",
+      "/api/livro-diario"
+    ],
+    "app/(dashboard)/page.tsx": [
+      "/api/fichas-tecnicas?limit=100&skip=0",
+      "/api/produtos?limit=1&skip=0",
+      "/api/planejamento/indicadores-resumo?ano=${anoAtual}",
+      "/api/planejamento/metas?ano=${anoAtual}"
+    ],
+    "app/(dashboard)/planejamento/editar/despesas-fixas/page.tsx": [
+      "/api/planejamento/despesas-fixas?ano=${anoReferencia}",
+      "/api/planejamento/despesas-fixas"
+    ],
+    "app/(dashboard)/planejamento/editar/despesas-variaveis/page.tsx": [
+      "/api/planejamento-financeiro/despesas-variaveis?ano=${anoAtual}&mes=${mesAtual}",
+      "/api/planejamento/folha-salarial?ano=${anoAtual}",
+      "/api/planejamento-financeiro/despesas-variaveis"
+    ],
+    "app/(dashboard)/planejamento/editar/funcionarios/page.tsx": [
+      "/api/planejamento/funcionarios?ano=${anoReferencia}",
+      "/api/planejamento/folha-pagamento-config?ano=${anoReferencia}&mes=${mesReferencia}",
+      "/api/planejamento/folha-pagamento-config",
+      "/api/planejamento/funcionarios"
+    ],
+    "app/(dashboard)/planejamento/editar/metas-mensais/page.tsx": [
+      "/api/planejamento/metas?ano=${anoReferencia}",
+      "/api/planejamento/metas"
+    ],
+    "app/(dashboard)/planejamento/editar/provisoes/page.tsx": [
+      "/api/planejamento/funcionarios?ano=${anoReferencia}",
+      "/api/planejamento/provisoes-funcionarios?ano=${anoReferencia}",
+      "/api/planejamento/provisoes-funcionarios"
+    ],
+    "app/(dashboard)/planejamento/page.tsx": [
+      "/api/planejamento/folha-salarial",
+      "/api/planejamento/periodos-selecionados?ano=${anoAtual}",
+      "/api/planejamento-financeiro/faturamento?ano=${anoAtual}",
+      "/api/planejamento/acompanhamento?ano=${anoAtual}",
+      "/api/planejamento/funcionarios?ano=${anoAtual}",
+      "/api/planejamento/folha-salarial?ano=${anoAtual}",
+      "/api/planejamento-financeiro/despesas-variaveis?ano=${anoAtual}&mes=${mesAtual}",
+      "/api/planejamento/percentuais-periodos?ano=${anoAtual}",
+      "/api/planejamento/lucro-desejado?ano=${anoAtual}",
+      "/api/planejamento-financeiro/despesas-fixas?ano=${anoAtual}",
+      "/api/planejamento/acompanhamento/sync-from-lancamentos?ano=${anoAtual}",
+      "/api/planejamento/lucro-desejado",
+      "/api/planejamento/despesas-fixas",
+      "/api/planejamento/funcionarios",
+      "/api/planejamento/periodos-selecionados",
+      "/api/planejamento-financeiro/despesas-fixas",
+      "/api/planejamento/percentuais-periodos",
+      "/api/planejamento-financeiro/faturamento"
+    ],
+    "app/(dashboard)/planejamento-financeiro/editar/taxas/page.tsx": [
+      "/api/planejamento-financeiro/despesas-variaveis?ano=${anoAtual}&mes=${mesAtual}",
+      "/api/planejamento/folha-salarial?ano=${anoAtual}",
+      "/api/planejamento-financeiro/despesas-variaveis"
+    ],
+    "app/(dashboard)/planejamento-financeiro/page.tsx": [
+      "/api/planejamento-financeiro/faturamento?ano=${anoAtual}",
+      "/api/planejamento-financeiro/despesas-fixas?ano=${anoAtual}&mes=${mesAtual}",
+      "/api/planejamento-financeiro/despesas-variaveis?ano=${anoAtual}&mes=${mesAtual}",
+      "/api/planejamento-financeiro/sync-from-lancamentos",
+      "/api/planejamento-financeiro/faturamento",
+      "/api/planejamento-financeiro/despesas-fixas",
+      "/api/planejamento-financeiro/despesas-variaveis"
+    ]
+  },
+  "navTargets": {
+    "app/(auth)/forgot-password/page.tsx": [
+      "/login"
+    ],
+    "app/(auth)/login/page.tsx": [
+      "/forgot-password",
+      "/register",
+      "/termos"
+    ],
+    "app/(auth)/register/page.tsx": [
+      "/login",
+      "/termos",
+      "/privacidade"
+    ],
+    "app/(auth)/reset-password/page.tsx": [
+      "/login",
+      "/forgot-password"
+    ],
+    "app/(dashboard)/admin/page.tsx": [],
+    "app/(dashboard)/caixa/page.tsx": [],
+    "app/(dashboard)/config/loja/page.tsx": [],
+    "app/(dashboard)/config/planos/page.tsx": [
+      "/login"
+    ],
+    "app/(dashboard)/contas-bancarias/nova/page.tsx": [
+      "/contas-bancarias"
+    ],
+    "app/(dashboard)/contas-bancarias/page.tsx": [
+      "/contas-bancarias/nova"
+    ],
+    "app/(dashboard)/contas-bancarias/[id]/editar/page.tsx": [
+      "/contas-bancarias"
+    ],
+    "app/(dashboard)/contas-bancarias/[id]/movimentacoes/page.tsx": [],
+    "app/(dashboard)/fechamento-mensal/page.tsx": [],
+    "app/(dashboard)/fechamento-mensal/plano-contas/page.tsx": [],
+    "app/(dashboard)/fichas-tecnicas/nova/page.tsx": [
+      "/fichas-tecnicas"
+    ],
+    "app/(dashboard)/fichas-tecnicas/page.tsx": [
+      "/fichas-tecnicas/nova"
+    ],
+    "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx": [
+      "/fichas-tecnicas"
+    ],
+    "app/(dashboard)/fluxo-caixa/configuracoes/page.tsx": [
+      "/fluxo-caixa"
+    ],
+    "app/(dashboard)/fluxo-caixa/page.tsx": [
+      "/fluxo-caixa/configuracoes"
+    ],
+    "app/(dashboard)/livro-diario/page.tsx": [],
+    "app/(dashboard)/nfe/compra/page.tsx": [],
+    "app/(dashboard)/nfe/lancamento/page.tsx": [
+      "/nfe/produtos/novo"
+    ],
+    "app/(dashboard)/nfe/page.tsx": [
+      "/nfe/produtos",
+      "/nfe/lancamento",
+      "/nfe/produtos/novo"
+    ],
+    "app/(dashboard)/nfe/produtos/normalizacao/page.tsx": [
+      "/nfe/produtos"
+    ],
+    "app/(dashboard)/nfe/produtos/novo/page.tsx": [
+      "/nfe/produtos"
+    ],
+    "app/(dashboard)/nfe/produtos/page.tsx": [
+      "/nfe/produtos/normalizacao"
+    ],
+    "app/(dashboard)/nfe/produtos/[ id ]/edit/page.tsx": [
+      "/nfe/produtos"
+    ],
+    "app/(dashboard)/nfe/xml/page.tsx": [],
+    "app/(dashboard)/page.tsx": [
+      "/login"
+    ],
+    "app/(dashboard)/planejamento/editar/despesas-fixas/page.tsx": [
+      "/planejamento"
+    ],
+    "app/(dashboard)/planejamento/editar/despesas-variaveis/page.tsx": [],
+    "app/(dashboard)/planejamento/editar/funcionarios/page.tsx": [
+      "/planejamento"
+    ],
+    "app/(dashboard)/planejamento/editar/metas-mensais/page.tsx": [
+      "/planejamento"
+    ],
+    "app/(dashboard)/planejamento/editar/provisoes/page.tsx": [
+      "/planejamento"
+    ],
+    "app/(dashboard)/planejamento/page.tsx": [],
+    "app/(dashboard)/planejamento-financeiro/editar/taxas/page.tsx": [],
+    "app/(dashboard)/planejamento-financeiro/page.tsx": [
+      "/planejamento/editar/despesas-variaveis",
+      "/planejamento/configuracoes?tab=ajuda"
+    ]
+  },
+  "cycles": [],
+  "modulePages": {
+    "Auth": [
+      "app/(auth)/forgot-password/page.tsx",
+      "app/(auth)/login/page.tsx",
+      "app/(auth)/register/page.tsx",
+      "app/(auth)/reset-password/page.tsx"
+    ],
+    "Admin/Config": [
+      "app/(dashboard)/admin/page.tsx",
+      "app/(dashboard)/config/loja/page.tsx",
+      "app/(dashboard)/config/planos/page.tsx"
+    ],
+    "Financeiro": [
+      "app/(dashboard)/caixa/page.tsx",
+      "app/(dashboard)/contas-bancarias/[id]/editar/page.tsx",
+      "app/(dashboard)/contas-bancarias/[id]/movimentacoes/page.tsx",
+      "app/(dashboard)/contas-bancarias/nova/page.tsx",
+      "app/(dashboard)/contas-bancarias/page.tsx",
+      "app/(dashboard)/fechamento-mensal/page.tsx",
+      "app/(dashboard)/fechamento-mensal/plano-contas/page.tsx",
+      "app/(dashboard)/fluxo-caixa/configuracoes/page.tsx",
+      "app/(dashboard)/fluxo-caixa/page.tsx",
+      "app/(dashboard)/livro-diario/page.tsx"
+    ],
+    "FichasTecnicas": [
+      "app/(dashboard)/fichas-tecnicas/[id]/edit/page.tsx",
+      "app/(dashboard)/fichas-tecnicas/nova/page.tsx",
+      "app/(dashboard)/fichas-tecnicas/page.tsx"
+    ],
+    "NFe": [
+      "app/(dashboard)/nfe/compra/page.tsx",
+      "app/(dashboard)/nfe/lancamento/page.tsx",
+      "app/(dashboard)/nfe/page.tsx",
+      "app/(dashboard)/nfe/produtos/[ id ]/edit/page.tsx",
+      "app/(dashboard)/nfe/produtos/normalizacao/page.tsx",
+      "app/(dashboard)/nfe/produtos/novo/page.tsx",
+      "app/(dashboard)/nfe/produtos/page.tsx",
+      "app/(dashboard)/nfe/xml/page.tsx"
+    ],
+    "DashboardHome": [
+      "app/(dashboard)/page.tsx"
+    ],
+    "Planejamento": [
+      "app/(dashboard)/planejamento-financeiro/editar/taxas/page.tsx",
+      "app/(dashboard)/planejamento-financeiro/page.tsx",
+      "app/(dashboard)/planejamento/editar/despesas-fixas/page.tsx",
+      "app/(dashboard)/planejamento/editar/despesas-variaveis/page.tsx",
+      "app/(dashboard)/planejamento/editar/funcionarios/page.tsx",
+      "app/(dashboard)/planejamento/editar/metas-mensais/page.tsx",
+      "app/(dashboard)/planejamento/editar/provisoes/page.tsx",
+      "app/(dashboard)/planejamento/page.tsx"
+    ]
+  },
+  "boundary": [
+    {
+      "module": "components/ui/button.tsx",
+      "modulesTouched": [
+        "Auth",
+        "Admin/Config",
+        "Financeiro",
+        "FichasTecnicas",
+        "NFe",
+        "DashboardHome",
+        "Planejamento"
+      ],
+      "count": 35
+    },
+    {
+      "module": "components/ui/input.tsx",
+      "modulesTouched": [
+        "Auth",
+        "Admin/Config",
+        "Financeiro",
+        "FichasTecnicas",
+        "NFe",
+        "Planejamento"
+      ],
+      "count": 27
+    },
+    {
+      "module": "components/ui/alert.tsx",
+      "modulesTouched": [
+        "Auth",
+        "Admin/Config",
+        "Financeiro",
+        "FichasTecnicas",
+        "NFe",
+        "DashboardHome",
+        "Planejamento"
+      ],
+      "count": 26
+    },
+    {
+      "module": "lib/utils.ts",
+      "modulesTouched": [
+        "Admin/Config",
+        "Financeiro",
+        "FichasTecnicas",
+        "NFe",
+        "DashboardHome",
+        "Planejamento"
+      ],
+      "count": 24
+    },
+    {
+      "module": "components/ui/label.tsx",
+      "modulesTouched": [
+        "Auth",
+        "Admin/Config",
+        "Financeiro",
+        "FichasTecnicas",
+        "NFe",
+        "Planejamento"
+      ],
+      "count": 22
+    },
+    {
+      "module": "components/ui/card.tsx",
+      "modulesTouched": [
+        "Auth",
+        "Admin/Config",
+        "Financeiro",
+        "NFe",
+        "DashboardHome",
+        "Planejamento"
+      ],
+      "count": 20
+    },
+    {
+      "module": "components/ui/badge.tsx",
+      "modulesTouched": [
+        "Admin/Config",
+        "Financeiro",
+        "NFe",
+        "DashboardHome"
+      ],
+      "count": 11
+    },
+    {
+      "module": "components/ui/dialog.tsx",
+      "modulesTouched": [
+        "Admin/Config",
+        "Financeiro"
+      ],
+      "count": 4
+    },
+    {
+      "module": "components/ui/switch.tsx",
+      "modulesTouched": [
+        "Admin/Config",
+        "Planejamento"
+      ],
+      "count": 4
+    },
+    {
+      "module": "components/ui/separator.tsx",
+      "modulesTouched": [
+        "Admin/Config",
+        "NFe"
+      ],
+      "count": 3
+    },
+    {
+      "module": "components/ui/tabs.tsx",
+      "modulesTouched": [
+        "Admin/Config",
+        "Financeiro",
+        "NFe"
+      ],
+      "count": 3
+    },
+    {
+      "module": "components/ui/textarea.tsx",
+      "modulesTouched": [
+        "Admin/Config",
+        "FichasTecnicas"
+      ],
+      "count": 3
+    },
+    {
+      "module": "components/ui/select.tsx",
+      "modulesTouched": [
+        "Admin/Config",
+        "Financeiro"
+      ],
+      "count": 2
+    }
+  ]
+}

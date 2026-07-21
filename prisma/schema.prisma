@@ -349,6 +349,7 @@ model FichaTecnica {
   categoria         String
   precoVenda        Decimal     @default(0) @map("preco_venda") @db.Decimal(10, 2)
   custoTotal        Decimal     @default(0) @map("custo_total") @db.Decimal(10, 2)
+  fatorOscilacao    Decimal     @default(0) @map("fator_oscilacao") @db.Decimal(5, 2)
   custoPorPorcao    Decimal     @default(0) @map("custo_por_porcao") @db.Decimal(10, 2)
   margem            Decimal     @default(0) @db.Decimal(5, 2)
   rendimentoPorcoes Int         @default(1) @map("rendimento_porcoes")
@@ -377,6 +378,9 @@ model FichaItem {
   custo            Decimal?     @db.Decimal(10, 2)
   isProdutoAcabado Boolean      @default(false) @map("is_produto_acabado")
   gramasEquivalentes Float?      @map("gramas_equivalentes")
+  pesoBruto        Decimal?     @map("peso_bruto") @db.Decimal(10, 3)
+  pesoLiquido      Decimal?     @map("peso_liquido") @db.Decimal(10, 3)
+  fatorCorrecao    Decimal      @default(1) @map("fator_correcao") @db.Decimal(6, 3)
   empresaId        String
   userId           String
   empresa          Empresa      @relation(fields: [empresaId], references: [id], onDelete: Cascade)

@@ -35,6 +35,7 @@ export async function calculateRecipeCost(fichaId: string) {
           unitPrice: Number(product.valorUnitario) || 0,
           pesoUnitario: product.pesoUnitario ? Number(product.pesoUnitario) : undefined,
           densidade: product.densidade ? Number(product.densidade) : undefined,
+          fatorCorrecao: item.fatorCorrecao != null ? Number(item.fatorCorrecao) : 1,
         }
       )
 

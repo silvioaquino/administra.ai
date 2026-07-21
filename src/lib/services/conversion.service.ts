@@ -84,6 +84,8 @@ export class ConversionService {
       unitPrice: number
       pesoUnitario?: number
       densidade?: number
+      // Fator de correção (peso bruto ÷ peso líquido). >= 1. Default 1 = sem perda.
+      fatorCorrecao?: number
     }
   ): ConversionResult {
     // 1. Quantidade usada na receita -> gramas
@@ -105,10 +107,18 @@ export class ConversionService {
     // 3. Quantas unidades de compra foram usadas
     const unitsUsed = gramsUsed / gramsPerUnit
 
-    // 4. Custo = unidades usadas × custo de 1 unidade (valorUnitario)
-    const cost = unitsUsed * product.unitPrice
+    // 4. Custo sem correção = unidades usadas × custo de 1 unidade (valorUnitario)
+    const costWithoutCorrection = unitsUsed * product.unitPrice
 
-    // 5. Verificar se é fracionado
+    // 5. Aplicar fator de correção: para usar a qtd líquida foi preciso comprar
+    //    (qtd × FC) de peso bruto, então o custo real sobe proporcionalmente.
+    const fatorCorrecao = product.fatorCorrecao && product.fatorCorrecao > 0
+      ? product.fatorCorrecao
+      : 1
+    const cost = costWithoutCorrection * fatorCorrecao
+    const perdaValor = cost - costWithoutCorrection
+
+    // 6. Verificar se é fracionado
     const isFractional = unitsUsed % 1 !== 0
     const fractionalAlert = isFractional
       ? `Usou ${unitsUsed.toFixed(3)} ${this.getUnitLabel(product.purchaseUnit)} de ${product.purchaseUnit}`
@@ -118,6 +128,9 @@ export class ConversionService {
       gramsUsed,
       packagesUsed: unitsUsed,
       cost,
+      costWithoutCorrection,
+      fatorCorrecao,
+      perdaValor,
       isFractional,
       fractionalAlert,
       formatted: {

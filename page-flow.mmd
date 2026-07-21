@@ -1,0 +1,81 @@
+graph TD
+  subgraph Auth["Auth"]
+    P_auth_forgot_password["auth/forgot-password"]
+    P_auth_login["auth/login"]
+    P_auth_register["auth/register"]
+    P_auth_reset_password["auth/reset-password"]
+  end
+  subgraph AdminConfig["Admin/Config"]
+    P_admin["admin"]
+    P_config_loja["config/loja"]
+    P_config_planos["config/planos"]
+  end
+  subgraph Financeiro["Financeiro"]
+    P_caixa["caixa"]
+    P_contas_bancarias___editar["contas-bancarias/*/editar"]
+    P_contas_bancarias___movimentacoes["contas-bancarias/*/movimentacoes"]
+    P_contas_bancarias_nova["contas-bancarias/nova"]
+    P_contas_bancarias["contas-bancarias"]
+    P_fechamento_mensal["fechamento-mensal"]
+    P_fechamento_mensal_plano_contas["fechamento-mensal/plano-contas"]
+    P_fluxo_caixa_configuracoes["fluxo-caixa/configuracoes"]
+    P_fluxo_caixa["fluxo-caixa"]
+    P_livro_diario["livro-diario"]
+  end
+  subgraph FichasTecnicas["FichasTecnicas"]
+    P_fichas_tecnicas___edit["fichas-tecnicas/*/edit"]
+    P_fichas_tecnicas_nova["fichas-tecnicas/nova"]
+    P_fichas_tecnicas["fichas-tecnicas"]
+  end
+  subgraph NFe["NFe"]
+    P_nfe_compra["nfe/compra"]
+    P_nfe_lancamento["nfe/lancamento"]
+    P_nfe["nfe"]
+    P_nfe_produtos___edit["nfe/produtos/*/edit"]
+    P_nfe_produtos_normalizacao["nfe/produtos/normalizacao"]
+    P_nfe_produtos_novo["nfe/produtos/novo"]
+    P_nfe_produtos["nfe/produtos"]
+    P_nfe_xml["nfe/xml"]
+  end
+  subgraph DashboardHome["DashboardHome"]
+    P_page_tsx["page.tsx"]
+  end
+  subgraph Planejamento["Planejamento"]
+    P_planejamento_financeiro_editar_taxas["planejamento-financeiro/editar/taxas"]
+    P_planejamento_financeiro["planejamento-financeiro"]
+    P_planejamento_editar_despesas_fixas["planejamento/editar/despesas-fixas"]
+    P_planejamento_editar_despesas_variaveis["planejamento/editar/despesas-variaveis"]
+    P_planejamento_editar_funcionarios["planejamento/editar/funcionarios"]
+    P_planejamento_editar_metas_mensais["planejamento/editar/metas-mensais"]
+    P_planejamento_editar_provisoes["planejamento/editar/provisoes"]
+    P_planejamento["planejamento"]
+  end
+  P_fluxo_caixa -.->|importa NFe| NFe
+  P_livro_diario -.->|importa NFe| NFe
+  P_nfe_compra -.->|importa Financeiro| Financeiro
+  P_nfe_lancamento -.->|importa Financeiro| Financeiro
+  P_nfe_xml -.->|importa Financeiro| Financeiro
+  P_auth_forgot_password ==>|/api/auth/forgot-password| AdminConfig
+  P_auth_register ==>|/api/auth/register| AdminConfig
+  P_auth_reset_password ==>|/api/auth/reset-password| AdminConfig
+  P_config_loja ==>|/api/empresa| AdminConfig
+  P_config_loja ==>|/api/config/horarios| AdminConfig
+  P_config_loja ==>|/api/config/pagamentos| AdminConfig
+  P_config_loja ==>|/api/config/entrega| AdminConfig
+  P_config_loja ==>|/api/auth/register-user| AdminConfig
+  P_config_loja ==>|/api/auth/users/${id}| AdminConfig
+  P_fichas_tecnicas___edit ==>|/api/produtos| NFe
+  P_fichas_tecnicas___edit ==>|/api/planejamento/indicadores-resumo| Planejamento
+  P_fichas_tecnicas_nova ==>|/api/produtos| NFe
+  P_fichas_tecnicas_nova ==>|/api/planejamento/indicadores-resumo| Planejamento
+  P_fichas_tecnicas ==>|/api/planejamento/lucro-desejado| Planejamento
+  P_fluxo_caixa ==>|/api/produtos/${produto.id}/normalizacao| NFe
+  P_livro_diario ==>|/api/planejamento/folha-pagamento-config/funcionarios| Planejamento
+  P_nfe_compra ==>|/api/livro-diario| Financeiro
+  P_nfe_lancamento ==>|/api/livro-diario| Financeiro
+  P_nfe ==>|/api/livro-diario| Financeiro
+  P_nfe_xml ==>|/api/livro-diario| Financeiro
+  P_page_tsx ==>|/api/fichas-tecnicas| FichasTecnicas
+  P_page_tsx ==>|/api/produtos| NFe
+  P_page_tsx ==>|/api/planejamento/indicadores-resumo| Planejamento
+  P_page_tsx ==>|/api/planejamento/metas| Planejamento
