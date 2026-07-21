@@ -55,9 +55,9 @@ export async function POST(request: NextRequest) {
     // Hash da senha
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Criar usuário com período trial de 14 dias
+    // Criar usuário com período trial de 7 dias
     const trialEndsAt = new Date()
-    trialEndsAt.setDate(trialEndsAt.getDate() + 14)
+    trialEndsAt.setDate(trialEndsAt.getDate() + 7)
 
     // Criar usuário e empresa em uma transação
     const result = await prisma.$transaction(async (tx) => {
