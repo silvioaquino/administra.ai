@@ -2,19 +2,22 @@
 // Atualiza um plano (nome, preço, features, ativo, stripePriceId).
 // Apenas ADMIN. Usa adminPrisma.
 
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { adminPrisma } from "@/lib/prisma-admin"
 import { getServerAdminOrNull } from "@/lib/admin"
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const session = await getServerAdminOrNull()
   if (!session) {
     return NextResponse.json({ error: "Acesso negado" }, { status: 403 })
   }
 
   try {
-    const { id } = params
-    const body = await req.json()
+    const { id } = await params
+    const body = await request.json()
     const { name, price, features, isActive, stripePriceId } = body
 
     const planoExistente = await adminPrisma.plan.findUnique({ where: { id } })
