@@ -493,7 +493,7 @@ export default function ConfigLojaPage() {
             >
               Personalização
             </button>
-            <button
+            {/*<button
               onClick={() => setActiveTab("horarios")}
               className={cn(
                 "px-4 py-2.5 text-sm font-medium transition-all whitespace-nowrap border-b-2",
@@ -536,7 +536,7 @@ export default function ConfigLojaPage() {
               )}
             >
               Meus Links
-            </button>
+            </button>*/}
             <button
               onClick={() => setActiveTab("acessos")}
               className={cn(
@@ -660,7 +660,7 @@ export default function ConfigLojaPage() {
                     />
                     <p className="text-xs text-gray-500 mt-1">Documento usado para processar pagamentos da sua assinatura</p>
                   </div>
-                  <div>
+                  {/*<div>
                     <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Pedido Mínimo</Label>
                     <div className="relative mt-1">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
@@ -674,7 +674,7 @@ export default function ConfigLojaPage() {
                       />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">Total mínimo para compras</p>
-                  </div>
+                  </div>*/}
                 </div>
               </div>
 
@@ -750,7 +750,7 @@ export default function ConfigLojaPage() {
                 </div>
               </div>
 
-              {/* Configurações do Cardápio */}
+              {/* Configurações do Cardápio 
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden lg:col-span-2">
                 <div className="bg-gray-100 p-4 border-b border-gray-100">
                   <div className="flex items-center gap-2">
@@ -807,7 +807,7 @@ export default function ConfigLojaPage() {
                     </Select>
                   </div>
                 </div>
-              </div>
+              </div>*/}
             </div>
           </div>
         )}

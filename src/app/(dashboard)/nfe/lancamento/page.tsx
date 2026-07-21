@@ -78,6 +78,11 @@ export default function LancamentoManualPage() {
       return;
     }
 
+    if (formData.tipoLancamento === "COMPRA" && !formData.contaDespesa) {
+      alert("Cadastre e selecione uma Conta Financeira antes de salvar.\n\nAcesse o menu 'Contas Bancárias' e adicione uma conta para este cliente.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -103,6 +108,7 @@ export default function LancamentoManualPage() {
           saida: formData.tipoLancamento === "COMPRA" ? valorTotal : 0,
           tipo: formData.tipoLancamento,
           origemDestino: formData.origemDestino || null, // NOVO CAMPO
+          formaPagamento: formData.formaPagamento
         }),
       });
 

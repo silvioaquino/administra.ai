@@ -1,4 +1,4 @@
-# Guia de Testes de Usabilidade - Administra.ai
+# Guia de Testes de Usabilidade - SeuGerente
 
 ## Fluxos Críticos para Testar
 

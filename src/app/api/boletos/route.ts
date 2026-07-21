@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
       dataVencimento,
       clienteFornecedor,
       conta,
+      origemDestino,
       userId
     } = body
 
@@ -132,6 +133,7 @@ export async function POST(request: NextRequest) {
           entrada: 0,
           saida: valor,
           tipo: "DESPESA",
+          origemDestino: origemDestino || null,
           userId: userId,
           statusBoleto: "PENDENTE",
           dataVencimento: dataVencimentoDate
@@ -173,7 +175,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
-    const { id, descricao, valor, dataVencimento, clienteFornecedor, conta } = body
+    const { id, descricao, valor, dataVencimento, clienteFornecedor, conta, origemDestino } = body
 
     if (!id) {
       return NextResponse.json(
@@ -230,6 +232,7 @@ export async function PUT(request: NextRequest) {
             descricao: `Boleto: ${descricao || boletoExistente.descricao}`,
             clienteFornecedor: clienteFornecedor !== undefined ? clienteFornecedor : boletoExistente.clienteFornecedor,
             saida: valor || boletoExistente.valor,
+            origemDestino: origemDestino !== undefined ? origemDestino : boletoExistente.lancamento?.origemDestino,
             dataVencimento: dataVencimentoDate || boletoExistente.dataVencimento
           }
         })

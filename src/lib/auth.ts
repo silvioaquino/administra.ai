@@ -16,6 +16,7 @@ declare module "next-auth" {
     subscriptionStatus?: string | null
     isInTrial?: boolean
     empresaId?: string | null
+    role?: "USER" | "ADMIN"
   }
   interface Session {
     user: {
@@ -29,6 +30,7 @@ declare module "next-auth" {
       subscriptionStatus?: string | null
       isInTrial?: boolean
       empresaId?: string | null
+      role?: "USER" | "ADMIN"
     }
   }
 }
@@ -87,6 +89,7 @@ export const authOptions: NextAuthOptions = {
           subscriptionStatus: subscription?.status || null,
           isInTrial: isInTrial || false,
           empresaId: user.empresas?.[0]?.id || null,
+          role: (user.role ?? "USER") as "USER" | "ADMIN",
         }
       },
     }),
@@ -103,6 +106,7 @@ export const authOptions: NextAuthOptions = {
         token.subscriptionStatus = user.subscriptionStatus
         token.isInTrial = user.isInTrial
         token.empresaId = user.empresaId
+        token.role = user.role
       }
       return token
     },
@@ -117,6 +121,7 @@ export const authOptions: NextAuthOptions = {
         session.user.subscriptionStatus = token.subscriptionStatus as string
         session.user.isInTrial = token.isInTrial as boolean
         session.user.empresaId = token.empresaId as string
+        session.user.role = token.role as "USER" | "ADMIN"
       }
       return session
     },

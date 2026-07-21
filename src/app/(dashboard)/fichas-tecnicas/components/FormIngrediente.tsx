@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { formatCurrency } from "@/lib/utils"
+import { ConversionService } from "@/lib/services/conversion.service"
+import { UnitType } from "@/types/ficha-tecnica"
 
 interface Produto {
   id: number
@@ -15,6 +17,9 @@ interface Produto {
   precoVenda: number
   unidade: string
   quantidade: number
+  valorUnitario: number
+  pesoUnitario?: number
+  densidade?: number
 }
 
 interface Ficha {
@@ -100,8 +105,26 @@ export function FormIngrediente({
       return
     }
 
-    const valorUnitario = produtoSelecionado.precoVenda || 0
-    const custo = quantidade * valorUnitario
+    // Custo por unidade de compra (NUNCA o preço de venda)
+    const valorUnitario = Number(produtoSelecionado.valorUnitario) || 0
+
+    let custo: number
+    try {
+      const result = ConversionService.calculateConsumption(
+        quantidade,
+        (produtoSelecionado.unidade as UnitType) || "UN",
+        {
+          purchaseUnit: (produtoSelecionado.unidade as UnitType) || "UN",
+          unitPrice: valorUnitario,
+          pesoUnitario: produtoSelecionado.pesoUnitario ? Number(produtoSelecionado.pesoUnitario) : undefined,
+          densidade: produtoSelecionado.densidade ? Number(produtoSelecionado.densidade) : undefined,
+        }
+      )
+      custo = result.cost
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Erro ao calcular custo do ingrediente")
+      return
+    }
 
     onAddIngrediente({
       produtoId: produtoSelecionado.id,
@@ -149,7 +172,7 @@ export function FormIngrediente({
   }
 
   const valorTotalProduto = produtoSelecionado
-    ? quantidade * produtoSelecionado.precoVenda
+    ? quantidade * (Number(produtoSelecionado.valorUnitario) || 0)
     : 0
 
   const valorTotalFicha = fichaSelecionada
@@ -176,7 +199,7 @@ export function FormIngrediente({
             >
               <span className={selectedProdutoId ? "text-gray-800" : "text-gray-400"}>
                 {selectedProdutoId && produtoSelecionado 
-                  ? `${produtoSelecionado.nome || produtoSelecionado.descricao} - ${formatCurrency(produtoSelecionado.precoVenda)}/${produtoSelecionado.unidade}`
+                  ? `${produtoSelecionado.nome || produtoSelecionado.descricao} - Custo: ${formatCurrency(Number(produtoSelecionado.valorUnitario) || 0)}/${produtoSelecionado.unidade}`
                   : "Selecione um produto..."}
               </span>
               <svg className={`h-4 w-4 text-gray-400 transition-transform ${produtoOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -211,7 +234,7 @@ export function FormIngrediente({
                       }}
                     >
                       <span>{p.nome || p.descricao}</span>
-                      <span className="text-gray-400 text-xs">{formatCurrency(p.precoVenda)}/{p.unidade}</span>
+                      <span className="text-gray-400 text-xs">{formatCurrency(Number(p.valorUnitario) || 0)}/{p.unidade}</span>
                     </button>
                   ))}
                   {produtosFiltrados.length === 0 && (

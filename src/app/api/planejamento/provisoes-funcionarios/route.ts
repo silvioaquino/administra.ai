@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { recalcularFolhaSalarial } from "@/lib/folha"
+import { calcularDREAno } from "@/lib/dre-calculator"
 
 const PROVISOES_KEYS = [
   "decimo_terceiro",
@@ -90,6 +92,15 @@ export async function POST(request: NextRequest) {
           ativo: ativo ?? true,
         },
       })
+    }
+
+    // Recalcular a folha salarial (mês a mês) e o DRE com as novas provisões.
+    try {
+      const empresaId = session.user.empresaId || "sem-empresa"
+      await recalcularFolhaSalarial(empresaId, session.user.id, ano)
+      await calcularDREAno(empresaId, session.user.id, ano)
+    } catch (recalcErr) {
+      console.error("Erro ao recalcular folha/DRE após provisões:", recalcErr)
     }
 
     return NextResponse.json({ success: true, message: "Configurações salvas com sucesso" })

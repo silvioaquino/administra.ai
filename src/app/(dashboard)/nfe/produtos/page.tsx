@@ -17,6 +17,7 @@ import { formatCurrency } from "@/lib/utils"
 import { ModalNovoProduto } from "@/components/produtos/ModalNovoProduto"
 import { ModalEditarProduto } from "@/components/produtos/ModalEditarProduto"
 
+
 interface Produto {
   id: number
   descricao: string
@@ -98,6 +99,12 @@ export default function ProdutosPage() {
             <p className="text-sm text-gray-500">Gerencie seus produtos e estoque</p>
           </div>
         </div>
+        <Button 
+          onClick={() => router.push("/nfe/produtos/normalizacao")}
+          className="bg-[#de4838] hover:bg-[#c73d2e] text-white px-6 rounded-full shadow-sm"
+        >
+          Correção Nomes
+        </Button>
         <Button 
           onClick={() => setNovoProdutoOpen(true)}
           className="bg-[#de4838] hover:bg-[#c73d2e] text-white px-6 rounded-full shadow-sm"

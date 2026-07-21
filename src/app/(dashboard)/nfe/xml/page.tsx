@@ -110,6 +110,11 @@ export default function NfeXmlPage() {
       return
     }
 
+    if (!formData.contaDespesa) {
+      alert("Cadastre e selecione uma Conta Financeira antes de salvar.\n\nAcesse o menu 'Contas Bancárias' e adicione uma conta para este cliente.")
+      return
+    }
+
     setSalvando(true)
 
     try {
@@ -127,7 +132,8 @@ export default function NfeXmlPage() {
           entrada: 0,
           saida: valorTotal,
           tipo: "COMPRA",
-          origemDestino: contaSelecionada?.nome || null
+          origemDestino: contaSelecionada?.nome || null,
+          origemXml: true
         })
       })
 

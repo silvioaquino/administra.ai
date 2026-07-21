@@ -1,0 +1,73 @@
+
+> seugerente@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://10.0.0.174:3000
+- Environments: .env
+✓ Ready in 2.2s
+○ Compiling middleware ...
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+○ Compiling /fichas-tecnicas/nova ...
+ GET /fichas-tecnicas/nova 200 in 15.5s (next.js: 14.6s, application-code: 921ms)
+ GET /fichas-tecnicas/__probe__/edit 200 in 4.9s (next.js: 4.6s, application-code: 365ms)
+○ Compiling /config/planos ...
+ GET /config/planos 200 in 5.9s (next.js: 5.2s, application-code: 612ms)
+○ Compiling /api/auth/[...nextauth] ...
+[next-auth][warn][NEXTAUTH_URL] 
+https://next-auth.js.org/warnings#nextauth_url
+[next-auth][warn][DEBUG_ENABLED] 
+https://next-auth.js.org/warnings#debug_enabled
+ GET /api/auth/session 200 in 10.3s (next.js: 9.9s, application-code: 383ms)
+ GET /api/empresa 200 in 6.0s (next.js: 3.0s, application-code: 2.9s)
+○ Compiling /fichas-tecnicas ...
+ GET /fichas-tecnicas 200 in 5.1s (next.js: 4.9s, application-code: 260ms)
+ GET /api/planejamento/lucro-desejado?ano=2026 200 in 3.2s (next.js: 2.6s, application-code: 553ms)
+ GET /api/planejamento/lucro-desejado?ano=2026 200 in 185ms (next.js: 16ms, application-code: 169ms)
+ GET /api/fichas-tecnicas 200 in 4.7s (next.js: 2.9s, application-code: 1885ms)
+ GET /api/fichas-tecnicas 200 in 517ms (next.js: 22ms, application-code: 495ms)
+ GET /fichas-tecnicas/cmrmeu9hy000511dhesuiy88j/edit 200 in 558ms (next.js: 160ms, application-code: 398ms)
+ GET /api/fichas-tecnicas 200 in 608ms (next.js: 42ms, application-code: 566ms)
+ GET /api/fichas-tecnicas 200 in 644ms (next.js: 48ms, application-code: 596ms)
+○ Compiling /api/planejamento/indicadores-resumo ...
+ GET /api/produtos?limit=500 200 in 5.4s (next.js: 3.1s, application-code: 2.3s)
+ GET /api/produtos?limit=500 200 in 325ms (next.js: 9ms, application-code: 316ms)
+ GET /api/fichas-tecnicas/cmrmeu9hy000511dhesuiy88j 200 in 7.6s (next.js: 7.1s, application-code: 510ms)
+ GET /api/fichas-tecnicas/cmrmeu9hy000511dhesuiy88j 200 in 424ms (next.js: 37ms, application-code: 387ms)
+ GET /api/planejamento/indicadores-resumo?ano=2026 200 in 9.7s (next.js: 4.0s, application-code: 5.7s)
+ GET /api/planejamento/indicadores-resumo?ano=2026 200 in 1440ms (next.js: 56ms, application-code: 1385ms)
+ PUT /api/fichas-tecnicas/cmrmeu9hy000511dhesuiy88j 200 in 2.1s (next.js: 49ms, application-code: 2.0s)
+ GET /fichas-tecnicas 200 in 248ms (next.js: 93ms, application-code: 155ms)
+ GET /api/planejamento/lucro-desejado?ano=2026 200 in 411ms (next.js: 39ms, application-code: 372ms)
+ GET /api/planejamento/lucro-desejado?ano=2026 200 in 174ms (next.js: 14ms, application-code: 160ms)
+ GET /api/fichas-tecnicas 200 in 721ms (next.js: 13ms, application-code: 708ms)
+ GET /api/fichas-tecnicas 200 in 489ms (next.js: 14ms, application-code: 475ms)
+ GET /api/auth/session 200 in 152ms (next.js: 68ms, application-code: 84ms)
+ GET /config/planos 200 in 158ms (next.js: 18ms, application-code: 141ms)
+Erro ao buscar empresa: Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].empresa.findFirst()` invocation in
+C:\Dev.em.Transição\Sistemas\Sistema-Administra.ai\administra.ai\.next\dev\server\chunks\[root-of-the-server]__0b~0tmq._.js:424:168
+
+  421         status: 401
+  422     });
+  423 }
+→ 424 const empresa = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].empresa.findFirst(
+Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)
+    at <unknown> (src\app\api\empresa\route.ts:18:42)
+    at async GET (src\app\api\empresa\route.ts:18:21)
+  16 |     }
+  17 |
+> 18 |     const empresa = await prisma.empresa.findFirst({
+     |                                          ^
+  19 |       where: { userId: session.user.id },
+  20 |       select: {
+  21 |         nome: true, {
+  code: 'P2024',
+  clientVersion: '5.22.0',
+  meta: { modelName: 'Empresa', connection_limit: 5, timeout: 10 }
+}
+ GET /api/empresa 500 in 11.0s (next.js: 12ms, application-code: 11.0s)
+ GET /api/auth/session 200 in 187ms (next.js: 97ms, application-code: 90ms)
+ GET /api/empresa 200 in 2.1s (next.js: 27ms, application-code: 2.1s)

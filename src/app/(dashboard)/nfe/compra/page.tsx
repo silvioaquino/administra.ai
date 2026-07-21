@@ -151,6 +151,11 @@ export default function CompraNfePage() {
       return
     }
 
+    if (!formData.contaDespesa) {
+      alert("Cadastre e selecione uma Conta Financeira antes de salvar.\n\nAcesse o menu 'Contas Bancárias' e adicione uma conta para este cliente.")
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -192,7 +197,8 @@ export default function CompraNfePage() {
           saida: valorTotal,
           tipo: "COMPRA",
           notaFiscalId: notaFiscalId,
-          origemDestino: contaSelecionada?.nome || null
+          origemDestino: contaSelecionada?.nome || null,
+          formaPagamento: formData.formaPagamento
         })
       })
 

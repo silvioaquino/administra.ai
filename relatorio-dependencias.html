@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Relatório de Dependências — SeurGerente.ai</title>
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root { --bg:#0b0f17; --panel:#111827; --panel2:#161f2e; --border:#233044; --text:#e5e7eb; --muted:#94a3b8; --accent:#de4838; --accent2:#f97316; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height:1.6; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 1.9rem; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
+  h2 { font-size: 1.45rem; margin-top: 2.2rem; color:#fff; border-left: 4px solid var(--accent); padding-left: 10px; }
+  h3 { font-size: 1.15rem; margin-top: 1.6rem; color:#f8fafc; }
+  h4 { color:#f1f5f9; }
+  a { color: var(--accent2); }
+  code { background:#0d1420; padding: 2px 6px; border-radius: 5px; font-size: .88em; border:1px solid var(--border); }
+  pre { background:#0d1420; border:1px solid var(--border); border-radius: 10px; padding: 14px; overflow:auto; }
+  pre code { background: none; border: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: .9rem; }
+  th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--panel2); color:#fff; }
+  tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+  blockquote { border-left: 4px solid var(--accent2); margin: 14px 0; padding: 6px 14px; background: var(--panel); color: var(--muted); }
+  .mermaid { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin: 18px 0; text-align: center; overflow:auto; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+  ul, ol { padding-left: 22px; }
+  .topbar { position: sticky; top:0; z-index: 10; background: linear-gradient(180deg, #0b0f17 80%, rgba(11,15,23,0)); padding: 10px 0; }
+  .topbar b { color: var(--accent); }
+</style>
+</head>
+<body>
+  <div class="topbar container" style="padding-top:14px;padding-bottom:14px;">
+    <b>SeurGerente.ai</b> &nbsp;•&nbsp; Relatório de Dependências entre Páginas
+  </div>
+  <div class="container">
+    <div id="content"></div>
+  </div>
+
+  <script type="text/markdown" id="report-md"># Relatório de Dependências entre Páginas — SeurGerente.ai
+
+> Análise estática do `src/` (Next.js App Router) para suportar a divisão do projeto em módulos independentes.
+> Gerado em 2026-07-19. Base: `madge` (grafo de importações) + leitura de navegação (`Link`/`router.push`) + chamadas de API (`fetch("/api/...")`).
+
+---
+
+## 1. Resumo Executivo
+
+- **37 páginas** (`page.tsx`) e **91 rotas de API** (`route.ts`) no `src/`.
+- **Nenhuma página importa outra página.** O acoplamento entre telas ocorre em uma camada saudável: **serviços/hooks de domínio e rotas de API**, não em imports diretos de componentes de página. Isso é ótimo para modularização.
+- A navegação entre telas é **centralizada no `(dashboard)/layout.tsx`** (sidebar inline). Isso concentra o "grafo de navegação" num único ponto (bom e ruim — ver Riscos).
+- **Camada "Core" universal:** `components/ui/*` (shadcn) + `lib/utils` (`cn`) + `lib/prisma` + `AuthProvider` (SessionProvider) são usados por quase todas as páginas. Esta é a fronteira de baixo acoplamento que todo módulo atravessa.
+- **Dependência circular de MÓDULO (a único ponto crítico):** `NFe ⇄ Financeiro`. O NFe grava lançamentos no `/api/livro-diario` (7 ocorrências em 4 páginas) e o Financeiro (`fluxo-caixa`, `livro-diario`) consome `/api/produtos` (catálogo do NFe). Não é um ciclo de código, mas um ciclo lógico entre módulos.
+- **Hubs de backend mais referenciados:** `/api/livro-diario` (Financeiro+NFe), `/api/produtos` (NFe+Fichas), `/api/planejamento/indicadores-resumo` (Planejamento+Fichas+Dashboard).
+- **Código legado/duplicado encontrado:** `components/layout/Sidebar.tsx` **não é importado por nada** (sidebar morto, com rotas que não existem: `/notas-processadas`, `/configuracoes`). O `(dashboard)/layout.tsx` também referencia `/config/integracoes`, que **não tem página** (link quebrado).
+
+---
+
+## 2. Metodologia e Ferramentas
+
+1. **`madge` 8.0.0** — gerou o grafo completo de importações de `src/` (264 arquivos) resolvendo o alias `@/` via `tsconfig.json`. Saída: `madge-graph.json`.
+2. **Scripts de processamento** (`scripts/analyze-deps.mjs`, `scripts/module-coupling.mjs`, `scripts/gen-mermaid.mjs`) classificaram os imports por tipo (ui/layout/provider/hook/service/lib/component), calcularam módulos compartilhados, uso de APIs por página, ciclos e acoplamento módulo→módulo.
+3. **Detecção de navegação** — `Link href` e `router.push/replace` lidas diretamente do código das páginas e do layout.
+4. **Imagem visual (`--image graph.png`):** **não gerada** — o Graphviz (`dot`/`gvpr`) não está instalado no ambiente. Foi gerado o arquivo `graph.dot` (fonte DOT, escopo **páginas + módulos de domínio**, 37+44 nós) que você pode renderizar com `dot -Tpng graph.dot -o graph.png` após instalar o Graphviz. Os diagramas curados para modularização estão em **Mermaid** abaixo (`module-flow.mmd`, `page-flow.mmd`).
+
+> Observação: o grafo completo do `madge` tem 264 nós (inclui os 91 routes de API, testes e libs). Para separar módulos, o que importa é o recorte por **domínio**, não o grafo cru — por isso os diagramas abaixo são curados.
+
+---
+
+## 3. Inventário de Páginas (37) agrupadas por módulo proposto
+
+| Módulo | Páginas | Count |
+|---|---|---|
+| **Auth** | `auth/login`, `auth/register`, `auth/forgot-password`, `auth/reset-password` | 4 |
+| **NFe** | `nfe`, `nfe/xml`, `nfe/compra`, `nfe/lancamento`, `nfe/produtos`, `nfe/produtos/novo`, `nfe/produtos/[id]/edit`, `nfe/produtos/normalizacao` | 8 |
+| **FichasTecnicas** | `fichas-tecnicas`, `fichas-tecnicas/nova`, `fichas-tecnicas/[id]/edit` | 3 |
+| **Planejamento** | `planejamento`, `planejamento/editar/{despesas-fixas,despesas-variaveis,funcionarios,metas-mensais,provisoes}`, `planejamento-financeiro`, `planejamento-financeiro/editar/taxas` | 8 |
+| **Financeiro** | `caixa`, `contas-bancarias`(+`/nova`,`/[id]/editar`,`/[id]/movimentacoes`), `fluxo-caixa`(+`/configuracoes`), `livro-diario`, `fechamento-mensal`(+`/plano-contas`) | 10 |
+| **Admin/Config** | `admin`, `config/loja`, `config/planos` | 3 |
+| **DashboardHome** | `(dashboard)/page` | 1 |
+| **TOTAL** | | **37** |
+
+---
+
+## 4. Diagrama de Fluxo de MÓDULOS
+
+```mermaid
+graph TD
+  classDef core fill:#1e293b,stroke:#de4838,color:#fff;
+  classDef cycle fill:#7f1d1d,stroke:#fca5a5,color:#fff;
+  Auth["Auth"]
+  NFe["NFe"]
+  FichasTecnicas["FichasTecnicas"]
+  Planejamento["Planejamento"]
+  Financeiro["Financeiro"]
+  AdminConfig["Admin/Config"]
+  DashboardHome["DashboardHome"]
+  Auth -->|3| AdminConfig
+  FichasTecnicas -->|2| NFe
+  FichasTecnicas -->|3| Planejamento
+  Financeiro -.->|3| NFe
+  Financeiro -->|1| Planejamento
+  NFe -.->|7| Financeiro
+  DashboardHome -->|1| FichasTecnicas
+  DashboardHome -->|1| NFe
+  DashboardHome -->|2| Planejamento
+
+  %% Core compartilhado por todos (ui/*, lib/utils, prisma, AuthProvider)
+  CORE["CORE: ui/* + lib/utils + prisma + AuthProvider"]:::core
+  Auth --> CORE
+  NFe --> CORE
+  FichasTecnicas --> CORE
+  Planejamento --> CORE
+  Financeiro --> CORE
+  AdminConfig --> CORE
+  DashboardHome --> CORE
+
+  %% CICLO DE MÓDULO: NFe <-> Financeiro
+  NFe:::cycle
+  Financeiro:::cycle
+```
+
+**Leitura:** setas sólidas `A -->|n| B` = A consome domínio próprio de B em `n` pontos (imports de serviço/hook + chamadas de API). **Setas tracejadas** = acoplamento **bidirecional** (ciclo de módulo). `NFe ⇄ Financeiro` é o único ciclo.
+
+---
+
+## 5. Diagrama de Fluxo de PÁGINAS (agrupado por módulo)
+
+Arestas = apenas dependências de **domínio cruzadas** (o que importa para o corte em módulos). Cada página também toca o `CORE` (não desenhado para não poluir).
+
+```mermaid
+graph TD
+  subgraph Auth["Auth"]
+    P_auth_forgot_password["auth/forgot-password"]
+    P_auth_login["auth/login"]
+    P_auth_register["auth/register"]
+    P_auth_reset_password["auth/reset-password"]
+  end
+  subgraph AdminConfig["Admin/Config"]
+    P_admin["admin"]
+    P_config_loja["config/loja"]
+    P_config_planos["config/planos"]
+  end
+  subgraph Financeiro["Financeiro"]
+    P_caixa["caixa"]
+    P_contas_bancarias___editar["contas-bancarias/*/editar"]
+    P_contas_bancarias___movimentacoes["contas-bancarias/*/movimentacoes"]
+    P_contas_bancarias_nova["contas-bancarias/nova"]
+    P_contas_bancarias["contas-bancarias"]
+    P_fechamento_mensal["fechamento-mensal"]
+    P_fechamento_mensal_plano_contas["fechamento-mensal/plano-contas"]
+    P_fluxo_caixa_configuracoes["fluxo-caixa/configuracoes"]
+    P_fluxo_caixa["fluxo-caixa"]
+    P_livro_diario["livro-diario"]
+  end
+  subgraph FichasTecnicas["FichasTecnicas"]
+    P_fichas_tecnicas___edit["fichas-tecnicas/*/edit"]
+    P_fichas_tecnicas_nova["fichas-tecnicas/nova"]
+    P_fichas_tecnicas["fichas-tecnicas"]
+  end
+  subgraph NFe["NFe"]
+    P_nfe_compra["nfe/compra"]
+    P_nfe_lancamento["nfe/lancamento"]
+    P_nfe["nfe"]
+    P_nfe_produtos___edit["nfe/produtos/*/edit"]
+    P_nfe_produtos_normalizacao["nfe/produtos/normalizacao"]
+    P_nfe_produtos_novo["nfe/produtos/novo"]
+    P_nfe_produtos["nfe/produtos"]
+    P_nfe_xml["nfe/xml"]
+  end
+  subgraph DashboardHome["DashboardHome"]
+    P_page_tsx["page.tsx"]
+  end
+  subgraph Planejamento["Planejamento"]
+    P_planejamento_financeiro_editar_taxas["planejamento-financeiro/editar/taxas"]
+    P_planejamento_financeiro["planejamento-financeiro"]
+    P_planejamento_editar_despesas_fixas["planejamento/editar/despesas-fixas"]
+    P_planejamento_editar_despesas_variaveis["planejamento/editar/despesas-variaveis"]
+    P_planejamento_editar_funcionarios["planejamento/editar/funcionarios"]
+    P_planejamento_editar_metas_mensais["planejamento/editar/metas-mensais"]
+    P_planejamento_editar_provisoes["planejamento/editar/provisoes"]
+    P_planejamento["planejamento"]
+  end
+  P_fluxo_caixa -.->|importa NFe| NFe
+  P_livro_diario -.->|importa NFe| NFe
+  P_nfe_compra -.->|importa Financeiro| Financeiro
+  P_nfe_lancamento -.->|importa Financeiro| Financeiro
+  P_nfe_xml -.->|importa Financeiro| Financeiro
+  P_auth_forgot_password ==>|/api/auth/forgot-password| AdminConfig
+  P_auth_register ==>|/api/auth/register| AdminConfig
+  P_auth_reset_password ==>|/api/auth/reset-password| AdminConfig
+  P_config_loja ==>|/api/empresa| AdminConfig
+  P_config_loja ==>|/api/config/horarios| AdminConfig
+  P_config_loja ==>|/api/config/pagamentos| AdminConfig
+  P_config_loja ==>|/api/config/entrega| AdminConfig
+  P_config_loja ==>|/api/auth/register-user| AdminConfig
+  P_config_loja ==>|/api/auth/users/${id}| AdminConfig
+  P_fichas_tecnicas___edit ==>|/api/produtos| NFe
+  P_fichas_tecnicas___edit ==>|/api/planejamento/indicadores-resumo| Planejamento
+  P_fichas_tecnicas_nova ==>|/api/produtos| NFe
+  P_fichas_tecnicas_nova ==>|/api/planejamento/indicadores-resumo| Planejamento
+  P_fichas_tecnicas ==>|/api/planejamento/lucro-desejado| Planejamento
+  P_fluxo_caixa ==>|/api/produtos/${produto.id}/normalizacao| NFe
+  P_livro_diario ==>|/api/planejamento/folha-pagamento-config/funcionarios| Planejamento
+  P_nfe_compra ==>|/api/livro-diario| Financeiro
+  P_nfe_lancamento ==>|/api/livro-diario| Financeiro
+  P_nfe ==>|/api/livro-diario| Financeiro
+  P_nfe_xml ==>|/api/livro-diario| Financeiro
+  P_page_tsx ==>|/api/fichas-tecnicas| FichasTecnicas
+  P_page_tsx ==>|/api/produtos| NFe
+  P_page_tsx ==>|/api/planejamento/indicadores-resumo| Planejamento
+  P_page_tsx ==>|/api/planejamento/metas| Planejamento
+```
+
+Arquivos-fonte destes diagramas: `module-flow.mmd` e `page-flow.mmd` (podem ser colados no editor Mermaid do GitHub/VSCode).
+
+---
+
+## 6. Camada "Core" (compartilhada por quase tudo)
+
+Estes são os nós de maior grau — o que define a fronteira de baixo acoplamento que **todo** módulo atravessa. Tratá-los como um pacote `@core` independente é o primeiro passo.
+
+| Módulo Core | Importado por | Tipo |
+|---|---|---|
+| `components/ui/button.tsx` | **35/37** páginas | ui (shadcn) |
+| `components/ui/input.tsx` | 27 | ui |
+| `components/ui/alert.tsx` | 26 | ui |
+| `lib/utils.ts` (`cn`) | 24 | lib (core) |
+| `components/ui/label.tsx` | 22 | ui |
+| `components/ui/card.tsx` | 20 | ui |
+| `components/ui/badge.tsx` | 11 | ui |
+| `lib/prisma.ts` / `lib/prisma-admin.ts` | todas as rotas de API | lib (core) |
+| `components/providers/AuthProvider.tsx` (SessionProvider) | todas as páginas (root layout) | provider (core) |
+
+> **Conclusão:** o `ui/*` + `lib/utils` + `AuthProvider` + `prisma` formam o **Core estável**. Eles NÃO devem conter lógica de domínio — manter só primitivos de apresentação e acesso a dados.
+
+---
+
+## 7. Acoplamento Módulo → Módulo (domínio)
+
+`A → B (n)` = páginas do módulo A consomem domínio próprio do módulo B em `n` pontos (imports + chamadas de API).
+
+| De (A) | Para (B) | Peso | Via (exemplos) |
+|---|---|---|---|
+| **NFe** | **Financeiro** | **7** | `/api/livro-diario` (nfe, xml, compra, lancamento) |
+| **FichasTecnicas** | **Planejamento** | 3 | `/api/planejamento/indicadores-resumo`, `lucro-desejado` |
+| **NFe** | **Financeiro** (hook) | 3 | `hooks/useContasFinanceiras` em nfe/compra, lancamento, xml |
+| **Financeiro** | **NFe** | 3 | `/api/produtos` (normalização) em fluxo-caixa, livro-diario |
+| **FichasTecnicas** | **NFe** | 2 | `/api/produtos?limit=500` em fichas/nova, /*/edit |
+| **DashboardHome** | **Planejamento** | 2 | `/api/planejamento/{indicadores-resumo,metas}` |
+| **Auth** | **Admin/Config** | 3 | `/api/auth/*`, `/api/empresa` |
+| **Financeiro** | **Planejamento** | 1 | `/api/planejamento/folha-pagamento-config/funcionarios` |
+| **DashboardHome** | **NFe** | 1 | `/api/produtos` |
+| **DashboardHome** | **FichasTecnicas** | 1 | `/api/fichas-tecnicas` |
+
+**Bidirectional / ciclo:** `NFe ⇄ Financeiro` (7 + 3). É o único ciclo de módulo do sistema.
+
+---
+
+## 8. APIs Compartilhadas entre Módulos (boundary no backend)
+
+Estas rotas são consumidas por páginas de **módulos diferentes** — são os pontos de acoplamento reais entre times/módulos.
+
+| API | Módulos que a usam | Páginas |
+|---|---|---|
+| `/api/livro-diario` | **Financeiro + NFe** | 4 (livro-diario, nfe, nfe/xml, nfe/compra, nfe/lancamento) |
+| `/api/produtos` | **FichasTecnicas + NFe + Dashboard** | 3+ |
+| `/api/planejamento/indicadores-resumo` | **FichasTecnicas + DashboardHome** | 3 |
+
+> Outras APIs fortes de domínio: `/api/fluxo-caixa/dre-mensal`, `/api/fechamento-mensal/dre`, `/api/caixa`, `/api/contas-financeiras` (todas internas ao módulo Financeiro).
+
+---
+
+## 9. Componentes/Hooks de Domínio Compartilhados (>=2 páginas)
+
+Além do Core, estes módulos de domínio são reutilizados — sinal de onde estão as fronteiras naturais:
+
+| Módulo compartilhado | Páginas | Pertence a |
+|---|---|---|
+| `hooks/useContasFinanceiras.ts` | nfe/compra, nfe/lancamento, nfe/xml | **Financeiro** (usado pelo **NFe**) |
+| `components/fichas-tecnicas/CostBreakdown.tsx` | fichas-tecnicas/nova, /*/edit | FichasTecnicas |
+| `components/fichas-tecnicas/UnitQuantityInput.tsx` | fichas-tecnicas/nova, /*/edit | FichasTecnicas |
+| `lib/services/conversion.service.ts` | fichas-tecnicas/nova, /*/edit | FichasTecnicas |
+| `types/ficha-tecnica.ts` | fichas-tecnicas/nova, /*/edit | FichasTecnicas |
+| `components/camera-scanner.tsx` | nfe/compra, nfe/xml | NFe |
+
+> **Achado de fronteira:** `useContasFinanceiras` é um hook do domínio **Financeiro** sendo importado por 3 páginas do **NFe**. Isso é um vazamento de fronteira — o NFe deveria consumir o saldo/conta via API, não importar o hook de estado do Financeiro.
+
+---
+
+## 10. Detalhe por Página
+
+Colunas: **Importa domínio de** (outros módulos cujo código/serviço a página usa) · **Consumido por (via API)** (quem chama a API que esta página "possui") · **Hooks/Contexto global** · **Componentes de domínio compartilhados**.
+
+> Contexto global comum a **todas as páginas autenticadas**: `SessionProvider` (via `AuthProvider` no root layout) + estado de sessão/empresa no `(dashboard)/layout`. O `(auth)/layout` provê apenas o shell de autenticação.
+
+### Auth (4)
+| Página | Importa de | Consumido por | Hooks/Contexto | Componentes domínio |
+|---|---|---|---|---|
+| auth/login | — | Auth | SessionProvider | ui/* |
+| auth/register | Admin/Config (`/api/auth/register`) | Auth | SessionProvider | ui/* |
+| auth/forgot-password | Admin/Config | Auth | SessionProvider | ui/* |
+| auth/reset-password | Admin/Config | Auth | SessionProvider | ui/* |
+
+### NFe (8)
+| Página | Importa de | Consumido por | Hooks/Contexto | Componentes domínio |
+|---|---|---|---|---|
+| nfe | Financeiro (`/api/livro-diario`) | NFe | SessionProvider | — |
+| nfe/xml | **Financeiro** (hook+API livro-diario) | NFe | SessionProvider | `camera-scanner` |
+| nfe/compra | **Financeiro** (hook+API livro-diario) | NFe | SessionProvider | `camera-scanner` |
+| nfe/lancamento | **Financeiro** (hook) | NFe | SessionProvider | — |
+| nfe/produtos | — | NFe, Fichas, Dashboard | SessionProvider | — |
+| nfe/produtos/novo | — | NFe | SessionProvider | — |
+| nfe/produtos/[id]/edit | — | NFe | SessionProvider | — |
+| nfe/produtos/normalizacao | — | NFe | SessionProvider | — |
+
+### FichasTecnicas (3)
+| Página | Importa de | Consumido por | Hooks/Contexto | Componentes domínio |
+|---|---|---|---|---|
+| fichas-tecnicas | Planejamento (`lucro-desejado`) | Fichas, Dashboard | SessionProvider | — |
+| fichas-tecnicas/nova | **NFe** (`/api/produtos`), Planejamento (`indicadores-resumo`) | Fichas | SessionProvider | `CostBreakdown`, `UnitQuantityInput`, `conversion.service`, `types/ficha-tecnica` |
+| fichas-tecnicas/[id]/edit | **NFe**, Planejamento | Fichas | SessionProvider | `CostBreakdown`, `UnitQuantityInput`, `conversion.service`, `types/ficha-tecnica` |
+
+### Planejamento (8)
+| Página | Importa de | Consumido por | Hooks/Contexto | Componentes domínio |
+|---|---|---|---|---|
+| planejamento | Financeiro (`faturamento`/`despesas` de planejamento-financeiro) | Planejamento, Fichas, Dashboard | SessionProvider | ui/* (switch, tabs) |
+| planejamento/editar/despesas-fixas | — | Planejamento | SessionProvider | — |
+| planejamento/editar/despesas-variaveis | Financeiro (`despesas-variaveis` de planejamento-financeiro, `folha-salarial`) | Planejamento | SessionProvider | — |
+| planejamento/editar/funcionarios | — | Planejamento | SessionProvider | — |
+| planejamento/editar/metas-mensais | — | Planejamento, Dashboard | SessionProvider | — |
+| planejamento/editar/provisoes | — | Planejamento | SessionProvider | — |
+| planejamento-financeiro | — | Planejamento | SessionProvider | — |
+| planejamento-financeiro/editar/taxas | Financeiro (`folha-salarial`) | Planejamento | SessionProvider | — |
+
+### Financeiro (10)
+| Página | Importa de | Consumido por | Hooks/Contexto | Componentes domínio |
+|---|---|---|---|---|
+| caixa | — | Financeiro | SessionProvider | ui/* (dialog) |
+| contas-bancarias | — | Financeiro | SessionProvider, `useContasFinanceiras`* | — |
+| contas-bancarias/nova | — | Financeiro | SessionProvider, `useContasFinanceiras`* | — |
+| contas-bancarias/[id]/editar | — | Financeiro | SessionProvider, `useContasFinanceiras`* | — |
+| contas-bancarias/[id]/movimentacoes | — | Financeiro | SessionProvider, `useContasFinanceiras`* | — |
+| fluxo-caixa | **NFe** (`/api/produtos/*/normalizacao`) | Financeiro | SessionProvider | ui/* (tabs) |
+| fluxo-caixa/configuracoes | — | Financeiro | SessionProvider | — |
+| livro-diario | **NFe** (hook), Planejamento (`folha-pagamento-config`) | Financeiro, NFe | SessionProvider | ui/* (tabs) |
+| fechamento-mensal | — | Financeiro | SessionProvider | ui/* (tabs) |
+| fechamento-mensal/plano-contas | — | Financeiro | SessionProvider | — |
+
+`*` `useContasFinanceiras` aparece em contas-bancarias (interno ao módulo) — mas o mesmo hook é importado por NFe (vazamento, ver §9).
+
+### Admin/Config (3) e DashboardHome (1)
+| Página | Importa de | Consumido por | Hooks/Contexto | Componentes domínio |
+|---|---|---|---|---|
+| admin | — | Admin/Config | SessionProvider (role ADMIN) | ui/* (badge) |
+| config/loja | Admin/Config (empresa, config/*, auth/users) | Admin/Config | SessionProvider | ui/* |
+| config/planos | — | Admin/Config | SessionProvider | ui/* (stripe) |
+| (dashboard)/page | Fichas, NFe, Planejamento | DashboardHome | SessionProvider | ui/* (chart) |
+
+---
+
+## 11. Sugestão de Separação em Módulos
+
+Princípio: **alta coesão intra-módulo, baixo acoplamento inter-módulo, mínimo de dependências fora do Core.** O projeto já está 90% pronto para isso — o corte natural é o prefixo de rota sob `(dashboard)/`.
+
+### 11.1 Pacote `@core` (foundation, sem lógica de domínio)
+- `components/ui/*`, `lib/utils`, `lib/prisma`, `lib/prisma-admin`, `components/providers/AuthProvider`, `lib/auth`, `types/*` base.
+- Todos os módulos dependem dele; ele não depende de nenhum módulo de domínio.
+
+### 11.2 Módulos de domínio (cada um com suas páginas + componentes + hooks + services + rotas de API)
+
+| Módulo | Páginas | Componentes próprios | Hooks/Services próprios | Rotas de API próprias |
+|---|---|---|---|---|
+| **@app/auth** | auth/* | — | — | `/api/auth/*` |
+| **@app/nfe** | nfe/* | `camera-scanner`, `produtos/*` | `useCategorias` | `/api/nfe/*`, `/api/produtos/*` |
+| **@app/fichas** | fichas-tecnicas/* | `fichas-tecnicas/*` | `conversion.service`, `recipe-cost.service`, `types/ficha-tecnica` | `/api/fichas-tecnicas/*` |
+| **@app/planejamento** | planejamento*, planejamento-financeiro* | — | `lib/planejamento/*`, `lib/folha*`, `lib/calculoDespesasVariaveis` | `/api/planejamento*`, `/api/planejamento-financeiro*` |
+| **@app/financeiro** | caixa, contas-bancarias*, fluxo-caixa*, livro-diario, fechamento-mensal* | — | `useContasFinanceiras`, `lib/dre*`, `lib/folha-lancamentos` | `/api/caixa`, `/api/contas-financeiras`, `/api/fluxo-caixa`, `/api/livro-diario`, `/api/fechamento-mensal`, `/api/dre`, `/api/boletos`, `/api/retiradas`, `/api/vendas`, `/api/notas` |
+| **@app/admin** | admin, config/* | — | `lib/admin`, `lib/stripe`, `lib/email` | `/api/admin/*`, `/api/config/*`, `/api/empresa` |
+| **@app/dashboard** | (dashboard)/page | `produtividade-chart` | `useOnboarding` | `/api/dashboard*` |
+
+### 11.3 Fronteiras e violações a corrigir (boundary violations)
+
+| Violação | Atual | Recomendado |
+|---|---|---|
+| `useContasFinanceiras` (Financeiro) importado por NFe | NFe acopla estado do Financeiro | NFe consome saldo/conta via `/api/contas-financeiras` (já existe) em vez de importar o hook |
+| NFe escreve em `/api/livro-diario` | Acoplamento NFe→Financeiro | Manter, mas tratar `livro-diario` como **evento/contrato estável** (versão na rota) — NFe só posta lançamentos padronizados |
+| Fichas consomem `/api/produtos` e `/api/planejamento/indicadores-resumo` | Fichas depende de NFe e Planejamento | OK como dependência de *serviço* (API), desde que essas APIs sejam estáveis; **não** importar código de NFe/Planejamento |
+| Dashboard consome 3 módulos | Dashboard vira hub | Aceitável — Dashboard é orquestrador de leitura; manter só leitura (GET) |
+
+---
+
+## 12. Riscos Identificados
+
+| # | Risco | Severidade | Detalhe |
+|---|---|---|---|
+| R1 | **Ciclo de módulo NFe ⇄ Financeiro** | 🔴 Alta | NFe grava em `/api/livro-diario` (7 pts) e Financeiro lê `/api/produtos`. Mudança no contrato de uma API quebra a outra. É o acoplamento mais crítico. |
+| R2 | **`/api/livro-diario` como hub central** | 🔴 Alta | 4+ páginas de 2 módulos dependem dela. Refatorar o Livro Diário impacta NFe e Financeiro simultaneamente. |
+| R3 | **Sidebar centralizada no `(dashboard)/layout.tsx`** | 🟡 Média | Todo o grafo de navegação vive num arquivo de 400 linhas. Separar módulos exige um sistema de registro de rotas (cada módulo declara seus itens de menu) em vez de lista hardcoded. |
+| R4 | **Código legado/duplicado** | 🟡 Média | `components/layout/Sidebar.tsx` **morto** (não importado; rotas `/notas-processadas`, `/configuracoes` inexistentes). `config/integracoes` no menu **não tem página** (link quebrado). |
+| R5 | **`/api/produtos` compartilhado (catálogo)** | 🟡 Média | NFe, Fichas e Dashboard dependem. Mudanças de schema de produto afetam 3 módulos. |
+| R6 | **`types/ficha-tecnica.ts` partilhado só dentro de Fichas** | 🟢 Baixa | Coesão boa; só confirmar que não vaze para outros módulos. |
+| R7 | **Sem testes de contrato de API** | 🟡 Média | Como o acoplamento é via API (não tipo), uma mudança de payload quebra o consumidor em runtime sem erro de compilação. |
+
+---
+
+## 13. Plano de Desacoplamento (passos concretos)
+
+1. **Extrair `@core`** — mover `components/ui`, `lib/utils`, `lib/prisma`, `AuthProvider`, `lib/auth`, `types` para um pacote/barrel interno. Garantir que nada de domínio mora lá.
+2. **Criar barril de módulo** (`features/<mod>/index.ts`) exportando só a superfície pública (páginas, componentes, hooks, services). Importar módulos sempre via barril, nunca por caminho interno.
+3. **Quebrar o ciclo NFe ⇄ Financeiro (R1/R2):**
+   - Definir um **contrato de lançamento** estável (ex.: `LancamentoDTO`) em `@core/types`.
+   - NFe posta lançamentos via esse contrato; Financeiro (`livro-diario`) o consome. Versar a rota se mudar o shape.
+   - NFe deixa de importar `useContasFinanceiras` (R da §9) — passa a buscar saldo via `/api/contas-financeiras`.
+4. **Descentralizar a navegação (R3/R4):** cada módulo exporta seus itens de menu; o layout monta o sidebar a partir do registro. Remover `Sidebar.tsx` legado e o link `config/integracoes` quebrado.
+5. **Estabilizar APIs-hub (R2/R5):** tratar `/api/livro-diario`, `/api/produtos`, `/api/planejamento/indicadores-resumo` como contratos públicos versionados; adicionar testes de contrato (R7).
+6. **Testes de fronteira:** um teste automatizado que falha se uma página de módulo X importar código interno de módulo Y (exceto `@core`). Reutilizar `madge` com `--circular` + um lint de imports.
+
+---
+
+## 14. Como regerar esta análise
+
+```bash
+# 1) grafo de importações (madge) -> madge-graph.json
+npx madge src --extensions ts,tsx --ts-config tsconfig.json --json > madge-graph.json
+
+# 2) análise de páginas/APIs/módulos compartilhados -> analysis.json
+node scripts/analyze-deps.mjs
+
+# 3) acoplamento módulo->módulo -> coupling.json
+node scripts/module-coupling.mjs
+
+# 4) diagramas Mermaid -> module-flow.mmd, page-flow.mmd
+node scripts/gen-mermaid.mjs
+
+# 5) (opcional) imagem PNG — requer Graphviz instalado:
+#    baixe de https://graphviz.org/download/ e adicione ao PATH, depois:
+npx madge src --extensions ts,tsx --ts-config tsconfig.json --image graph.png
+# ou a partir do DOT já gerado:
+dot -Tpng graph.dot -o graph.png
+
+# ciclos de dependência (código):
+npx madge src --extensions ts,tsx --ts-config tsconfig.json --circular
+```
+
+---
+
+### Arquivos gerados nesta análise
+`madge-graph.json`, `analysis.json`, `coupling.json`, `graph.dot`, `module-flow.mmd`, `page-flow.mmd`, `scripts/analyze-deps.mjs`, `scripts/module-coupling.mjs`, `scripts/gen-mermaid.mjs`.
+</script>
+
+  <script>
+    const mdText = document.getElementById('report-md').textContent;
+    const el = document.getElementById('content');
+
+    // Fallback offline: se o CDN não carregar, mostra o markdown cru em <pre>.
+    if (typeof marked === 'undefined' || typeof mermaid === 'undefined') {
+      const warn = document.createElement('div');
+      warn.style.cssText = 'background:#3b0d0d;border:1px solid #de4838;color:#fca5a5;padding:10px 14px;border-radius:8px;margin-bottom:16px';
+      warn.textContent = 'Aviso: não foi possível carregar as bibliotecas (marked/mermaid) via CDN. Verifique sua conexão com a internet. O texto do relatório aparece abaixo em formato bruto.';
+      el.appendChild(warn);
+      const pre = document.createElement('pre');
+      pre.textContent = mdText;
+      el.appendChild(pre);
+    } else {
+      // 1) markdown -> html
+      const html = marked.parse(mdText, { gfm: true, breaks: false });
+      el.innerHTML = html;
+
+      // 2) transformar blocos mermaid (pre>code.language-mermaid) em div.mermaid
+      el.querySelectorAll('pre > code.language-mermaid').forEach((code) => {
+        const pre = code.parentElement;
+        const div = document.createElement('div');
+        div.className = 'mermaid';
+        div.textContent = code.textContent;
+        pre.replaceWith(div);
+      });
+
+      // 3) renderizar mermaid
+      mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+      mermaid.run();
+    }
+  </script>
+</body>
+</html>

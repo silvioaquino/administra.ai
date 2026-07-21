@@ -113,6 +113,8 @@ export async function POST(request: NextRequest) {
       tipo,
       origemDestino, // NOVO CAMPO
       notaFiscalId, // ID da nota fiscal relacionada
+      formaPagamento, // Forma de pagamento (define status Pago/Pendente)
+      origemXml, // Lançamento via XML é sempre pendente
     } = body;
 
     const empresaId = session.user.empresaId || "";
@@ -168,6 +170,18 @@ export async function POST(request: NextRequest) {
     const [year, month, day] = data.split('-').map(Number)
     const dataLancamento = new Date(year, month - 1, day)
 
+    // Determinar o status do lançamento com base na forma de pagamento
+    const FORMAS_PAGAS = ["À vista", "Cartão de Débito", "PIX", "DINHEIRO", "CARTAO_DEBITO", "IFOOD"];
+    let statusLancamento = "PENDENTE";
+    if (origemXml) {
+      statusLancamento = "PENDENTE";
+    } else if (tipo === "VENDA" || tipo === "RECEITA") {
+      statusLancamento = "PAGO";
+    } else if (FORMAS_PAGAS.includes(formaPagamento)) {
+      statusLancamento = "PAGO";
+    }
+    const dataPagamentoLanc = statusLancamento === "PAGO" ? dataLancamento : null;
+
     const novoLancamento = await prisma.livroDiario.create({
       data: {
         empresaId,
@@ -180,6 +194,8 @@ export async function POST(request: NextRequest) {
         tipo: tipo || (entrada > 0 ? "RECEITA" : "DESPESA"),
         origemDestino: origemDestino || null, // NOVO CAMPO
         notaFiscalId: notaFiscalId || null,
+        status: statusLancamento,
+        dataPagamento: dataPagamentoLanc,
         userId: session.user.id,
       },
     });

@@ -39,6 +39,7 @@ export async function GET(
       precoVenda: Number(ficha.precoVenda),
       custoTotal: Number(ficha.custoTotal),
       custoPorPorcao: Number(ficha.custoPorPorcao),
+      fatorOscilacao: Number(ficha.fatorOscilacao),
       margem: Number(ficha.margem),
       ingredientes: ficha.fichaItems.map(item => ({
         id: item.id,
@@ -48,7 +49,10 @@ export async function GET(
         unidade: item.unidade,
         valorUnitario: Number(item.valorUnitario),
         custo: Number(item.custo),
-        isProdutoAcabado: item.isProdutoAcabado
+        isProdutoAcabado: item.isProdutoAcabado,
+        pesoBruto: item.pesoBruto != null ? Number(item.pesoBruto) : undefined,
+        pesoLiquido: item.pesoLiquido != null ? Number(item.pesoLiquido) : undefined,
+        fatorCorrecao: item.fatorCorrecao != null ? Number(item.fatorCorrecao) : 1
       }))
     }
 
@@ -77,6 +81,7 @@ export async function PUT(
 
   try {
     const { id } = await params
+    const empresaId = session.user.empresaId
     const body = await request.json()
     const {
       nome,
@@ -85,6 +90,7 @@ export async function PUT(
       custoTotal,
       custoPorPorcao,
       margem,
+      fatorOscilacao,
       rendimentoPorcoes,
       ingredientes,
       modoPreparo
@@ -125,6 +131,7 @@ export async function PUT(
           custoTotal,
           custoPorPorcao,
           margem,
+          fatorOscilacao: fatorOscilacao ?? 0,
           rendimentoPorcoes,
           modoPreparo: modoPreparo || null,
           updatedAt: new Date()
@@ -144,7 +151,12 @@ export async function PUT(
             unidade: ing.unidade,
             valorUnitario: ing.valorUnitario,
             custo: ing.custo,
-            isProdutoAcabado: ing.isProdutoAcabado || false
+            isProdutoAcabado: ing.isProdutoAcabado || false,
+            pesoBruto: ing.pesoBruto ?? null,
+            pesoLiquido: ing.pesoLiquido ?? null,
+            fatorCorrecao: ing.fatorCorrecao ?? 1,
+            empresaId,
+            userId: session.user.id
           }))
         })
       }
@@ -170,6 +182,7 @@ export async function PUT(
         precoVenda: Number(fichaComItens?.precoVenda),
         custoTotal: Number(fichaComItens?.custoTotal),
         custoPorPorcao: Number(fichaComItens?.custoPorPorcao),
+        fatorOscilacao: Number(fichaComItens?.fatorOscilacao),
         margem: Number(fichaComItens?.margem),
         ingredientes: fichaComItens?.fichaItems.map(item => ({
           id: item.id,

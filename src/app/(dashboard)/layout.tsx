@@ -20,13 +20,15 @@ import {
   Ticket,
   QrCode,
   Plug,
+  Shield,
   HelpCircle,
   LogOut,
   ChevronRight,
   LayoutDashboard,
   Calculator,
   Receipt,
-  TrendingUp
+  TrendingUp,
+  CheckCircle2
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
@@ -39,7 +41,7 @@ export default function DashboardLayout({
   const router = useRouter()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [empresaNome, setEmpresaNome] = useState<string>("Administra.ai")
+  const [empresaNome, setEmpresaNome] = useState<string>("SeuGerente")
 
   // Buscar nome da empresa no banco de dados
   useEffect(() => {
@@ -73,22 +75,27 @@ export default function DashboardLayout({
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/", badge: null },
+    { icon: TrendingUp, label: "Planejamento", href: "/planejamento", badge: null },
     { icon: ShoppingBag, label: "Registros NFEs", href: "/nfe", badge: null },
     { icon: Calculator, label: "Fichas Técnicas", href: "/fichas-tecnicas", badge: null },
-    { icon: TrendingUp, label: "Planejamento", href: "/planejamento", badge: null },
     { icon: Receipt, label: "Livro Diário", href: "/livro-diario", badge: null },
     { icon: Ticket, label: "Fluxo de Caixa / DRE", href: "/fluxo-caixa", badge: null },
     { icon: Truck, label: "Contas bancárias", href: "/contas-bancarias", badge: null },
-    { icon: CreditCard, label: "Fechamento Mensal", href: "/fechamento-mensal", badge: null },
     { icon: CreditCard, label: "Abrir/Fechar Caixa Diário", href: "/caixa", badge: null },
-    
+        { icon: CreditCard, label: "Fechamento Mensal", href: "/fechamento-mensal", badge: null },
+
   ]
 
   const configItems = [
     { icon: Store, label: "Minha loja", href: "/config/loja", badge: null },
     { icon: Store, label: "Gerenciamento de Planos", href: "/config/planos", badge: null },
-    { icon: Plug, label: "Integrações", href: "/config/integracoes", badge: null },
+    //{ icon: Plug, label: "Integrações", href: "/config/integracoes", badge: null },
   ]
+
+  const isAdmin = session?.user?.role === "ADMIN"
+  const adminItems = isAdmin
+    ? [{ icon: Shield, label: "Administração", href: "/admin", badge: "Admin" as string | null }]
+    : []
 
   if (status === "loading") {
     return (
@@ -172,6 +179,38 @@ export default function DashboardLayout({
               </Link>
             )
           })}
+
+          {adminItems.length > 0 && (
+            <>
+              <p className="mb-2 mt-4 px-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                Administração
+              </p>
+              {adminItems.map((item, idx) => {
+                const active = isActive(item.href)
+                return (
+                  <Link
+                    key={idx}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center justify-between rounded-lg px-2 py-1.5 text-[14px] transition-all mb-0.5",
+                      active
+                        ? "bg-[#de4838]/20 text-[#de4838] font-medium"
+                        : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <item.icon className={cn("h-3.5 w-3.5", active ? "text-[#de4838]" : "text-gray-500")} />
+                      <span className="truncate">{item.label}</span>
+                    </div>
+                    {item.badge && (
+                      <Badge className="bg-amber-500/20 text-amber-400 text-[9px] px-1 border-amber-500/30">{item.badge}</Badge>
+                    )}
+                    {active && <ChevronRight className="h-2.5 w-2.5 text-[#de4838]" />}
+                  </Link>
+                )
+              })}
+            </>
+          )}
 
           <p className="mb-2 mt-4 px-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
             Configurações
@@ -288,6 +327,17 @@ export default function DashboardLayout({
               </Link>
             ))}
             <div className="my-2 border-t border-gray-800 pt-2">
+              {adminItems.map((item, idx) => (
+                <Link
+                  key={idx}
+                  href={item.href}
+                  className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800/50 sm:text-xs"
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <item.icon className="h-4 w-4 text-gray-500 sm:h-3.5 sm:w-3.5" />
+                  <span className="font-medium">{item.label}</span>
+                </Link>
+              ))}
               {configItems.map((item, idx) => (
                 <Link
                   key={idx}

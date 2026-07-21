@@ -223,7 +223,7 @@ export default function RegisterPage() {
                   <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#de4838] to-[#de4838]/80 flex items-center justify-center shadow-md">
                     <Store className="h-5 w-5 text-white" />
                   </div>
-                  <span className="text-xl font-bold text-[#de4838]">Emporio do Sabor</span>
+                  <span className="text-xl font-bold text-[#de4838]">SeuGerente</span>
                 </div>
               </div>
 

@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
       precoVenda: Number(ficha.precoVenda),
       custoTotal: Number(ficha.custoTotal),
       custoPorPorcao: Number(ficha.custoPorPorcao),
+      fatorOscilacao: Number(ficha.fatorOscilacao),
       margem: Number(ficha.margem),
       ingredientes: ficha.fichaItems.map(item => ({
         id: item.id,
@@ -69,7 +70,10 @@ export async function GET(request: NextRequest) {
         unidade: item.unidade,
         valorUnitario: Number(item.valorUnitario),
         custo: Number(item.custo),
-        isProdutoAcabado: item.isProdutoAcabado
+        isProdutoAcabado: item.isProdutoAcabado,
+        pesoBruto: item.pesoBruto != null ? Number(item.pesoBruto) : undefined,
+        pesoLiquido: item.pesoLiquido != null ? Number(item.pesoLiquido) : undefined,
+        fatorCorrecao: item.fatorCorrecao != null ? Number(item.fatorCorrecao) : 1
       }))
     }))
 
@@ -110,6 +114,7 @@ export async function POST(request: NextRequest) {
       custoTotal,
       custoPorPorcao,
       margem,
+      fatorOscilacao,
       rendimentoPorcoes,
       ingredientes,
       modoPreparo
@@ -123,9 +128,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!categoria || (categoria !== "Almoço" && categoria !== "Janta")) {
+    if (!categoria || !String(categoria).trim()) {
       return NextResponse.json(
-        { error: "Categoria inválida. Use 'Almoço' ou 'Janta'" },
+        { error: "Categoria é obrigatória" },
         { status: 400 }
       )
     }
@@ -188,6 +193,7 @@ export async function POST(request: NextRequest) {
         custoTotal,
         custoPorPorcao,
         margem,
+        fatorOscilacao: fatorOscilacao ?? 0,
         rendimentoPorcoes,
         modoPreparo: modoPreparo || null,
         fichaItems: {
@@ -197,7 +203,12 @@ export async function POST(request: NextRequest) {
             unidade: ing.unidade,
             valorUnitario: ing.valorUnitario,
             custo: ing.custo,
-            isProdutoAcabado: ing.isProdutoAcabado || false
+            isProdutoAcabado: ing.isProdutoAcabado || false,
+            pesoBruto: ing.pesoBruto ?? null,
+            pesoLiquido: ing.pesoLiquido ?? null,
+            fatorCorrecao: ing.fatorCorrecao ?? 1,
+            empresaId,
+            userId: session.user.id,
           }))
         }
       },
@@ -217,6 +228,7 @@ export async function POST(request: NextRequest) {
         precoVenda: Number(ficha.precoVenda),
         custoTotal: Number(ficha.custoTotal),
         custoPorPorcao: Number(ficha.custoPorPorcao),
+        fatorOscilacao: Number(ficha.fatorOscilacao),
         margem: Number(ficha.margem),
         ingredientes: ficha.fichaItems.map(item => ({
           id: item.id,

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import {
   TrendingUp, DollarSign,
@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
 import { toast } from 'sonner'
+import { calcularIndicadores, type MaquininhaIndicador } from "@/lib/planejamento/calcularIndicadores"
 
 // Components
 import { IndicadoresCard } from "./components/IndicadoresCard"
@@ -84,7 +85,6 @@ export default function PlanejamentoPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [anoAtual, setAnoAtual] = useState(new Date().getFullYear())
-  const [indicadoresRefresh, setIndicadoresRefresh] = useState(0)
   const [metasMensais, setMetasMensais] = useState<MetaFaturamentoRow[]>([])
   const [acompanhamentos, setAcompanhamentos] = useState<Acompanhamento[]>([])
   const [despesasFixas, setDespesasFixas] = useState<DespesaFixa[]>([])
@@ -109,20 +109,8 @@ export default function PlanejamentoPage() {
     // O carregarDados será chamado automaticamente pelo useEffect abaixo
   }, [anoAtual])
 
-  // Estado para os indicadores (vem da API)
-  const [indicadores, setIndicadores] = useState({
-    metaMensalTotal: 0,
-    lucroDesejado: 15,
-    markUp: 0,
-    cmvMaximo: 0,
-    pctFixas: 0,
-    pctVariaveis: 0,
-    despesasVariaveisBase: 0,
-    totalDespesasVariaveis: 0,
-    despesasFixas: [] as DespesaFixa[],
-    folhaEncargosPercentual: 0,
-    metaFaltando: false
-  })
+  // Lucro desejado (carregado uma vez; muda apenas ao salvar)
+  const [lucroDesejado, setLucroDesejado] = useState(15)
 
   // Estado para controlar períodos de metas no header
   const [periodosSelecionados, setPeriodosSelecionados] = useState<PeriodoRefeicao[]>([])
@@ -165,8 +153,7 @@ export default function PlanejamentoPage() {
           ...totals
         })
       })
-      // Recalcular indicadores (cards Indicadores, CMV Máximo e Distribuição %)
-      setIndicadoresRefresh((k) => k + 1)
+      // Os indicadores são recalculados no cliente via useMemo; nada a fazer aqui.
     } catch (error) {
       console.error("Erro ao salvar totais da folha:", error)
     }
@@ -217,20 +204,27 @@ export default function PlanejamentoPage() {
         setSalariosTotal(totalSalarios)
       }
 
-      // 4.5 Carregar totais da folha salarial (nova API)
+      // 4.5 Carregar totais da folha salarial (salvos mês a mês); usa o mês atual.
       const folhaResponse = await fetch(`/api/planejamento/folha-salarial?ano=${anoAtual}`)
       const folhaData = await folhaResponse.json()
       if (folhaData.success && folhaData.dados) {
-        setFolhaSalarialTotais({
-          totalSalarios: folhaData.dados.totalSalarios || 0,
-          totalDecimo: folhaData.dados.totalDecimo || 0,
-          totalFerias: folhaData.dados.totalFerias || 0,
-          totalFgts: folhaData.dados.totalFgts || 0,
-          totalInss: folhaData.dados.totalInss || 0,
-          totalInssPatronal: folhaData.dados.totalInssPatronal || 0,
-          totalMensal: folhaData.dados.totalMensal || 0,
-          folhaEncargosPercentual: folhaData.dados.folhaEncargosPercentual || 0
-        })
+        const mesAtualFolha = new Date().getMonth() + 1
+        const f =
+          folhaData.dados[mesAtualFolha] ||
+          Object.values(folhaData.dados)[0] ||
+          null
+        if (f) {
+          setFolhaSalarialTotais({
+            totalSalarios: f.totalSalarios || 0,
+            totalDecimo: f.totalDecimo || 0,
+            totalFerias: f.totalFerias || 0,
+            totalFgts: f.totalFgts || 0,
+            totalInss: f.totalInss || 0,
+            totalInssPatronal: f.totalInssPatronal || 0,
+            totalMensal: f.totalMensal || 0,
+            folhaEncargosPercentual: f.folhaEncargosPercentual || 0
+          })
+        }
       }
 
       // 5. Carregar despesas variáveis (nova API planejamento-financeiro)
@@ -253,39 +247,30 @@ export default function PlanejamentoPage() {
         })
       }
 
+      // 7. Carregar lucro desejado (GET leve, 1 query) — fonte dos indicadores
+      const lucroResponse = await fetch(`/api/planejamento/lucro-desejado?ano=${anoAtual}`)
+      const lucroData = await lucroResponse.json()
+      if (lucroData.success) {
+        setLucroDesejado(lucroData.lucroDesejado ?? 15)
+      }
+
+      // 8. Carregar despesas fixas (GET leve) da mesma tabela do card — fonte dos indicadores
+      const dfResponse = await fetch(`/api/planejamento-financeiro/despesas-fixas?ano=${anoAtual}`)
+      const dfData = await dfResponse.json()
+      if (dfData.success) {
+        setDespesasFixas(dfData.dados || [])
+      }
+
     } catch (error) {
       console.error("Erro ao carregar dados:", error)
     } finally {
       setLoading(false)
-      setIndicadoresRefresh((k) => k + 1)
     }
   }, [anoAtual])
 
   useEffect(() => {
     carregarDados()
   }, [carregarDados])
-
-  // Busca os indicadores da API sempre que o refresh muda ou o ano muda.
-  // Centraliza a fonte de verdade para os cards Indicadores, CMV Máximo e
-  // Distribuição %, evitando que fiquem defasados em relação à busca do card Distribuição.
-  useEffect(() => {
-    let cancelado = false
-    async function buscarIndicadores() {
-      try {
-        const response = await fetch(`/api/planejamento/indicadores-resumo?ano=${anoAtual}`)
-        const data = await response.json()
-        if (!cancelado && data.success) {
-          aplicarIndicadores(data)
-        }
-      } catch (error) {
-        console.error("Erro ao carregar indicadores:", error)
-      }
-    }
-    buscarIndicadores()
-    return () => {
-      cancelado = true
-    }
-  }, [indicadoresRefresh, anoAtual])
 
   // Sincronizar activeTab com os períodos selecionados
   useEffect(() => {
@@ -315,30 +300,13 @@ export default function PlanejamentoPage() {
     }
   }
 
-  // Aplica os indicadores vindos da API (fonte única de verdade) no estado
-  function aplicarIndicadores(data: any) {
-    setIndicadores({
-      metaMensalTotal: data.metaMensalTotal || 0,
-      lucroDesejado: data.lucroDesejado || 15,
-      markUp: data.markUp || 0,
-      cmvMaximo: data.cmv || 0,
-      pctFixas: data.pctFixas || 0,
-      pctVariaveis: data.despesasVariaveisPct || 0,
-      despesasVariaveisBase: data.despesasVariaveisBase || 0,
-      totalDespesasVariaveis: data.totalDespesasVariaveis || 0,
-      despesasFixas: data.despesasFixas || [],
-      folhaEncargosPercentual: data.folhaEncargosPercentual || 0,
-      metaFaltando: !!data.metaFaltando
-    })
-    setDespesasFixas(data.despesasFixas || [])
-  }
-
-  // Atualização otimista do lucro desejado (resposta imediata na UI)
+  // Atualização otimista do lucro desejado (resposta imediata na UI);
+  // o useMemo de indicadores recalcula sozinho a partir deste estado.
   function handleLucroChange(value: number) {
-    setIndicadores(prev => ({ ...prev, lucroDesejado: value }))
+    setLucroDesejado(value)
   }
 
-  // Persiste o lucro desejado e recalcula os indicadores a partir da API
+  // Persiste o lucro desejado. O recálculo dos indicadores acontece no cliente.
   async function handleLucroSave(value: number) {
     try {
       await fetch("/api/planejamento/lucro-desejado", {
@@ -346,7 +314,6 @@ export default function PlanejamentoPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ano: anoAtual, lucroDesejado: value })
       })
-      setIndicadoresRefresh((k) => k + 1)
     } catch (error) {
       console.error("Erro ao salvar lucro desejado:", error)
       toast.error("Erro ao salvar o lucro desejado")
@@ -393,6 +360,51 @@ export default function PlanejamentoPage() {
     folhaSalarialTotais.totalDecimo + folhaSalarialTotais.totalFerias +
     folhaSalarialTotais.totalFgts + folhaSalarialTotais.totalInss +
     folhaSalarialTotais.totalInssPatronal
+
+  // Indicadores calculados no cliente a partir dos dados já carregados.
+  // Elimina as chamadas repetidas ao endpoint pesado /indicadores-resumo:
+  // os valores só mudam quando algum input (metas, folha, despesas fixas,
+  // despesas variáveis ou lucro) é alterado e salvo.
+  const mesAtualIndicadores = new Date().getMonth() + 1
+  const metaMensalTotal = metasMensais.find((m) => m.mes === mesAtualIndicadores)?.metaTotal || 0
+
+  const indicadores = useMemo(() => {
+    const dv = despesasVariaveisData
+    const maquininhas = (dv?.config?.maquininhas || []) as MaquininhaIndicador[]
+    const distribuicaoVendas = dv?.config?.distribuicaoVendas || { debito: 40, credito: 50, voucher: 10 }
+    const outrasTaxas = {
+      voucher: dv?.config?.taxaVoucher ?? 7.0,
+      simplesNacional: dv?.config?.simplesNacional ?? 0,
+      manutencao: dv?.config?.manutencao ?? 0,
+    }
+    const faturamentoBase = dv?.faturamentoBase ?? metaMensalTotal
+
+    const resultado = calcularIndicadores({
+      metaMensalTotal,
+      lucroDesejado,
+      despesasFixas: despesasFixas.map((d) => ({ nome: d.nome, valor: Number(d.valor) })),
+      totalSalarios: folhaSalarialTotais.totalSalarios,
+      encargosFolha,
+      maquininhas,
+      distribuicaoVendas,
+      outrasTaxas,
+      faturamentoBase,
+    })
+
+    return {
+      metaMensalTotal: resultado.metaMensalTotal,
+      lucroDesejado: resultado.lucroDesejado,
+      markUp: resultado.markUp ?? 0,
+      cmvMaximo: resultado.cmv ?? 0,
+      pctFixas: resultado.pctFixas,
+      pctVariaveis: resultado.despesasVariaveisPct,
+      despesasVariaveisBase: resultado.despesasVariaveisBase,
+      totalDespesasVariaveis: resultado.totalDespesasVariaveis,
+      despesasFixas: resultado.despesasFixas,
+      folhaEncargosPercentual: resultado.folhaEncargosPercentual,
+      metaFaltando: resultado.metaFaltando,
+    }
+  }, [despesasVariaveisData, metasMensais, lucroDesejado, despesasFixas, folhaSalarialTotais, encargosFolha, metaMensalTotal])
 
   const togglePeriodo = (periodo: PeriodoRefeicao) => {
     setPeriodosSelecionados(prev => {
@@ -460,27 +472,27 @@ export default function PlanejamentoPage() {
   const cardsResumo = [
     {
       title: "Faturamento Mensal",
-      value: formatCurrency(indicadores.metaMensalTotal),
+      value: loading ? formatCurrency(0) : formatCurrency(indicadores.metaMensalTotal),
       icon: DollarSign,
       gradient: "from-emerald-500 to-emerald-600",
     },
     {
       title: "Lucro Desejado",
-      value: formatPercentage(indicadores.lucroDesejado),
+      value: loading ? formatPercentage(0) : formatPercentage(indicadores.lucroDesejado),
       icon: TrendingUp,
       gradient: "from-green-600 to-green-500",
       detail: "Margem alvo",
     },
     {
       title: "Mark-Up",
-      value: indicadores.metaFaltando ? "—" : indicadores.markUp.toFixed(2),
+      value: loading || indicadores.metaFaltando ? "—" : indicadores.markUp.toFixed(2),
       icon: Calculator,
       gradient: "from-orange-500 to-orange-600",
       detail: "Fator multiplicador",
     },
     {
       title: "CMV Máximo",
-      value: indicadores.metaFaltando ? "—" : formatPercentage(indicadores.cmvMaximo),
+      value: loading || indicadores.metaFaltando ? "—" : formatPercentage(indicadores.cmvMaximo),
       icon: Percent,
       gradient: "from-purple-500 to-purple-600",
       detail: "Custo com Produção",
@@ -571,14 +583,14 @@ export default function PlanejamentoPage() {
         {/* Indicadores Ideais vs Atuais */}
         <div className="mt-8">
           <IndicadoresCard
-            despesasFixas={indicadores.despesasFixas}
-            despesasVariaveisPct={indicadores.pctVariaveis}
-            metaMensalTotal={indicadores.metaMensalTotal}
-            lucroDesejado={indicadores.lucroDesejado}
-            markUp={indicadores.markUp}
-            cmv={indicadores.cmvMaximo}
-            pctFixas={indicadores.pctFixas}
-            metaFaltando={indicadores.metaFaltando}
+            despesasFixas={loading ? [] : indicadores.despesasFixas}
+            despesasVariaveisPct={loading ? 0 : indicadores.pctVariaveis}
+            metaMensalTotal={loading ? 0 : indicadores.metaMensalTotal}
+            lucroDesejado={loading ? 0 : indicadores.lucroDesejado}
+            markUp={loading ? 0 : indicadores.markUp}
+            cmv={loading ? 0 : indicadores.cmvMaximo}
+            pctFixas={loading ? 0 : indicadores.pctFixas}
+            metaFaltando={loading ? false : indicadores.metaFaltando}
           />
         </div>
 
@@ -669,8 +681,10 @@ export default function PlanejamentoPage() {
                 />
                 <GraficosDistribuicao
                   tipo={((activeTab === 'turnoUnico' || activeTab === 'cafe') ? 'almoco' : activeTab) as 'almoco' | 'janta'}
-                  ano={anoAtual}
-                  refreshKey={indicadoresRefresh}
+                  pctFixas={loading ? 0 : indicadores.pctFixas}
+                  despesasVariaveisPct={loading ? 0 : indicadores.pctVariaveis}
+                  lucroDesejado={loading ? 0 : indicadores.lucroDesejado}
+                  cmv={loading || indicadores.metaFaltando ? null : indicadores.cmvMaximo}
                 />
               </div>
             </div>

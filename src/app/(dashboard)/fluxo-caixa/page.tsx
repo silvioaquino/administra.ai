@@ -19,6 +19,8 @@ import {
   Download,
   Filter,
   Plus,
+  Check,
+  X,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,7 +29,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
-import { DreItem, DreResponse, DreMeses } from '@/types/dre';
+import { limparTexto } from '@/lib/services/local-normalizer';
+import { DreItem, DreMeses } from '@/types/dre';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -80,156 +83,11 @@ interface DreMensal {
 interface ProdutoInsumo {
   id: number;
   descricao: string;
-  valor: number;
-  dataCompra: string;
   origem: string;
+  agrupado: boolean;
   valoresPorMes: Record<number, number>;
 }
 
-// Categorias do DRE
-const CATEGORIAS_DESPESAS = [
-  // RECEITA
-  { codigo: '3.1', nome: 'RECEITA / FATURAMENTO', grupo: 'RECEITA', isHeader: true, nivel: 0 },
-  { codigo: '3.1.1', nome: 'Receitas de Vendas', grupo: 'RECEITA', nivel: 1 },
-  { codigo: '3.1.2', nome: 'Vendas em Dinheiro', grupo: 'RECEITA_DETALHE', nivel: 2 },
-  { codigo: '3.1.3', nome: 'Maquineta Stone', grupo: 'RECEITA_DETALHE', nivel: 3 },
-  { codigo: '3.1.4', nome: 'Maquineta Caixa', grupo: 'RECEITA_DETALHE', nivel: 3 },
-  { codigo: '3.1.5', nome: 'Maquineta Infinity', grupo: 'RECEITA_DETALHE', nivel: 3 },
-  { codigo: '3.1.6', nome: 'Vendas em Cartão Débito', grupo: 'RECEITA_DETALHE', nivel: 2 },
-  { codigo: '3.1.7', nome: 'Maquineta Stone', grupo: 'RECEITA_DETALHE', nivel: 3 },
-  { codigo: '3.1.8', nome: 'Maquineta Caixa', grupo: 'RECEITA_DETALHE', nivel: 3 },
-  { codigo: '3.1.9', nome: 'Maquineta Infinity', grupo: 'RECEITA_DETALHE', nivel: 3 },
-  { codigo: '3.1.10', nome: 'Vendas em Cartão Crédito', grupo: 'RECEITA_DETALHE', nivel: 2 },
-  { codigo: '3.1.11', nome: 'Maquineta Stone', grupo: 'RECEITA_DETALHE', nivel: 3 },
-  { codigo: '3.1.12', nome: 'Maquineta Caixa', grupo: 'RECEITA_DETALHE', nivel: 3 },
-  { codigo: '3.1.13', nome: 'Maquineta Infinity', grupo: 'RECEITA_DETALHE', nivel: 3 },
-  { codigo: '3.1.14', nome: 'Vendas em Plataformas Digitais (Ifood/99)', grupo: 'RECEITA_DETALHE', nivel: 2 },
-  { codigo: '3.1.15', nome: 'Acertos', grupo: 'RECEITA_DETALHE', nivel: 2 },
-
-  // CUSTOS VARIÁVEIS
-  { codigo: '4.1', nome: 'DESPESAS/CUSTOS VARIÁVEIS', grupo: 'DESPESA', isHeader: true, nivel: 0 },
-  { codigo: '4.1.1', nome: 'Simples Nacional', grupo: 'DESPESA_DETALHE', nivel: 1 },
-  { codigo: '4.1.2', nome: 'Mercantil', grupo: 'DESPESA_DETALHE', nivel: 1 },
-  { codigo: '4.1.3', nome: 'IPTU', grupo: 'DESPESA_DETALHE', nivel: 1 },
-  { codigo: '4.1.4', nome: 'Parcelamento Impostos', grupo: 'DESPESA_DETALHE', nivel: 1 },
-  { codigo: '4.1.5', nome: 'Imposto Bombeiros', grupo: 'DESPESA_DETALHE', nivel: 1 },
-  { codigo: '4.1.6', nome: 'Devoluções de Vendas', grupo: 'DESPESA_DETALHE', nivel: 1 },
-  { codigo: '4.1.7', nome: 'Abatimentos sobre Vendas', grupo: 'DESPESA_DETALHE', nivel: 1 },
-
-  // RECEITA LÍQUIDA
-  { codigo: '4.2', nome: 'RECEITA LÍQUIDA', grupo: 'CALCULO', isHeader: true, nivel: 0 },
-
-  // CUSTOS COM PRODUTOS/INSUMOS
-  { codigo: '4.3', nome: 'CUSTOS COM PRODUTOS/INSUMOS', grupo: 'DESPESA', isHeader: true, nivel: 0 },
-  { codigo: '4.3.1', nome: 'Produtos/Insumos', grupo: 'DESPESA_DETALHE', nivel: 1 },
-  { codigo: '4.3.2', nome: 'Acerto Despesas', grupo: 'DESPESA_DETALHE', nivel: 1 },
-
-  // LUCRO BRUTO
-  { codigo: '4.4', nome: 'LUCRO BRUTO', grupo: 'CALCULO', isHeader: true, nivel: 0 },
-
-  // DESPESAS FIXAS
-  { codigo: '5.1', nome: 'DESPESAS FIXAS', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
-
-  // Tarifas Bancárias
-  { codigo: '5.1.1', nome: 'Tarifas Bancárias', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-
-  // Aluguel de Maquinetas
-  { codigo: '5.1.2', nome: 'Aluguel de Maquinetas', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-
-  // Empréstimos
-  { codigo: '5.1.3', nome: 'Empréstimos', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-
-  // Despesas Administrativas
-  { codigo: '5.2', nome: 'Despesas Administrativas', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
-  { codigo: '5.2.1', nome: 'Aluguel Imóvel', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.2', nome: 'Energia (Celpe)', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.3', nome: 'Água (Compesa)', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.4', nome: 'Internet', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.5', nome: 'Telefone', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.6', nome: 'Celular', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.7', nome: 'Gasolina/Estacionamento/Táxi', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.8', nome: 'Financiamento Carro', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.9', nome: 'IPVA', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.10', nome: 'Botijão de Gás', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.11', nome: 'Outras Despesas', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.2.12', nome: 'Acertos', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-
-  // Despesas com Pessoal
-  { codigo: '5.3', nome: 'Despesas com Pessoal', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
-  { codigo: '5.3.1', nome: 'Salários de Funcionários', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.3.2', nome: 'Adiantamento de Salários', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.3.3', nome: 'Pro-Labore', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.3.4', nome: 'Bolsa de Estágio', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.3.5', nome: 'Vale Transporte', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.3.6', nome: 'Rescisão', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.3.7', nome: 'Outras Despesas', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.3.8', nome: 'Ferias Funcionarios', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-
-  // PROVISÕES
-  { codigo: '5.4', nome: 'PROVISÕES', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
-  { codigo: '5.4.1', nome: 'Férias de Funcionários', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.4.2', nome: '1/3 Férias', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.4.3', nome: 'FGTS', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.4.4', nome: 'INSS', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.4.5', nome: '13º Salário', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.4.6', nome: 'INSS Patronal', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-
-  // Despesas com Serviços de Terceiros
-  { codigo: '5.5', nome: 'Despesas com Serviços de Terceiros', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
-  { codigo: '5.5.1', nome: 'Contador', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.5.2', nome: 'TI', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.5.3', nome: 'Outras Despesas', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-
-  // Despesas com Materiais e Equipamentos
-  { codigo: '5.6', nome: 'Despesas com Materiais e Equipamentos', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
-  { codigo: '5.6.1', nome: 'Manutenção de Equipamentos', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.6.2', nome: 'Softwares', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.6.3', nome: 'Materiais de Expediente/Manutenção/Limpeza', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.6.4', nome: 'Manutenção de Veículos', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-
-  // Fornecedores
-  { codigo: '5.7', nome: 'Fornecedores', grupo: 'DESPESA_FIXA', isHeader: true, nivel: 0 },
-  { codigo: '5.7.1', nome: 'Karne Keijo', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.7.2', nome: 'Natto', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.7.3', nome: 'Coca-Cola', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '5.7.4', nome: 'Outros', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-
-  // LUCRO OPERACIONAL ANTES DOS INVESTIMENTOS
-  { codigo: '6.1', nome: 'LUCRO OPERACIONAL ANTES DOS INVESTIMENTOS', grupo: 'CALCULO', isHeader: true, nivel: 0 },
-
-  // INVESTIMENTOS
-  { codigo: '6.2', nome: 'INVESTIMENTOS', grupo: 'INVESTIMENTO', isHeader: true, nivel: 0 },
-  { codigo: '6.2.1', nome: 'Investimento em Marketing', grupo: 'INVESTIMENTO_DETALHE', nivel: 1 },
-  { codigo: '6.2.2', nome: 'Investimento em Bens Materiais', grupo: 'INVESTIMENTO_DETALHE', nivel: 1 },
-  { codigo: '6.2.3', nome: 'Investimento em Desenvolvimento Empresarial', grupo: 'INVESTIMENTO_DETALHE', nivel: 1 },
-  { codigo: '6.2.4', nome: 'Outros', grupo: 'INVESTIMENTO_DETALHE', nivel: 1 },
-
-  // TOTAL DESPESA OPERACIONAL
-  { codigo: '6.3', nome: 'TOTAL DESPESA OPERACIONAL', grupo: 'CALCULO', isHeader: true, nivel: 0 },
-
-  // LUCRO OPERACIONAL
-  { codigo: '6.4', nome: 'LUCRO OPERACIONAL', grupo: 'CALCULO', isHeader: true, nivel: 0 },
-
-  // ENTRADAS E SAÍDAS NÃO OPERACIONAIS
-  { codigo: '7.1', nome: 'ENTRADAS E SAÍDAS NÃO OPERACIONAIS', grupo: 'NAO_OPERACIONAL', isHeader: true, nivel: 0 },
-  { codigo: '7.2', nome: 'Saídas não operacionais', grupo: 'NAO_OPERACIONAL_DETALHE', nivel: 1 },
-
-  // LUCRO ANTES DOS JUROS E IMPOSTOS
-  { codigo: '8.1', nome: 'LUCRO ANTES DOS JUROS E IMPOSTOS', grupo: 'CALCULO', isHeader: true, nivel: 0 },
-
-  // Despesas Financeiras
-  { codigo: '8.2', nome: 'Despesas Financeiras', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-
-  // LUCRO ANTES DOS IMPOSTOS
-  { codigo: '9.1', nome: 'LUCRO ANTES DOS IMPOSTOS', grupo: 'CALCULO', isHeader: true, nivel: 0 },
-
-  // CSLL e IR
-  { codigo: '9.2', nome: 'Despesa Contribuição Social sobre Lucros (CSLL)', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-  { codigo: '9.3', nome: 'Despesa com Imposto de Renda', grupo: 'DESPESA_FIXA_DETALHE', nivel: 1 },
-
-  // LUCRO LÍQUIDO
-  { codigo: 'RESULTADO', nome: 'LUCRO LÍQUIDO', grupo: 'CALCULO', isHeader: true, nivel: 0 },
-];
 
 // Ícone Percent não existe no lucide-react
 const PercentIcon = Percent;
@@ -251,27 +109,41 @@ export default function FluxoCaixaPage() {
     previsao: 0,
     realizado: 0,
   });
-  const [produtosPorMes, setProdutosPorMes] = useState<Record<number, ProdutoInsumo[]>>({});
+  const [produtosPorMes, setProdutosPorMes] = useState<ProdutoInsumo[]>([]);
+  const [editandoNormalizacao, setEditandoNormalizacao] = useState<number | null>(null);
+  const [valorNormalizacao, setValorNormalizacao] = useState('');
+  const [salvandoNormalizacao, setSalvandoNormalizacao] = useState(false);
 
   useEffect(() => {
     carregarDados();
   }, [anoAtual]);
 
+  // Busca única: metas + DRE (real, de dreResultado) + DRE mensal
+  // (cards + insumos). Um só gate de loading cobre tudo.
   const carregarDados = async () => {
     setLoading(true);
     try {
-      const metaResponse = await fetch(`/api/fluxo-caixa/metas?ano=${anoAtual}&mes=${mesAtual}`);
+      const [metaResponse, dreResponse, dreMensalResponse] = await Promise.all([
+        fetch(`/api/fluxo-caixa/metas?ano=${anoAtual}&mes=${mesAtual}`),
+        fetch(`/api/dre?ano=${anoAtual}`),
+        fetch(`/api/fluxo-caixa/dre-mensal?ano=${anoAtual}`),
+      ]);
+
       const metaData = await metaResponse.json();
       if (metaData.success) {
         setMeta(metaData.data);
       }
 
-      const dreResponse = await fetch(`/api/fluxo-caixa/dre-mensal?ano=${anoAtual}`);
       const dreData = await dreResponse.json();
       if (dreData.success) {
-        setDreMensal(dreData.data);
-        setTotaisAno(dreData.totaisAno);
-        setProdutosPorMes(dreData.produtosPorMes || {});
+        setDREData(dreData.data);
+      }
+
+      const dreMensalData = await dreMensalResponse.json();
+      if (dreMensalData.success) {
+        setDreMensal(dreMensalData.data);
+        setTotaisAno(dreMensalData.totaisAno);
+        setProdutosPorMes(dreMensalData.produtosPorMes || {});
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -279,23 +151,6 @@ export default function FluxoCaixaPage() {
       setLoading(false);
     }
   };
-
-  // Carregar dados da nova API DRE
-  const carregarDRE = async () => {
-    try {
-      const response = await fetch(`/api/dre?ano=${anoAtual}`);
-      const result: DreResponse = await response.json();
-      if (result.success) {
-        setDREData(result.data);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar DRE:', error);
-    }
-  };
-
-  useEffect(() => {
-    carregarDRE();
-  }, [anoAtual]);
 
   const sincronizarDados = async () => {
     setLoading(true);
@@ -322,6 +177,9 @@ export default function FluxoCaixaPage() {
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
   ];
+
+  // Formata o valor sem o prefixo "R$" (usado nas tabelas DRE e Produtos)
+  const formatValor = (value: number) => formatCurrency(value).replace(/R\$\s?/, '');
 
   const obterValorMes = (mesNum: number, tipo: 'previsao' | 'realizado') => {
     const mesData = dreMensal.find(m => m.mes === mesNum);
@@ -363,6 +221,120 @@ export default function FluxoCaixaPage() {
   };
 
   const kpis = calcularKPIs();
+
+  // Separar insumos agrupados (com nomeNormalizado) dos não agrupados
+  const insumosAgrupados = produtosPorMes.filter((p) => p.agrupado);
+  const insumosNaoAgrupados = produtosPorMes.filter((p) => !p.agrupado);
+
+  const renderLinhaInsumo = (produto: ProdutoInsumo) => {
+    const total = Object.values(produto.valoresPorMes || {}).reduce(
+      (acc, v) => acc + v,
+      0
+    );
+    const editando = editandoNormalizacao === produto.id;
+
+    return (
+      <tr key={produto.id} className="border-b border-gray-100 hover:bg-gray-100">
+        <td className="px-4 py-2 text-xs font-medium">
+          {editando ? (
+            <Input
+              value={valorNormalizacao}
+              onChange={(e) => setValorNormalizacao(e.target.value)}
+              className="h-7 text-xs"
+              autoFocus
+            />
+          ) : (
+            produto.descricao
+          )}
+        </td>
+        <td className="px-2 py-2 text-xs text-center">
+          <Badge variant="outline" className="text-[10px]">{produto.origem}</Badge>
+        </td>
+        {meses.map((_, idx) => {
+          const mesNum = idx + 1;
+          const valor = produto.valoresPorMes?.[mesNum] || 0;
+          const isMesAtual = idx === mesAtual - 1;
+          return (
+            <td key={idx} className={`px-2 py-2 text-[9px] lg:text-[10px] text-center min-w-[60px] sm:min-w-0 ${isMesAtual ? 'bg-red-200 text-gray-800' : ''}`}>
+              {hideValues ? '••••' : formatValor(valor)}
+            </td>
+          );
+        })}
+        <td className="px-2 py-2 text-xs text-center font-semibold">
+          {hideValues ? '••••' : formatValor(total)}
+        </td>
+        <td className="px-2 py-2 text-center">
+          {editando ? (
+            <div className="flex items-center justify-center gap-1">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => confirmarNormalizacao(produto)}
+                disabled={salvandoNormalizacao || !valorNormalizacao.trim()}
+                className="h-7 w-7 text-green-600 hover:bg-green-50"
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={cancelarNormalizacao}
+                disabled={salvandoNormalizacao}
+                className="h-7 w-7 text-gray-500 hover:bg-gray-100"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => iniciarNormalizacao(produto)}
+              className="rounded-lg border-gray-200 hover:bg-gray-100 text-[10px] h-7 px-1"
+            >
+              Normalizar
+            </Button>
+          )}
+        </td>
+      </tr>
+    );
+  };
+
+  const iniciarNormalizacao = (produto: ProdutoInsumo) => {
+    setEditandoNormalizacao(produto.id);
+    setValorNormalizacao(limparTexto(produto.descricao) || produto.descricao);
+  };
+
+  const cancelarNormalizacao = () => {
+    setEditandoNormalizacao(null);
+    setValorNormalizacao('');
+  };
+
+  const confirmarNormalizacao = async (produto: ProdutoInsumo) => {
+    const nome = valorNormalizacao.trim();
+    if (!nome) return;
+    setSalvandoNormalizacao(true);
+    try {
+      const response = await fetch(`/api/produtos/${produto.id}/normalizacao`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nomeNormalizado: nome,
+          marca: null,
+          categoriaSugestao: null,
+          unidadeMedida: null,
+        }),
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Falha ao normalizar');
+      setEditandoNormalizacao(null);
+      setValorNormalizacao('');
+      carregarDados();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Erro ao normalizar produto');
+    } finally {
+      setSalvandoNormalizacao(false);
+    }
+  };
 
   // Exportar para CSV
   const exportCSV = () => {
@@ -495,6 +467,15 @@ export default function FluxoCaixaPage() {
               <option value={2025}>2025</option>
               <option value={2026}>2026</option>
             </select>
+            <select
+              className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm"
+              value={mesAtual}
+              onChange={(e) => setMesAtual(parseInt(e.target.value))}
+            >
+              {meses.map((m, idx) => (
+                <option key={idx} value={idx + 1}>{m}</option>
+              ))}
+            </select>
             <Badge variant="outline" className="bg-gray-100">
               Ano de Referência
             </Badge>
@@ -571,18 +552,18 @@ export default function FluxoCaixaPage() {
           </div>
 
           <ScrollArea className="h-[700px]">
-            <table className="w-full text-sm">
+            <table className="w-full table-fixed text-xs min-w-[820px] sm:min-w-0">
               <thead className="bg-emerald-200 border-b border-gray-200 sticky top-0 z-10">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-800 uppercase w-[280px]">DESPESAS</th>
-                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase">PREVISÃO</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-bold text-gray-800 uppercase w-[13%]">DESPESAS</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase w-[8%]">PREVISÃO</th>
                   {meses.map((mes, idx) => (
                     <th key={idx} className={`px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase ${idx === mesAtual - 1 ? 'bg-red-200' : ''}`}>
                       {mes.substring(0, 3)}
                     </th>
                   ))}
-                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase">A.V.%</th>
-                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase">A.H.%</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase w-[5%]">A.V.%</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase w-[5%]">A.H.%</th>
                 </tr>
               </thead>
               <tbody>
@@ -596,7 +577,9 @@ export default function FluxoCaixaPage() {
                     </td>
                   </tr>
                 ) : (
-                  dreData.map((item) => {
+                  dreData
+                    .filter((item) => !item.id.startsWith('produto-'))
+                    .map((item) => {
                     const isHeader = item.nivel === 0 && (item.tipo === 'receita' || item.tipo === 'despesa');
                     const isCategoryHeader = item.isHeader === true;
                     const isCalcRow = item.isCalcRow === true;
@@ -625,23 +608,44 @@ export default function FluxoCaixaPage() {
                       setEditing({ itemId: id, field: 'previsao', value: item.previsao });
                     };
 
-                    const handleSave = () => {
+                    const handleSave = async () => {
                       if (!editing) return;
-                      // Aqui seria feita a chamada API para salvar
-                      setEditing(null);
+                      const codigo = editing.itemId;
+                      const valor = editing.value;
+                      try {
+                        const res = await fetch('/api/fluxo-caixa/dre-previsao', {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ ano: anoAtual, codigo, valor }),
+                        });
+                        const data = await res.json();
+                        if (!data.success) throw new Error(data.error || 'Falha ao salvar');
+                        // Atualiza localmente a previsão editada
+                        setDREData((prev) =>
+                          prev.map((it) =>
+                            it.id === codigo ? { ...it, previsao: valor } : it
+                          )
+                        );
+                      } catch (error) {
+                        alert(
+                          error instanceof Error
+                            ? error.message
+                            : 'Erro ao salvar previsão'
+                        );
+                      } finally {
+                        setEditing(null);
+                      }
                     };
 
                     return (
                       <tr key={item.id} className={`${rowClass} transition-colors cursor-pointer`}>
-                        <td className="px-4 py-2 text-sm">
+                        <td className="px-4 py-2 text-xs">
                           <span className={isHeader || isCategoryHeader || isSubtotal ? 'font-bold' : 'font-medium'}>
                             {item.nome}
                           </span>
                         </td>
-                        <td className={`px-2 py-2 text-sm text-center ${isCalcRow ? 'font-semibold' : ''}`}>
-                          {isTotal ? (
-                            <span className="font-bold">R$ 0,00</span>
-                          ) : editing?.itemId === item.id ? (
+                        <td className={`px-2 py-2 text-xs text-center ${isCalcRow ? 'font-semibold' : ''}`}>
+                          {editing?.itemId === item.id ? (
                             <Input
                               type="number"
                               value={editing.value}
@@ -655,7 +659,7 @@ export default function FluxoCaixaPage() {
                               onDoubleClick={() => handleDoubleClick(item.id)}
                               className={`cursor-pointer hover:bg-gray-200/50 rounded px-1 ${isCalcRow ? 'font-semibold' : ''}`}
                             >
-                              {formatCurrency(item.previsao)}
+                              {formatValor(item.previsao)}
                             </span>
                           )}
                         </td>
@@ -676,26 +680,92 @@ export default function FluxoCaixaPage() {
                           const isMesAtual = idx === mesAtual - 1;
 
                           return (
-                            <td key={idx} className={`px-2 py-2 text-sm text-center min-w-[120px] ${isMesAtual ? 'bg-red-200 text-gray-800' : ''} ${isCalcRow ? 'font-semibold' : ''}`}>
-                              {isTotal ? (
-                                <span className={`font-bold ${isMesAtual ? 'text-gray-800' : 'text-white'}`}>R$ 0,00</span>
-                              ) : hideValues ? (
+                            <td key={idx} className={`px-2 py-2 text-[9px] lg:text-[10px] text-center min-w-[60px] sm:min-w-0 ${isMesAtual ? 'bg-red-200 text-gray-800' : ''} ${isCalcRow ? 'font-semibold' : ''}`}>
+                              {hideValues ? (
                                 <span>••••••</span>
+                              ) : isTotal ? (
+                                <span className={`font-bold ${isMesAtual ? 'text-gray-800' : 'text-white'}`}>{formatValor(valor)}</span>
                               ) : (
-                                formatCurrency(valor)
+                                formatValor(valor)
                               )}
                             </td>
                           );
                         })}
-                        <td className="px-2 py-2 text-sm text-center">
-                          {isTotal ? '-' : hideValues ? '••••' : `${item.av.toFixed(2)}%`}
+                        <td className="px-2 py-2 text-xs text-center">
+                          {hideValues ? '••••' : `${item.av.toFixed(2)}%`}
                         </td>
-                        <td className="px-2 py-2 text-sm text-center">
-                          {isTotal ? '-' : hideValues ? '••••' : `${item.ah.toFixed(2)}%`}
+                        <td className="px-2 py-2 text-xs text-center">
+                          {hideValues ? '••••' : `${item.ah.toFixed(2)}%`}
                         </td>
                       </tr>
                     );
                   })
+                )}
+              </tbody>
+            </table>
+          </ScrollArea>
+        </div>
+
+        {/* Lista de Produtos/Insumos agrupados por nome normalizado */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+          <div className="p-4 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-[#de4838]" />
+                <h3 className="font-semibold text-gray-800">Produtos / Insumos Agrupados - {anoAtual}</h3>
+              </div>
+              <div className="text-xs text-gray-500">
+                <Filter className="h-4 w-4 inline mr-1" />
+                <span>
+                  {insumosAgrupados.length} agrupados · {insumosNaoAgrupados.length} não agrupados
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <ScrollArea className="h-[500px]">
+            <table className="w-full table-fixed text-xs min-w-[900px] sm:min-w-0">
+              <thead className="bg-blue-200 border-b border-gray-200 sticky top-0 z-10">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-800 uppercase w-[13%]">PRODUTO / INSUMO</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase w-[6%]">ORIGEM</th>
+                  {meses.map((mes, idx) => (
+                    <th key={idx} className={`px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase min-w-[60px] sm:min-w-0 ${idx === mesAtual - 1 ? 'bg-red-200' : ''}`}>
+                      {mes.substring(0, 3)}
+                    </th>
+                  ))}
+                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase w-[8%]">TOTAL</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase w-[7%]">AÇÃO</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={16} className="py-12 text-center">
+                      <div className="flex justify-center items-center gap-2">
+                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#de4838] border-t-transparent" />
+                        <span className="text-sm text-gray-500">Carregando...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : produtosPorMes.length === 0 ? (
+                  <tr>
+                    <td colSpan={16} className="py-10 text-center text-sm text-gray-500">
+                      Nenhum produto/insumo encontrado para {anoAtual}.
+                    </td>
+                  </tr>
+                ) : (
+                  <>
+                    {insumosAgrupados.map(renderLinhaInsumo)}
+                    {insumosNaoAgrupados.length > 0 && (
+                      <tr>
+                        <td colSpan={16} className="bg-amber-100 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-amber-800">
+                          Não agrupados ({insumosNaoAgrupados.length})
+                        </td>
+                      </tr>
+                    )}
+                    {insumosNaoAgrupados.map(renderLinhaInsumo)}
+                  </>
                 )}
               </tbody>
             </table>

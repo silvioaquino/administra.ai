@@ -14,7 +14,6 @@ import {
   EyeOff,
   Lock,
   Unlock,
-  RefreshCw,
   ChevronRight,
   ChevronDown,
   BarChart3,
@@ -22,6 +21,8 @@ import {
   AlertCircle,
   Edit,
   Plus,
+  CheckCircle,
+  ChevronDown as ChevronDownIcon,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DespesasTab } from "./components/tabs/DespesasTab";
 import { FolhaPagamentoTab } from "./components/tabs/FolhaPagamentoTab";
 import { SaldosContasTab } from "./components/tabs/SaldosContasTab";
+import { DistribuicaoLucroTab } from "./components/tabs/DistribuicaoLucroTab";
+import { ModalEditarConta, type ContaParaEditar } from "./components/modais/ModalEditarConta";
+import { ModalNovaConta } from "./components/modais/ModalNovaConta";
 import { formatCurrency, formatPercentage, formatDate } from "@/lib/utils";
 import type { FuncionarioFechamento, DespesaFechamento, ContaSaldo } from "@/types/fechamento";
 
@@ -66,7 +70,18 @@ export default function FechamentoMensalPage() {
   const [contas, setContas] = useState<ContaSaldo[]>([]);
   const [despesas, setDespesas] = useState<DespesaFechamento[]>([]);
   const [funcionarios, setFuncionarios] = useState<FuncionarioFechamento[]>([]);
-  const [despesasFixas, setDespesasFixas] = useState<any[]>([]);
+  const [mostrarPagas, setMostrarPagas] = useState(false);
+  const [contaEditando, setContaEditando] = useState<ContaSaldo | null>(null);
+  const [modalEditarOpen, setModalEditarOpen] = useState(false);
+  const [modalNovaOpen, setModalNovaOpen] = useState(false);
+
+  // Estados para controle de seções expansíveis
+  const [sectionsExpanded, setSectionsExpanded] = useState({
+    summary: true,
+    accounts: true,
+    fixedExpenses: true,
+    alerts: true,
+  });
 
   const meses = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -80,53 +95,52 @@ export default function FechamentoMensalPage() {
   const carregarDados = async () => {
     setLoading(true);
     try {
-      // Carregar DRE do mês
       const dreResponse = await fetch(`/api/fechamento-mensal/dre?ano=${anoAtual}&mes=${mesAtual}`);
       const dreData = await dreResponse.json();
       if (dreData.success) {
         setDre(dreData.data);
       }
 
-      // Carregar DRE acumulado do ano
       const acumuladoResponse = await fetch(`/api/fechamento-mensal/dre?ano=${anoAtual}&acumulado=true`);
       const acumuladoData = await acumuladoResponse.json();
       if (acumuladoData.success) {
         setAcumuladoAno(acumuladoData.data);
       }
 
-      // Carregar informações de fechamento
       const fechamentoResponse = await fetch(`/api/fechamento-mensal/status?ano=${anoAtual}&mes=${mesAtual}`);
       const fechamentoData = await fechamentoResponse.json();
       if (fechamentoData.success) {
         setFechamento(fechamentoData.data);
       }
 
-      // Carregar contas financeiras
-      const contasResponse = await fetch(`/api/contas-financeiras?userId=current-user`);
+      const contasResponse = await fetch(`/api/contas-financeiras`);
       const contasData = await contasResponse.json();
       if (contasData.success) {
         setContas(contasData.data.map((c: any) => ({
           id: c.id,
           nome: c.nome,
           saldoAtual: Number(c.saldoAtual || 0),
-          saldoAnterior: Number(c.saldoAnterior || c.saldoAtual || 0),
+          saldoAnterior: Number(c.saldoInicial || 0),
           despesas: 0,
           sobra: Number(c.saldoAtual || 0),
+          saldoInicial: Number(c.saldoInicial || 0),
+          tipo: c.tipo || "CONTA_CORRENTE",
         })));
       }
 
-      // Carregar despesas do mês
-      const despesasResponse = await fetch(`/api/livro-diario?ano=${anoAtual}&mes=${mesAtual}&tipo=DESPESA`);
+      const despesasResponse = await fetch(`/api/fechamento-mensal/despesas-pendentes?ano=${anoAtual}&mes=${mesAtual}&incluirPagas=true`);
       const despesasData = await despesasResponse.json();
       if (despesasData.success) {
-        setDespesas(despesasData.data || []);
-      }
-
-      // Carregar despesas fixas
-      const despesasFixasResponse = await fetch(`/api/despesas-fixas`);
-      const despesasFixasData = await despesasFixasResponse.json();
-      if (despesasFixasData.success) {
-        setDespesasFixas(despesasFixasData.data || []);
+        setDespesas((despesasData.data || []).map((d: any) => ({
+          id: String(d.id),
+          nome: d.nome,
+          valor: Number(d.valor),
+          dataVencimento: d.vencimento,
+          status: d.status,
+          contaId: d.contaId ?? undefined,
+          origem: d.origem,
+          contaNome: d.contaNome,
+        })));
       }
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -215,6 +229,45 @@ export default function FechamentoMensalPage() {
     }
   };
 
+  const marcarPago = async (d: DespesaFechamento) => {
+    try {
+      if (d.origem === "FIXA") {
+        await fetch(`/api/despesas-fixas/${Number(d.id)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "PAGO" }),
+        });
+      } else {
+        await fetch(`/api/livro-diario/${Number(d.id)}/pagar`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dataPagamento: new Date().toISOString() }),
+        });
+      }
+      carregarDados();
+    } catch {
+      alert("Erro ao marcar como pago");
+    }
+  };
+
+  const salvarConta = async (id: number, dados: { nome: string; saldoInicial: number; tipo: string }) => {
+    await fetch(`/api/fechamento-mensal/contas/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dados),
+    });
+    carregarDados();
+  };
+
+  const criarConta = async (dados: { nome: string; saldoInicial: number; tipo: string }) => {
+    await fetch(`/api/contas-financeiras`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dados),
+    });
+    carregarDados();
+  };
+
   const toggleGroup = (groupId: string) => {
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(groupId)) {
@@ -225,12 +278,58 @@ export default function FechamentoMensalPage() {
     setExpandedGroups(newExpanded);
   };
 
+  const toggleSection = (section: keyof typeof sectionsExpanded) => {
+    setSectionsExpanded(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // Componente de cabeçalho de seção
+  const SectionHeader = ({ 
+    title, 
+    icon: Icon, 
+    section, 
+    badge,
+    action
+  }: { 
+    title: string
+    icon: any
+    section: keyof typeof sectionsExpanded
+    badge?: string
+    action?: React.ReactNode
+  }) => (
+    <div 
+      className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+      onClick={() => toggleSection(section)}
+    >
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-[#de4838]/10 text-[#de4838]">
+          <Icon className="h-4 w-4" />
+        </div>
+        <h3 className="font-semibold text-gray-800">{title}</h3>
+        {badge && (
+          <span className="inline-flex items-center rounded-full bg-[#de4838]/10 px-2.5 py-0.5 text-xs font-medium text-[#de4838]">
+            {badge}
+          </span>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        {action}
+        <ChevronDownIcon 
+          className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${
+            sectionsExpanded[section] ? 'rotate-180' : ''
+          }`}
+        />
+      </div>
+    </div>
+  );
+
   const renderDreLinha = (linha: DreLinha, nivel: number = 0, isAcumulado: boolean = false) => {
     const isExpanded = expandedGroups.has(linha.id);
     const hasChildren = linha.children && linha.children.length > 0;
     const valorFormatado = formatCurrency(linha.valor);
 
-    // Determinar cor baseada no tipo de linha
     let valorClass = "text-gray-800";
     let bgClass = "";
 
@@ -267,7 +366,7 @@ export default function FechamentoMensalPage() {
           </td>
           <td className="px-4 py-3 text-right text-gray-500">
             {formatPercentage(linha.percentual)}
-           </td>
+          </td>
           {!isAcumulado && (
             <td className="px-4 py-3 text-center">
               {linha.contas && linha.contas.length > 0 && (
@@ -275,7 +374,7 @@ export default function FechamentoMensalPage() {
                   {linha.contas.length} conta(s)
                 </Badge>
               )}
-             </td>
+            </td>
           )}
         </tr>
         {hasChildren && isExpanded && (
@@ -291,81 +390,82 @@ export default function FechamentoMensalPage() {
 
   const isFechado = fechamento?.status === "FECHADO";
 
-  // Cálculos do fechamento
   const saldoTotal = contas.reduce((sum, c) => sum + (c.saldoAtual || 0), 0);
-  const totalDespesas = despesas.reduce((sum, d) => sum + Number(d.valor || 0), 0);
-  const saldoRestante = saldoTotal - totalDespesas;
 
-  // Distribuição de lucros
-  const capitalGiro = saldoRestante * 0.10;
-  const fundoInvestimento = saldoRestante * 0.10;
-  const provisoes = Math.max(1000, saldoRestante * 0.05);
-  const lucroLiquido = saldoRestante - capitalGiro - fundoInvestimento - provisoes;
+  const listaDespesas = mostrarPagas
+    ? despesas
+    : despesas.filter((d) => d.status !== "PAGO");
+  const despesasPendentes = despesas.filter((d) => d.status !== "PAGO");
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb]">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-200/80 px-6 py-4 flex items-center justify-between shadow-sm">
         <div>
-          <h1 className="text-xl font-semibold text-gray-800">Fechamento Mensal</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+            Fechamento Mensal
+            <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+              {meses[mesAtual - 1]} {anoAtual}
+            </span>
+          </h1>
+          <p className="text-sm text-gray-500 hidden sm:block">
             Demonstrativo de Resultados do Exercício (DRE)
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setHideValues(!hideValues)}
-            className="gap-2 rounded-full border-gray-200"
+            className="gap-2 rounded-full border-gray-200 hover:bg-gray-100"
           >
             {hideValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            {hideValues ? "Mostrar" : "Ocultar"}
+            <span className="hidden sm:inline">{hideValues ? "Mostrar" : "Ocultar"}</span>
           </Button>
           <Button
             variant="outline"
             onClick={gerarRelatorio}
-            className="rounded-full border-gray-200"
+            className="rounded-full border-gray-200 hover:bg-gray-100"
           >
             <Download className="mr-2 h-4 w-4" />
-            PDF
+            <span className="hidden sm:inline">PDF</span>
           </Button>
           <Button
             variant="outline"
             onClick={exportarExcel}
-            className="rounded-full border-gray-200"
+            className="rounded-full border-gray-200 hover:bg-gray-100"
           >
             <FileText className="mr-2 h-4 w-4" />
-            Excel
+            <span className="hidden sm:inline">Excel</span>
           </Button>
           {isFechado ? (
             <Button
               variant="outline"
               onClick={reabrirFechamento}
-              className="rounded-full border-amber-500 text-amber-600"
+              className="rounded-full border-amber-500 text-amber-600 hover:bg-amber-50"
             >
               <Unlock className="mr-2 h-4 w-4" />
-              Reabrir Mês
+              <span className="hidden sm:inline">Reabrir</span>
             </Button>
           ) : (
             <Button
               onClick={realizarFechamento}
-              className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full"
+              className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full shadow-lg shadow-[#de4838]/25"
             >
               <Lock className="mr-2 h-4 w-4" />
-              Fechar Mês
+              <span className="hidden sm:inline">Fechar Mês</span>
             </Button>
           )}
         </div>
       </div>
 
-      <div className="container mx-auto p-6 max-w-7xl">
+      <div className="container mx-auto p-4 md:p-6 max-w-7xl">
         {/* Seletor de Mês/Ano */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 p-1">
+            <div className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 p-1 shadow-sm">
               <select
-                className="rounded-lg bg-transparent px-4 py-2 text-sm focus:outline-none"
+                className="rounded-lg bg-transparent px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
                 value={mesAtual}
                 onChange={(e) => setMesAtual(parseInt(e.target.value))}
                 disabled={isFechado && fechamento?.mes === mesAtual && fechamento?.ano === anoAtual}
@@ -378,7 +478,7 @@ export default function FechamentoMensalPage() {
               </select>
               <span className="text-gray-300">|</span>
               <select
-                className="rounded-lg bg-transparent px-4 py-2 text-sm focus:outline-none"
+                className="rounded-lg bg-transparent px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
                 value={anoAtual}
                 onChange={(e) => setAnoAtual(parseInt(e.target.value))}
                 disabled={isFechado && fechamento?.mes === mesAtual && fechamento?.ano === anoAtual}
@@ -389,11 +489,11 @@ export default function FechamentoMensalPage() {
               </select>
             </div>
             {fechamento && (
-              <Badge className={isFechado ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}>
+              <Badge className={`${isFechado ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"} px-3 py-1`}>
                 {isFechado ? (
                   <>
                     <Lock className="mr-1 h-3 w-3" />
-                    Fechado em {fechamento.dataFechamento ? formatDate(fechamento.dataFechamento) : "-"}
+                    Fechado
                   </>
                 ) : (
                   <>
@@ -404,153 +504,123 @@ export default function FechamentoMensalPage() {
               </Badge>
             )}
           </div>
-          <div className="text-right">
-            <p className="text-sm text-gray-500">Margem Líquida</p>
-            <p className={`text-xl font-bold ${margemLiquida >= 20 ? "text-emerald-600" : margemLiquida >= 10 ? "text-amber-600" : "text-red-600"}`}>
+          <div className="text-right bg-white rounded-xl px-4 py-2 border border-gray-200 shadow-sm">
+            <p className="text-xs text-gray-500">Margem Líquida</p>
+            <p className={`text-lg font-bold ${margemLiquida >= 20 ? "text-emerald-600" : margemLiquida >= 10 ? "text-amber-600" : "text-red-600"}`}>
               {formatPercentage(margemLiquida)}
             </p>
           </div>
         </div>
 
-        {/* Cards de Resumo */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          <Card className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm opacity-90 flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Receita Bruta
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">
-                {hideValues ? "••••••" : formatCurrency(receitaBruta)}
-              </p>
-              <p className="text-xs opacity-80 mt-1">Total de vendas no período</p>
-            </CardContent>
-          </Card>
+        {/* Seção: Cards de Resumo */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden transition-all duration-200 hover:shadow-md mb-6">
+          <SectionHeader 
+            title="Resumo do Período" 
+            icon={BarChart3} 
+            section="summary"
+          />
+          {sectionsExpanded.summary && (
+            <div className="p-4 md:p-5 pt-0 border-t border-gray-100">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl p-4 text-white shadow-lg shadow-emerald-500/20">
+                  <div className="flex items-center gap-2 mb-1">
+                    <TrendingUp className="h-4 w-4 opacity-90" />
+                    <p className="text-xs opacity-90">Receita Bruta</p>
+                  </div>
+                  <p className="text-xl font-bold">
+                    {hideValues ? "••••••" : formatCurrency(receitaBruta)}
+                  </p>
+                  <p className="text-[10px] opacity-80 mt-1">Total de vendas</p>
+                </div>
 
-          <Card className="bg-gradient-to-r from-red-600 to-red-700 text-white">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm opacity-90 flex items-center gap-2">
-                <TrendingDown className="h-4 w-4" />
-                CMV
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">
-                {hideValues ? "••••••" : formatCurrency(dre.find(l => l.id === "CMV")?.valor || 0)}
-              </p>
-              <p className="text-xs opacity-80 mt-1">Custo da Mercadoria Vendida</p>
-            </CardContent>
-          </Card>
+                <div className="bg-gradient-to-br from-red-500 to-red-700 rounded-xl p-4 text-white shadow-lg shadow-red-500/20">
+                  <div className="flex items-center gap-2 mb-1">
+                    <TrendingDown className="h-4 w-4 opacity-90" />
+                    <p className="text-xs opacity-90">CMV</p>
+                  </div>
+                  <p className="text-xl font-bold">
+                    {hideValues ? "••••••" : formatCurrency(dre.find(l => l.id === "CMV")?.valor || 0)}
+                  </p>
+                  <p className="text-[10px] opacity-80 mt-1">Custo da Mercadoria</p>
+                </div>
 
-          <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm opacity-90 flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                Despesas Operacionais
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">
-                {hideValues ? "••••••" : formatCurrency(dre.find(l => l.id === "DESPESAS_OPERACIONAIS")?.valor || 0)}
-              </p>
-              <p className="text-xs opacity-80 mt-1">Despesas administrativas e financeiras</p>
-            </CardContent>
-          </Card>
+                <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-4 text-white shadow-lg shadow-blue-500/20">
+                  <div className="flex items-center gap-2 mb-1">
+                    <DollarSign className="h-4 w-4 opacity-90" />
+                    <p className="text-xs opacity-90">Despesas OP</p>
+                  </div>
+                  <p className="text-xl font-bold">
+                    {hideValues ? "••••••" : formatCurrency(dre.find(l => l.id === "DESPESAS_OPERACIONAIS")?.valor || 0)}
+                  </p>
+                  <p className="text-[10px] opacity-80 mt-1">Despesas operacionais</p>
+                </div>
 
-          <Card className={`bg-gradient-to-r ${lucroLiquido >= 0 ? "from-purple-600 to-purple-700" : "from-orange-600 to-orange-700"} text-white`}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm opacity-90 flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Lucro Líquido
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">
-                {hideValues ? "••••••" : formatCurrency(lucroLiquido)}
-              </p>
-              <p className="text-xs opacity-80 mt-1">Resultado final do período</p>
-            </CardContent>
-          </Card>
+                <div className={`bg-gradient-to-br ${lucroLiquidoDRE >= 0 ? "from-purple-500 to-purple-700" : "from-orange-500 to-orange-700"} rounded-xl p-4 text-white shadow-lg ${lucroLiquidoDRE >= 0 ? "shadow-purple-500/20" : "shadow-orange-500/20"}`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <BarChart3 className="h-4 w-4 opacity-90" />
+                    <p className="text-xs opacity-90">Lucro Líquido</p>
+                  </div>
+                  <p className="text-xl font-bold">
+                    {hideValues ? "••••••" : formatCurrency(lucroLiquidoDRE)}
+                  </p>
+                  <p className="text-[10px] opacity-80 mt-1">Resultado final</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Card de Saldos das Contas */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-[#de4838]" />
-              Saldos das Contas - {meses[mesAtual - 1]}/{anoAtual}
-            </CardTitle>
-            <p className="text-xs text-gray-500 mt-1">
-              Adicione os saldos finais das contas para realizar o fechamento
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Lista de contas existentes */}
+        {/* Seção: Saldos das Contas */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden transition-all duration-200 hover:shadow-md mb-6">
+          <SectionHeader 
+            title="Saldos das Contas" 
+            icon={DollarSign} 
+            section="accounts"
+            badge={`${contas.length} contas`}
+          />
+          {sectionsExpanded.accounts && (
+            <div className="p-4 md:p-5 pt-0 border-t border-gray-100">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {contas.map((conta) => (
-                  <div key={conta.id} className="border rounded-lg p-3 bg-gray-100">
+                  <div key={conta.id} className="border rounded-xl p-3 bg-gray-50/50 hover:bg-gray-100 transition-colors">
                     <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-800">{conta.nome}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-800 truncate">{conta.nome}</p>
                         <p className="text-xs text-gray-500">Saldo atual</p>
                       </div>
-                      <div className="text-right flex items-center gap-2">
+                      <div className="text-right flex items-center gap-1">
                         <p className="text-lg font-bold text-gray-800">
                           {hideValues ? "••••••" : formatCurrency(conta.saldoAtual)}
                         </p>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="p-1 h-6 w-6"
+                          className="p-1 h-7 w-7 rounded-lg hover:bg-gray-200"
                           onClick={() => {
-                            const novoSaldo = prompt("Digite o novo saldo:", conta.saldoAtual.toString());
-                            if (novoSaldo !== null) {
-                              const saldo = parseFloat(novoSaldo);
-                              if (!isNaN(saldo)) {
-                                setContas(contas.map(c => c.id === conta.id ? { ...c, saldoAtual: saldo } : c));
-                              }
-                            }
+                            setContaEditando(conta);
+                            setModalEditarOpen(true);
                           }}
                         >
-                          <Edit className="h-3 w-3" />
+                          <Edit className="h-3 w-3 text-gray-400" />
                         </Button>
                       </div>
                     </div>
                   </div>
                 ))}
 
-                {/* Conta Dinheiro */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 bg-white hover:bg-gray-100 transition-colors cursor-pointer" onClick={() => {
-                  const nome = prompt("Nome da nova conta:");
-                  if (nome) {
-                    const novoSaldo = parseFloat(prompt("Saldo inicial?", "0") || "0");
-                    if (!isNaN(novoSaldo)) {
-                      setContas([...contas, {
-                        id: Date.now(),
-                        nome,
-                        saldoAtual: novoSaldo,
-                        saldoAnterior: novoSaldo,
-                        despesas: 0,
-                        sobra: novoSaldo,
-                      }]);
-                    }
-                  }
-                }}>
-                  <div className="flex items-center justify-center flex-col gap-2">
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                      <Plus className="h-5 w-5 text-emerald-600" />
-                    </div>
-                    <p className="font-medium text-gray-700">Nova Conta</p>
-                    <p className="text-xs text-gray-500">Adicionar conta</p>
+                <div
+                  className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-white hover:bg-gray-50 transition-colors cursor-pointer flex items-center justify-center flex-col gap-2"
+                  onClick={() => setModalNovaOpen(true)}
+                >
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                    <Plus className="h-5 w-5 text-emerald-600" />
                   </div>
+                  <p className="font-medium text-gray-700">Nova Conta</p>
+                  <p className="text-xs text-gray-500">Adicionar conta</p>
                 </div>
               </div>
 
-              {/* Total */}
-              <div className="border-t pt-4 mt-4">
+              <div className="border-t border-gray-200 pt-4 mt-4">
                 <div className="flex justify-between items-center">
                   <p className="font-semibold text-lg text-gray-800">Total em Contas</p>
                   <p className="text-2xl font-bold text-[#de4838]">
@@ -559,144 +629,172 @@ export default function FechamentoMensalPage() {
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
 
-        {/* Card de Despesas Fixas */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-[#de4838]" />
-              Despesas Fixas do Mês
-            </CardTitle>
-            <p className="text-xs text-gray-500 mt-1">
-              Controle de despesas recorrentes que precisam ser pagas
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Lista de despesas fixas */}
+        {/* Seção: Despesas Pendentes do Mês */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden transition-all duration-200 hover:shadow-md mb-6">
+          <SectionHeader
+            title="Despesas Pendentes do Mês"
+            icon={DollarSign}
+            section="fixedExpenses"
+            badge={`${despesasPendentes.length} pendentes`}
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMostrarPagas(!mostrarPagas)}
+                className="rounded-full border-gray-200 hover:bg-gray-100 text-xs"
+              >
+                {mostrarPagas ? "Ocultar pagas" : "Mostrar pagas"}
+              </Button>
+            }
+          />
+          {sectionsExpanded.fixedExpenses && (
+            <div className="p-4 md:p-5 pt-0 border-t border-gray-100">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-100 border-b border-gray-200">
+                  <thead className="bg-gray-100/80 border-b border-gray-200">
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Despesa</th>
-                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Valor</th>
-                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Venc.</th>
-                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Conta</th>
-                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Pago</th>
+                      <th className="px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Despesa</th>
+                      <th className="px-3 py-2.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                      <th className="px-3 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Venc.</th>
+                      <th className="px-3 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Conta</th>
+                      <th className="px-3 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-3 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {despesasFixas.length === 0 ? (
+                    {listaDespesas.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-8 text-center text-gray-500">
-                          Nenhuma despesa fixa cadastrada.
+                        <td colSpan={6} className="py-8 text-center text-gray-500">
+                          <DollarSign className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                          Nenhuma despesa pendente neste mês.
                         </td>
                       </tr>
                     ) : (
-                      despesasFixas.map((despesa) => (
-                        <tr key={despesa.id} className="border-b border-gray-100">
-                          <td className="px-3 py-2 font-medium text-gray-800">{despesa.nome}</td>
-                          <td className="px-3 py-2 text-right text-gray-700">
-                            {hideValues ? "••••••" : formatCurrency(despesa.valor)}
+                      listaDespesas.map((d) => (
+                        <tr key={`${d.origem}-${d.id}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                          <td className="px-3 py-2.5 font-medium text-gray-800">{d.nome}</td>
+                          <td className="px-3 py-2.5 text-right text-gray-700 font-mono">
+                            {hideValues ? "••••••" : formatCurrency(d.valor)}
                           </td>
-                          <td className="px-3 py-2 text-center text-gray-600">
-                            {new Date(despesa.vencimento).toLocaleDateString()}
+                          <td className="px-3 py-2.5 text-center text-gray-600 hidden sm:table-cell">
+                            {new Date(d.dataVencimento).toLocaleDateString()}
                           </td>
-                          <td className="px-3 py-2 text-center">
-                            {despesa.contaId ? (
-                              <span className="text-sm text-gray-600">
-                                {contas.find(c => c.id === despesa.contaId)?.nome || "Conta " + despesa.contaId}
-                              </span>
+                          <td className="px-3 py-2.5 text-center hidden md:table-cell text-xs text-gray-600">
+                            {d.contaNome || "—"}
+                          </td>
+                          <td className="px-3 py-2.5 text-center">
+                            {d.status === "PAGO" ? (
+                              <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Pago</span>
                             ) : (
-                              <span className="text-xs text-gray-400">Não definida</span>
+                              <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">Pendente</span>
                             )}
                           </td>
-                          <td className="px-3 py-2 text-center">
-                            <input
-                              type="checkbox"
-                              checked={despesa.status === "PAGO"}
-                              onChange={(e) => {
-                                setDespesasFixas(prev => prev.map(d =>
-                                  d.id === despesa.id
-                                    ? { ...d, status: e.target.checked ? "PAGO" : "PENDENTE" }
-                                    : d
-                                ));
-                              }}
-                              className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                            />
+                          <td className="px-3 py-2.5 text-center">
+                            {d.status !== "PAGO" ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => marcarPago(d)}
+                                className="rounded-full border-emerald-500 text-emerald-600 hover:bg-emerald-50 text-xs"
+                              >
+                                <CheckCircle className="mr-1 h-3 w-3" />
+                                Pagar
+                              </Button>
+                            ) : (
+                              <CheckCircle className="h-4 w-4 text-emerald-500 mx-auto" />
+                            )}
                           </td>
                         </tr>
                       ))
                     )}
                   </tbody>
+                  {listaDespesas.length > 0 && (
+                    <tfoot className="border-t-2 border-gray-200 bg-gray-100/80">
+                      <tr>
+                        <td colSpan={2} className="px-3 py-3 text-right font-semibold text-gray-700">
+                          Total:
+                        </td>
+                        <td className="px-3 py-3 text-right font-bold text-red-600 hidden sm:table-cell">
+                          {hideValues ? "••••••" : formatCurrency(listaDespesas.reduce((sum, d) => sum + d.valor, 0))}
+                        </td>
+                        <td colSpan={4} className="px-3 py-3 text-right font-bold text-red-600">
+                          {hideValues ? "••••••" : formatCurrency(listaDespesas.reduce((sum, d) => sum + d.valor, 0))}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  )}
                 </table>
               </div>
-
-              {/* Total */}
-              <div className="border-t pt-4">
-                <div className="flex justify-between items-center">
-                  <p className="font-semibold text-lg text-gray-800">Total Despesas Fixas</p>
-                  <p className="text-xl font-bold text-red-600">
-                    {hideValues ? "••••••" : formatCurrency(despesasFixas.reduce((sum, d) => sum + d.valor, 0))}
-                  </p>
-                </div>
-              </div>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
 
-        {/* Alertas */}
-        {lucroLiquido < 0 && (
-          <Alert className="mb-6 bg-red-50 border-red-200">
-            <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-sm text-red-700">
-              Atenção! Você está operando com prejuízo neste período. Analise seus custos e despesas para identificar oportunidades de redução.
-            </AlertDescription>
-          </Alert>
-        )}
+        {/* Seção: Alertas */}
+        {(lucroLiquidoDRE < 0 || (margemLiquida < 10 && margemLiquida > 0)) && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden transition-all duration-200 hover:shadow-md mb-6">
+            <SectionHeader 
+              title="Alertas" 
+              icon={AlertCircle} 
+              section="alerts"
+            />
+            {sectionsExpanded.alerts && (
+              <div className="p-4 md:p-5 pt-0 border-t border-gray-100 space-y-3">
+                {lucroLiquidoDRE < 0 && (
+                  <Alert className="bg-red-50 border-red-200/80 rounded-xl">
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <AlertDescription className="text-sm text-red-700">
+                      Atenção! Você está operando com prejuízo neste período. Analise seus custos e despesas para identificar oportunidades de redução.
+                    </AlertDescription>
+                  </Alert>
+                )}
 
-        {margemLiquida < 10 && margemLiquida > 0 && (
-          <Alert className="mb-6 bg-amber-50 border-amber-200">
-            <AlertCircle className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-sm text-amber-700">
-              Sua margem líquida está abaixo de 10%. Considere revisar preços ou reduzir custos operacionais.
-            </AlertDescription>
-          </Alert>
+                {margemLiquida < 10 && margemLiquida > 0 && (
+                  <Alert className="bg-amber-50 border-amber-200/80 rounded-xl">
+                    <AlertCircle className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="text-sm text-amber-700">
+                      Sua margem líquida está abaixo de 10%. Considere revisar preços ou reduzir custos operacionais.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Tabs */}
         <Tabs defaultValue="mensal" className="mt-6">
-          <TabsList className="bg-white border border-gray-200 rounded-xl p-1 w-full justify-start overflow-x-auto">
-            <TabsTrigger value="mensal" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4">
+          <TabsList className="bg-white border border-gray-200 rounded-xl p-1 w-full justify-start overflow-x-auto shadow-sm">
+            <TabsTrigger value="mensal" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4 whitespace-nowrap">
               DRE do Mês
             </TabsTrigger>
-            <TabsTrigger value="despesas" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4">
+            <TabsTrigger value="despesas" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4 whitespace-nowrap">
               Despesas
             </TabsTrigger>
-            <TabsTrigger value="folha" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4">
-              Folha de Pagamento
+            <TabsTrigger value="folha" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4 whitespace-nowrap">
+              Folha
             </TabsTrigger>
-            <TabsTrigger value="saldos" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4">
-              Saldos de Contas
+            <TabsTrigger value="saldos" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4 whitespace-nowrap">
+              Saldos
             </TabsTrigger>
-            <TabsTrigger value="acumulado" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4">
-              DRE Acumulado
+            <TabsTrigger value="acumulado" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4 whitespace-nowrap">
+              Acumulado
             </TabsTrigger>
-            <TabsTrigger value="comparativo" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4">
+            <TabsTrigger value="comparativo" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4 whitespace-nowrap">
               Comparativo
             </TabsTrigger>
-            <TabsTrigger value="fechamento" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4">
+            <TabsTrigger value="fechamento" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4 whitespace-nowrap">
               Distribuição
             </TabsTrigger>
           </TabsList>
 
           {/* Tab - DRE do Mês */}
           <TabsContent value="mensal" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="bg-gray-50/80 border-b border-gray-100">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <FileText className="h-5 w-5 text-[#de4838]" />
                   Demonstrativo de Resultados - {meses[mesAtual - 1]}/{anoAtual}
                 </CardTitle>
@@ -704,10 +802,10 @@ export default function FechamentoMensalPage() {
                   Valores em R$ e percentuais de participação sobre a Receita Bruta
                 </p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-100 border-b border-gray-200">
+                    <thead className="bg-gray-100/80 border-b border-gray-200">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Descrição
@@ -758,9 +856,9 @@ export default function FechamentoMensalPage() {
 
           {/* Tab - Despesas */}
           <TabsContent value="despesas" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="bg-gray-50/80 border-b border-gray-100">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <DollarSign className="h-5 w-5 text-[#de4838]" />
                   Gestão de Despesas
                 </CardTitle>
@@ -768,11 +866,11 @@ export default function FechamentoMensalPage() {
                   Controle de despesas fixas e variáveis do mês
                 </p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 md:p-5">
                 <DespesasTab
                   despesas={despesas}
-                  onChange={setDespesas}
-                  contasIds={contas.map(c => c.id)}
+                  contas={contas.map(c => ({ id: c.id, nome: c.nome }))}
+                  onRecarregar={carregarDados}
                 />
               </CardContent>
             </Card>
@@ -780,9 +878,9 @@ export default function FechamentoMensalPage() {
 
           {/* Tab - Folha de Pagamento */}
           <TabsContent value="folha" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="bg-gray-50/80 border-b border-gray-100">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <FileText className="h-5 w-5 text-[#de4838]" />
                   Folha de Pagamento
                 </CardTitle>
@@ -790,7 +888,7 @@ export default function FechamentoMensalPage() {
                   Controle de salários e encargos trabalhistas
                 </p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 md:p-5">
                 <FolhaPagamentoTab
                   funcionarios={funcionarios}
                   onChange={setFuncionarios}
@@ -801,9 +899,9 @@ export default function FechamentoMensalPage() {
 
           {/* Tab - Saldos de Contas */}
           <TabsContent value="saldos" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="bg-gray-50/80 border-b border-gray-100">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <PieChart className="h-5 w-5 text-[#de4838]" />
                   Saldos de Contas
                 </CardTitle>
@@ -811,11 +909,15 @@ export default function FechamentoMensalPage() {
                   Controle de saldos bancários e fluxo de caixa
                 </p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 md:p-5">
                 <SaldosContasTab
                   contas={contas}
                   despesas={despesas}
                   onChange={setContas}
+                  onSalvar={(id, saldoInicial) => {
+                    const c = contas.find(x => x.id === id);
+                    if (c) salvarConta(id, { nome: c.nome, saldoInicial, tipo: c.tipo || "CONTA_CORRENTE" });
+                  }}
                 />
               </CardContent>
             </Card>
@@ -823,9 +925,9 @@ export default function FechamentoMensalPage() {
 
           {/* Tab - DRE Acumulado */}
           <TabsContent value="acumulado" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="bg-gray-50/80 border-b border-gray-100">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <TrendingUp className="h-5 w-5 text-[#de4838]" />
                   DRE Acumulado - {anoAtual}
                 </CardTitle>
@@ -833,10 +935,10 @@ export default function FechamentoMensalPage() {
                   Resultados acumulados de Janeiro a {meses[mesAtual - 1]}
                 </p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-100 border-b border-gray-200">
+                    <thead className="bg-gray-100/80 border-b border-gray-200">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Descrição
@@ -877,17 +979,17 @@ export default function FechamentoMensalPage() {
 
           {/* Tab - Comparativo Mensal */}
           <TabsContent value="comparativo" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="bg-gray-50/80 border-b border-gray-100">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <Calendar className="h-5 w-5 text-[#de4838]" />
                   Comparativo Mensal - {anoAtual}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 md:p-5">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-100 border-b border-gray-200">
+                    <thead className="bg-gray-100/80 border-b border-gray-200">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Mês</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Receita Bruta</th>
@@ -911,7 +1013,9 @@ export default function FechamentoMensalPage() {
                       ) : (
                         <tr className="border-b border-gray-100">
                           <td colSpan={7} className="py-12 text-center text-gray-500">
-                            Funcionalidade em desenvolvimento. Em breve você poderá comparar todos os meses do ano.
+                            <Calendar className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                            Funcionalidade em desenvolvimento.
+                            <p className="text-xs text-gray-400 mt-1">Em breve você poderá comparar todos os meses do ano.</p>
                           </td>
                         </tr>
                       )}
@@ -924,95 +1028,58 @@ export default function FechamentoMensalPage() {
 
           {/* Tab - Distribuição de Lucros */}
           <TabsContent value="fechamento" className="mt-6">
-            <div className="grid gap-6">
-              {/* Resultados do Fechamento */}
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-                  <CardContent className="p-4">
-                    <p className="text-xs opacity-90">Saldo Total</p>
-                    <p className="text-lg font-bold mt-1">
-                      {hideValues ? "••••••" : formatCurrency(saldoTotal)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white">
-                  <CardContent className="p-4">
-                    <p className="text-xs opacity-90">Capital Giro (10%)</p>
-                    <p className="text-lg font-bold mt-1">
-                      {hideValues ? "••••••" : formatCurrency(capitalGiro)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-                  <CardContent className="p-4">
-                    <p className="text-xs opacity-90">Fundo Investimento (10%)</p>
-                    <p className="text-lg font-bold mt-1">
-                      {hideValues ? "••••••" : formatCurrency(fundoInvestimento)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className={`bg-gradient-to-r ${lucroLiquido >= 0 ? "from-indigo-500 to-indigo-600" : "from-orange-500 to-orange-600"} text-white`}>
-                  <CardContent className="p-4">
-                    <p className="text-xs opacity-90">Lucro Líquido</p>
-                    <p className="text-lg font-bold mt-1">
-                      {hideValues ? "••••••" : formatCurrency(lucroLiquido)}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Distribuição de Lucros */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Distribuição de Lucros</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-800">Capital de Giro</p>
-                          <p className="text-sm text-gray-500">10% do saldo restante</p>
-                        </div>
-                        <p className="font-bold text-blue-600">{formatCurrency(capitalGiro)}</p>
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-800">Fundo de Investimento</p>
-                          <p className="text-sm text-gray-500">10% do saldo restante</p>
-                        </div>
-                        <p className="font-bold text-purple-600">{formatCurrency(fundoInvestimento)}</p>
-                      </div>
-                      <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-800">Provisões</p>
-                          <p className="text-sm text-gray-500">Mínimo R$ 1.000 ou 5%</p>
-                        </div>
-                        <p className="font-bold text-amber-600">{formatCurrency(provisoes)}</p>
-                      </div>
-                    </div>
-                    <div className="border-t pt-4 mt-4">
-                      <div className="flex justify-between items-center">
-                        <p className="font-semibold text-lg text-gray-800">Lucro Líquido Distribuído</p>
-                        <p className={`text-2xl font-bold ${lucroLiquido >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                          {formatCurrency(lucroLiquido)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <DistribuicaoLucroTab
+              ano={anoAtual}
+              mes={mesAtual}
+              contas={contas.map(c => ({ id: c.id, nome: c.nome }))}
+            />
           </TabsContent>
         </Tabs>
 
         {/* Observações do Fechamento */}
         {fechamento?.observacao && (
-          <div className="mt-6 bg-gray-100 rounded-xl p-4 border border-gray-200">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Observações do Fechamento</p>
+          <div className="mt-6 bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-2">
+              <FileText className="h-3 w-3" />
+              Observações do Fechamento
+            </p>
             <p className="text-sm text-gray-700 mt-1">{fechamento.observacao}</p>
           </div>
         )}
+
+        {/* Botão de ação flutuante para mobile */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-gray-200 md:hidden z-10">
+          {isFechado ? (
+            <Button
+              onClick={reabrirFechamento}
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-lg shadow-amber-500/30"
+            >
+              <Unlock className="mr-2 h-4 w-4" />
+              Reabrir Mês
+            </Button>
+          ) : (
+            <Button
+              onClick={realizarFechamento}
+              className="w-full bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-xl shadow-lg shadow-[#de4838]/30"
+            >
+              <Lock className="mr-2 h-4 w-4" />
+              Fechar Mês
+            </Button>
+          )}
+        </div>
+
+        {/* Modais de contas */}
+        <ModalEditarConta
+          conta={contaEditando as ContaParaEditar | null}
+          open={modalEditarOpen}
+          onClose={() => { setModalEditarOpen(false); setContaEditando(null); }}
+          onSave={async (id, dados) => { await salvarConta(id, dados); }}
+        />
+        <ModalNovaConta
+          open={modalNovaOpen}
+          onClose={() => setModalNovaOpen(false)}
+          onSave={async (dados) => { await criarConta(dados); }}
+        />
       </div>
     </div>
   );

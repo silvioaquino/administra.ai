@@ -21,6 +21,8 @@ export interface DespesaFechamento {
   status: 'PENDENTE' | 'PAGO' | 'VENCIDO' | 'CANCELADO';
   contaId?: number;
   observacao?: string;
+  origem?: 'FIXA' | 'LANCAMENTO';
+  contaNome?: string | null;
 }
 
 export interface ContaSaldo {
@@ -30,6 +32,8 @@ export interface ContaSaldo {
   saldoAnterior: number;
   despesas: number;
   sobra: number;
+  saldoInicial?: number;
+  tipo?: string;
 }
 
 export interface DistribuicaoLucro {

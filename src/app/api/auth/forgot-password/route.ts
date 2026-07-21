@@ -59,9 +59,9 @@ export async function POST(req: Request) {
     // Enviar e-mail usando Resend
     try {
       const { data, error } = await resend.emails.send({
-        from: process.env.EMAIL_FROM || "Empório do Sabor <onboarding@resend.dev>",
+        from: process.env.EMAIL_FROM || "SeuGerente <onboarding@resend.dev>",
         to: email,
-        subject: "Redefinição de senha - Empório do Sabor",
+        subject: "Redefinição de senha - SeuGerente",
         html: `
           <!DOCTYPE html>
           <html>
@@ -92,7 +92,7 @@ export async function POST(req: Request) {
                     <path d="M9 13L12 16L19 9" stroke="white" stroke-width="2" stroke-linecap="round"/>
                   </svg>
                 </div>
-                <h1 style="color: #1f2937; font-size: 28px; font-weight: 700; margin: 0 0 8px 0;">Empório do Sabor</h1>
+                <h1 style="color: #1f2937; font-size: 28px; font-weight: 700; margin: 0 0 8px 0;">SeuGerente</h1>
                 <p style="color: #6b7280; font-size: 16px; margin: 0;">Redefinição de senha</p>
               </div>
 
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
                 </p>
                 
                 <p style="color: #374151; font-size: 16px; line-height: 1.5; margin-bottom: 24px;">
-                  Recebemos uma solicitação para redefinir a senha da sua conta no <strong>Empório do Sabor</strong>. 
+                  Recebemos uma solicitação para redefinir a senha da sua conta no <strong>SeuGerente</strong>. 
                   Clique no botão abaixo para criar uma nova senha:
                 </p>
 
@@ -144,13 +144,13 @@ export async function POST(req: Request) {
               <!-- Rodapé -->
               <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
                 <p style="color: #9ca3af; font-size: 12px; margin: 0 0 8px 0;">
-                  Empório do Sabor - Sistema de Gestão para Restaurantes
+                  SeuGerente - Sistema de Gestão para Restaurantes
                 </p>
                 <p style="color: #9ca3af; font-size: 12px; margin: 0;">
                   Este e-mail foi enviado automaticamente, por favor não responda.
                 </p>
                 <p style="color: #d1d5db; font-size: 11px; margin-top: 16px;">
-                  © ${new Date().getFullYear()} Empório do Sabor. Todos os direitos reservados.
+                  © ${new Date().getFullYear()} SeuGerente. Todos os direitos reservados.
                 </p>
               </div>
             </div>

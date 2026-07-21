@@ -21,6 +21,7 @@ interface Produto {
   codigo: string
   valor_unitario: number
   valor_total: number
+  pesoUnitario: number
 }
 
 interface ModalEditarProdutoProps {
@@ -43,7 +44,8 @@ export function ModalEditarProduto({ isOpen, onClose, produtoId, onSuccess }: Mo
     data_compra: "",
     codigo: "",
     valor_unitario: 0,
-    valor_total: 0
+    valor_total: 0,
+    pesoUnitario: 0
   })
 
   useEffect(() => {
@@ -64,7 +66,8 @@ export function ModalEditarProduto({ isOpen, onClose, produtoId, onSuccess }: Mo
           ...data.data,
           preco_venda: data.data.precoVenda || data.data.preco_venda || 0,
           valor_unitario: data.data.valorUnitario || data.data.valor_unitario || 0,
-          valor_total: data.data.valorTotal || data.data.valor_total || 0
+          valor_total: data.data.valorTotal || data.data.valor_total || 0,
+          pesoUnitario: data.data.pesoUnitario ?? 0
         })
       }
     } catch (error) {
@@ -97,7 +100,8 @@ export function ModalEditarProduto({ isOpen, onClose, produtoId, onSuccess }: Mo
           fornecedor: formData.fornecedor,
           data_compra: formData.data_compra,
           valor_unitario: formData.valor_unitario,
-          valor_total: formData.valor_total
+          valor_total: formData.valor_total,
+          pesoUnitario: formData.pesoUnitario
         })
       })
 
@@ -295,16 +299,30 @@ export function ModalEditarProduto({ isOpen, onClose, produtoId, onSuccess }: Mo
               />
             </div>
 
-            {/* Valor Total em Estoque (calculado) */}
+            {/* Peso Unitário (g) */}
             <div className="space-y-1">
-              <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Valor Total em Estoque</Label>
+              <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Pesoo Unitário (g)</Label>
               <Input
-                type="text"
-                value={formatCurrency(valorTotalEstoque)}
-                disabled
-                className="rounded-lg bg-gray-100 border-gray-200 text-gray-600"
+                type="number"
+                step="0.001"
+                min="0"
+                value={formData.pesoUnitario}
+                onChange={(e) => setFormData({ ...formData, pesoUnitario: Number(e.target.value) })}
+                placeholder="Ex: 400 para 400g"
+                className="rounded-lg border-gray-300 focus:ring-[#de4838]"
               />
             </div>
+          </div>
+
+          {/* Valor Total em Estoque (calculado) */}
+          <div className="space-y-1">
+            <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Valor Total em Estoque</Label>
+            <Input
+              type="text"
+              value={formatCurrency(valorTotalEstoque)}
+              disabled
+              className="rounded-lg bg-gray-100 border-gray-200 text-gray-600 md:max-w-[16rem]"
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

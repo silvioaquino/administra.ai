@@ -41,7 +41,7 @@ export function Sidebar() {
         {/* Logo */}
         <div className="flex h-16 items-center justify-center border-b px-4">
           <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            Emporio do Sabor
+            SeuGerente
           </h1>
         </div>
 

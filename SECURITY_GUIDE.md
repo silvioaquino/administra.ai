@@ -1,4 +1,4 @@
-# Guia de Segurança - Administra.ai
+# Guia de Segurança - SeuGerente
 
 ## Pontos de Atenção para Revisão
 

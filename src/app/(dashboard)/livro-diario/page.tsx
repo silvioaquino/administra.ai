@@ -8,8 +8,6 @@ import {
   BookOpen,
   Plus,
   RefreshCw,
-  Search,
-  Eraser,
   DollarSign,
   TrendingUp,
   TrendingDown,
@@ -83,13 +81,29 @@ interface Lancamento {
   entrada: number
   saida: number
   tipo: string
+  origemDestino?: string | null
   notaFiscalId: number | null
   boletoId: number | null
   statusBoleto: string | null
   dataVencimento: string | null
   dataPagamento: string | null
+  status?: string | null
   createdAt: string
   updatedAt: string
+}
+
+interface FolhaItemDetalhe {
+  nome: string
+  salario: number
+  adiantamento: number
+  salarioRestante: number
+}
+
+interface FolhaDetalhe {
+  tipo: "adiantamento" | "salario"
+  pct: number
+  itens: FolhaItemDetalhe[]
+  total: number
 }
 
 // Tipo para as opções de conta do select
@@ -101,6 +115,15 @@ interface ContaOption {
   isHeader: boolean;
 }
 
+// Tipo para as contas bancárias (origem/destino do lançamento)
+interface ContaBancaria {
+  id: number
+  nome: string
+  tipo: string
+  instituicao?: string | null
+  saldoAtual?: number
+}
+
 const obterDataHoje = () => {
   const hoje = new Date()
   const ano = hoje.getFullYear()
@@ -110,8 +133,14 @@ const obterDataHoje = () => {
   return `${ano}-${mes}-${dia}`
 }
 
+function obterPrimeiroDiaMes(): string {
+  const data = new Date()
+  data.setDate(1) // Seta para o primeiro dia do mês
+  return data.toISOString().split('T')[0] // Formato YYYY-MM-DD
+}
+
 // Dados mocados de exemplo (IDs 9991-10000)
-const lancamentosExemploMocados: Lancamento[] = [
+{/*const lancamentosExemploMocados: Lancamento[] = [
   {
     id: 9991,
     data: new Date(new Date().getFullYear(), new Date().getMonth(), 10).toISOString(),
@@ -299,7 +328,7 @@ const lancamentosExemploMocados: Lancamento[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
-]
+]*/}
 
 // Função para obter o estilo da linha baseado no status do boleto
 const getRowStyleForBoleto = (statusBoleto: string | null, dataVencimento: string | null, dataPagamento: string | null) => {
@@ -352,6 +381,8 @@ export default function LivroDiarioPage() {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
   const [notasCache, setNotasCache] = useState<Map<number, NotaFiscal>>(new Map())
   const [loadingNotas, setLoadingNotas] = useState<Set<number>>(new Set())
+  const [folhaCache, setFolhaCache] = useState<Map<number, FolhaDetalhe>>(new Map())
+  const [loadingFolha, setLoadingFolha] = useState<Set<number>>(new Set())
   const [mostrarExemplos, setMostrarExemplos] = useState(true)
 
   // Hook para categorias dinâmicas
@@ -367,6 +398,25 @@ export default function LivroDiarioPage() {
   const contasDespesa = getContasDespesa()
   const contasReceita = getContasReceita()
 
+  // Estado das contas bancárias (origem/destino)
+  const [contasBancarias, setContasBancarias] = useState<ContaBancaria[]>([])
+
+  // Buscar contas bancárias para o select de Conta Bancária
+  useEffect(() => {
+    const fetchContasBancarias = async () => {
+      try {
+        const res = await fetch("/api/contas-financeiras")
+        if (res.ok) {
+          const json = await res.json()
+          setContasBancarias(Array.isArray(json.data) ? json.data : [])
+        }
+      } catch (err) {
+        console.error("Erro ao buscar contas bancárias:", err)
+      }
+    }
+    fetchContasBancarias()
+  }, [])
+
   const [resumo, setResumo] = useState({
     totalEntradas: 0,
     totalSaidas: 0,
@@ -380,7 +430,7 @@ export default function LivroDiarioPage() {
 
   // Filtros
   const [filtros, setFiltros] = useState({
-    dataInicio: obterDataHoje(),
+    dataInicio: obterPrimeiroDiaMes(),
     dataFim: obterDataHoje(),
     conta: "",
     tipo: "",
@@ -396,6 +446,7 @@ export default function LivroDiarioPage() {
     conta: "",
     descricao: "",
     clienteFornecedor: "",
+    contaBancaria: "",
     entrada: 0,
     saida: 0,
     tipo: "DESPESA",
@@ -431,15 +482,74 @@ export default function LivroDiarioPage() {
     return lancamento.boletoId !== null || lancamento.statusBoleto !== null
   }
 
-  // Verificar se pode expandir (nota fiscal ou boleto)
+  // Verificar se pode expandir (nota fiscal, boleto ou folha de pagamento)
   const canExpand = (lancamento: Lancamento) => {
-    return isNotaFiscal(lancamento) || isBoleto(lancamento)
+    return isNotaFiscal(lancamento) || isBoleto(lancamento) || isFolhaPagamento(lancamento)
   }
 
   // Verificar se é folha de pagamento
   const isFolhaPagamento = (lancamento: Lancamento) => {
     return lancamento.descricao.toLowerCase().includes("folha de pagamento") ||
       lancamento.conta === "4.1.6 Despesas com Pessoal"
+  }
+
+  // Extrair o tipo (adiantamento ou salario restante) pela descricao
+  const extrairTipoFolha = (descricao: string): "adiantamento" | "salario" | null => {
+    const d = descricao.toLowerCase()
+    if (d.startsWith("adiantamento salarial")) return "adiantamento"
+    if (d.startsWith("salário (restante)") || d.startsWith("salario (restante)")) return "salario"
+    return null
+  }
+
+  // Buscar detalhes da folha (funcionarios e valores) ao expandir
+  const buscarDetalhesFolha = async (lancamento: Lancamento) => {
+    const id = lancamento.id
+
+    if (expandedRows.has(id)) {
+      toggleRowExpand(id)
+      return
+    }
+    if (folhaCache.has(id)) {
+      toggleRowExpand(id)
+      return
+    }
+    if (loadingFolha.has(id)) return
+
+    setLoadingFolha(prev => new Set(prev).add(id))
+
+    try {
+      const tipo = extrairTipoFolha(lancamento.descricao) || "salario"
+      const match = lancamento.descricao.match(/(\d{2})\/(\d{4})/)
+      const ano = match ? parseInt(match[2]) : new Date().getFullYear()
+      const mes = match ? parseInt(match[1]) : new Date().getMonth() + 1
+
+      const res = await fetch(
+        `/api/planejamento/folha-pagamento-config/funcionarios?ano=${ano}&mes=${mes}`
+      )
+      const data = await res.json()
+      if (data.success) {
+        const itens: FolhaItemDetalhe[] = (data.itens || []).map((i: any) => ({
+          nome: i.nome,
+          salario: Number(i.salario),
+          adiantamento: Number(i.adiantamento),
+          salarioRestante: Number(i.salarioRestante),
+        }))
+        const total =
+          tipo === "adiantamento"
+            ? itens.reduce((s: number, i: FolhaItemDetalhe) => s + i.adiantamento, 0)
+            : itens.reduce((s: number, i: FolhaItemDetalhe) => s + i.salarioRestante, 0)
+        setFolhaCache(prev => new Map(prev).set(id, { tipo, pct: data.pct, itens, total }))
+      }
+    } catch (error) {
+      console.error("Erro ao buscar detalhes da folha:", error)
+    } finally {
+      setLoadingFolha(prev => {
+        const n = new Set(prev)
+        n.delete(id)
+        return n
+      })
+      toggleRowExpand(id)
+    }
   }
 
   // Calcular total da folha com encargos
@@ -576,7 +686,7 @@ export default function LivroDiarioPage() {
       const resumoData = await resumoRes.json()
 
       // Adicionar dados mocados de exemplo
-      if (mostrarExemplos) {
+      {/*if (mostrarExemplos) {
         let lancamentosMocados = [...lancamentosExemploMocados]
 
         if (filtros.dataInicio) {
@@ -600,37 +710,39 @@ export default function LivroDiarioPage() {
         }
 
         lancamentosData = [...lancamentosData, ...lancamentosMocados]
-      }
+      }*/}
+
+      const hoje = new Date()
+      hoje.setHours(0, 0, 0, 0)
+
+      const lancamentosAtualizados = lancamentosData.map((lanc: Lancamento) => {
+        if (lanc.statusBoleto === "PAGO" || lanc.dataPagamento) {
+          return { ...lanc, statusBoleto: "PAGO" }
+        }
+        if (lanc.dataVencimento) {
+          const vencimento = new Date(lanc.dataVencimento)
+          vencimento.setHours(0, 0, 0, 0)
+          if (vencimento < hoje) {
+            return { ...lanc, statusBoleto: "VENCIDO" }
+          }
+        }
+        return lanc
+      })
 
       if (lancamentosRes.ok) {
-        const hoje = new Date()
-        hoje.setHours(0, 0, 0, 0)
-
-        const lancamentosAtualizados = lancamentosData.map((lanc: Lancamento) => {
-          if (lanc.statusBoleto === "PAGO" || lanc.dataPagamento) {
-            return { ...lanc, statusBoleto: "PAGO" }
-          }
-          if (lanc.dataVencimento) {
-            const vencimento = new Date(lanc.dataVencimento)
-            vencimento.setHours(0, 0, 0, 0)
-            if (vencimento < hoje) {
-              return { ...lanc, statusBoleto: "VENCIDO" }
-            }
-          }
-          return lanc
-        })
-
         setLancamentos(lancamentosAtualizados)
         setNotasCache(new Map())
         setExpandedRows(new Set())
       }
 
       if (resumoRes.ok) {
-        const boletosPendentes = lancamentosData.filter((l: Lancamento) =>
-          l.boletoId && (!l.statusBoleto || l.statusBoleto === "PENDENTE") && !l.dataPagamento
+        const boletosPendentes = lancamentosAtualizados.filter((l: Lancamento) =>
+          (l.boletoId !== null || l.statusBoleto !== null) &&
+          (!l.statusBoleto || l.statusBoleto === "PENDENTE") &&
+          !l.dataPagamento
         )
-        const boletosVencidos = lancamentosData.filter((l: Lancamento) =>
-          l.boletoId && l.statusBoleto === "VENCIDO"
+        const boletosVencidos = lancamentosAtualizados.filter((l: Lancamento) =>
+          (l.boletoId !== null || l.statusBoleto !== null) && l.statusBoleto === "VENCIDO"
         )
         const valorPendente = boletosPendentes.reduce((sum: number, l: Lancamento) => sum + l.saida, 0)
         const totalFolha = lancamentosData
@@ -666,15 +778,17 @@ export default function LivroDiarioPage() {
 
     try {
       if (tipoLancamento === "boleto") {
-        const url = editandoId ? `/api/boletos/${editandoId}` : "/api/boletos"
+        const url = "/api/boletos"
         const method = editandoId ? "PUT" : "POST"
 
         const boletoPayload = {
+          ...(editandoId ? { id: editandoId } : {}),
           descricao: formData.descricao,
           valor: formData.saida,
           dataVencimento: formData.dataVencimento,
           clienteFornecedor: formData.clienteFornecedor,
           conta: formData.conta,
+          origemDestino: formData.contaBancaria,
           userId: "current-user-id"
         }
 
@@ -690,11 +804,11 @@ export default function LivroDiarioPage() {
           resetForm()
           carregarDados()
         } else {
-          const error = await response.json()
+          const error = await response.json().catch(() => ({}))
           alert(error.error || "Erro ao salvar boleto")
         }
       } else {
-        const url = editandoId ? `/api/livro-diario/${editandoId}` : "/api/livro-diario"
+        const url = editandoId ? `/api/livro-diario?id=${editandoId}` : "/api/livro-diario"
         const method = editandoId ? "PUT" : "POST"
 
         let descricaoFinal = formData.descricao
@@ -710,6 +824,7 @@ export default function LivroDiarioPage() {
           entrada: formData.entrada,
           saida: tipoLancamento === "folha" ? formData.totalFolha : formData.saida,
           tipo: "DESPESA",
+          origemDestino: tipoLancamento === "folha" ? null : formData.contaBancaria,
           userId: "current-user-id"
         }
 
@@ -725,7 +840,7 @@ export default function LivroDiarioPage() {
           resetForm()
           carregarDados()
         } else {
-          const error = await response.json()
+          const error = await response.json().catch(() => ({}))
           alert(error.error || "Erro ao salvar")
         }
       }
@@ -737,28 +852,34 @@ export default function LivroDiarioPage() {
     }
   }
 
-  // Marcar boleto como pago
+  // Marcar boleto ou lançamento como pago
   const handlePagarBoleto = async () => {
-    if (!lancamentoParaPagar || !lancamentoParaPagar.boletoId) return
+    if (!lancamentoParaPagar) return
+
+    const isBoleto = !!lancamentoParaPagar.boletoId
+    const url = isBoleto
+      ? `/api/boletos/${lancamentoParaPagar.boletoId}/pagar`
+      : `/api/livro-diario/${lancamentoParaPagar.id}/pagar`
 
     try {
-      const response = await fetch(`/api/boletos/${lancamentoParaPagar.boletoId}/pagar`, {
+      const response = await fetch(url, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dataPagamento })
       })
 
       if (response.ok) {
-        alert("Boleto marcado como pago!")
+        alert(isBoleto ? "Boleto marcado como pago!" : "Lançamento marcado como pago!")
         setPagamentoModalOpen(false)
         setLancamentoParaPagar(null)
         carregarDados()
       } else {
-        alert("Erro ao marcar boleto como pago")
+        const erro = await response.json().catch(() => ({}))
+        alert(erro.error || "Erro ao marcar como pago")
       }
     } catch (error) {
       console.error("Erro:", error)
-      alert("Erro ao marcar boleto como pago")
+      alert("Erro ao marcar como pago")
     }
   }
 
@@ -767,7 +888,7 @@ export default function LivroDiarioPage() {
     if (!confirm("Tem certeza que deseja excluir este lançamento?")) return
 
     try {
-      const response = await fetch(`/api/livro-diario/${id}`, { method: "DELETE" })
+      const response = await fetch(`/api/livro-diario?id=${id}`, { method: "DELETE" })
       if (response.ok) {
         alert("Lançamento excluído!")
         carregarDados()
@@ -793,6 +914,7 @@ export default function LivroDiarioPage() {
         conta: lancamento.conta,
         descricao: lancamento.descricao.replace("Boleto: ", ""),
         clienteFornecedor: lancamento.clienteFornecedor || "",
+        contaBancaria: lancamento.origemDestino || "",
         entrada: lancamento.entrada,
         saida: lancamento.saida,
         tipo: lancamento.tipo,
@@ -816,6 +938,7 @@ export default function LivroDiarioPage() {
         conta: lancamento.conta,
         descricao: lancamento.descricao.replace("Folha de Pagamento - ", ""),
         clienteFornecedor: lancamento.clienteFornecedor || "",
+        contaBancaria: lancamento.origemDestino || "",
         entrada: lancamento.entrada,
         saida: lancamento.saida,
         tipo: lancamento.tipo,
@@ -839,6 +962,7 @@ export default function LivroDiarioPage() {
         conta: lancamento.conta,
         descricao: lancamento.descricao,
         clienteFornecedor: lancamento.clienteFornecedor || "",
+        contaBancaria: lancamento.origemDestino || "",
         entrada: lancamento.entrada,
         saida: lancamento.saida,
         tipo: lancamento.tipo,
@@ -867,6 +991,7 @@ export default function LivroDiarioPage() {
       conta: "",
       descricao: "",
       clienteFornecedor: "",
+      contaBancaria: "",
       entrada: 0,
       saida: 0,
       tipo: "DESPESA",
@@ -887,12 +1012,35 @@ export default function LivroDiarioPage() {
 
   const limparFiltros = () => {
     setFiltros({
-      dataInicio: obterDataHoje(),
+      dataInicio: obterPrimeiroDiaMes(),
       dataFim: obterDataHoje(),
       conta: "",
       tipo: "",
       statusBoleto: ""
     })
+  }
+
+  // Aplica um período rápido (Hoje / Semanal / Quinzenal) e recarrega
+  const aplicarPeriodo = (periodo: "hoje" | "semanal" | "quinzenal") => {
+    const formatar = (d: Date) => {
+      const ano = d.getFullYear()
+      const mes = String(d.getMonth() + 1).padStart(2, "0")
+      const dia = String(d.getDate()).padStart(2, "0")
+      return `${ano}-${mes}-${dia}`
+    }
+    const hoje = new Date()
+    const dataFim = formatar(hoje)
+    let dataInicio = dataFim
+    if (periodo === "semanal") {
+      const d = new Date(hoje)
+      d.setDate(d.getDate() - 6)
+      dataInicio = formatar(d)
+    } else if (periodo === "quinzenal") {
+      const d = new Date(hoje)
+      d.setDate(d.getDate() - 14)
+      dataInicio = formatar(d)
+    }
+    setFiltros(prev => ({ ...prev, dataInicio, dataFim }))
   }
 
   const getTipoBadge = (tipo: string) => {
@@ -906,6 +1054,81 @@ export default function LivroDiarioPage() {
     return tipos[tipo] || { label: tipo, color: "bg-gray-100 text-gray-700" }
   }
 
+  // Remove o código numérico do início da conta (ex: "4.1.1 Despesas" -> "Despesas")
+  const formatarConta = (conta: string) => {
+    return conta.replace(/^\d+(\.\d+)*\s+/, "")
+  }
+
+  // Linha expandida com o detalhe da folha (adiantamento/salário por funcionário)
+  const FolhaExpandedRow = ({ lancamento }: { lancamento: Lancamento }) => {
+    const detalhe = folhaCache.get(lancamento.id)
+    const isLoading = loadingFolha.has(lancamento.id)
+    const tipo = extrairTipoFolha(lancamento.descricao) || "salario"
+
+    if (isLoading) {
+      return (
+        <tr className="bg-indigo-50">
+          <td colSpan={10} className="px-4 py-4">
+            <div className="flex justify-center items-center gap-2">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+              <span className="text-sm text-gray-500">Carregando detalhes da folha...</span>
+            </div>
+          </td>
+        </tr>
+      )
+    }
+
+    const titulo = tipo === "adiantamento" ? "Adiantamento Salarial" : "Salário (restante)"
+
+    return (
+      <tr className="bg-indigo-50">
+        <td colSpan={10} className="px-4 py-3">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-indigo-600" />
+              <span className="font-semibold text-indigo-800">{titulo}</span>
+              <Badge variant="outline" className="ml-2">{(detalhe?.pct ?? 0)}% do salário</Badge>
+            </div>
+            {detalhe?.itens && detalhe.itens.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-indigo-100/50 text-gray-600">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs uppercase tracking-wider">Funcionário</th>
+                      <th className="px-3 py-2 text-right text-xs uppercase tracking-wider">Salário</th>
+                      <th className="px-3 py-2 text-right text-xs uppercase tracking-wider">Adiantamento</th>
+                      <th className="px-3 py-2 text-right text-xs uppercase tracking-wider">Salário Restante</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detalhe.itens.map((item: FolhaItemDetalhe, idx: number) => (
+                      <tr key={idx} className="border-t border-indigo-100">
+                        <td className="px-3 py-2 text-gray-800">{item.nome}</td>
+                        <td className="px-3 py-2 text-right text-gray-600">{formatCurrency(item.salario)}</td>
+                        <td className="px-3 py-2 text-right text-indigo-700 font-medium">{formatCurrency(item.adiantamento)}</td>
+                        <td className="px-3 py-2 text-right text-gray-800 font-medium">{formatCurrency(item.salarioRestante)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t-2 border-indigo-200 font-semibold">
+                      <td className="px-3 py-2 text-indigo-800">Total</td>
+                      <td className="px-3 py-2" />
+                      <td className="px-3 py-2 text-right text-indigo-700">{formatCurrency(detalhe.itens.reduce((s: number, i: FolhaItemDetalhe) => s + i.adiantamento, 0))}</td>
+                      <td className="px-3 py-2 text-right text-indigo-800">{formatCurrency(detalhe.itens.reduce((s: number, i: FolhaItemDetalhe) => s + i.salarioRestante, 0))}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">Sem funcionários cadastrados para este mês.</p>
+            )}
+          </div>
+        </td>
+      </tr>
+    )
+  }
+
   // Componente da linha expandida com produtos
   const ExpandedRowContent = ({ lancamento }: { lancamento: Lancamento }) => {
     const nota = notasCache.get(lancamento.id)
@@ -915,7 +1138,7 @@ export default function LivroDiarioPage() {
     if (isLoading) {
       return (
         <tr className="bg-gray-100">
-          <td colSpan={11} className="px-4 py-4">
+          <td colSpan={10} className="px-4 py-4">
             <div className="flex justify-center items-center gap-2">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#de4838] border-t-transparent" />
               <span className="text-sm text-gray-500">Carregando detalhes...</span>
@@ -930,7 +1153,7 @@ export default function LivroDiarioPage() {
       return (
         <>
           <tr className="bg-blue-50">
-            <td colSpan={11} className="px-4 py-3">
+            <td colSpan={10} className="px-4 py-3">
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-blue-600" />
@@ -990,7 +1213,7 @@ export default function LivroDiarioPage() {
 
           {nota.pagamentos && nota.pagamentos.length > 0 && (
             <tr className="bg-blue-50">
-              <td colSpan={11} className="px-4 py-2">
+              <td colSpan={10} className="px-4 py-2">
                 <div className="mt-2 pt-2 border-t border-blue-200">
                   <span className="text-sm font-medium">Formas de Pagamento:</span>
                   <div className="flex flex-wrap gap-3 mt-1">
@@ -1010,7 +1233,7 @@ export default function LivroDiarioPage() {
     if (isBoleto(lancamento)) {
       return (
         <tr className="bg-purple-50">
-          <td colSpan={11} className="px-4 py-3">
+          <td colSpan={10} className="px-4 py-3">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Barcode className="h-4 w-4 text-purple-600" />
@@ -1042,7 +1265,7 @@ export default function LivroDiarioPage() {
     // Para outros tipos de lançamento, mostrar informações básicas
     return (
       <tr className="bg-gray-100">
-        <td colSpan={11} className="px-4 py-3">
+        <td colSpan={10} className="px-4 py-3">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-gray-600" />
@@ -1205,9 +1428,9 @@ export default function LivroDiarioPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Conta</Label>
+                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Tipo Despesa</Label>
                 <Input
-                  placeholder="Filtrar por conta..."
+                  placeholder="Filtrar por tipo de despesa..."
                   value={filtros.conta}
                   onChange={(e) => setFiltros({ ...filtros, conta: e.target.value })}
                   className="rounded-lg border-gray-200 focus:ring-[#de4838]"
@@ -1252,14 +1475,18 @@ export default function LivroDiarioPage() {
                 </div>
               </div>
             </div>
-            <div className="flex gap-3 mt-5">
-              <Button onClick={() => carregarDados()} className="flex-1 bg-[#de4838] hover:bg-[#c73d2e] rounded-lg">
-                <Search className="mr-2 h-4 w-4" />
-                Filtrar
+            <div className="grid grid-cols-4 gap-2 mt-5">
+              <Button onClick={() => aplicarPeriodo("hoje")} className="w-full bg-[#de4838] hover:bg-[#c73d2e] rounded-lg">
+                Hoje
               </Button>
-              <Button variant="outline" onClick={limparFiltros} className="flex-1 border-gray-200 hover:bg-gray-100 rounded-lg">
-                <Eraser className="mr-2 h-4 w-4" />
-                Limpar Filtros
+              <Button onClick={() => aplicarPeriodo("semanal")} className="w-full bg-[#de4838] hover:bg-[#c73d2e] rounded-lg">
+                Semanal
+              </Button>
+              <Button onClick={() => aplicarPeriodo("quinzenal")} className="w-full bg-[#de4838] hover:bg-[#c73d2e] rounded-lg">
+                Quinzenal
+              </Button>
+              <Button variant="outline" onClick={limparFiltros} className="w-full border-gray-200 hover:bg-gray-100 rounded-lg">
+                Limpar
               </Button>
             </div>
           </div>
@@ -1275,26 +1502,25 @@ export default function LivroDiarioPage() {
             </div>
           </div>
           <div className="p-0 overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-[0.6125rem] table-fixed">
               <thead className="bg-gray-100 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left w-8"></th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conta</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente/Fornecedor</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                  <th className="px-4 py-3 text-left w-10"></th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[100px]">Data</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[100px]">Tipo Despesa</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[150px]">Descrição</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[145px]">Fornecedor</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[100px]">Entrada</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[100px]">Saída</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[77px]">Tipo</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[115px]">Status</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[108px]">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr className="border-b border-gray-100">
-                    <td colSpan={11} className="py-12 text-center">
+                    <td colSpan={10} className="py-12 text-center">
                       <div className="flex justify-center items-center gap-2">
                         <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#de4838] border-t-transparent" />
                         <span className="text-sm text-gray-500">Carregando lançamentos...</span>
@@ -1303,7 +1529,7 @@ export default function LivroDiarioPage() {
                   </tr>
                 ) : lancamentos.length === 0 ? (
                   <tr className="border-b border-gray-100">
-                    <td colSpan={11} className="py-12 text-center">
+                    <td colSpan={10} className="py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <BookOpen className="h-12 w-12 text-gray-300" />
                         <p className="text-gray-500">Nenhum lançamento encontrado</p>
@@ -1337,13 +1563,13 @@ export default function LivroDiarioPage() {
                           tabIndex={canExpandRow ? 0 : undefined}
                           aria-expanded={canExpandRow ? isExpanded : undefined}
                           aria-label={canExpandRow ? `Expandir detalhes de ${lanc.descricao}` : undefined}
-                          onClick={canExpandRow ? () => buscarNotaFiscal(lanc) : undefined}
+                          onClick={canExpandRow ? () => isFolhaLanc ? buscarDetalhesFolha(lanc) : buscarNotaFiscal(lanc) : undefined}
                           onKeyDown={(e) => {
                             if (!canExpandRow) return
                             if ((e.target as HTMLElement).closest("button")) return
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault()
-                              buscarNotaFiscal(lanc)
+                              isFolhaLanc ? buscarDetalhesFolha(lanc) : buscarNotaFiscal(lanc)
                             }
                           }}
                         >
@@ -1355,22 +1581,21 @@ export default function LivroDiarioPage() {
                             )}
                             {isFolhaLanc && <Users className="h-4 w-4 text-indigo-500" />}
                           </td>
-                          <td className="px-4 py-3 font-mono text-xs text-gray-500">#{lanc.id}</td>
                           <td className="px-4 py-3 text-gray-700">{formatDate(lanc.data)}</td>
-                          <td className="px-4 py-3 max-w-[200px] truncate text-gray-600">{lanc.conta}</td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              {isBoletoLanc && <Barcode className="h-3 w-3 text-purple-500" />}
-                              {isNota && <FileText className="h-3 w-3 text-blue-500" />}
-                              {isFolhaLanc && <Users className="h-3 w-3 text-indigo-500" />}
-                              <span className="truncate max-w-[200px] text-gray-800">{lanc.descricao}</span>
+                          <td className="px-4 py-3 align-middle text-center text-gray-600">{formatarConta(lanc.conta)}</td>
+                          <td className="px-4 py-3 align-top">
+                            <div className="flex items-start gap-2">
+                              {isBoletoLanc && <Barcode className="h-3 w-3 text-purple-500 mt-1 shrink-0" />}
+                              {isNota && <FileText className="h-3 w-3 text-blue-500 mt-1 shrink-0" />}
+                              {isFolhaLanc && <Users className="h-3 w-3 text-indigo-500 mt-1 shrink-0" />}
+                              <span className="text-gray-800 break-words">{lanc.descricao}</span>
                             </div>
                           </td>
                           <td className="px-4 py-3 text-gray-600">{lanc.clienteFornecedor || "-"}</td>
-                          <td className="px-4 py-3 text-right text-emerald-600 font-medium">
+                          <td className="px-4 py-3 align-middle text-center text-emerald-600 font-medium text-[0.704rem]">
                             {lanc.entrada > 0 ? formatCurrency(lanc.entrada) : "-"}
                           </td>
-                          <td className="px-4 py-3 text-right text-red-500 font-medium">
+                          <td className="px-4 py-3 align-middle text-center text-red-500 font-medium text-[0.704rem]">
                             {lanc.saida > 0 ? formatCurrency(lanc.saida) : "-"}
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -1384,8 +1609,16 @@ export default function LivroDiarioPage() {
                                 {getBoletoStatusIcon(boletoStatus, lanc.dataPagamento)}
                                 {getBoletoStatusBadge(boletoStatus, lanc.dataPagamento)}
                               </div>
-                            ) : isFolhaLanc ? (
-                              <Badge className="bg-indigo-100 text-indigo-700">Processada</Badge>
+                            ) : lanc.status === "PAGO" ? (
+                              <div className="flex items-center justify-center gap-1">
+                                <CheckCircle className="h-4 w-4 text-emerald-600" />
+                                <Badge className="bg-emerald-100 text-emerald-700">Pago</Badge>
+                              </div>
+                            ) : lanc.status === "PENDENTE" ? (
+                              <div className="flex items-center justify-center gap-1">
+                                <Clock className="h-4 w-4 text-amber-600" />
+                                <Badge className="bg-amber-100 text-amber-700">Pendente</Badge>
+                              </div>
                             ) : (
                               <span className="text-gray-400 text-xs">-</span>
                             )}
@@ -1393,6 +1626,15 @@ export default function LivroDiarioPage() {
                           <td className="px-4 py-3 text-center">
                             <div className="flex justify-center gap-1">
                               {podePagar && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setLancamentoParaPagar(lanc); setPagamentoModalOpen(true); }}
+                                  className="p-1 text-emerald-500 hover:bg-emerald-100 rounded-lg transition-colors"
+                                  title="Marcar como Pago"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </button>
+                              )}
+                              {!isBoletoLanc && lanc.status === "PENDENTE" && (
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setLancamentoParaPagar(lanc); setPagamentoModalOpen(true); }}
                                   className="p-1 text-emerald-500 hover:bg-emerald-100 rounded-lg transition-colors"
@@ -1420,6 +1662,7 @@ export default function LivroDiarioPage() {
                         </tr>
 
                         {isExpanded && isNota && <ExpandedRowContent lancamento={lanc} />}
+                        {isExpanded && isFolhaLanc && <FolhaExpandedRow lancamento={lanc} />}
                       </React.Fragment>
                     )
                   })
@@ -1448,7 +1691,7 @@ export default function LivroDiarioPage() {
           </div>
 
           {/* Conteúdo rolável */}
-          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+          <form id="submit-button" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
             {/* Seletor de tipo de lançamento */}
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -1498,8 +1741,9 @@ export default function LivroDiarioPage() {
                 </div>
 
                 {tipoLancamento !== "folha" && (
+                  <>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Conta *</Label>
+                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Tipo Despesa *</Label>
                     <div className="relative">
                       {loadingCategorias ? (
                         <div className="w-full rounded-lg border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm text-gray-500">
@@ -1546,6 +1790,29 @@ export default function LivroDiarioPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Conta Bancária (origem/destino do lançamento) */}
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Conta Bancária</Label>
+                    <div className="relative">
+                      <select
+                        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                        value={formData.contaBancaria}
+                        onChange={(e) => setFormData({ ...formData, contaBancaria: e.target.value })}
+                      >
+                        <option value="">Selecione a conta bancária...</option>
+                        {contasBancarias.map((cb) => (
+                          <option key={cb.id} value={cb.nome}>
+                            {cb.nome}{cb.instituicao ? ` - ${cb.instituicao}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                      </div>
+                    </div>
+                  </div>
+                  </>
                 )}
               </div>
 

@@ -3,7 +3,8 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { calcularTotalDespesasVariaveis } from "@/lib/calculoDespesasVariaveis"
+import { calcularIndicadores } from "@/lib/planejamento/calcularIndicadores"
+import { garantirFolhaAno } from "@/lib/folha"
 
 interface DespesasVariaveisDados {
   maquininhas?: Array<{ id?: string; nome?: string; taxaDebito: number; taxaCredito: number; aluguel: number; ativo: boolean }>
@@ -105,16 +106,24 @@ export async function GET(request: Request) {
       }
     }
 
-    // 3. Folha salarial (total de salários + encargos) — fonte enriquecida dos indicadores
-    const folha = await prisma.planejamentoFolhaSalarial.findUnique({
-      where: {
-        empresaId_userId_anoReferencia: {
-          empresaId,
-          userId,
-          anoReferencia: ano
-        }
-      }
-    })
+    // 3. Folha salarial (total de salários + encargos) — fonte enriquecida dos indicadores.
+    // Garante que o mês atual esteja salvo (snapshot) e lê o registro do mês corrente.
+    await garantirFolhaAno(empresaId, userId, ano)
+    const folha =
+      (await prisma.planejamentoFolhaSalarial.findUnique({
+        where: {
+          empresaId_userId_anoReferencia_mes: {
+            empresaId,
+            userId,
+            anoReferencia: ano,
+            mes: mesAtual,
+          },
+        },
+      })) ||
+      (await prisma.planejamentoFolhaSalarial.findFirst({
+        where: { empresaId, userId, anoReferencia: ano },
+        orderBy: { mes: "asc" },
+      }))
     const totalSalarios = Number(folha?.totalSalarios) || 0
     const encargosFolha =
       (Number(folha?.totalDecimo) || 0) +
@@ -132,14 +141,6 @@ export async function GET(request: Request) {
         anoReferencia: ano
       }
     })
-    const dvResultado = await prisma.despesasVariaveisResultado.findFirst({
-      where: {
-        userId,
-        ano,
-        mes: mesAtual
-      }
-    })
-
     // Configuração padrão (mantém fallback caso não haja config salva)
     const dvDados = (dvConfig?.dados as DespesasVariaveisDados) || {}
     const configMaquininhas: ConfigMaquininhas = dvConfig?.dados
@@ -167,49 +168,40 @@ export async function GET(request: Request) {
         }
 
     // 5. Cálculo enriquecido (mesma fonte das telas) -------------------------
-    // % Fixas inclui aluguel das máquinas + salários sobre a meta mensal total
-    const aluguelMaquininhas = configMaquininhas.maquininhas
-      .filter((m) => m.ativo)
-      .reduce((sum, m) => sum + (m.aluguel || 0), 0)
+    // % Fixas inclui aluguel das máquinas + salários sobre a meta mensal total.
+    // faturamentoBase vem da MESMA fonte viva que o client (tabela nova
+    // planejamentoFaturamentoNovo), eliminando a divergência com a tabela
+    // legada despesasVariaveisResultado (valor congelado / default 52000).
+    const faturamentoBase = metaDefinida
+      ? Number(metaAtual!.metaTotal) ||
+        Number(metaAtual!.metaDiaria ?? 0) * Number(metaAtual!.diasTrabalhados ?? 26)
+      : 0
 
-    const totalFixas = despesasFixas.reduce((sum, d) => sum + Number(d.valor ?? 0), 0)
-    const totalDespesasFixas = totalFixas + aluguelMaquininhas + totalSalarios
-    const pctFixas = metaMensalTotal > 0 ? (totalDespesasFixas / metaMensalTotal) * 100 : 0
-
-    // Despesas variáveis incluem encargos da folha salarial (espelha o client).
-    // faturamentoBase vem do resultado salvo (ou da meta mensal como fallback).
-    const faturamentoBase = dvResultado?.faturamentoBase != null
-      ? Number(dvResultado.faturamentoBase)
-      : metaMensalTotal
-    const calculoDV = calcularTotalDespesasVariaveis({
+    const resultado = calcularIndicadores({
+      metaMensalTotal,
+      lucroDesejado,
+      despesasFixas,
+      totalSalarios,
+      encargosFolha,
       maquininhas: configMaquininhas.maquininhas,
       distribuicaoVendas: configMaquininhas.distribuicaoVendas,
       outrasTaxas: configMaquininhas.outrasTaxas,
       faturamentoBase,
-      folhaSalarialTotalMensal: encargosFolha
     })
-    const folhaEncargosPercentual = metaMensalTotal > 0 ? (encargosFolha / metaMensalTotal) * 100 : 0
-    const despesasVariaveisPct = calculoDV.total
-    const despesasVariaveisBase = calculoDV.base
-
-    // 6. Calcular CMV e Mark-Up (espelha o card Mark-Up e Precificação)
-    // Se a meta do mês não está definida, não calcula (evita default silencioso de 0)
-    const cmv = metaDefinida ? Math.max(0, 100 - (pctFixas + despesasVariaveisPct + lucroDesejado)) : null
-    const markUp = metaDefinida && cmv !== null && cmv > 0 ? 100 / cmv : null
 
     return NextResponse.json({
       success: true,
-      metaFaltando: !metaDefinida,
-      despesasFixas: despesasFixas.map(d => ({ nome: d.nome, valor: Number(d.valor) })),
-      despesasVariaveisPct,
-      despesasVariaveisBase,
-      totalDespesasVariaveis: calculoDV.total,
-      metaMensalTotal,
-      cmv: cmv === null ? null : Math.max(0, cmv),
-      pctFixas,
-      markUp,
-      lucroDesejado,
-      folhaEncargosPercentual
+      metaFaltando: resultado.metaFaltando,
+      despesasFixas: resultado.despesasFixas,
+      despesasVariaveisPct: resultado.despesasVariaveisPct,
+      despesasVariaveisBase: resultado.despesasVariaveisBase,
+      totalDespesasVariaveis: resultado.totalDespesasVariaveis,
+      metaMensalTotal: resultado.metaMensalTotal,
+      cmv: resultado.cmv,
+      pctFixas: resultado.pctFixas,
+      markUp: resultado.markUp,
+      lucroDesejado: resultado.lucroDesejado,
+      folhaEncargosPercentual: resultado.folhaEncargosPercentual
     })
 
   } catch (error) {

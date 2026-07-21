@@ -7,7 +7,7 @@ export async function sendResetPasswordEmail(email: string, resetUrl: string) {
   await resend.emails.send({
     from: 'onboarding@resend.dev',
     to: email,
-    subject: 'Redefinição de senha - Empório do Sabor',
+    subject: 'Redefinição de senha - SeuGerente',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #de4838;">Redefinição de senha</h2>
@@ -18,7 +18,7 @@ export async function sendResetPasswordEmail(email: string, resetUrl: string) {
         <p>Este link é válido por 1 hora.</p>
         <p>Se você não solicitou essa alteração, ignore este e-mail.</p>
         <hr style="margin: 20px 0;" />
-        <p style="color: #666; font-size: 12px;">Empório do Sabor - Sistema de Gestão</p>
+        <p style="color: #666; font-size: 12px;">SeuGerente - Sistema de Gestão</p>
       </div>
     `
   })
