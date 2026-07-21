@@ -169,7 +169,7 @@ export default function LoginPage() {
 
               <div className="bg-orange-50 rounded-xl p-3 text-center">
                 <p className="text-xs text-orange-700">
-                  🎉 Teste grátis por 20 dias. Não exige cartão de crédito.
+                  🎉 Teste grátis por 7 dias. Não exige cartão de crédito.
                 </p>
               </div>
             </form>
