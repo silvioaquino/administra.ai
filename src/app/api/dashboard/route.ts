@@ -209,33 +209,43 @@ export async function GET(request: NextRequest) {
     const saldo = totalReceitas - totalDespesas
     const margem = totalReceitas > 0 ? (saldo / totalReceitas) * 100 : 0
 
-    // Buscar METAS do PLANEJAMENTO (planejamentoFaturamento) - mesmo lugar do Planejamento
+    // Buscar METAS do PLANEJAMENTO (planejamentoFaturamentoNovo) - tabela usada pela página de planejamento
+    // Usa o período selecionado: mês vigente para "Mês"/"Hoje", ano corrente para "Ano",
+    // e a data inicial para período específico
     const anoMeta = range.inicio.getFullYear()
     const mesMeta = range.inicio.getMonth() + 1
+    const empresaId = session.user.empresaId || ""
 
-    const metaPlanejamento = await prisma.planejamentoFaturamento.findFirst({
+    const metaPlanejamento = await prisma.planejamentoFaturamentoNovo.findFirst({
       where: {
         userId: session.user.id,
+        empresaId,
         ano: anoMeta,
         mes: mesMeta
       }
     })
 
-    // Calcular metas baseado no planejamentoFaturamento (mesmo cálculo da página Planejamento)
-    const diasTrabalhados = metaPlanejamento?.diasTrabalhados || 26
-    const metaDiariaAlmoco = metaPlanejamento?.metaDiariaAlmoco || 0
-    const metaDiariaJanta = metaPlanejamento?.metaDiariaJanta || 0
-    const lucroDesejado = metaPlanejamento?.lucroDesejado || 15
+    // Buscar lucroDesejado de PlanejamentoConfig (mesma abordagem da API indicadores-resumo)
+    const lucroConfig = await prisma.planejamentoConfig.findFirst({
+      where: {
+        userId: session.user.id,
+        tipo: "lucro_desejado",
+        anoReferencia: anoMeta
+      }
+    })
+    const lucroDesejado = (lucroConfig?.dados as { lucroDesejado?: number } | null)?.lucroDesejado ?? 15
 
-    const metaMensalAlmoco = metaDiariaAlmoco * diasTrabalhados
-    const metaMensalJanta = metaDiariaJanta * diasTrabalhados
-    const metaFaturamento = metaMensalAlmoco + metaMensalJanta
+    // Calcular metas baseado no planejamentoFaturamentoNovo
+    const diasTrabalhados = metaPlanejamento?.diasTrabalhados || 26
+    // metaTotal já calculado na criação, ou calcular a partir de metaDiaria
+    const metaFaturamento = Number(metaPlanejamento?.metaTotal) ||
+      (Number(metaPlanejamento?.metaDiaria) || 0) * diasTrabalhados
     const metaLucro = lucroDesejado
 
-    // Para meta de despesa, estima baseado no faturamento meta (assumindo 70% de despesa)
-    // Ou busca das despesas fixas + variáveis do planejamento
-    const metaDespesa = metaFaturamento * 0.7
-    const metaDespesaDiaria = metaDespesa / diasTrabalhados
+    // Meta de despesa: 100% do faturamento - lucro desejado
+    // Exemplo: se lucroDesejado = 15%, metaDespesa = 85% do faturamento
+    const metaDespesa = metaFaturamento * (1 - lucroDesejado / 100)
+    const metaDespesaDiaria = diasTrabalhados > 0 ? metaDespesa / diasTrabalhados : 0
 
     const ultimosLancamentos = await prisma.livroDiario.findMany({
       where: {
