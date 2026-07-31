@@ -31,14 +31,6 @@ import { ProdutividadeChart } from "@/components/produtividade-chart"
 
 type PeriodoType = "hoje" | "mes" | "ano" | "especifico"
 
-interface MetaPlanejamento {
-  mes: number
-  metaDiariaAlmoco: number
-  metaDiariaJanta: number
-  diasTrabalhados: number
-  lucroDesejado: number
-}
-
 interface ChartData {
   periodo: string
   receitas: number
@@ -249,51 +241,6 @@ export default function DashboardPage() {
     }
   }
 
-  async function carregarMetasPlanejamento() {
-    try {
-      const anoAtual = new Date().getFullYear()
-      const response = await fetch(`/api/planejamento/metas?ano=${anoAtual}`)
-      const data = await response.json()
-
-      if (data.success && data.metas) {
-        const mesAtual = new Date().getMonth() + 1
-        const metaAtual: MetaPlanejamento | undefined = data.metas.find((m: MetaPlanejamento) => m.mes === mesAtual)
-
-        if (metaAtual) {
-          const metaMensalAlmoco = metaAtual.metaDiariaAlmoco * metaAtual.diasTrabalhados
-          const metaMensalJanta = metaAtual.metaDiariaJanta * metaAtual.diasTrabalhados
-          const metaTotal = metaMensalAlmoco + metaMensalJanta
-
-          // Buscar dados atuais do dashboard para calcular o progresso
-          const totalReceitas = stats.totalReceitas
-          const totalDespesas = stats.totalDespesas
-          const margem = stats.margem
-
-          setMetas({
-            faturamento: {
-              atual: totalReceitas,
-              meta: metaTotal,
-              percentual: metaTotal > 0 ? Math.min(100, Math.max(0, (totalReceitas / metaTotal) * 100)) : 0
-            },
-            despesa: {
-              atual: totalDespesas,
-              meta: metaTotal * 0.7, // Estimativa de despesa baseada na meta de faturamento
-              diaria: metaTotal * 0.7 / metaAtual.diasTrabalhados,
-              percentual: metaTotal > 0 ? Math.min(100, Math.max(0, (totalDespesas / (metaTotal * 0.7)) * 100)) : 0
-            },
-            lucro: {
-              atual: margem,
-              meta: metaAtual.lucroDesejado,
-              percentual: metaAtual.lucroDesejado > 0 ? Math.min(100, Math.max(0, (margem / metaAtual.lucroDesejado) * 100)) : 0
-            }
-          })
-        }
-      }
-    } catch (error) {
-      console.error("Erro ao carregar metas do planejamento:", error)
-    }
-  }
-
   function criarAlertasFinanceiros(saldo: number, margem: number) {
     if (saldo < 0) {
       return [{ type: "danger", message: `Situação crítica! Despesas superam receitas em ${formatCurrency(Math.abs(saldo))}` }]
@@ -332,13 +279,6 @@ export default function DashboardPage() {
 
     return () => window.clearTimeout(timeout)
   }, [periodo, dataInicio, dataFim])
-
-  // Carregar metas do planejamento após carregar dados do dashboard
-  useEffect(() => {
-    if (stats.totalReceitas > 0 || stats.totalDespesas > 0) {
-      carregarMetasPlanejamento()
-    }
-  }, [stats.totalReceitas, stats.totalDespesas])
 
   const formatTooltipValue = (value: number | string | readonly (string | number)[] | undefined): string => {
     if (Array.isArray(value)) {
@@ -826,7 +766,7 @@ export default function DashboardPage() {
           </CardContent>
         </div>
 
-        {/* Produtividade por funcionário */}
+        {/* Produtividade por funcionário 
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
           <div className="bg-gray-100 p-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
@@ -837,7 +777,7 @@ export default function DashboardPage() {
           <CardContent className="p-5">
             <ProdutividadeChart />
           </CardContent>
-        </div>
+        </div>*/}
 
         {/* Últimos Lançamentos e Alertas */}
         <div className="grid gap-6 md:grid-cols-2 mb-6">
