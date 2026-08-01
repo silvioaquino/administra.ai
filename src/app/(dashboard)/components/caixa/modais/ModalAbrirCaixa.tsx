@@ -40,25 +40,25 @@ export default function ModalAbrirCaixa({ show, onClose, onAbrirCaixa }: ModalAb
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="w-full max-w-md bg-surface rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#de4838]/5 to-transparent p-5 border-b border-gray-100">
+        <div className="bg-gradient-to-r from-[#de4838]/5 to-transparent p-5 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-sm">
                 <Wallet className="h-4 w-4 text-white" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-800">Abrir Caixa</h2>
+              <h2 className="text-lg font-semibold text-white">Abrir Caixa</h2>
             </div>
             <button 
               onClick={onClose}
-              className="rounded-full p-1.5 hover:bg-gray-100 transition-colors"
+              className="rounded-full p-1.5 hover:bg-surface-2 transition-colors"
               disabled={loading}
             >
-              <X className="h-4 w-4 text-gray-400" />
+              <X className="h-4 w-4 text-muted-foreground/70" />
             </button>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             Informe o saldo inicial em dinheiro para abrir o caixa
           </p>
         </div>
@@ -67,11 +67,11 @@ export default function ModalAbrirCaixa({ show, onClose, onAbrirCaixa }: ModalAb
         <div className="p-5 space-y-5">
           {/* Valor Inicial */}
           <div className="space-y-1.5">
-            <label htmlFor="valorInicial" className="block text-xs font-medium text-gray-600 uppercase tracking-wider">
+            <label htmlFor="valorInicial" className="block text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Valor Inicial em Caixa
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">R$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 font-medium">R$</span>
               <input 
                 type="number" 
                 id="valorInicial"
@@ -80,18 +80,18 @@ export default function ModalAbrirCaixa({ show, onClose, onAbrirCaixa }: ModalAb
                 value={valorInicial}
                 onChange={(e) => setValorInicial(e.target.value)}
                 disabled={loading}
-                className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent bg-white text-sm"
+                className="w-full pl-9 pr-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-surface text-sm"
                 placeholder="0,00"
               />
             </div>
-            <p className="text-[10px] text-gray-400">
+            <p className="text-[10px] text-muted-foreground/70">
               Valor que você tem em mãos no momento da abertura
             </p>
           </div>
           
           {/* Observações */}
           <div className="space-y-1.5">
-            <label htmlFor="observacao" className="block text-xs font-medium text-gray-600 uppercase tracking-wider">
+            <label htmlFor="observacao" className="block text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Observações
             </label>
             <textarea 
@@ -100,18 +100,18 @@ export default function ModalAbrirCaixa({ show, onClose, onAbrirCaixa }: ModalAb
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
               disabled={loading}
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent bg-white text-sm resize-none"
+              className="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-surface text-sm resize-none"
               placeholder="Observações sobre abertura do caixa..."
             />
           </div>
 
           {/* Info adicional */}
-          <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+          <div className="bg-info/5 rounded-xl p-3 border border-blue-100">
             <div className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <AlertCircle className="h-4 w-4 text-info mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-xs font-medium text-blue-800">Informação importante</p>
-                <p className="text-[10px] text-blue-600 mt-0.5">
+                <p className="text-[10px] text-info mt-0.5">
                   O saldo informado será registrado como abertura do caixa e poderá ser consultado posteriormente.
                 </p>
               </div>
@@ -125,7 +125,7 @@ export default function ModalAbrirCaixa({ show, onClose, onAbrirCaixa }: ModalAb
             type="button" 
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 font-medium rounded-lg transition-colors"
+            className="px-4 py-2 text-sm text-muted-foreground hover:text-white font-medium rounded-lg transition-colors"
           >
             Cancelar
           </button>
@@ -133,7 +133,7 @@ export default function ModalAbrirCaixa({ show, onClose, onAbrirCaixa }: ModalAb
             type="button" 
             onClick={handleSubmit}
             disabled={loading}
-            className="px-5 py-2 bg-[#de4838] hover:bg-[#c73d2e] text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>

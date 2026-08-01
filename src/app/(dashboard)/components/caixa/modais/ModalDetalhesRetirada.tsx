@@ -43,7 +43,7 @@ export default function ModalDetalhesRetirada({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 animate-slide-in">
+      <div className="bg-surface rounded-lg shadow-xl w-full max-w-md mx-4 animate-slide-in">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-xl font-semibold text-foreground">Detalhes da Retirada</h2>
@@ -62,7 +62,7 @@ export default function ModalDetalhesRetirada({
         <div className="p-4 space-y-4">
           <div>
             <strong className="text-foreground">Valor:</strong>
-            <div className="text-3xl font-bold text-red-600 mt-1">{formatarMoeda(retirada.valor)}</div>
+            <div className="text-3xl font-bold text-destructive mt-1">{formatarMoeda(retirada.valor)}</div>
           </div>
           <div>
             <strong className="text-foreground">Data e Hora:</strong>
@@ -70,7 +70,7 @@ export default function ModalDetalhesRetirada({
           </div>
           <div>
             <strong className="text-foreground">Observação:</strong>
-            <div className="p-3 bg-gray-100 rounded-lg mt-1 text-muted-foreground">
+            <div className="p-3 bg-surface-2 rounded-lg mt-1 text-muted-foreground">
               {retirada.observacao || 'Sem observação'}
             </div>
           </div>
@@ -82,7 +82,7 @@ export default function ModalDetalhesRetirada({
             type="button" 
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 bg-gray-1000 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+            className="px-4 py-2 bg-surface-20 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
           >
             Fechar
           </button>
@@ -90,7 +90,7 @@ export default function ModalDetalhesRetirada({
             type="button" 
             onClick={handleExcluir}
             disabled={loading}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+            className="px-4 py-2 bg-destructive hover:bg-destructive/90 text-white font-medium rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
           >
             {loading ? (
               <>

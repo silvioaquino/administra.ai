@@ -1,130 +1,423 @@
 /* src/app/globals.css */
 @import "tailwindcss";
 
-@theme {
-  /* Cores convertidas de HSL para valores diretos */
-  --background: #fef7f0;  /* 35 30% 96% */
-  --foreground: #0a0a0a;  /* 20 14% 4% */
-  --card: #ffffff;
-  --card-foreground: #0a0a0a;
-  --popover: #ffffff;
-  --popover-foreground: #0a0a0a;
-  --primary: #7a2e0e;     /* 23 74% 30% */
-  --primary-foreground: #fef7e8; /* 35 100% 97% */
-  --secondary: #d4b48c;   /* 33 48% 69% */
-  --secondary-foreground: #3a2a1f; /* 24 30% 20% */
-  --muted: #ebe5de;       /* 30 20% 92% */
-  --muted-foreground: #7a6b5f; /* 25 10% 45% */
-  --accent: #d4b48c;      /* 33 48% 69% */
-  --accent-foreground: #3a2a1f; /* 24 30% 20% */
-  --destructive: #ef4444; /* 0 84% 60% */
-  --destructive-foreground: #fafafa;
-  --border: #e0d6cd;      /* 30 15% 85% */
-  --input: #e0d6cd;       /* 30 15% 85% */
-  --ring: #7a2e0e;        /* 23 74% 30% */
-  --radius: 0.5rem;
+/* ================================================================
+   SeuGerente — Design System "Midnight Professional"
+   Fase 1: Fundação (tokens semânticos, tipografia, elevação, motion)
+   Nunca use cores literais em componentes: use os tokens abaixo.
+   ================================================================ */
 
-  /* Mapa para utilitários de cor do Tailwind v4 (bg-popover, border-input, ring-ring, bg-accent, etc.).
-     O Tailwind v4 gera essas classes a partir do namespace --color-*, não dos nomes crus acima. */
+/* Cores em :root (não em @theme) para que o tema claro e a cor de destaque
+   possam sobrescrevê-las em tempo de execução, inclusive com opacidade. */
+:root {
+  /* ---------- Superfícies e texto ---------- */
+  --background: #0a0a1a;
+  --foreground: #e2e8f0;
+
+  --surface: #141432;
+  --surface-2: #1a1a44;
+  --surface-3: #1e1e5a;
+
+  --card: #141432;
+  --card-foreground: #ffffff;
+  --popover: #141432;
+  --popover-foreground: #ffffff;
+
+  /* ---------- Marca ---------- */
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-soft: #312e81;
+  --primary-glow: #818cf8;
+  --primary-foreground: #ffffff;
+
+  --secondary: #1e1e5a;
+  --secondary-foreground: #e2e8f0;
+  --accent: #1e1e5a;
+  --accent-foreground: #ffffff;
+  --muted: #141432;
+  --muted-foreground: #94a3b8;
+  --subtle-foreground: #64748b;
+
+  /* ---------- Estados semânticos ---------- */
+  --success: #34d399;
+  --success-foreground: #052e21;
+  --success-soft: #064e3b;
+
+  --warning: #fbbf24;
+  --warning-foreground: #2c1a00;
+  --warning-soft: #4a3208;
+
+  --info: #38bdf8;
+  --info-foreground: #04283a;
+  --info-soft: #0b3a52;
+
+  --destructive: #f43f5e;
+  --destructive-foreground: #ffffff;
+  --destructive-soft: #4c0f1e;
+
+  /* ---------- Bordas, campos, foco ---------- */
+  --border: #24245e;
+  --border-strong: #32327a;
+  --input: #24245e;
+  --ring: #6366f1;
+
+  /* ---------- Sidebar ---------- */
+  --sidebar: #0d0d24;
+  --sidebar-foreground: #cbd5e1;
+  --sidebar-primary: #4f46e5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1a1a44;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #24245e;
+  --sidebar-ring: #6366f1;
+
+  /* ---------- Gráficos ---------- */
+  --chart-1: #6366f1;
+  --chart-2: #34d399;
+  --chart-3: #fbbf24;
+  --chart-4: #38bdf8;
+  --chart-5: #f472b6;
+}
+
+@theme {
+  /* ---------- Raio ---------- */
+  --radius: 0.875rem;
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.125rem;
+  --radius-2xl: 1.5rem;
+
+  /* ---------- Elevação e efeitos ---------- */
+  --shadow-surface: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-elevated: 0 18px 40px -24px rgb(0 0 0 / 0.85);
+  --shadow-focus: 0 0 0 3px color-mix(in oklab, var(--ring) 45%, transparent);
+  --shadow-glow: 0 12px 30px -12px color-mix(in oklab, var(--primary) 75%, transparent);
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-glow));
+  --gradient-surface: linear-gradient(160deg, var(--surface-2), var(--surface));
+
+  /* ---------- Motion ---------- */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-emphasis: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 360ms;
+
+  /* ---------- Tipografia ---------- */
+  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", monospace;
+
+  --text-eyebrow: 0.625rem;
+  --tracking-eyebrow: 0.18em;
+}
+
+/* Mapa de tokens -> utilitários Tailwind (bg-*, text-*, border-*, ring-*) */
+@theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-glow: var(--primary-glow);
+  --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-soft: var(--destructive-soft);
+
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
 }
 
-/* Classes base */
 @layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-display);
+    color: var(--card-foreground);
+    letter-spacing: -0.015em;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--primary) 45%, transparent);
+    color: var(--primary-foreground);
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
   }
 }
 
-@layer components {
-  .border-border {
-    border-color: var(--border);
+/* ---------- Utilitários do design system ---------- */
+
+@utility surface-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-surface);
+}
+
+@utility surface-elevated {
+  background-image: var(--gradient-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-elevated);
+}
+
+@utility surface-inset {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+}
+
+@utility panel-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--card-foreground);
+  letter-spacing: -0.01em;
+}
+
+@utility eyebrow {
+  font-size: var(--text-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
+@utility gradient-primary {
+  background-image: var(--gradient-primary);
+}
+
+@utility text-gradient-primary {
+  background-image: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility btn-primary {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-glow);
+  transition: background-color var(--duration-normal) var(--ease-standard);
+
+  &:hover {
+    background-color: var(--primary-hover);
   }
 }
 
-/* Animações customizadas */
+@utility btn-ghost {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color var(--duration-normal) var(--ease-standard);
+
+  &:hover {
+    background-color: var(--surface-2);
+  }
+}
+
+@utility card-hover {
+  transition: transform var(--duration-normal) var(--ease-emphasis),
+    border-color var(--duration-normal) var(--ease-standard),
+    box-shadow var(--duration-normal) var(--ease-standard);
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in oklab, var(--primary) 60%, transparent);
+    box-shadow: var(--shadow-elevated);
+  }
+}
+
+/* ---------- Animações ---------- */
+
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideIn {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn var(--duration-slow) var(--ease-emphasis);
 }
 
 .animate-slide-in {
-  animation: slideIn 0.3s ease-out;
+  animation: slideIn var(--duration-slow) var(--ease-emphasis);
 }
 
-/* Scrollbar personalizada */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Scrollbar ---------- */
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #8B4513;
+  background: var(--surface-3);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6d3410;
+  background: var(--primary);
 }
 
-/* Cardapio.ai style extras */
-@layer base {
-  :root {
-    --color-primary: #de4838;
-    --color-primary-fifty: #de483850;
-    --color-primary-twenty-five: #de483825;
-    --color-primary-ten: #de483810;
-    --transition: all 0.2s ease;
-  }
+/* Personalização do sistema: densidade e animações */
+:root[data-densidade="compacta"] {
+  --spacing: 0.2rem;
+}
 
-  .card-hover {
-    transition: var(--transition);
-  }
-  
-  .card-hover:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1);
-  }
+:root[data-reduzir-animacoes="true"] *,
+:root[data-reduzir-animacoes="true"] *::before,
+:root[data-reduzir-animacoes="true"] *::after {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* ================================================================
+   Tema claro — sobrescreve os tokens quando data-tema="claro"
+   ================================================================ */
+:root[data-tema="claro"] {
+  --background: #f6f7fb;
+  --foreground: #1e2436;
+
+  --surface: #ffffff;
+  --surface-2: #f1f3f9;
+  --surface-3: #e6e9f4;
+
+  --card: #ffffff;
+  --card-foreground: #111827;
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+
+  --secondary: #eef1f8;
+  --secondary-foreground: #1e2436;
+  --accent: #eef1f8;
+  --accent-foreground: #111827;
+  --muted: #f1f3f9;
+  --muted-foreground: #5b6478;
+  --subtle-foreground: #7b849a;
+
+  --success-foreground: #052e21;
+  --success-soft: #d7f5e8;
+  --warning-soft: #fdf0cf;
+  --info-soft: #d9eefc;
+  --destructive-soft: #fde3e8;
+
+  --border: #dfe3ee;
+  --border-strong: #c8cfe2;
+  --input: #dfe3ee;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #3a4258;
+  --sidebar-accent: #eef1f8;
+  --sidebar-accent-foreground: #111827;
+  --sidebar-border: #e2e6f1;
+
+  --shadow-surface: 0 1px 2px rgb(16 24 40 / 0.06);
+  --shadow-elevated: 0 18px 40px -24px rgb(16 24 40 / 0.35);
+  --gradient-surface: linear-gradient(160deg, #ffffff, #f3f5fb);
+
+  color-scheme: light;
+}
+
+/* No tema claro, textos brancos hardcoded ficariam invisíveis em superfícies claras */
+:root[data-tema="claro"] .text-white:not([class*="bg-primary"]):not([class*="gradient-primary"]):not([class*="bg-destructive"]):not([class*="bg-success"]) {
+  color: var(--card-foreground);
+}
+:root[data-tema="claro"] .text-slate-300,
+:root[data-tema="claro"] .text-slate-400,
+:root[data-tema="claro"] .text-gray-300,
+:root[data-tema="claro"] .text-gray-400 {
+  color: var(--muted-foreground);
+}
+:root[data-tema="claro"] .bg-white {
+  background-color: var(--surface);
 }

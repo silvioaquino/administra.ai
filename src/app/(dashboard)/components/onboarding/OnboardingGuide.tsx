@@ -303,26 +303,26 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
         <div className="w-full max-w-2xl mx-auto shadow-2xl animate-fade-in pointer-events-auto">
           <Card className="relative">
             {/* Header */}
-            <div className="p-4 border-b bg-gradient-to-r from-white to-gray-50 sticky top-0 bg-white z-10 rounded-t-xl">
+            <div className="p-4 border-b bg-gradient-to-r from-white to-gray-50 sticky top-0 bg-surface z-10 rounded-t-xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-sm">
                     <Sparkles className="h-4 w-4 text-white" />
                   </div>
-                  <h2 className="text-lg font-semibold text-gray-800">Guia de Configuração</h2>
+                  <h2 className="text-lg font-semibold text-white">Guia de Configuração</h2>
                 </div>
                 <button
                   onClick={skipOnboarding}
-                  className="rounded-full p-1 hover:bg-gray-100 transition-colors"
+                  className="rounded-full p-1 hover:bg-surface-2 transition-colors"
                 >
-                  <X className="h-4 w-4 text-gray-400" />
+                  <X className="h-4 w-4 text-muted-foreground/70" />
                 </button>
               </div>
               
               {/* Progresso */}
               <div className="flex items-center gap-3">
                 <Progress value={progress} className="h-1.5 flex-1" />
-                <span className="text-xs text-gray-500">{Math.round(progress)}%</span>
+                <span className="text-xs text-muted-foreground">{Math.round(progress)}%</span>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
                 Passo {currentStep + 1} de {steps.length}
@@ -335,26 +335,26 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
               <div className="text-center space-y-3">
                 <div className="flex justify-center">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#de4838]/10 to-[#de4838]/5">
-                    <IconComponent className="h-8 w-8 text-[#de4838]" />
+                    <IconComponent className="h-8 w-8 text-primary" />
                   </div>
                 </div>
                 <div className="flex items-center justify-center gap-2">
-                  <h3 className="text-xl font-bold text-gray-800">{step.title}</h3>
+                  <h3 className="text-xl font-bold text-white">{step.title}</h3>
                   {isStepCompleted && (
-                    <CheckCircle className="h-5 w-5 text-emerald-500" />
+                    <CheckCircle className="h-5 w-5 text-success" />
                   )}
                 </div>
-                <p className="text-gray-500 text-sm">{step.description}</p>
+                <p className="text-muted-foreground text-sm">{step.description}</p>
               </div>
 
               {/* Dicas */}
               {step.tips && step.tips.length > 0 && (
-                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                <div className="bg-info/5 rounded-xl p-4 border border-blue-100">
                   <p className="text-sm font-medium text-blue-800 mb-2">💡 Dicas importantes:</p>
                   <ul className="space-y-1">
                     {step.tips.map((tip, idx) => (
-                      <li key={idx} className="text-xs text-blue-700 flex items-start gap-2">
-                        <span className="text-blue-500">•</span>
+                      <li key={idx} className="text-xs text-info flex items-start gap-2">
+                        <span className="text-info">•</span>
                         {tip}
                       </li>
                     ))}
@@ -364,12 +364,12 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
 
               {/* Checklist */}
               {step.checklist && (
-                <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-                  <p className="text-sm font-medium text-emerald-800 mb-2">✓ Checklist:</p>
+                <div className="bg-success/5 rounded-xl p-4 border border-emerald-100">
+                  <p className="text-sm font-medium text-success mb-2">✓ Checklist:</p>
                   <ul className="space-y-1">
                     {step.checklist.map((item, idx) => (
-                      <li key={idx} className="text-xs text-emerald-700 flex items-start gap-2">
-                        <span className="text-emerald-500">✓</span>
+                      <li key={idx} className="text-xs text-success flex items-start gap-2">
+                        <span className="text-success">✓</span>
                         {item}
                       </li>
                     ))}
@@ -379,8 +379,8 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
 
               {/* Instrução do Highlight */}
               {step.action.fieldSelector && (
-                <div className="bg-amber-50 rounded-xl p-3 border border-amber-100">
-                  <p className="text-xs text-amber-700 flex items-center gap-2">
+                <div className="bg-warning/5 rounded-xl p-3 border border-amber-100">
+                  <p className="text-xs text-warning flex items-center gap-2">
                     <Target className="h-3 w-3" />
                     Ao clicar no botão abaixo, o campo que você precisa editar será destacado em vermelho.
                   </p>
@@ -393,7 +393,7 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
                   <Button
                     variant="outline"
                     onClick={handlePrevious}
-                    className="flex-1 rounded-xl border-gray-200 hover:border-[#de4838] h-11"
+                    className="flex-1 rounded-xl border-border hover:border-primary h-11"
                   >
                     <ChevronLeft className="mr-2 h-4 w-4" />
                     Voltar
@@ -401,7 +401,7 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
                 )}
                 <Button
                   onClick={handleAction}
-                  className="flex-1 bg-[#de4838] hover:bg-[#c73d2e] rounded-xl h-11 text-white"
+                  className="flex-1 bg-primary hover:bg-primary/90 rounded-xl h-11 text-white"
                 >
                   {step.action.label}
                   <ChevronRight className="ml-2 h-4 w-4" />
@@ -409,7 +409,7 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
                 <Button
                   variant="outline"
                   onClick={handleNext}
-                  className="flex-1 rounded-xl border-gray-200 hover:border-[#de4838] h-11"
+                  className="flex-1 rounded-xl border-border hover:border-primary h-11"
                 >
                   {isLastStep ? "Finalizar" : "Pular"}
                   {!isLastStep && <ChevronRight className="ml-2 h-4 w-4" />}
@@ -420,7 +420,7 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
               <div className="text-center">
                 <button
                   onClick={skipOnboarding}
-                  className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors"
                 >
                   Pular tutorial e configurar depois
                 </button>
@@ -428,7 +428,7 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
             </CardContent>
 
             {/* Footer */}
-            <div className="p-4 border-t bg-gray-100 rounded-b-xl">
+            <div className="p-4 border-t bg-surface-2 rounded-b-xl">
               <div className="flex justify-center gap-1.5">
                 {steps.map((_, idx) => (
                   <button
@@ -440,15 +440,15 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
                     }}
                     className={`h-1.5 rounded-full transition-all ${
                       idx === currentStep
-                        ? "w-6 bg-[#de4838]"
+                        ? "w-6 bg-primary"
                         : idx < currentStep
-                        ? "w-1.5 bg-[#de4838]/50"
-                        : "w-1.5 bg-gray-300"
+                        ? "w-1.5 bg-primary/50"
+                        : "w-1.5 bg-surface-2"
                     }`}
                   />
                 ))}
               </div>
-              <p className="text-center text-xs text-gray-400 mt-3">
+              <p className="text-center text-xs text-muted-foreground/70 mt-3">
                 Complete cada etapa para configurar seu sistema
               </p>
             </div>

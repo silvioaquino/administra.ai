@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
+import { PageContainer } from "@/components/layout/PageContainer"
+import { PageHeader } from "@/components/layout/PageHeader"
 import { FichaCard } from "./components/FichaCard"
 
 interface FichaTecnica {
@@ -132,31 +134,29 @@ export default function FichasTecnicasPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
+      <div className="min-h-screen bg-surface-2 flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 ml-6 mr-6 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-800">Fichas Técnicas</h1>
-          <p className="text-sm text-gray-500">Gerencie as receitas e custos dos seus pratos</p>
-        </div>
-        <Button 
-          onClick={() => router.push("/fichas-tecnicas/nova")}
-          className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-5"
+      <PageContainer>
+        <PageHeader
+          title="Fichas Técnicas"
+          subtitle="Gerencie as receitas e custos dos seus pratos"
+          backHref="/precificacao"
         >
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Ficha Técnica
-        </Button>
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto p-6 max-w-7xl">
+          <Button
+            onClick={() => router.push("/fichas-tecnicas/nova")}
+            className="bg-primary hover:bg-primary/90 text-white rounded-full px-5"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Ficha Técnica
+          </Button>
+        </PageHeader>
         {/* Cards de Estatísticas 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {cardsStats.map((card, idx) => (
@@ -182,23 +182,23 @@ export default function FichasTecnicasPage() {
         </div>*/}
 
         {/* Filtros */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+        <div className="bg-surface rounded-2xl shadow-sm overflow-hidden mb-6">
           <div className="py-3 px-5">
             <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1">
               <div className="flex items-center gap-1 flex-shrink-0">
-                <Filter className="h-4 w-4 text-[#de4838]" />
-                <h3 className="font-semibold text-gray-800 text-sm hidden sm:inline">Filtros</h3>
+                <Filter className="h-4 w-4 text-primary" />
+                <h3 className="font-semibold text-white text-sm hidden sm:inline">Filtros</h3>
               </div>
 
               <div className="flex items-center gap-2 flex-grow min-w-0">
                 {/* Busca por nome */}
                 <div className="relative flex-shrink-0">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
                   <Input
                     placeholder="Buscar por nome do prato..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-9 pr-3 py-2 text-sm rounded-lg border-gray-200 focus:ring-[#de4838] focus:border-transparent min-w-[200px]"
+                    className="pl-9 pr-3 py-2 text-sm rounded-lg border-border focus:ring-primary focus:border-transparent min-w-[200px]"
                   />
                 </div>
 
@@ -207,19 +207,19 @@ export default function FichasTecnicasPage() {
                   <select
                     value={categoriaFiltro}
                     onChange={(e) => setCategoriaFiltro(e.target.value)}
-                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8 min-w-[120px]"
+                    className="rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none pr-8 min-w-[120px]"
                   >
                     <option value="">Todos</option>
                     {categoriasUnicas.map((cat) => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
                     <svg className="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                   </div>
                 </div>
 
-                <div className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 flex-shrink-0">
+                <div className="rounded-lg bg-surface-2 px-3 py-2 text-sm font-medium text-white flex-shrink-0">
                   <CalendarRange className="h-4 w-4 inline mr-1" />
                   {stats.total} ficha{stats.total !== 1 ? 's' : ''}
                 </div>
@@ -230,9 +230,9 @@ export default function FichasTecnicasPage() {
 
         {/* Alertas de Margem Baixa */}
         {fichas.some(f => f.margem < lucroDesejado) && (
-          <Alert className="mt-4 bg-amber-50 border-amber-200 rounded-xl">
-            <AlertCircle className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-sm text-amber-700">
+          <Alert className="mt-4 bg-warning/5 border-amber-200 rounded-xl">
+            <AlertCircle className="h-4 w-4 text-warning" />
+            <AlertDescription className="text-sm text-warning">
               Algumas fichas técnicas têm margem de lucro abaixo de {formatPercentage(lucroDesejado)} (margem alvo do Planejamento). Revise os custos ou preços de venda.
             </AlertDescription>
           </Alert>
@@ -241,19 +241,19 @@ export default function FichasTecnicasPage() {
         {/* Lista de Fichas */}
         <div className="mt-6">
           {fichasFiltradas.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
               <div className="flex h-80 flex-col items-center justify-center text-center p-6">
-                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <Package className="h-10 w-10 text-gray-400" />
+                <div className="w-20 h-20 bg-surface-2 rounded-full flex items-center justify-center mb-4">
+                  <Package className="h-10 w-10 text-muted-foreground/70" />
                 </div>
-                <p className="text-gray-500 mb-2">Nenhuma ficha técnica encontrada</p>
-                <p className="text-sm text-gray-400 mb-4">
+                <p className="text-muted-foreground mb-2">Nenhuma ficha técnica encontrada</p>
+                <p className="text-sm text-muted-foreground/70 mb-4">
                   {search ? "Tente buscar por outro termo" : "Comece criando sua primeira ficha técnica"}
                 </p>
                 {!search && (
                   <Button 
                     onClick={() => router.push("/fichas-tecnicas/nova")}
-                    className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg"
+                    className="bg-primary hover:bg-primary/90 text-white rounded-lg"
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Criar primeira ficha técnica
@@ -278,12 +278,12 @@ export default function FichasTecnicasPage() {
 
         {/* Badge de Atualização Automática */}
         <div className="fixed bottom-6 right-6">
-          <div className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs text-emerald-700 shadow-sm">
+          <div className="rounded-full bg-success/10 px-3 py-1.5 text-xs text-success shadow-sm">
             <Zap className="inline h-3 w-3 mr-1" />
             Atualização automática de custos ativada
           </div>
         </div>
-      </div>
+      </PageContainer>
     </div>
   )
 }

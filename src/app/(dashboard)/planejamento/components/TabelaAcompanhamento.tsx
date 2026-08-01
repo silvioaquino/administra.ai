@@ -102,12 +102,12 @@ export function TabelaAcompanhamento({ metas, acompanhamentos, periodosSeleciona
   const percentualGeral = totalMeta > 0 ? (totalReal / totalMeta) * 100 : 0
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className="bg-gray-100 p-4 border-b border-gray-100">
+    <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-surface-2 p-4 border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-[#de4838]" />
-            <h3 className="font-semibold text-gray-800">Acompanhamento Mensal - Real vs Meta</h3>
+            <BarChart3 className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold text-white">Acompanhamento Mensal - Real vs Meta</h3>
           </div>
           {/* Abas dinâmicas para o período */}
           <div className="flex gap-1">
@@ -116,8 +116,8 @@ export function TabelaAcompanhamento({ metas, acompanhamentos, periodosSeleciona
                 key={periodo}
                 className={`flex items-center gap-1 px-2 py-1 text-xs rounded ${
                   abaAtiva === periodo
-                    ? 'bg-[#de4838] text-white'
-                    : 'bg-gray-200 text-gray-600'
+                    ? 'bg-primary text-white'
+                    : 'bg-surface-2 text-muted-foreground'
                 }`}
               >
                 {getIcon(periodo)}
@@ -129,26 +129,26 @@ export function TabelaAcompanhamento({ metas, acompanhamentos, periodosSeleciona
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-100 border-b border-gray-200">
+          <thead className="bg-surface-2 border-b border-border">
             <tr>
-              <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mês</th>
+              <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mês</th>
               {periodosSelecionados.map((periodo) => (
-                <th key={periodo} colSpan={2} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-x border-gray-200">
+                <th key={periodo} colSpan={2} className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider border-x border-border">
                   {getLabel(periodo)}
                 </th>
               ))}
               {/* Coluna de espaçamento no final - header (linha 1) */}
-              <th rowSpan={2} className="bg-gray-100 w-18"></th>
+              <th rowSpan={2} className="bg-surface-2 w-18"></th>
             </tr>
-            <tr className="bg-gray-100">
+            <tr className="bg-surface-2">
               {periodosSelecionados.map((periodo) => (
                 <React.Fragment key={periodo}>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Meta</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Real</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Meta</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Real</th>
                 </React.Fragment>
               ))}
               {/* Coluna de espaçamento no final - header (linha 2) */}
-              <th className="bg-gray-100"></th>
+              <th className="bg-surface-2"></th>
             </tr>
           </thead>
           <tbody>
@@ -181,19 +181,19 @@ export function TabelaAcompanhamento({ metas, acompanhamentos, periodosSeleciona
               let rowClass = ""
               let statusIcon = null
               if (totalLinhaReal >= totalLinhaMeta) {
-                rowClass = "bg-emerald-50"
-                statusIcon = <TrendingUp className="h-3 w-3 text-emerald-600" />
+                rowClass = "bg-success/5"
+                statusIcon = <TrendingUp className="h-3 w-3 text-success" />
               } else if (totalLinhaReal >= totalLinhaMeta * 0.8) {
-                rowClass = "bg-amber-50"
-                statusIcon = <TrendingUp className="h-3 w-3 text-amber-600" />
+                rowClass = "bg-warning/5"
+                statusIcon = <TrendingUp className="h-3 w-3 text-warning" />
               } else if (totalLinhaReal > 0) {
-                rowClass = "bg-red-50"
-                statusIcon = <TrendingDown className="h-3 w-3 text-red-600" />
+                rowClass = "bg-destructive/5"
+                statusIcon = <TrendingDown className="h-3 w-3 text-destructive" />
               }
 
               return (
-                <tr key={idx} className={`border-b border-gray-100 ${rowClass}`}>
-                  <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">
+                <tr key={idx} className={`border-b border-border ${rowClass}`}>
+                  <td className="px-4 py-3 font-medium text-white whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       {statusIcon}
                       {mes}
@@ -201,23 +201,23 @@ export function TabelaAcompanhamento({ metas, acompanhamentos, periodosSeleciona
                   </td>
                   {periodosSelecionados.map((periodo) => (
                     <React.Fragment key={periodo}>
-                      <td className="px-4 py-3 text-right font-mono text-gray-600">
+                      <td className="px-4 py-3 text-right font-mono text-muted-foreground">
                         {formatCurrency(metaPorPeriodo[periodo] || 0)}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-gray-700">
+                      <td className="px-4 py-3 text-right font-mono text-white">
                         {formatCurrency(realPorPeriodo[periodo] || 0)}
                       </td>
                     </React.Fragment>
                   ))}
                   {/* Coluna de espaçamento no final - body - usa a cor da linha */}
-                  <td className={`border-b border-gray-100 ${rowClass} w-18`}></td>
+                  <td className={`border-b border-border ${rowClass} w-18`}></td>
                 </tr>
               )
             })}
           </tbody>
-          <tfoot className="border-t-2 border-gray-200 bg-gray-100">
+          <tfoot className="border-t-2 border-border bg-surface-2">
             <tr className="font-semibold">
-              <td className="px-4 py-3 text-gray-800 pr-8">TOTAL ANUAL ({getLabel(abaAtiva)})</td>
+              <td className="px-4 py-3 text-white pr-8">TOTAL ANUAL ({getLabel(abaAtiva)})</td>
               {periodosSelecionados.map((periodo) => {
                 const totalMetaPeriodo = metas.reduce((sum, m) => sum + ((m.periodos?.[periodo as keyof typeof m.periodos] || 0) * m.diasTrabalhados), 0)
                 const totalRealPeriodo = acompanhamentos.reduce((sum, a) => {
@@ -228,31 +228,31 @@ export function TabelaAcompanhamento({ metas, acompanhamentos, periodosSeleciona
                 }, 0)
                 return (
                   <React.Fragment key={periodo}>
-                    <td className="px-4 py-3 text-right text-gray-800">
+                    <td className="px-4 py-3 text-right text-white">
                       {formatCurrency(totalMetaPeriodo)}
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-800">
+                    <td className="px-4 py-3 text-right text-white">
                       {formatCurrency(totalRealPeriodo)}
                     </td>
                   </React.Fragment>
                 )
               })}
               {/* Coluna de espaçamento no final - footer */}
-              <td className="bg-gray-100 w-12"></td>
+              <td className="bg-surface-2 w-12"></td>
             </tr>
           </tfoot>
         </table>
       </div>
 
       {/* Progresso da Meta do Período Ativo */}
-      <div className="p-5 border-t border-gray-100">
+      <div className="p-5 border-t border-border">
         <div className="mb-2 flex justify-between text-sm">
-          <span className="text-gray-600">🎯 Progresso da Meta Anual ({getLabel(abaAtiva)})</span>
-          <span className="font-medium text-gray-700">{percentualGeral.toFixed(0)}%</span>
+          <span className="text-muted-foreground">🎯 Progresso da Meta Anual ({getLabel(abaAtiva)})</span>
+          <span className="font-medium text-white">{percentualGeral.toFixed(0)}%</span>
         </div>
         <Progress value={percentualGeral} className="h-3" />
         <div className="mt-4">
-          <div className={`rounded-xl p-3 text-center text-sm ${percentualGeral >= 100 ? 'bg-emerald-100 text-emerald-700' : percentualGeral >= 80 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+          <div className={`rounded-xl p-3 text-center text-sm ${percentualGeral >= 100 ? 'bg-success/10 text-success' : percentualGeral >= 80 ? 'bg-warning/10 text-warning' : 'bg-destructive/10 text-destructive'}`}>
             {percentualGeral >= 100
               ? "🎉 Meta Anual Alcançada! Parabéns!"
               : percentualGeral >= 80

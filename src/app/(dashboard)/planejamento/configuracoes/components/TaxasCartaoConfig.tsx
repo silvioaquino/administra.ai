@@ -255,33 +255,33 @@ export function TaxasCartaoConfig({ config, resultados, onUpdate, onSave, saving
         {/* Resultados */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-green-600">📈 RESULTADOS DOS CÁLCULOS</CardTitle>
+            <CardTitle className="text-success">📈 RESULTADOS DOS CÁLCULOS</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg bg-blue-50 p-2 text-center">
+              <div className="rounded-lg bg-info/5 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Taxa Débito Média</p>
-                <p className="text-lg font-bold text-blue-600">{formatPercentage(resultados.debitoMedia)}</p>
+                <p className="text-lg font-bold text-info">{formatPercentage(resultados.debitoMedia)}</p>
               </div>
-              <div className="rounded-lg bg-blue-50 p-2 text-center">
+              <div className="rounded-lg bg-info/5 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Taxa Crédito Média</p>
-                <p className="text-lg font-bold text-blue-600">{formatPercentage(resultados.creditoMedia)}</p>
+                <p className="text-lg font-bold text-info">{formatPercentage(resultados.creditoMedia)}</p>
               </div>
               <div className="rounded-lg bg-yellow-50 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Taxa Média Geral</p>
                 <p className="text-lg font-bold text-yellow-600">{formatPercentage(resultados.taxaMediaGeral)}</p>
               </div>
-              <div className="rounded-lg bg-gray-100 p-2 text-center">
+              <div className="rounded-lg bg-surface-2 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Aluguel Total</p>
-                <p className="text-lg font-bold text-gray-600">{formatCurrency(resultados.aluguelTotal)}</p>
+                <p className="text-lg font-bold text-muted-foreground">{formatCurrency(resultados.aluguelTotal)}</p>
               </div>
-              <div className="rounded-lg bg-gray-100 p-2 text-center">
+              <div className="rounded-lg bg-surface-2 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Aluguel % (base R$30k)</p>
-                <p className="text-lg font-bold text-gray-600">{formatPercentage(resultados.percentualAluguel)}</p>
+                <p className="text-lg font-bold text-muted-foreground">{formatPercentage(resultados.percentualAluguel)}</p>
               </div>
               <div className="rounded-lg bg-green-50 p-2 text-center">
                 <p className="text-xs text-muted-foreground">🎯 TOTAL DESPESAS VARIÁVEIS</p>
-                <p className="text-lg font-bold text-green-600">{formatPercentage(resultados.totalDespesasVariaveis)}</p>
+                <p className="text-lg font-bold text-success">{formatPercentage(resultados.totalDespesasVariaveis)}</p>
               </div>
             </div>
             <Alert className="mt-4" variant="info">

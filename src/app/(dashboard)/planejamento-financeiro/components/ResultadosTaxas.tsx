@@ -104,13 +104,13 @@ export function ResultadosTaxas({
   ]
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-50 p-4 border-b border-gray-100">
+      <div className="bg-surface-2 p-4 border-b border-border">
         <div className="flex items-center gap-2">
-          <Calculator className="h-5 w-5 text-[#de4838]" />
-          <h3 className="font-semibold text-gray-800">Resultados</h3>
-          <span className="text-xs text-gray-400 ml-auto">
+          <Calculator className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold text-white">Resultados</h3>
+          <span className="text-xs text-muted-foreground/70 ml-auto">
             Base: {formatCurrency(faturamentoTotal || 0)} de faturamento
           </span>
         </div>
@@ -140,17 +140,17 @@ export function ResultadosTaxas({
         </div>
 
         {/* Total Despesas Variáveis */}
-        <div className="mt-6 pt-4 border-t-2 border-gray-200">
+        <div className="mt-6 pt-4 border-t-2 border-border">
           <div className="flex justify-between items-center">
-            <span className="text-base font-semibold text-gray-800 flex items-center gap-2">
-              <PieChart className="h-5 w-5 text-[#de4838]" />
+            <span className="text-base font-semibold text-white flex items-center gap-2">
+              <PieChart className="h-5 w-5 text-primary" />
               Total Despesas Variáveis:
             </span>
-            <span className="text-3xl font-bold text-[#de4838]">
+            <span className="text-3xl font-bold text-primary">
               {formatPercentage(totalDespesasVariaveis)}
             </span>
           </div>
-          <div className="mt-2 grid grid-cols-2 md:grid-cols-5 gap-2 text-xs text-gray-500">
+          <div className="mt-2 grid grid-cols-2 md:grid-cols-5 gap-2 text-xs text-muted-foreground">
             <div className="flex justify-between">
               <span>Simples Nacional:</span>
               <span className="font-medium">{formatPercentage(outrasTaxas.simplesNacional)}</span>
@@ -171,8 +171,8 @@ export function ResultadosTaxas({
         </div>
 
         {/* Informações adicionais */}
-        <div className="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
-          <p className="text-xs text-blue-700">
+        <div className="mt-4 p-3 bg-info/5 rounded-xl border border-blue-100">
+          <p className="text-xs text-info">
             <strong>ℹ️ Detalhamento:</strong> Taxa Média Geral = (Débito {distribuicaoVendas.debito}% × {taxaDebitoMedia.toFixed(2)}%) + 
             (Crédito {distribuicaoVendas.credito}% × {taxaCreditoMedia.toFixed(2)}%) + 
             (Voucher {distribuicaoVendas.voucher}% × {taxaVoucher.toFixed(2)}%) = {taxaMediaGeral.toFixed(2)}%
@@ -180,13 +180,13 @@ export function ResultadosTaxas({
         </div>
 
         {/* Status das maquininhas */}
-        <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
+        <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="inline-block h-2 w-2 rounded-full bg-success/50" />
             {maquininhasAtivas.length} maquininhas ativas
           </span>
           <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-gray-300" />
+            <span className="inline-block h-2 w-2 rounded-full bg-surface-2" />
             {maquininhas.length - maquininhasAtivas.length} inativas
           </span>
         </div>

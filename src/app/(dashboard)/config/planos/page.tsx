@@ -34,6 +34,8 @@ import { Plan, Subscription } from "@prisma/client";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 type PlanWithDetails = Plan & {
   features: string[] | Json;
@@ -221,27 +223,26 @@ export default function PlanosPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
+      <div className="min-h-screen bg-surface-2 flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb]">
-      <div className="container mx-auto p-6 max-w-7xl">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-800">Gerenciamento de Plano</h1>
-          <p className="text-sm text-gray-500">Gerencie sua assinatura e escolha o melhor plano para o seu negócio.</p>
-        </div>
+    <div className="min-h-screen bg-background">
+      <PageContainer>
+        <PageHeader
+          title="Gerenciamento de Plano"
+          subtitle="Gerencie sua assinatura e escolha o melhor plano para o seu negócio."
+        />
 
         {/* Alertas de Trial/Assinatura */}
         {isInTrial && (
-          <Alert className="mb-6 bg-orange-50 border-orange-200 rounded-xl">
-            <Crown className="h-5 w-5 text-orange-600" />
-            <AlertTitle className="text-orange-700 font-semibold">Período de Teste Grátis</AlertTitle>
-            <AlertDescription className="text-orange-600">
+          <Alert className="mb-6 bg-warning/5 border-orange-200 rounded-xl">
+            <Crown className="h-5 w-5 text-warning" />
+            <AlertTitle className="text-warning font-semibold">Período de Teste Grátis</AlertTitle>
+            <AlertDescription className="text-warning">
               Seu teste gratuito termina em <strong>{trialDaysLeft} dias</strong>. Aproveite todos os recursos!
               Ao assinar qualquer plano, o tempo restante do teste é somado à sua assinatura.
             </AlertDescription>
@@ -249,10 +250,10 @@ export default function PlanosPage() {
         )}
 
         {isSubscriptionActive && currentPlan && subscriptionEndDate && (
-          <Alert className="mb-6 bg-emerald-50 border-emerald-200 rounded-xl">
-            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-            <AlertTitle className="text-emerald-700 font-semibold">Assinatura Ativa</AlertTitle>
-            <AlertDescription className="text-emerald-700">
+          <Alert className="mb-6 bg-success/5 border-success/30 rounded-xl">
+            <CheckCircle2 className="h-5 w-5 text-success" />
+            <AlertTitle className="text-success font-semibold">Assinatura Ativa</AlertTitle>
+            <AlertDescription className="text-success">
               Seu plano <strong>{currentPlan.name}</strong> está ativo até{" "}
               {format(subscriptionEndDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}.
             </AlertDescription>
@@ -260,10 +261,10 @@ export default function PlanosPage() {
         )}
 
         {!isSubscriptionActive && !isInTrial && (
-          <Alert className="mb-6 bg-red-50 border-red-200 rounded-xl">
-            <AlertTriangle className="h-5 w-5 text-red-600" />
-            <AlertTitle className="text-red-700 font-semibold">Assinatura Expirada ou Cancelada</AlertTitle>
-            <AlertDescription className="text-red-600">
+          <Alert className="mb-6 bg-destructive/5 border-destructive/30 rounded-xl">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            <AlertTitle className="text-destructive font-semibold">Assinatura Expirada ou Cancelada</AlertTitle>
+            <AlertDescription className="text-destructive">
               Seu plano expirou. Para continuar usando o sistema, renove sua assinatura abaixo.
             </AlertDescription>
           </Alert>
@@ -271,14 +272,14 @@ export default function PlanosPage() {
 
         {/* Seletor de Período */}
         <div className="flex flex-col items-center gap-3 mb-8">
-          <div className="inline-flex rounded-xl bg-gray-100 p-1">
+          <div className="inline-flex rounded-xl bg-surface-2 p-1">
             <button
               onClick={() => setBillingPeriod("monthly")}
               className={cn(
                 "rounded-lg px-5 py-2 text-sm font-medium transition-all",
                 billingPeriod === "monthly"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:bg-gray-200"
+                  ? "bg-surface text-gray-900 shadow-sm"
+                  : "text-muted-foreground hover:bg-surface-2"
               )}
             >
               Mensal
@@ -288,25 +289,25 @@ export default function PlanosPage() {
               className={cn(
                 "rounded-lg px-5 py-2 text-sm font-medium transition-all",
                 billingPeriod === "semiannual"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:bg-gray-200"
+                  ? "bg-surface text-gray-900 shadow-sm"
+                  : "text-muted-foreground hover:bg-surface-2"
               )}
             >
-              Semestral <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-xs text-emerald-700">-10%</span>
+              Semestral <span className="ml-1 rounded-full bg-success/10 px-1.5 py-0.5 text-xs text-success">-10%</span>
             </button>
             <button
               onClick={() => setBillingPeriod("annual")}
               className={cn(
                 "rounded-lg px-5 py-2 text-sm font-medium transition-all",
                 billingPeriod === "annual"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:bg-gray-200"
+                  ? "bg-surface text-gray-900 shadow-sm"
+                  : "text-muted-foreground hover:bg-surface-2"
               )}
             >
-              Anual <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-xs text-emerald-700">-15%</span>
+              Anual <span className="ml-1 rounded-full bg-success/10 px-1.5 py-0.5 text-xs text-success">-15%</span>
             </button>
           </div>
-          <p className="text-xs text-gray-500">Planos com desconto para períodos mais longos.</p>
+          <p className="text-xs text-muted-foreground">Planos com desconto para períodos mais longos.</p>
         </div>
 
         {/* Grid de Planos */}
@@ -321,41 +322,41 @@ export default function PlanosPage() {
               <div
                 key={plan.id}
                 className={cn(
-                  "relative w-full max-w-xl bg-white rounded-2xl shadow-sm overflow-hidden transition-all duration-200 flex flex-col",
+                  "relative w-full max-w-xl bg-surface rounded-2xl shadow-sm overflow-hidden transition-all duration-200 flex flex-col",
                   isCurrentPlan ? "ring-2 ring-[#de4838] shadow-md" : "hover:shadow-md",
-                  plan.popular && !isCurrentPlan && "border-2 border-[#de4838]/20"
+                  plan.popular && !isCurrentPlan && "border-2 border-primary/20"
                 )}
               >
                 {plan.popular && !isCurrentPlan && (
-                  <div className="absolute top-0 right-6 rounded-b-lg bg-[#de4838] px-3 py-1 text-xs font-medium text-white">
+                  <div className="absolute top-0 right-6 rounded-b-lg bg-primary px-3 py-1 text-xs font-medium text-white">
                     Mais Popular
                   </div>
                 )}
                 {isCurrentPlan && (
-                  <div className="absolute top-0 right-6 rounded-b-lg bg-emerald-600 px-3 py-1 text-xs font-medium text-white">
+                  <div className="absolute top-0 right-6 rounded-b-lg bg-success px-3 py-1 text-xs font-medium text-white">
                     Plano Atual
                   </div>
                 )}
                 
                 {/* Header com gradiente */}
                 <div className={cn(
-                  "p-5 border-b border-gray-100",
+                  "p-5 border-b border-border",
                   plan.popular && !isCurrentPlan ? "bg-gradient-to-r from-[#de4838]/5 to-transparent" : ""
                 )}>
-                  <h3 className="text-xl font-bold text-gray-800">{plan.name}</h3>
-                  <p className="text-sm text-gray-500 mt-1 min-h-[40px]">
+                  <h3 className="text-xl font-bold text-white">{plan.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1 min-h-[40px]">
                     {plan.name === "Plano Básico" && "Venda para entrega, retirada, balcão, mesa e agendado."}
                     {plan.name === "Plano Robô" && "Tudo do PDV + Robô de pedidos e acesso ao pagamento online."}
                   </p>
                   <div className="mt-4">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold text-gray-800">{formatCurrency(periodPrice)}</span>
-                      <span className="text-sm text-gray-500">/{getPeriodLabel()}</span>
+                      <span className="text-3xl font-bold text-white">{formatCurrency(periodPrice)}</span>
+                      <span className="text-sm text-muted-foreground">/{getPeriodLabel()}</span>
                     </div>
                     {hasDiscount && (
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         <span className="line-through">{formatCurrency(originalPrice)}</span>
-                        <span className="ml-2 font-medium text-emerald-600">
+                        <span className="ml-2 font-medium text-success">
                           Economize {formatCurrency(originalPrice - periodPrice)}
                         </span>
                       </p>
@@ -368,15 +369,15 @@ export default function PlanosPage() {
                   <ul className="space-y-2">
                     {menuOptions.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-sm">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                        <span className="text-gray-600">{item}</span>
+                        <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                        <span className="text-muted-foreground">{item}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
                 {/* Footer */}
-                <div className="p-5 pt-0 border-t border-gray-100 mt-4">
+                <div className="p-5 pt-0 border-t border-border mt-4">
                   <Button
                     className="w-full rounded-lg"
                     variant={isCurrentPlan ? "outline" : "default"}
@@ -385,44 +386,44 @@ export default function PlanosPage() {
                   >
                     {isCurrentPlan ? "Plano Atual" : `Assinar ${plan.name}`}
                   </Button>
-                  <p className="text-center text-xs text-gray-400 mt-3">Sem fidelidade, cancele quando quiser.</p>
+                  <p className="text-center text-xs text-muted-foreground/70 mt-3">Sem fidelidade, cancele quando quiser.</p>
                 </div>
               </div>
             );
           })}
         </div>
 
-        <Separator className="bg-gray-200 my-8" />
+        <Separator className="bg-surface-2 my-8" />
 
         {/* Método de Pagamento */}
         <div className="space-y-6">
-          <h2 className="text-lg font-semibold text-gray-800">Método de Pagamento</h2>
+          <h2 className="text-lg font-semibold text-white">Método de Pagamento</h2>
           <div className="grid gap-6 md:grid-cols-2">
             {/* Cartão de Crédito */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-100 p-4 border-b border-gray-100">
+            <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-surface-2 p-4 border-b border-border">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-blue-600" />
-                    <h3 className="font-semibold text-gray-800">Cartão de Crédito</h3>
+                    <CreditCard className="h-5 w-5 text-info" />
+                    <h3 className="font-semibold text-white">Cartão de Crédito</h3>
                   </div>
                   <Button 
                     variant="outline" 
                     onClick={() => alert("Redirecionar para cadastro de cartão")}
-                    className="rounded-lg border-gray-200"
+                    className="rounded-lg border-border"
                   >
                     Cadastrar
                   </Button>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">Cadastre seu cartão para pagamentos recorrentes. Cancele quando quiser.</p>
+                <p className="text-sm text-muted-foreground mt-1">Cadastre seu cartão para pagamentos recorrentes. Cancele quando quiser.</p>
               </div>
               {false && (
                 <div className="p-5">
-                  <div className="rounded-xl bg-gray-100 p-3">
-                    <p className="text-sm font-medium text-gray-800">**** **** **** 4242</p>
-                    <p className="text-xs text-gray-500 mt-1">Vencimento: 12/2028</p>
+                  <div className="rounded-xl bg-surface-2 p-3">
+                    <p className="text-sm font-medium text-white">**** **** **** 4242</p>
+                    <p className="text-xs text-muted-foreground mt-1">Vencimento: 12/2028</p>
                   </div>
-                  <Button variant="link" className="mt-2 h-auto p-0 text-red-500">
+                  <Button variant="link" className="mt-2 h-auto p-0 text-destructive">
                     Remover cartão
                   </Button>
                 </div>
@@ -430,22 +431,22 @@ export default function PlanosPage() {
             </div>
 
             {/* Pix */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="bg-gray-100 p-4 border-b border-gray-100">
+            <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-surface-2 p-4 border-b border-border">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Zap className="h-5 w-5 text-emerald-600" />
-                    <h3 className="font-semibold text-gray-800">Pix</h3>
+                    <Zap className="h-5 w-5 text-success" />
+                    <h3 className="font-semibold text-white">Pix</h3>
                   </div>
                   <Button 
                     variant="outline" 
                     onClick={handleGeneratePix}
-                    className="rounded-lg border-gray-200"
+                    className="rounded-lg border-border"
                   >
                     Gerar código Pix
                   </Button>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">Renove sua assinatura usando QR Code ou Pix copia e cola.</p>
+                <p className="text-sm text-muted-foreground mt-1">Renove sua assinatura usando QR Code ou Pix copia e cola.</p>
               </div>
             </div>
           </div>
@@ -471,31 +472,31 @@ export default function PlanosPage() {
         {/* Modal Pix */}
         {showPixModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="relative max-w-md w-full rounded-2xl bg-white shadow-xl animate-in fade-in zoom-in duration-200">
+            <div className="relative max-w-md w-full rounded-2xl bg-surface shadow-xl animate-in fade-in zoom-in duration-200">
               <button
                 onClick={() => setShowPixModal(false)}
-                className="absolute right-4 top-4 rounded-full p-1 hover:bg-gray-100 transition-colors"
+                className="absolute right-4 top-4 rounded-full p-1 hover:bg-surface-2 transition-colors"
               >
-                <X className="h-5 w-5 text-gray-400" />
+                <X className="h-5 w-5 text-muted-foreground/70" />
               </button>
               <div className="p-6 text-center">
                 <div className="mb-4 flex justify-center">
-                  <div className="rounded-2xl bg-gray-100 p-4">
-                    <div className="flex h-32 w-32 items-center justify-center bg-white rounded-xl">
+                  <div className="rounded-2xl bg-surface-2 p-4">
+                    <div className="flex h-32 w-32 items-center justify-center bg-surface rounded-xl">
                       <div className="h-28 w-28 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 opacity-20" />
                     </div>
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800">Pague com Pix</h3>
-                <p className="mt-1 text-sm text-gray-500">
+                <h3 className="text-lg font-semibold text-white">Pague com Pix</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Escaneie o QR Code com o celular ou copie o código Pix
                 </p>
-                <p className="mt-4 text-2xl font-bold text-emerald-600">
+                <p className="mt-4 text-2xl font-bold text-success">
                   {formatCurrency(isSubscriptionActive ? currentPlan?.price || 49.9 : 49.9)}
                 </p>
                 <Button
                   onClick={handleCopyPixCode}
-                  className="mt-4 w-full gap-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg"
+                  className="mt-4 w-full gap-2 bg-success hover:bg-success/90 rounded-lg"
                 >
                   {copiedPix ? (
                     <>
@@ -507,14 +508,14 @@ export default function PlanosPage() {
                     </>
                   )}
                 </Button>
-                <p className="mt-4 text-xs text-gray-400">
+                <p className="mt-4 text-xs text-muted-foreground/70">
                   Após a confirmação, o pagamento pode levar até 1 minuto para ser processado.
                 </p>
               </div>
             </div>
           </div>
         )}
-      </div>
+      </PageContainer>
     </div>
   );
 }

@@ -44,6 +44,8 @@ import {
 } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatCurrency, formatDate } from "@/lib/utils"
+import { PageContainer } from "@/components/layout/PageContainer"
+import { PageHeader } from "@/components/layout/PageHeader"
 import { useCategorias } from "@/hooks/useCategorias"
 
 // Tipos
@@ -332,7 +334,7 @@ function obterPrimeiroDiaMes(): string {
 
 // Função para obter o estilo da linha baseado no status do boleto
 const getRowStyleForBoleto = (statusBoleto: string | null, dataVencimento: string | null, dataPagamento: string | null) => {
-  if (statusBoleto === "PAGO" || dataPagamento) return "bg-emerald-50/30"
+  if (statusBoleto === "PAGO" || dataPagamento) return "bg-success/5/30"
   if (!dataVencimento) return ""
 
   const hoje = new Date()
@@ -342,22 +344,22 @@ const getRowStyleForBoleto = (statusBoleto: string | null, dataVencimento: strin
 
   const diffDays = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
 
-  if (vencimento < hoje) return "bg-red-100 border-l-4 border-red-500"
-  if (diffDays === 0) return "bg-amber-100 border-l-4 border-amber-500"
-  if (diffDays <= 3) return "bg-amber-50 border-l-4 border-amber-400"
-  if (diffDays <= 5) return "bg-blue-50 border-l-4 border-blue-400"
-  return "bg-blue-50/60 border-l-4 border-blue-300"
+  if (vencimento < hoje) return "bg-destructive/10 border-l-4 border-red-500"
+  if (diffDays === 0) return "bg-warning/10 border-l-4 border-amber-500"
+  if (diffDays <= 3) return "bg-warning/5 border-l-4 border-amber-400"
+  if (diffDays <= 5) return "bg-info/5 border-l-4 border-info"
+  return "bg-info/5/60 border-l-4 border-blue-300"
 }
 
 // Função para obter o ícone de status do boleto
 const getBoletoStatusIcon = (statusBoleto: string | null, dataPagamento: string | null) => {
   if (statusBoleto === "PAGO" || dataPagamento) {
-    return <CheckCircle className="h-4 w-4 text-emerald-600" />
+    return <CheckCircle className="h-4 w-4 text-success" />
   }
   if (statusBoleto === "VENCIDO") {
-    return <AlertCircle className="h-4 w-4 text-red-600" />
+    return <AlertCircle className="h-4 w-4 text-destructive" />
   }
-  return <Clock className="h-4 w-4 text-amber-600" />
+  return <Clock className="h-4 w-4 text-warning" />
 }
 
 // Função para obter o badge de status do boleto
@@ -366,12 +368,12 @@ const getBoletoStatusBadge = (statusBoleto: string | null, dataPagamento: string
   const isVencido = statusBoleto === "VENCIDO"
 
   if (isPago) {
-    return <Badge className="bg-emerald-100 text-emerald-700">Pago</Badge>
+    return <Badge className="bg-success/10 text-success">Pago</Badge>
   }
   if (isVencido) {
-    return <Badge className="bg-red-100 text-red-700">Vencido</Badge>
+    return <Badge className="bg-destructive/10 text-destructive">Vencido</Badge>
   }
-  return <Badge className="bg-amber-100 text-amber-700">Pendente</Badge>
+  return <Badge className="bg-warning/10 text-warning">Pendente</Badge>
 }
 
 export default function LivroDiarioPage() {
@@ -1045,13 +1047,13 @@ export default function LivroDiarioPage() {
 
   const getTipoBadge = (tipo: string) => {
     const tipos: Record<string, { label: string; color: string }> = {
-      VENDA: { label: "💰 Venda", color: "bg-emerald-100 text-emerald-700" },
-      COMPRA: { label: "📦 Compra", color: "bg-red-100 text-red-700" },
-      DESPESA: { label: "📉 Despesa", color: "bg-amber-100 text-amber-700" },
-      RECEITA: { label: "📈 Receita", color: "bg-emerald-100 text-emerald-700" },
-      MANUAL: { label: "✏️ Manual", color: "bg-gray-100 text-gray-700" }
+      VENDA: { label: "💰 Venda", color: "bg-success/10 text-success" },
+      COMPRA: { label: "📦 Compra", color: "bg-destructive/10 text-destructive" },
+      DESPESA: { label: "📉 Despesa", color: "bg-warning/10 text-warning" },
+      RECEITA: { label: "📈 Receita", color: "bg-success/10 text-success" },
+      MANUAL: { label: "✏️ Manual", color: "bg-surface-2 text-white" }
     }
-    return tipos[tipo] || { label: tipo, color: "bg-gray-100 text-gray-700" }
+    return tipos[tipo] || { label: tipo, color: "bg-surface-2 text-white" }
   }
 
   // Remove o código numérico do início da conta (ex: "4.1.1 Despesas" -> "Despesas")
@@ -1067,11 +1069,11 @@ export default function LivroDiarioPage() {
 
     if (isLoading) {
       return (
-        <tr className="bg-indigo-50">
+        <tr className="bg-primary/5">
           <td colSpan={10} className="px-4 py-4">
             <div className="flex justify-center items-center gap-2">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
-              <span className="text-sm text-gray-500">Carregando detalhes da folha...</span>
+              <span className="text-sm text-muted-foreground">Carregando detalhes da folha...</span>
             </div>
           </td>
         </tr>
@@ -1081,18 +1083,18 @@ export default function LivroDiarioPage() {
     const titulo = tipo === "adiantamento" ? "Adiantamento Salarial" : "Salário (restante)"
 
     return (
-      <tr className="bg-indigo-50">
+      <tr className="bg-primary/5">
         <td colSpan={10} className="px-4 py-3">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-indigo-600" />
+              <Users className="h-4 w-4 text-primary/80" />
               <span className="font-semibold text-indigo-800">{titulo}</span>
               <Badge variant="outline" className="ml-2">{(detalhe?.pct ?? 0)}% do salário</Badge>
             </div>
             {detalhe?.itens && detalhe.itens.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-indigo-100/50 text-gray-600">
+                  <thead className="bg-primary/10/50 text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 text-left text-xs uppercase tracking-wider">Funcionário</th>
                       <th className="px-3 py-2 text-right text-xs uppercase tracking-wider">Salário</th>
@@ -1103,10 +1105,10 @@ export default function LivroDiarioPage() {
                   <tbody>
                     {detalhe.itens.map((item: FolhaItemDetalhe, idx: number) => (
                       <tr key={idx} className="border-t border-indigo-100">
-                        <td className="px-3 py-2 text-gray-800">{item.nome}</td>
-                        <td className="px-3 py-2 text-right text-gray-600">{formatCurrency(item.salario)}</td>
-                        <td className="px-3 py-2 text-right text-indigo-700 font-medium">{formatCurrency(item.adiantamento)}</td>
-                        <td className="px-3 py-2 text-right text-gray-800 font-medium">{formatCurrency(item.salarioRestante)}</td>
+                        <td className="px-3 py-2 text-white">{item.nome}</td>
+                        <td className="px-3 py-2 text-right text-muted-foreground">{formatCurrency(item.salario)}</td>
+                        <td className="px-3 py-2 text-right text-white font-medium">{formatCurrency(item.adiantamento)}</td>
+                        <td className="px-3 py-2 text-right text-white font-medium">{formatCurrency(item.salarioRestante)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1114,14 +1116,14 @@ export default function LivroDiarioPage() {
                     <tr className="border-t-2 border-indigo-200 font-semibold">
                       <td className="px-3 py-2 text-indigo-800">Total</td>
                       <td className="px-3 py-2" />
-                      <td className="px-3 py-2 text-right text-indigo-700">{formatCurrency(detalhe.itens.reduce((s: number, i: FolhaItemDetalhe) => s + i.adiantamento, 0))}</td>
+                      <td className="px-3 py-2 text-right text-white">{formatCurrency(detalhe.itens.reduce((s: number, i: FolhaItemDetalhe) => s + i.adiantamento, 0))}</td>
                       <td className="px-3 py-2 text-right text-indigo-800">{formatCurrency(detalhe.itens.reduce((s: number, i: FolhaItemDetalhe) => s + i.salarioRestante, 0))}</td>
                     </tr>
                   </tfoot>
                 </table>
               </div>
             ) : (
-              <p className="text-sm text-gray-500">Sem funcionários cadastrados para este mês.</p>
+              <p className="text-sm text-muted-foreground">Sem funcionários cadastrados para este mês.</p>
             )}
           </div>
         </td>
@@ -1137,11 +1139,11 @@ export default function LivroDiarioPage() {
 
     if (isLoading) {
       return (
-        <tr className="bg-gray-100">
+        <tr className="bg-surface-2">
           <td colSpan={10} className="px-4 py-4">
             <div className="flex justify-center items-center gap-2">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#de4838] border-t-transparent" />
-              <span className="text-sm text-gray-500">Carregando detalhes...</span>
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <span className="text-sm text-muted-foreground">Carregando detalhes...</span>
             </div>
           </td>
         </tr>
@@ -1152,29 +1154,29 @@ export default function LivroDiarioPage() {
     if (isNota && nota) {
       return (
         <>
-          <tr className="bg-blue-50">
+          <tr className="bg-info/5">
             <td colSpan={10} className="px-4 py-3">
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-blue-600" />
+                  <FileText className="h-4 w-4 text-info" />
                   <span className="font-semibold text-blue-800">Detalhes da Nota Fiscal</span>
                   <Badge variant="outline" className="ml-2">NFe {nota.numero}</Badge>
                 </div>
                 <div className="grid gap-2 md:grid-cols-4 text-sm">
                   <div>
-                    <span className="text-gray-500">Emitente:</span>
+                    <span className="text-muted-foreground">Emitente:</span>
                     <p className="font-medium">{nota.nomeEmitente}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">CNPJ:</span>
+                    <span className="text-muted-foreground">CNPJ:</span>
                     <p className="font-mono text-xs">{nota.cnpjEmitente}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">Data Emissão:</span>
+                    <span className="text-muted-foreground">Data Emissão:</span>
                     <p>{formatDate(nota.dataEmissao)}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">Chave Acesso:</span>
+                    <span className="text-muted-foreground">Chave Acesso:</span>
                     <p className="font-mono text-xs break-all">{nota.chaveAcesso}</p>
                   </div>
                 </div>
@@ -1185,15 +1187,15 @@ export default function LivroDiarioPage() {
           {nota.produtos && nota.produtos.length > 0 && (
             <>
               {nota.produtos.map((produto, idx) => (
-                <tr key={`prod-${idx}`} className="bg-blue-50/50 hover:bg-blue-100/50">
-                  <td className="px-4 py-2 text-gray-500 text-xs">{idx === 0 ? "Produtos:" : ""}</td>
+                <tr key={`prod-${idx}`} className="bg-info/5/50 hover:bg-info/10/50">
+                  <td className="px-4 py-2 text-muted-foreground text-xs">{idx === 0 ? "Produtos:" : ""}</td>
                   <td className="px-4 py-2" colSpan={1}>
                     <div className="flex items-center gap-2">
-                      <Package className="h-3 w-3 text-blue-500" />
+                      <Package className="h-3 w-3 text-info" />
                       <span className="text-sm">{produto.descricao}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-500">{produto.codigo || "-"}</td>
+                  <td className="px-4 py-2 text-sm text-muted-foreground">{produto.codigo || "-"}</td>
                   <td className="px-4 py-2 text-sm">{produto.quantidade} {produto.unidade}</td>
                   <td className="px-4 py-2 text-right text-sm">{formatCurrency(produto.valorUnitario)}</td>
                   <td className="px-4 py-2 text-right text-sm font-medium">{formatCurrency(produto.valorTotal)}</td>
@@ -1201,20 +1203,20 @@ export default function LivroDiarioPage() {
                 </tr>
               ))}
 
-              <tr className="bg-blue-100">
+              <tr className="bg-info/10">
                 <td className="px-4 py-2" />
                 <td className="px-4 py-2" colSpan={4} />
                 <td className="px-4 py-2 text-right font-semibold">Total Produtos:</td>
-                <td className="px-4 py-2 text-right font-bold text-[#de4838]">{formatCurrency(nota.valorTotal)}</td>
+                <td className="px-4 py-2 text-right font-bold text-primary">{formatCurrency(nota.valorTotal)}</td>
                 <td className="px-4 py-2" colSpan={4} />
               </tr>
             </>
           )}
 
           {nota.pagamentos && nota.pagamentos.length > 0 && (
-            <tr className="bg-blue-50">
+            <tr className="bg-info/5">
               <td colSpan={10} className="px-4 py-2">
-                <div className="mt-2 pt-2 border-t border-blue-200">
+                <div className="mt-2 pt-2 border-t border-info/30">
                   <span className="text-sm font-medium">Formas de Pagamento:</span>
                   <div className="flex flex-wrap gap-3 mt-1">
                     {nota.pagamentos.map((pg, idx) => (
@@ -1236,25 +1238,25 @@ export default function LivroDiarioPage() {
           <td colSpan={10} className="px-4 py-3">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Barcode className="h-4 w-4 text-purple-600" />
+                <Barcode className="h-4 w-4 text-primary/80" />
                 <span className="font-semibold text-purple-800">Detalhes do Boleto</span>
               </div>
               <div className="grid gap-2 md:grid-cols-3 text-sm">
                 <div>
-                  <span className="text-gray-500">Valor:</span>
-                  <p className="font-medium text-red-600">{formatCurrency(lancamento.saida)}</p>
+                  <span className="text-muted-foreground">Valor:</span>
+                  <p className="font-medium text-destructive">{formatCurrency(lancamento.saida)}</p>
                 </div>
                 <div>
-                  <span className="text-gray-500">Vencimento:</span>
+                  <span className="text-muted-foreground">Vencimento:</span>
                   <p>{lancamento.dataVencimento ? formatDate(lancamento.dataVencimento) : "-"}</p>
                 </div>
                 <div>
-                  <span className="text-gray-500">Status:</span>
+                  <span className="text-muted-foreground">Status:</span>
                   <p>{getBoletoStatusBadge(lancamento.statusBoleto, lancamento.dataPagamento)}</p>
                 </div>
               </div>
               {lancamento.clienteFornecedor && (
-                <p className="text-sm text-gray-600">Fornecedor: {lancamento.clienteFornecedor}</p>
+                <p className="text-sm text-muted-foreground">Fornecedor: {lancamento.clienteFornecedor}</p>
               )}
             </div>
           </td>
@@ -1264,32 +1266,32 @@ export default function LivroDiarioPage() {
 
     // Para outros tipos de lançamento, mostrar informações básicas
     return (
-      <tr className="bg-gray-100">
+      <tr className="bg-surface-2">
         <td colSpan={10} className="px-4 py-3">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-gray-600" />
-              <span className="font-semibold text-gray-800">Detalhes do Lançamento</span>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <span className="font-semibold text-white">Detalhes do Lançamento</span>
             </div>
             <div className="grid gap-2 md:grid-cols-3 text-sm">
               <div>
-                <span className="text-gray-500">Tipo:</span>
+                <span className="text-muted-foreground">Tipo:</span>
                 <p>{getTipoBadge(lancamento.tipo).label}</p>
               </div>
               <div>
-                <span className="text-gray-500">Data:</span>
+                <span className="text-muted-foreground">Data:</span>
                 <p>{formatDate(lancamento.data)}</p>
               </div>
               <div>
-                <span className="text-gray-500">Valor:</span>
-                <p className={lancamento.entrada > 0 ? "text-emerald-600 font-medium" : "text-red-500 font-medium"}>
+                <span className="text-muted-foreground">Valor:</span>
+                <p className={lancamento.entrada > 0 ? "text-success font-medium" : "text-destructive font-medium"}>
                   {lancamento.entrada > 0 ? formatCurrency(lancamento.entrada) : formatCurrency(lancamento.saida)}
                 </p>
               </div>
             </div>
-            <p className="text-sm text-gray-600">Descrição: {lancamento.descricao}</p>
+            <p className="text-sm text-muted-foreground">Descrição: {lancamento.descricao}</p>
             {lancamento.clienteFornecedor && (
-              <p className="text-sm text-gray-600">Cliente/Fornecedor: {lancamento.clienteFornecedor}</p>
+              <p className="text-sm text-muted-foreground">Cliente/Fornecedor: {lancamento.clienteFornecedor}</p>
             )}
           </div>
         </td>
@@ -1336,20 +1338,18 @@ export default function LivroDiarioPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 ml-6 mr-6 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-800">Livro Diário</h1>
-          <p className="text-sm text-gray-500">
-            Registro contábil de todas as movimentações financeiras, boletos e folha de pagamento
-          </p>
-        </div>
-        <div className="flex gap-2">
+      <PageContainer>
+        <PageHeader
+          title="Livro Diário"
+          subtitle="Registro contábil de todas as movimentações financeiras, boletos e folha de pagamento"
+          backHref="/gerenciamento"
+        >
           <Button
             variant="outline"
             onClick={() => carregarDados()}
-            className="rounded-full border-gray-200 hover:bg-gray-100"
+            className="rounded-full border-border hover:bg-surface-2"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Atualizar
@@ -1358,24 +1358,19 @@ export default function LivroDiarioPage() {
           {/*<Button
                           variant={mostrarExemplos ? "default" : "outline"}
                           onClick={() => setMostrarExemplos(!mostrarExemplos)}
-                          className={mostrarExemplos ? "bg-purple-600 hover:bg-purple-700 rounded-full" : "rounded-full border-gray-200"}
+                          className={mostrarExemplos ? "bg-primary/80 hover:bg-purple-700 rounded-full" : "rounded-full border-border"}
                         >
                           {mostrarExemplos ? "Ocultar Exemplos" : "Mostrar Exemplos"}
                         </Button>*/}
 
           <Button
             onClick={() => { resetForm(); setModalOpen(true); }}
-            className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-5"
+            className="bg-primary hover:bg-primary/90 text-white rounded-full px-5"
           >
             <Plus className="mr-2 h-4 w-4" />
             Novo Lançamento
           </Button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto p-6 max-w-7xl">
-        {/* Cards de Resumo */}
+        </PageHeader>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {cardsResumo.map((card, idx) => (
             <Card
@@ -1400,47 +1395,47 @@ export default function LivroDiarioPage() {
         </div>
 
         {/* Filtros */}
-        <div className="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-100 p-4 border-b border-gray-100">
+        <div className="mt-6 bg-surface rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-surface-2 p-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-[#de4838]" />
-              <h3 className="font-semibold text-gray-800">Filtros</h3>
+              <Filter className="h-4 w-4 text-primary" />
+              <h3 className="font-semibold text-white">Filtros</h3>
             </div>
           </div>
           <div className="p-5">
             <div className="grid gap-4 md:grid-cols-5">
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Data Início</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Data Início</Label>
                 <Input
                   type="date"
                   value={filtros.dataInicio}
                   onChange={(e) => setFiltros({ ...filtros, dataInicio: e.target.value })}
-                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
+                  className="rounded-lg border-border focus:ring-primary"
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Data Fim</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Data Fim</Label>
                 <Input
                   type="date"
                   value={filtros.dataFim}
                   onChange={(e) => setFiltros({ ...filtros, dataFim: e.target.value })}
-                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
+                  className="rounded-lg border-border focus:ring-primary"
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Tipo Despesa</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tipo Despesa</Label>
                 <Input
                   placeholder="Filtrar por tipo de despesa..."
                   value={filtros.conta}
                   onChange={(e) => setFiltros({ ...filtros, conta: e.target.value })}
-                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
+                  className="rounded-lg border-border focus:ring-primary"
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Tipo</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tipo</Label>
                 <div className="relative">
                   <select
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                    className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
                     value={filtros.tipo}
                     onChange={(e) => setFiltros({ ...filtros, tipo: e.target.value })}
                   >
@@ -1451,16 +1446,16 @@ export default function LivroDiarioPage() {
                     <option value="RECEITA">Receita</option>
                     <option value="MANUAL">Manual</option>
                   </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
                     <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
                   </div>
                 </div>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Status Boleto</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Status Boleto</Label>
                 <div className="relative">
                   <select
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                    className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
                     value={filtros.statusBoleto}
                     onChange={(e) => setFiltros({ ...filtros, statusBoleto: e.target.value })}
                   >
@@ -1469,23 +1464,23 @@ export default function LivroDiarioPage() {
                     <option value="PAGO">Boletos Pagos</option>
                     <option value="VENCIDO">Boletos Vencidos</option>
                   </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
                     <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
                   </div>
                 </div>
               </div>
             </div>
             <div className="grid grid-cols-4 gap-2 mt-5">
-              <Button onClick={() => aplicarPeriodo("hoje")} className="w-full bg-[#de4838] hover:bg-[#c73d2e] rounded-lg">
+              <Button onClick={() => aplicarPeriodo("hoje")} className="w-full bg-primary hover:bg-primary/90 rounded-lg">
                 Hoje
               </Button>
-              <Button onClick={() => aplicarPeriodo("semanal")} className="w-full bg-[#de4838] hover:bg-[#c73d2e] rounded-lg">
+              <Button onClick={() => aplicarPeriodo("semanal")} className="w-full bg-primary hover:bg-primary/90 rounded-lg">
                 Semanal
               </Button>
-              <Button onClick={() => aplicarPeriodo("quinzenal")} className="w-full bg-[#de4838] hover:bg-[#c73d2e] rounded-lg">
+              <Button onClick={() => aplicarPeriodo("quinzenal")} className="w-full bg-primary hover:bg-primary/90 rounded-lg">
                 Quinzenal
               </Button>
-              <Button variant="outline" onClick={limparFiltros} className="w-full border-gray-200 hover:bg-gray-100 rounded-lg">
+              <Button variant="outline" onClick={limparFiltros} className="w-full border-border hover:bg-surface-2 rounded-lg">
                 Limpar
               </Button>
             </div>
@@ -1493,49 +1488,49 @@ export default function LivroDiarioPage() {
         </div>
 
         {/* Tabela de Lançamentos */}
-        <div className="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-100 p-4 border-b border-gray-100">
+        <div className="mt-6 bg-surface rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-surface-2 p-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-[#de4838]" />
-              <h3 className="font-semibold text-gray-800">Lançamentos</h3>
-              <Badge className="bg-gray-200 text-gray-700">{lancamentos.length} registros</Badge>
+              <BookOpen className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-white">Lançamentos</h3>
+              <Badge className="bg-surface-2 text-white">{lancamentos.length} registros</Badge>
             </div>
           </div>
           <div className="p-0 overflow-x-auto">
             <table className="w-full text-[0.6125rem] table-fixed">
-              <thead className="bg-gray-100 border-b border-gray-200">
+              <thead className="bg-surface-2 border-b border-border">
                 <tr>
                   <th className="px-4 py-3 text-left w-10"></th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[100px]">Data</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[100px]">Tipo Despesa</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[150px]">Descrição</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-[145px]">Fornecedor</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[100px]">Entrada</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[100px]">Saída</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[77px]">Tipo</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[115px]">Status</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-[108px]">Ações</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">Data</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">Tipo Despesa</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">Descrição</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[145px]">Fornecedor</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">Entrada</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">Saída</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[77px]">Tipo</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[115px]">Status</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[108px]">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr className="border-b border-gray-100">
+                  <tr className="border-b border-border">
                     <td colSpan={10} className="py-12 text-center">
                       <div className="flex justify-center items-center gap-2">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#de4838] border-t-transparent" />
-                        <span className="text-sm text-gray-500">Carregando lançamentos...</span>
+                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        <span className="text-sm text-muted-foreground">Carregando lançamentos...</span>
                       </div>
                     </td>
                   </tr>
                 ) : lancamentos.length === 0 ? (
-                  <tr className="border-b border-gray-100">
+                  <tr className="border-b border-border">
                     <td colSpan={10} className="py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
-                        <BookOpen className="h-12 w-12 text-gray-300" />
-                        <p className="text-gray-500">Nenhum lançamento encontrado</p>
+                        <BookOpen className="h-12 w-12 text-muted-foreground/70" />
+                        <p className="text-muted-foreground">Nenhum lançamento encontrado</p>
                         <Button
                           onClick={() => { resetForm(); setModalOpen(true); }}
-                          className="mt-2 bg-[#de4838] hover:bg-[#c73d2e] rounded-lg"
+                          className="mt-2 bg-primary hover:bg-primary/90 rounded-lg"
                         >
                           <Plus className="mr-2 h-4 w-4" />
                           Criar primeiro lançamento
@@ -1558,7 +1553,7 @@ export default function LivroDiarioPage() {
                     return (
                       <React.Fragment key={lanc.id}>
                         <tr
-                          className={`border-b border-gray-100 hover:bg-gray-100 transition-colors ${rowStyle} ${canExpandRow ? "cursor-pointer" : ""}`}
+                          className={`border-b border-border hover:bg-surface-2 transition-colors ${rowStyle} ${canExpandRow ? "cursor-pointer" : ""}`}
                           role={canExpandRow ? "button" : undefined}
                           tabIndex={canExpandRow ? 0 : undefined}
                           aria-expanded={canExpandRow ? isExpanded : undefined}
@@ -1575,27 +1570,27 @@ export default function LivroDiarioPage() {
                         >
                           <td className="px-4 py-3">
                             {canExpandRow && (
-                              <button className="text-[#de4838]">
+                              <button className="text-primary">
                                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                               </button>
                             )}
-                            {isFolhaLanc && <Users className="h-4 w-4 text-indigo-500" />}
+                            {isFolhaLanc && <Users className="h-4 w-4 text-primary/80" />}
                           </td>
-                          <td className="px-4 py-3 text-gray-700">{formatDate(lanc.data)}</td>
-                          <td className="px-4 py-3 align-middle text-center text-gray-600">{formatarConta(lanc.conta)}</td>
+                          <td className="px-4 py-3 text-white">{formatDate(lanc.data)}</td>
+                          <td className="px-4 py-3 align-middle text-center text-muted-foreground">{formatarConta(lanc.conta)}</td>
                           <td className="px-4 py-3 align-top">
                             <div className="flex items-start gap-2">
-                              {isBoletoLanc && <Barcode className="h-3 w-3 text-purple-500 mt-1 shrink-0" />}
-                              {isNota && <FileText className="h-3 w-3 text-blue-500 mt-1 shrink-0" />}
-                              {isFolhaLanc && <Users className="h-3 w-3 text-indigo-500 mt-1 shrink-0" />}
-                              <span className="text-gray-800 break-words">{lanc.descricao}</span>
+                              {isBoletoLanc && <Barcode className="h-3 w-3 text-primary/80 mt-1 shrink-0" />}
+                              {isNota && <FileText className="h-3 w-3 text-info mt-1 shrink-0" />}
+                              {isFolhaLanc && <Users className="h-3 w-3 text-primary/80 mt-1 shrink-0" />}
+                              <span className="text-white break-words">{lanc.descricao}</span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-gray-600">{lanc.clienteFornecedor || "-"}</td>
-                          <td className="px-4 py-3 align-middle text-center text-emerald-600 font-medium text-[0.704rem]">
+                          <td className="px-4 py-3 text-muted-foreground">{lanc.clienteFornecedor || "-"}</td>
+                          <td className="px-4 py-3 align-middle text-center text-success font-medium text-[0.704rem]">
                             {lanc.entrada > 0 ? formatCurrency(lanc.entrada) : "-"}
                           </td>
-                          <td className="px-4 py-3 align-middle text-center text-red-500 font-medium text-[0.704rem]">
+                          <td className="px-4 py-3 align-middle text-center text-destructive font-medium text-[0.704rem]">
                             {lanc.saida > 0 ? formatCurrency(lanc.saida) : "-"}
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -1611,16 +1606,16 @@ export default function LivroDiarioPage() {
                               </div>
                             ) : lanc.status === "PAGO" ? (
                               <div className="flex items-center justify-center gap-1">
-                                <CheckCircle className="h-4 w-4 text-emerald-600" />
-                                <Badge className="bg-emerald-100 text-emerald-700">Pago</Badge>
+                                <CheckCircle className="h-4 w-4 text-success" />
+                                <Badge className="bg-success/10 text-success">Pago</Badge>
                               </div>
                             ) : lanc.status === "PENDENTE" ? (
                               <div className="flex items-center justify-center gap-1">
-                                <Clock className="h-4 w-4 text-amber-600" />
-                                <Badge className="bg-amber-100 text-amber-700">Pendente</Badge>
+                                <Clock className="h-4 w-4 text-warning" />
+                                <Badge className="bg-warning/10 text-warning">Pendente</Badge>
                               </div>
                             ) : (
-                              <span className="text-gray-400 text-xs">-</span>
+                              <span className="text-muted-foreground/70 text-xs">-</span>
                             )}
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -1628,7 +1623,7 @@ export default function LivroDiarioPage() {
                               {podePagar && (
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setLancamentoParaPagar(lanc); setPagamentoModalOpen(true); }}
-                                  className="p-1 text-emerald-500 hover:bg-emerald-100 rounded-lg transition-colors"
+                                  className="p-1 text-success hover:bg-success/10 rounded-lg transition-colors"
                                   title="Marcar como Pago"
                                 >
                                   <CheckCircle className="h-4 w-4" />
@@ -1637,7 +1632,7 @@ export default function LivroDiarioPage() {
                               {!isBoletoLanc && lanc.status === "PENDENTE" && (
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setLancamentoParaPagar(lanc); setPagamentoModalOpen(true); }}
-                                  className="p-1 text-emerald-500 hover:bg-emerald-100 rounded-lg transition-colors"
+                                  className="p-1 text-success hover:bg-success/10 rounded-lg transition-colors"
                                   title="Marcar como Pago"
                                 >
                                   <CheckCircle className="h-4 w-4" />
@@ -1645,14 +1640,14 @@ export default function LivroDiarioPage() {
                               )}
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleEdit(lanc); }}
-                                className="p-1 text-amber-500 hover:bg-amber-100 rounded-lg transition-colors"
+                                className="p-1 text-warning hover:bg-warning/10 rounded-lg transition-colors"
                                 title="Editar"
                               >
                                 <Edit className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleDelete(lanc.id); }}
-                                className="p-1 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
+                                className="p-1 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                                 title="Excluir"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -1671,19 +1666,19 @@ export default function LivroDiarioPage() {
             </table>
           </div>
         </div>
-      </div>
+      </PageContainer>
 
       {/* Modal Unificado de Lançamento/Boleto/Folha */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className={`
     ${tipoLancamento === "folha" ? "max-w-4xl" : "max-w-xl"}
-    bg-white rounded-2xl p-0 border-none shadow-2xl
+    bg-surface rounded-2xl p-0 border-none shadow-2xl
     max-h-[90vh] overflow-hidden flex flex-col
   `}>
           {/* Header fixo */}
-          <div className="sticky top-0 z-10 bg-white px-6 py-5 border-b border-gray-100 rounded-t-2xl">
+          <div className="sticky top-0 z-10 bg-surface px-6 py-5 border-b border-border rounded-t-2xl">
             <DialogHeader>
-              <DialogTitle className="text-xl font-semibold text-gray-800">
+              <DialogTitle className="text-xl font-semibold text-white">
                 {editandoId ? "Editar" : "Novo"}
                 {tipoLancamento === "boleto" ? " Boleto" : tipoLancamento === "folha" ? " Folha de Pagamento" : " Lançamento"}
               </DialogTitle>
@@ -1698,8 +1693,8 @@ export default function LivroDiarioPage() {
                 type="button"
                 onClick={() => setTipoLancamento("comum")}
                 className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${tipoLancamento === "comum"
-                    ? "bg-[#de4838] text-white border-[#de4838] shadow-sm"
-                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-100"
+                    ? "bg-primary text-white border-primary shadow-sm"
+                    : "bg-surface border-border text-white hover:bg-surface-2"
                   }`}
               >
                 <FileText className="h-4 w-4" />
@@ -1709,8 +1704,8 @@ export default function LivroDiarioPage() {
                 type="button"
                 onClick={() => setTipoLancamento("boleto")}
                 className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${tipoLancamento === "boleto"
-                    ? "bg-purple-600 text-white border-purple-600 shadow-sm"
-                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-100"
+                    ? "bg-primary/80 text-white border-purple-600 shadow-sm"
+                    : "bg-surface border-border text-white hover:bg-surface-2"
                   }`}
               >
                 <Barcode className="h-4 w-4" />
@@ -1722,7 +1717,7 @@ export default function LivroDiarioPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     {tipoLancamento === "boleto" ? "Data de Vencimento *" : "Data *"}
                   </Label>
                   <Input
@@ -1735,7 +1730,7 @@ export default function LivroDiarioPage() {
                         setFormData({ ...formData, data: e.target.value })
                       }
                     }}
-                    className="rounded-lg border-gray-200 focus:ring-[#de4838] focus:border-[#de4838]"
+                    className="rounded-lg border-border focus:ring-primary focus:border-primary"
                     required
                   />
                 </div>
@@ -1743,19 +1738,19 @@ export default function LivroDiarioPage() {
                 {tipoLancamento !== "folha" && (
                   <>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Tipo Despesa *</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tipo Despesa *</Label>
                     <div className="relative">
                       {loadingCategorias ? (
-                        <div className="w-full rounded-lg border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm text-gray-500">
+                        <div className="w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-sm text-muted-foreground">
                           Carregando categorias...
                         </div>
                       ) : errorCategorias ? (
-                        <div className="w-full rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-500">
+                        <div className="w-full rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-sm text-destructive">
                           Erro ao carregar categorias
                         </div>
                       ) : (
                         <select
-                          className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                          className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
                           value={formData.conta}
                           onChange={(e) => setFormData({ ...formData, conta: e.target.value })}
                           required
@@ -1785,7 +1780,7 @@ export default function LivroDiarioPage() {
                           </optgroup>
                         </select>
                       )}
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
                         <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
                       </div>
                     </div>
@@ -1793,10 +1788,10 @@ export default function LivroDiarioPage() {
 
                   {/* Conta Bancária (origem/destino do lançamento) */}
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Conta Bancária</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Conta Bancária</Label>
                     <div className="relative">
                       <select
-                        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                        className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
                         value={formData.contaBancaria}
                         onChange={(e) => setFormData({ ...formData, contaBancaria: e.target.value })}
                       >
@@ -1807,7 +1802,7 @@ export default function LivroDiarioPage() {
                           </option>
                         ))}
                       </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
                         <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
                       </div>
                     </div>
@@ -1817,7 +1812,7 @@ export default function LivroDiarioPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Descrição *</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Descrição *</Label>
                 <Input
                   value={formData.descricao}
                   onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
@@ -1826,19 +1821,19 @@ export default function LivroDiarioPage() {
                       tipoLancamento === "folha" ? "Ex: Competência Maio/2024" :
                         "Descrição do lançamento"
                   }
-                  className="rounded-lg border-gray-200 focus:ring-[#de4838]"
+                  className="rounded-lg border-border focus:ring-primary"
                   required
                 />
               </div>
 
               {tipoLancamento !== "folha" && (
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Cliente / Fornecedor</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Cliente / Fornecedor</Label>
                   <Input
                     value={formData.clienteFornecedor}
                     onChange={(e) => setFormData({ ...formData, clienteFornecedor: e.target.value })}
                     placeholder="Nome do cliente ou fornecedor"
-                    className="rounded-lg border-gray-200 focus:ring-[#de4838]"
+                    className="rounded-lg border-border focus:ring-primary"
                   />
                 </div>
               )}
@@ -1846,27 +1841,27 @@ export default function LivroDiarioPage() {
 
             {/* Campos específicos para Folha de Pagamento */}
             {tipoLancamento === "folha" && (
-              <div className="space-y-4 border rounded-xl p-5 bg-gray-100">
-                <div className="flex items-center gap-2 text-indigo-600 font-semibold">
+              <div className="space-y-4 border rounded-xl p-5 bg-surface-2">
+                <div className="flex items-center gap-2 text-primary/80 font-semibold">
                   <Calculator className="h-4 w-4" />
                   <span>Cálculo da Folha de Pagamento</span>
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Funcionários / Descrição</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Funcionários / Descrição</Label>
                   <Input
                     value={formData.funcionarios}
                     onChange={(e) => setFormData({ ...formData, funcionarios: e.target.value })}
                     placeholder="Ex: Equipe Operacional (5 funcionários)"
-                    className="rounded-lg border-gray-200 focus:ring-[#de4838]"
+                    className="rounded-lg border-border focus:ring-primary"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600">Salários Base</Label>
+                    <Label className="text-xs font-medium text-muted-foreground">Salários Base</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">R$</span>
                       <Input
                         type="number"
                         step="0.01"
@@ -1877,9 +1872,9 @@ export default function LivroDiarioPage() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600">INSS (20%)</Label>
+                    <Label className="text-xs font-medium text-muted-foreground">INSS (20%)</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">R$</span>
                       <Input
                         type="number"
                         step="0.01"
@@ -1890,9 +1885,9 @@ export default function LivroDiarioPage() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600">FGTS (8%)</Label>
+                    <Label className="text-xs font-medium text-muted-foreground">FGTS (8%)</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">R$</span>
                       <Input
                         type="number"
                         step="0.01"
@@ -1903,9 +1898,9 @@ export default function LivroDiarioPage() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600">Vale Transporte</Label>
+                    <Label className="text-xs font-medium text-muted-foreground">Vale Transporte</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">R$</span>
                       <Input
                         type="number"
                         step="0.01"
@@ -1916,9 +1911,9 @@ export default function LivroDiarioPage() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600">Vale Refeição</Label>
+                    <Label className="text-xs font-medium text-muted-foreground">Vale Refeição</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">R$</span>
                       <Input
                         type="number"
                         step="0.01"
@@ -1929,9 +1924,9 @@ export default function LivroDiarioPage() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600">Décimo Terceiro</Label>
+                    <Label className="text-xs font-medium text-muted-foreground">Décimo Terceiro</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">R$</span>
                       <Input
                         type="number"
                         step="0.01"
@@ -1942,9 +1937,9 @@ export default function LivroDiarioPage() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600">Férias</Label>
+                    <Label className="text-xs font-medium text-muted-foreground">Férias</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">R$</span>
                       <Input
                         type="number"
                         step="0.01"
@@ -1955,9 +1950,9 @@ export default function LivroDiarioPage() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600">Outros Benefícios</Label>
+                    <Label className="text-xs font-medium text-muted-foreground">Outros Benefícios</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">R$</span>
                       <Input
                         type="number"
                         step="0.01"
@@ -1971,12 +1966,12 @@ export default function LivroDiarioPage() {
 
                 <div className="border-t pt-4 mt-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-lg text-gray-800">TOTAL DA FOLHA:</span>
-                    <span className="text-2xl font-bold text-indigo-600">
+                    <span className="font-semibold text-lg text-white">TOTAL DA FOLHA:</span>
+                    <span className="text-2xl font-bold text-primary/80">
                       {formatCurrency(formData.totalFolha)}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">
+                  <div className="text-xs text-muted-foreground/70 mt-1">
                     * O lançamento será registrado como despesa no livro diário
                   </div>
                 </div>
@@ -1987,10 +1982,10 @@ export default function LivroDiarioPage() {
             {tipoLancamento === "comum" && (
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Tipo *</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tipo *</Label>
                   <div className="relative">
                     <select
-                      className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                      className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
                       value={formData.tipo}
                       onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
                       required
@@ -2001,16 +1996,16 @@ export default function LivroDiarioPage() {
                       <option value="RECEITA">Receita</option>
                       <option value="MANUAL">Manual</option>
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
                       <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
                     </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Entrada (R$)</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Entrada (R$)</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">R$</span>
                       <Input
                         type="number"
                         step="0.01"
@@ -2021,9 +2016,9 @@ export default function LivroDiarioPage() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Saída (R$)</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Saída (R$)</Label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">R$</span>
                       <Input
                         type="number"
                         step="0.01"
@@ -2040,9 +2035,9 @@ export default function LivroDiarioPage() {
             {/* Campo para boleto */}
             {tipoLancamento === "boleto" && (
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Valor (R$) *</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Valor (R$) *</Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">R$</span>
                   <Input
                     type="number"
                     step="0.01"
@@ -2058,13 +2053,13 @@ export default function LivroDiarioPage() {
           </form>
 
           {/* Footer fixo */}
-          <div className="sticky bottom-0 z-10 bg-white px-6 py-4 border-t border-gray-100 rounded-b-2xl">
+          <div className="sticky bottom-0 z-10 bg-surface px-6 py-4 border-t border-border rounded-b-2xl">
             <DialogFooter className="flex gap-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setModalOpen(false)}
-                className="flex-1 rounded-lg border-gray-200 hover:bg-gray-100"
+                className="flex-1 rounded-lg border-border hover:bg-surface-2"
               >
                 Cancelar
               </Button>
@@ -2072,7 +2067,7 @@ export default function LivroDiarioPage() {
                 type="submit"
                 form="submit-button"
                 disabled={saving}
-                className="flex-1 bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg"
+                className="flex-1 bg-primary hover:bg-primary/90 text-white rounded-lg"
               >
                 {saving ? "Salvando..." : (editandoId ? "Atualizar" : "Salvar")}
               </Button>
@@ -2083,15 +2078,15 @@ export default function LivroDiarioPage() {
 
       {/* Modal de Pagamento */}
       <Dialog open={pagamentoModalOpen} onOpenChange={setPagamentoModalOpen}>
-        <DialogContent className="max-w-md bg-white rounded-2xl p-0 border-none shadow-2xl">
+        <DialogContent className="max-w-md bg-surface rounded-2xl p-0 border-none shadow-2xl">
           <div className="p-6">
-            <DialogHeader className="pb-4 border-b border-gray-100">
-              <DialogTitle className="text-xl font-semibold text-gray-800">Marcar Boleto como Pago</DialogTitle>
+            <DialogHeader className="pb-4 border-b border-border">
+              <DialogTitle className="text-xl font-semibold text-white">Marcar Boleto como Pago</DialogTitle>
             </DialogHeader>
             {lancamentoParaPagar && (
               <div className="space-y-5 pt-4">
-                <Alert className="bg-blue-50 border-blue-200 rounded-xl">
-                  <AlertDescription className="text-sm text-blue-700">
+                <Alert className="bg-info/5 border-info/30 rounded-xl">
+                  <AlertDescription className="text-sm text-info">
                     <div className="space-y-2">
                       <p><strong>Descrição:</strong> {lancamentoParaPagar.descricao}</p>
                       <p><strong>Valor:</strong> {formatCurrency(lancamentoParaPagar.saida)}</p>
@@ -2100,27 +2095,27 @@ export default function LivroDiarioPage() {
                   </AlertDescription>
                 </Alert>
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Data de Pagamento *</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Data de Pagamento *</Label>
                   <Input
                     type="date"
                     value={dataPagamento}
                     onChange={(e) => setDataPagamento(e.target.value)}
-                    className="rounded-lg border-gray-200 focus:ring-[#de4838]"
+                    className="rounded-lg border-border focus:ring-primary"
                     required
                   />
                 </div>
-                <DialogFooter className="flex gap-3 pt-4 border-t border-gray-100">
+                <DialogFooter className="flex gap-3 pt-4 border-t border-border">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setPagamentoModalOpen(false)}
-                    className="flex-1 rounded-lg border-gray-200"
+                    className="flex-1 rounded-lg border-border"
                   >
                     Cancelar
                   </Button>
                   <Button
                     onClick={handlePagarBoleto}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 rounded-lg"
+                    className="flex-1 bg-success hover:bg-success/90 rounded-lg"
                   >
                     <CheckCircle className="mr-2 h-4 w-4" />
                     Confirmar Pagamento

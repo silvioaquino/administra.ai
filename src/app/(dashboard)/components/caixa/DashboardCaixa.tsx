@@ -169,11 +169,11 @@ export default function DashboardCaixa({
 
   const getCorTipo = (tipo: string): string => {
     const cores: Record<string, string> = {
-      DINHEIRO: 'bg-emerald-600',
-      CARTAO_CREDITO: 'bg-blue-600',
+      DINHEIRO: 'bg-success',
+      CARTAO_CREDITO: 'bg-info',
       CARTAO_DEBITO: 'bg-cyan-600',
-      PIX: 'bg-purple-600',
-      VR: 'bg-orange-600',
+      PIX: 'bg-primary/80',
+      VR: 'bg-warning',
       OUTRO: 'bg-gray-600'
     }
     return cores[tipo] || 'bg-gray-600'
@@ -373,8 +373,8 @@ export default function DashboardCaixa({
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#de4838] border-t-transparent mx-auto" />
-          <p className="mt-4 text-sm text-gray-500">Carregando dados do caixa...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto" />
+          <p className="mt-4 text-sm text-muted-foreground">Carregando dados do caixa...</p>
         </div>
       </div>
     )
@@ -384,7 +384,7 @@ export default function DashboardCaixa({
     <div className="space-y-6">
       {/* Cards de Resumo */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl p-3 sm:p-4 text-white shadow-sm h-full min-h-[92px] sm:min-h-[105px]">
+        <div className="bg-gradient-to-r from-success to-success/80 rounded-2xl p-3 sm:p-4 text-white shadow-sm h-full min-h-[92px] sm:min-h-[105px]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] sm:text-xs opacity-90 leading-tight">Saldo em Dinheiro</p>
@@ -394,7 +394,7 @@ export default function DashboardCaixa({
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-3 sm:p-4 text-white shadow-sm h-full min-h-[92px] sm:min-h-[105px]">
+        <div className="bg-gradient-to-r from-info to-info/80 rounded-2xl p-3 sm:p-4 text-white shadow-sm h-full min-h-[92px] sm:min-h-[105px]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] sm:text-xs opacity-90 leading-tight">Total de Vendas</p>
@@ -414,7 +414,7 @@ export default function DashboardCaixa({
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-3 sm:p-4 text-white shadow-sm h-full min-h-[92px] sm:min-h-[105px]">
+        <div className="bg-gradient-to-r from-primary/80 to-primary/70 rounded-2xl p-3 sm:p-4 text-white shadow-sm h-full min-h-[92px] sm:min-h-[105px]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] sm:text-xs opacity-90 leading-tight">Vendas Pendentes</p>
@@ -429,34 +429,34 @@ export default function DashboardCaixa({
         {/* Coluna Esquerda */}
         <div className="space-y-6">
           {/* Informações do Caixa - COMPLETO */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-100 p-4 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-800">Informações do Caixa</h3>
+          <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-surface-2 p-4 border-b border-border">
+              <h3 className="font-semibold text-white">Informações do Caixa</h3>
             </div>
             <div className="p-5 space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-500">Valor Inicial:</span>
-                <span className="font-semibold text-gray-800">{formatarMoeda(caixaAtual?.valorInicial || 0)}</span>
+              <div className="flex justify-between items-center py-2 border-b border-border">
+                <span className="text-sm text-muted-foreground">Valor Inicial:</span>
+                <span className="font-semibold text-white">{formatarMoeda(caixaAtual?.valorInicial || 0)}</span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-500">Vendas em Dinheiro:</span>
-                <span className="font-semibold text-emerald-600">{formatarMoeda(vendasDinheiro)}</span>
+              <div className="flex justify-between items-center py-2 border-b border-border">
+                <span className="text-sm text-muted-foreground">Vendas em Dinheiro:</span>
+                <span className="font-semibold text-success">{formatarMoeda(vendasDinheiro)}</span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-500">Total Dinheiro (Inicial + Vendas):</span>
-                <span className="font-bold text-[#de4838]">{formatarMoeda(totalDinheiroInicialMaisVendas)}</span>
+              <div className="flex justify-between items-center py-2 border-b border-border">
+                <span className="text-sm text-muted-foreground">Total Dinheiro (Inicial + Vendas):</span>
+                <span className="font-bold text-primary">{formatarMoeda(totalDinheiroInicialMaisVendas)}</span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-500">Total de Vendas:</span>
-                <span className="font-semibold text-blue-600">{formatarMoeda(todasVendas)}</span>
+              <div className="flex justify-between items-center py-2 border-b border-border">
+                <span className="text-sm text-muted-foreground">Total de Vendas:</span>
+                <span className="font-semibold text-info">{formatarMoeda(todasVendas)}</span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <span className="text-sm text-gray-500">Total de Retiradas:</span>
-                <span className="font-semibold text-amber-600">{formatarMoeda(totalRetiradas)}</span>
+              <div className="flex justify-between items-center py-2 border-b border-border">
+                <span className="text-sm text-muted-foreground">Total de Retiradas:</span>
+                <span className="font-semibold text-warning">{formatarMoeda(totalRetiradas)}</span>
               </div>
               <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-gray-500">Saldo Atual (Dinheiro):</span>
-                <span className={`font-bold text-lg ${saldoAtual >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                <span className="text-sm text-muted-foreground">Saldo Atual (Dinheiro):</span>
+                <span className={`font-bold text-lg ${saldoAtual >= 0 ? 'text-success' : 'text-destructive'}`}>
                   {formatarMoeda(saldoAtual)}
                 </span>
               </div>
@@ -464,30 +464,30 @@ export default function DashboardCaixa({
           </div>
 
           {/* Nova Retirada */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-100 p-4 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-800">Nova Retirada</h3>
+          <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-surface-2 p-4 border-b border-border">
+              <h3 className="font-semibold text-white">Nova Retirada</h3>
             </div>
             <div className="p-5 space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Valor</label>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Valor</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">R$</span>
                   <input 
                     type="number" step="0.01" min="0.01"
                     value={valorRetirada} onChange={(e) => setValorRetirada(e.target.value)}
                     disabled={loadingRetirada}
-                    className="w-full pl-8 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                    className="w-full pl-8 pr-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="0,00"
                   />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Observação</label>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Observação</label>
                 <textarea 
                   rows={2} value={obsRetirada} onChange={(e) => setObsRetirada(e.target.value)}
                   disabled={loadingRetirada}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#de4838] resize-none"
+                  className="w-full px-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                   placeholder="Motivo da retirada..."
                 />
               </div>
@@ -506,30 +506,30 @@ export default function DashboardCaixa({
           </div>
 
           {/* Lista de Retiradas */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-100 p-4 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-800">Últimas Retiradas</h3>
+          <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-surface-2 p-4 border-b border-border">
+              <h3 className="font-semibold text-white">Últimas Retiradas</h3>
             </div>
             <div className="p-4 max-h-64 overflow-y-auto">
               {retiradasLocal.length > 0 ? retiradasLocal.map(retirada => (
                 <div 
                   key={retirada.id} 
                   onClick={() => { setRetiradaSelecionada(retirada); setShowDetalhesRetirada(true); }}
-                  className="cursor-pointer border-b border-gray-100 pb-3 mb-3 last:border-0 hover:bg-gray-100 p-2 rounded-lg transition-colors"
+                  className="cursor-pointer border-b border-border pb-3 mb-3 last:border-0 hover:bg-surface-2 p-2 rounded-lg transition-colors"
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="font-bold text-red-600">{formatarMoeda(retirada.valor)}</div>
-                      <div className="text-xs text-gray-500">{retirada.observacao || 'Sem observação'}</div>
+                      <div className="font-bold text-destructive">{formatarMoeda(retirada.valor)}</div>
+                      <div className="text-xs text-muted-foreground">{retirada.observacao || 'Sem observação'}</div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/70" />
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">
+                  <div className="text-xs text-muted-foreground/70 mt-1">
                     {new Date(retirada.dataRetirada).toLocaleString('pt-BR')}
                   </div>
                 </div>
               )) : (
-                <div className="text-center text-gray-500 py-6">
+                <div className="text-center text-muted-foreground py-6">
                   Nenhuma retirada registrada
                 </div>
               )}
@@ -537,50 +537,50 @@ export default function DashboardCaixa({
           </div>
 
           {/* Vendas Pendentes */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-amber-500 px-4 py-3">
+          <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-warning/50 px-4 py-3">
               <h3 className="font-semibold text-white flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
                   Vendas Pendentes
                 </span>
                 {vendasPendentes.length > 0 && (
-                  <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">{vendasPendentes.length}</span>
+                  <span className="bg-destructive text-white text-xs px-2 py-1 rounded-full">{vendasPendentes.length}</span>
                 )}
               </h3>
             </div>
             <div className="p-4">
               {vendasPendentes.length > 0 ? (
                 <>
-                  <div className="flex justify-between items-center mb-3 p-2 bg-amber-50 rounded-lg">
-                    <span className="font-bold text-gray-700">Total Pendente:</span>
-                    <span className="font-bold text-amber-700">{formatarMoeda(totalVendasPendentes)}</span>
+                  <div className="flex justify-between items-center mb-3 p-2 bg-warning/5 rounded-lg">
+                    <span className="font-bold text-white">Total Pendente:</span>
+                    <span className="font-bold text-warning">{formatarMoeda(totalVendasPendentes)}</span>
                   </div>
                   <div className="max-h-96 overflow-y-auto space-y-2">
                     {vendasPendentes.map(venda => (
                       <div 
                         key={venda.id} 
                         onClick={() => { setVendaSelecionada(venda); setShowDetalhesVenda(true); }}
-                        className="cursor-pointer p-3 border border-amber-200 rounded-lg bg-amber-50 hover:bg-amber-100 transition-colors"
+                        className="cursor-pointer p-3 border border-amber-200 rounded-lg bg-warning/5 hover:bg-warning/10 transition-colors"
                       >
                         <div className="flex justify-between items-start mb-1">
-                          <span className="font-bold text-amber-700">{formatarMoeda(venda.valorTotal)}</span>
-                          <span className="text-xs text-gray-500">{new Date(venda.dataVenda).toLocaleTimeString('pt-BR')}</span>
+                          <span className="font-bold text-warning">{formatarMoeda(venda.valorTotal)}</span>
+                          <span className="text-xs text-muted-foreground">{new Date(venda.dataVenda).toLocaleTimeString('pt-BR')}</span>
                         </div>
                         {venda.nomeCliente && <div className="text-sm"><strong>Cliente:</strong> {venda.nomeCliente}</div>}
                         {venda.tipoPedido && <div className="text-sm"><strong>Tipo:</strong> {venda.tipoPedido}</div>}
                         <div className="mt-2">
-                          <span className="text-xs bg-amber-200 text-amber-800 px-2 py-1 rounded-full">Aguardando definição</span>
+                          <span className="text-xs border-warning/30 text-amber-800 px-2 py-1 rounded-full">Aguardando definição</span>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-3 text-center text-xs text-gray-500">
+                  <div className="mt-3 text-center text-xs text-muted-foreground">
                     Clique em uma venda para definir o tipo de pagamento
                   </div>
                 </>
               ) : (
-                <div className="text-center text-gray-500 py-6">
+                <div className="text-center text-muted-foreground py-6">
                   Nenhuma venda pendente
                 </div>
               )}
@@ -590,20 +590,20 @@ export default function DashboardCaixa({
 
         {/* Coluna Direita - Relatório de Vendas */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-100 p-4 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="font-semibold text-gray-800">Relatório de Vendas</h3>
+          <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-surface-2 p-4 border-b border-border flex justify-between items-center">
+              <h3 className="font-semibold text-white">Relatório de Vendas</h3>
               <div className="flex gap-2">
                 <button 
                   onClick={() => onPreviewImpressao('parcial')} 
-                  className="px-3 py-1.5 text-sm border border-gray-200 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1"
+                  className="px-3 py-1.5 text-sm border border-border text-muted-foreground hover:bg-surface-2 rounded-lg transition-colors flex items-center gap-1"
                 >
                   <Printer className="h-3 w-3" />
                   Parcial
                 </button>
                 <button 
                   onClick={() => setShowFecharCaixa(true)} 
-                  className="px-3 py-1.5 text-sm bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg transition-colors flex items-center gap-1"
+                  className="px-3 py-1.5 text-sm bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors flex items-center gap-1"
                 >
                   <Wallet className="h-3 w-3" />
                   Fechar Caixa
@@ -621,7 +621,7 @@ export default function DashboardCaixa({
                   const valorManual = valoresManuais[tipo] || ''
 
                   return (
-                    <div key={tipo} className="border border-gray-200 rounded-xl overflow-hidden">
+                    <div key={tipo} className="border border-border rounded-xl overflow-hidden">
                       <div className={`${getCorTipo(tipo)} px-3 py-2 text-white text-center text-sm font-medium`}>
                         {formatarTipoPagamento(tipo)}
                         {tipo === 'DINHEIRO' && <span className="ml-1 text-xs opacity-80">(Inclui inicial)</span>}
@@ -633,20 +633,20 @@ export default function DashboardCaixa({
                             <div className="space-y-1">
                               <div className="flex gap-1">
                                 <div className="flex-1 relative">
-                                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">R$</span>
+                                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/70">R$</span>
                                   <input 
                                     ref={(el) => { inputRefs.current[`${tipo}-valor`] = el }}
                                     type="number" step="0.01" placeholder="0,00" 
                                     value={valorManual}
                                     onChange={(e) => handleInputChange(tipo, 'valor', e.target.value)}
                                     onKeyPress={(e) => handleKeyPress(tipo, e)}
-                                    className="w-full pl-6 pr-2 py-1.5 text-sm border border-gray-200 rounded-lg"
+                                    className="w-full pl-6 pr-2 py-1.5 text-sm border border-border rounded-lg"
                                   />
                                 </div>
                                 <button 
                                   onClick={() => handleAdicionarVendaManual(tipo)} 
                                   disabled={!valorManual || parseFloat(valorManual) <= 0}
-                                  className="px-2 py-1.5 bg-emerald-600 text-white rounded-lg text-sm disabled:opacity-50"
+                                  className="px-2 py-1.5 bg-success text-white rounded-lg text-sm disabled:opacity-50"
                                 >
                                   <Plus className="h-3 w-3" />
                                 </button>
@@ -659,27 +659,27 @@ export default function DashboardCaixa({
                                   onChange={(e) => handleInputChange(tipo, 'descricao', e.target.value)}
                                   onKeyPress={(e) => handleKeyPress(tipo, e)}
                                   maxLength={50}
-                                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-lg"
+                                  className="w-full px-2 py-1.5 text-sm border border-border rounded-lg"
                                 />
                               </div>
                             </div>
                           ) : (
                             <div className="flex gap-1">
                               <div className="flex-1 relative">
-                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">R$</span>
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/70">R$</span>
                                 <input 
                                   ref={(el) => { inputRefs.current[`${tipo}-valor`] = el }}
                                   type="number" step="0.01" placeholder="0,00" 
                                   value={valorManual}
                                   onChange={(e) => handleInputChange(tipo, 'valor', e.target.value)}
                                   onKeyPress={(e) => handleKeyPress(tipo, e)}
-                                  className="w-full pl-6 pr-2 py-1.5 text-sm border border-gray-200 rounded-lg"
+                                  className="w-full pl-6 pr-2 py-1.5 text-sm border border-border rounded-lg"
                                 />
                               </div>
                               <button 
                                 onClick={() => handleAdicionarVendaManual(tipo)} 
                                 disabled={!valorManual || parseFloat(valorManual) <= 0}
-                                className="px-2 py-1.5 bg-emerald-600 text-white rounded-lg text-sm disabled:opacity-50"
+                                className="px-2 py-1.5 bg-success text-white rounded-lg text-sm disabled:opacity-50"
                               >
                                 <Plus className="h-3 w-3" />
                               </button>
@@ -688,80 +688,80 @@ export default function DashboardCaixa({
                         </div>
 
                         {/* Contadores */}
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>Sistema <span className="bg-gray-200 text-gray-700 px-1 rounded">{vendasTipo.length}</span></span>
-                          <span>Manual <span className="bg-emerald-100 text-emerald-700 px-1 rounded">{vendasManuaisTipo.length}</span></span>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Sistema <span className="bg-surface-2 text-white px-1 rounded">{vendasTipo.length}</span></span>
+                          <span>Manual <span className="bg-success/10 text-success px-1 rounded">{vendasManuaisTipo.length}</span></span>
                         </div>
 
                         {/* Listas lado a lado */}
                         <div className="grid grid-cols-2 gap-2">
                           <div 
                             ref={(el) => { listaSistemaRefs.current[tipo] = el }} 
-                            className="border border-gray-200 rounded-lg overflow-y-auto max-h-32"
+                            className="border border-border rounded-lg overflow-y-auto max-h-32"
                           >
                             {vendasTipo.map(venda => (
                               <div 
                                 key={venda.id} 
                                 onClick={() => { setVendaSelecionada(venda); setShowDetalhesVenda(true); }} 
-                                className="cursor-pointer p-1.5 border-b border-gray-100 text-sm hover:bg-gray-100"
+                                className="cursor-pointer p-1.5 border-b border-border text-sm hover:bg-surface-2"
                               >
                                 <div className="flex justify-between">
                                   <span className="font-medium">{formatarMoeda(venda.valorTotal)}</span>
-                                  <span className="text-xs text-gray-500">
+                                  <span className="text-xs text-muted-foreground">
                                     {new Date(venda.dataVenda).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                   </span>
                                 </div>
                                 {venda.dadosPedido?.cliente?.nome && (
-                                  <div className="text-xs text-gray-500 truncate">{venda.dadosPedido.cliente.nome}</div>
+                                  <div className="text-xs text-muted-foreground truncate">{venda.dadosPedido.cliente.nome}</div>
                                 )}
                               </div>
                             ))}
                             {vendasTipo.length === 0 && (
-                              <div className="text-center text-xs text-gray-400 py-4">Nenhuma venda</div>
+                              <div className="text-center text-xs text-muted-foreground/70 py-4">Nenhuma venda</div>
                             )}
                           </div>
                           <div 
                             ref={(el) => { listaManualRefs.current[tipo] = el }} 
-                            className="border border-gray-200 rounded-lg overflow-y-auto max-h-32"
+                            className="border border-border rounded-lg overflow-y-auto max-h-32"
                           >
                             {vendasManuaisTipo.map(venda => (
-                              <div key={venda.id} className="p-1.5 border-b border-gray-100 text-sm flex justify-between items-center">
+                              <div key={venda.id} className="p-1.5 border-b border-border text-sm flex justify-between items-center">
                                 <div>
-                                  <span className="font-medium text-emerald-600">{formatarMoeda(venda.valor)}</span>
+                                  <span className="font-medium text-success">{formatarMoeda(venda.valor)}</span>
                                   {venda.descricao && venda.descricao !== `Venda manual - ${formatarTipoPagamento(tipo)}` && (
-                                    <div className="text-xs text-gray-500 truncate">{venda.descricao}</div>
+                                    <div className="text-xs text-muted-foreground truncate">{venda.descricao}</div>
                                   )}
                                 </div>
                                 <button 
                                   onClick={(e) => { e.stopPropagation(); handleRemoverVendaManual(venda.id, tipo); }} 
-                                  className="text-red-500 hover:text-red-700"
+                                  className="text-destructive hover:text-destructive"
                                 >
                                   <X className="h-3 w-3" />
                                 </button>
                               </div>
                             ))}
                             {vendasManuaisTipo.length === 0 && (
-                              <div className="text-center text-xs text-gray-400 py-4">Nenhuma manual</div>
+                              <div className="text-center text-xs text-muted-foreground/70 py-4">Nenhuma manual</div>
                             )}
                           </div>
                         </div>
 
                         {/* Totais e diferença */}
                         <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                          <div className="p-1.5 bg-gray-100 rounded-lg">
+                          <div className="p-1.5 bg-surface-2 rounded-lg">
                             <strong>Sistema</strong>
                             <div className="font-medium">{formatarMoeda(totalSistema)}</div>
                             {tipo === 'DINHEIRO' && (
-                              <div className="text-xs text-gray-400">(Inicial: {formatarMoeda(caixaAtual?.valorInicial || 0)})</div>
+                              <div className="text-xs text-muted-foreground/70">(Inicial: {formatarMoeda(caixaAtual?.valorInicial || 0)})</div>
                             )}
                           </div>
-                          <div className="p-1.5 bg-gray-100 rounded-lg">
+                          <div className="p-1.5 bg-surface-2 rounded-lg">
                             <strong>Manual</strong>
-                            <div className="font-medium text-emerald-600">{formatarMoeda(totalManual)}</div>
+                            <div className="font-medium text-success">{formatarMoeda(totalManual)}</div>
                           </div>
                         </div>
 
-                        <div className={`text-center p-1.5 rounded-lg text-xs font-medium ${diferenca >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                        <div className={`text-center p-1.5 rounded-lg text-xs font-medium ${diferenca >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
                           {diferenca >= 0 ? '✓' : '✗'} Diferença: {formatarMoeda(diferenca)}
                         </div>
                       </div>
@@ -771,37 +771,37 @@ export default function DashboardCaixa({
               </div>
 
               {/* Resumo Geral */}
-              <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+              <div className="mt-4 p-4 bg-surface-2 rounded-lg">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h4 className="font-semibold text-gray-800 mb-2">Resumo de Vendas</h4>
+                    <h4 className="font-semibold text-white mb-2">Resumo de Vendas</h4>
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Valor Inicial:</span>
+                        <span className="text-muted-foreground">Valor Inicial:</span>
                         <span className="font-medium">{formatarMoeda(caixaAtual?.valorInicial || 0)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Vendas do Sistema:</span>
+                        <span className="text-muted-foreground">Vendas do Sistema:</span>
                         <span className="font-medium">{formatarMoeda(todasVendas)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Vendas Manuais:</span>
-                        <span className="font-medium text-emerald-600">{formatarMoeda(Object.values(totaisManuaisPorTipo).reduce((a, b) => a + b, 0))}</span>
+                        <span className="text-muted-foreground">Vendas Manuais:</span>
+                        <span className="font-medium text-success">{formatarMoeda(Object.values(totaisManuaisPorTipo).reduce((a, b) => a + b, 0))}</span>
                       </div>
-                      <div className="flex justify-between pt-2 border-t border-gray-200">
+                      <div className="flex justify-between pt-2 border-t border-border">
                         <span className="font-bold">Total Dinheiro:</span>
-                        <span className="font-bold text-[#de4838]">{formatarMoeda(totalDinheiroInicialMaisVendas)}</span>
+                        <span className="font-bold text-primary">{formatarMoeda(totalDinheiroInicialMaisVendas)}</span>
                       </div>
                     </div>
                   </div>
                   <div>
-                    <div className="flex justify-between pt-2 border-t border-gray-200 mt-2">
+                    <div className="flex justify-between pt-2 border-t border-border mt-2">
                       <span className="font-bold">Diferença Geral:</span>
-                      <span className={`font-bold text-lg ${Object.values(diferencasPorTipo).reduce((a, b) => a + b, 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      <span className={`font-bold text-lg ${Object.values(diferencasPorTipo).reduce((a, b) => a + b, 0) >= 0 ? 'text-success' : 'text-destructive'}`}>
                         {formatarMoeda(Object.values(diferencasPorTipo).reduce((a, b) => a + b, 0))}
                       </span>
                     </div>
-                    <div className="mt-2 text-xs text-gray-400">
+                    <div className="mt-2 text-xs text-muted-foreground/70">
                       * O valor do sistema para DINHEIRO inclui o valor inicial do caixa
                     </div>
                   </div>

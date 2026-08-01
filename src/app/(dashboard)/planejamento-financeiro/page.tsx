@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatPercentage } from '@/lib/utils'
 import { toast } from 'sonner'
+import { PageContainer } from '@/components/layout/PageContainer'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 // Components
 import { MetaFaturamentoTable } from './components/MetaFaturamentoTable'
@@ -299,26 +301,24 @@ export default function PlanejamentoFinanceiroPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#e5e7eb] flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 ml-3 mr-3 sm:ml-6 sm:mr-6 bg-white border-b border-gray-200 px-3 py-3 sm:px-6 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-800">Planejamento Financeiro</h1>
-          <p className="text-sm text-gray-500">
-            Gestão de metas, despesas e taxas
-          </p>
-        </div>
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+      <PageContainer>
+        <PageHeader
+          title="Planejamento Financeiro"
+          subtitle="Gestão de metas, despesas e taxas"
+        >
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <div className="relative">
             <select
-              className="rounded-full border border-gray-200 bg-white px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8 cursor-pointer hover:border-red-500 transition-colors"
+              className="rounded-full border border-border bg-surface px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none pr-8 cursor-pointer hover:border-red-500 transition-colors"
               value={anoAtual}
               onChange={(e) => setAnoAtual(parseInt(e.target.value))}
             >
@@ -332,7 +332,7 @@ export default function PlanejamentoFinanceiroPage() {
           <Button
             variant="outline"
             onClick={carregarDados}
-            className="rounded-full border-gray-200 hover:border-[#de4838] hover:cursor-pointer transition-all whitespace-nowrap text-xs sm:text-sm"
+            className="rounded-full border-border hover:border-primary hover:cursor-pointer transition-all whitespace-nowrap text-xs sm:text-sm"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Atualizar
@@ -340,26 +340,23 @@ export default function PlanejamentoFinanceiroPage() {
           <Button
             variant="outline"
             onClick={sincronizarDados}
-            className="rounded-full border-gray-200 hover:border-green-500 hover:cursor-pointer transition-all whitespace-nowrap text-xs sm:text-sm"
+            className="rounded-full border-border hover:border-green-500 hover:cursor-pointer transition-all whitespace-nowrap text-xs sm:text-sm"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Sincronizar
           </Button>
           <Button
             onClick={salvarTudo}
-            className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-4 py-2 hover:cursor-pointer hover:border-red-500 hover:border-2 transition-all whitespace-nowrap text-xs sm:text-sm"
+            className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 py-2 hover:cursor-pointer hover:border-red-500 hover:border-2 transition-all whitespace-nowrap text-xs sm:text-sm"
           >
             <Save className="mr-2 h-4 w-4" />
             Salvar Tudo
           </Button>
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto p-6 max-w-7xl">
+        </PageHeader>
         {/* Cards Resumo */}
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          <Card className="relative overflow-hidden bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:cursor-pointer hover:scale-105 transition-transform duration-200">
+          <Card className="relative overflow-hidden bg-gradient-to-r from-success to-success/80 text-white hover:cursor-pointer hover:scale-105 transition-transform duration-200">
             <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium opacity-90 leading-tight">Faturamento Mensal</p>
@@ -383,7 +380,7 @@ export default function PlanejamentoFinanceiroPage() {
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:cursor-pointer hover:scale-105 transition-transform duration-200">
+          <Card className="relative overflow-hidden bg-gradient-to-r from-warning to-warning/80 text-white hover:cursor-pointer hover:scale-105 transition-transform duration-200">
             <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium opacity-90 leading-tight">% Despesas Variáveis</p>
@@ -395,7 +392,7 @@ export default function PlanejamentoFinanceiroPage() {
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:cursor-pointer hover:scale-105 transition-transform duration-200">
+          <Card className="relative overflow-hidden bg-gradient-to-r from-primary/80 to-primary/70 text-white hover:cursor-pointer hover:scale-105 transition-transform duration-200">
             <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium opacity-90 leading-tight">Mês Atual</p>
@@ -439,12 +436,12 @@ export default function PlanejamentoFinanceiroPage() {
           />
         </div>
 
-      </div>
+      </PageContainer>
 
       {/* Botão Ajuda */}
       <button
         onClick={() => router.push('/planejamento/configuracoes?tab=ajuda')}
-        className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-[#de4838] text-white shadow-lg transition-all hover:scale-110 hover:bg-[#c73d2e] hover:cursor-pointer hover:border-2 hover:border-red-500"
+        className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-110 hover:bg-primary/90 hover:cursor-pointer hover:border-2 hover:border-red-500"
       >
         <HelpCircle className="h-6 w-6" />
       </button>

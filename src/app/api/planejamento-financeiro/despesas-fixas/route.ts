@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { garantirDespesasFixasMes } from '@/lib/planejamento/rollover'
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -14,9 +15,20 @@ export async function GET(request: NextRequest) {
   const mes = searchParams.get('mes') ? parseInt(searchParams.get('mes')!) : undefined
 
   try {
+    const empresaIdAtual = session.user.empresaId || 'sem-empresa'
+
+    // Virada de mês: replica as despesas do último mês preenchido.
+    const hoje = new Date()
+    const mesAlvo = mes ?? (ano === hoje.getFullYear() ? hoje.getMonth() + 1 : 1)
+    try {
+      await garantirDespesasFixasMes(empresaIdAtual, session.user.id, ano, mesAlvo)
+    } catch (rolloverError) {
+      console.error('Erro na virada de mês das despesas fixas:', rolloverError)
+    }
+
     const whereClause: any = {
       userId: session.user.id,
-      empresaId: session.user.empresaId || 'sem-empresa',
+      empresaId: empresaIdAtual,
       ano
     }
 
@@ -28,6 +40,7 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       orderBy: { nome: 'asc' }
     })
+
 
     // Buscar percentual do período salvo
     const percentualConfig = await prisma.planejamentoConfig.findFirst({

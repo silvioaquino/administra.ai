@@ -83,25 +83,25 @@ function ResetPasswordForm() {
   // Se não tem token e não está em sucesso, mostra erro
   if (!token && !success) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-muted flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden p-6 md:p-8">
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden p-6 md:p-8">
             <Alert className="bg-red-50 border-red-200 rounded-xl mb-4">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-sm text-red-700">
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              <AlertDescription className="text-sm text-destructive">
                 Link inválido ou expirado. Solicite uma nova redefinição de senha.
               </AlertDescription>
             </Alert>
             <Button
               onClick={() => router.push("/forgot-password")}
-              className="w-full bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"
             >
               Solicitar novo link
             </Button>
             <div className="text-center mt-4">
               <Link 
                 href="/login" 
-                className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[#de4838] transition-colors"
+                className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Voltar para o login
@@ -114,36 +114,36 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-muted flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[#de4838] to-[#de4838]/80 flex items-center justify-center shadow-lg">
-              <Store className="h-8 w-8 text-white" />
+            <div className="h-16 w-16 rounded-2xl bg-linear-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg">
+              <Store className="h-8 w-8 text-primary-foreground" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">Redefinir Senha</h1>
-          <p className="text-sm text-gray-500 mt-2">
+          <h1 className="text-2xl font-bold text-foreground">Redefinir Senha</h1>
+          <p className="text-sm text-muted-foreground mt-2">
             Digite sua nova senha
           </p>
         </div>
 
         {/* Formulário */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
           <div className="p-6 md:p-8">
             {success ? (
               <div className="space-y-4">
-                <Alert className="bg-green-50 border-green-200 rounded-xl">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-sm text-green-700">
+                <Alert className="bg-success/10 border-success/30 rounded-xl">
+                  <CheckCircle className="h-4 w-4 text-success" />
+                  <AlertDescription className="text-sm text-success">
                     Senha redefinida com sucesso! Redirecionando para o login...
                   </AlertDescription>
                 </Alert>
                 <Button
                   type="button"
                   onClick={() => router.push("/login")}
-                  className="w-full bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg py-2.5"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg py-2.5"
                 >
                   Ir para o login
                 </Button>
@@ -152,21 +152,21 @@ function ResetPasswordForm() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 {error && (
                   <Alert className="bg-red-50 border-red-200 rounded-xl">
-                    <AlertCircle className="h-4 w-4 text-red-600" />
-                    <AlertDescription className="text-sm text-red-700">{error}</AlertDescription>
+                    <AlertCircle className="h-4 w-4 text-destructive" />
+                    <AlertDescription className="text-sm text-destructive">{error}</AlertDescription>
                   </Alert>
                 )}
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Nova senha
                   </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
-                      className="pl-9 pr-9 rounded-lg border-gray-200 focus:ring-[#de4838] focus:border-[#de4838]"
+                      className="pl-9 pr-9 rounded-lg border-border focus:ring-primary focus:border-primary"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       required
@@ -174,26 +174,26 @@ function ResetPasswordForm() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     A senha deve ter no mínimo 6 caracteres
                   </p>
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Confirmar nova senha
                   </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="••••••••"
-                      className="pl-9 pr-9 rounded-lg border-gray-200 focus:ring-[#de4838] focus:border-[#de4838]"
+                      className="pl-9 pr-9 rounded-lg border-border focus:ring-primary focus:border-primary"
                       value={formData.confirmPassword}
                       onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                       required
@@ -201,7 +201,7 @@ function ResetPasswordForm() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
                     >
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -210,7 +210,7 @@ function ResetPasswordForm() {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg py-2.5" 
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg py-2.5" 
                   disabled={loading}
                   size="lg"
                 >
@@ -220,7 +220,7 @@ function ResetPasswordForm() {
                 <div className="text-center">
                   <Link 
                     href="/login" 
-                    className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[#de4838] transition-colors"
+                    className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Voltar para o login
@@ -239,12 +239,12 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-muted flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden p-6 md:p-8 text-center">
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden p-6 md:p-8 text-center">
             <div className="animate-pulse">
-              <div className="h-8 w-32 bg-gray-200 rounded mx-auto mb-4"></div>
-              <div className="h-4 w-48 bg-gray-200 rounded mx-auto"></div>
+              <div className="h-8 w-32 bg-muted rounded mx-auto mb-4"></div>
+              <div className="h-4 w-48 bg-muted rounded mx-auto"></div>
             </div>
           </div>
         </div>

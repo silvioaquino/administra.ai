@@ -147,15 +147,15 @@ export default function MovimentacoesContaPage() {
   const getIcon = (tipo: string) => {
     switch (tipo) {
       case "CONTA_CORRENTE":
-        return <Building2 className="h-5 w-5 text-blue-500" />;
+        return <Building2 className="h-5 w-5 text-info" />;
       case "CARTEIRA":
-        return <Wallet className="h-5 w-5 text-emerald-500" />;
+        return <Wallet className="h-5 w-5 text-success" />;
       case "APLICACAO":
-        return <TrendingUp className="h-5 w-5 text-purple-500" />;
+        return <TrendingUp className="h-5 w-5 text-primary/80" />;
       case "CONTA_IFOOD":
-        return <CreditCard className="h-5 w-5 text-orange-500" />;
+        return <CreditCard className="h-5 w-5 text-warning" />;
       default:
-        return <Banknote className="h-5 w-5 text-gray-500" />;
+        return <Banknote className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
@@ -172,13 +172,13 @@ export default function MovimentacoesContaPage() {
 
   const getTipoBadge = (tipo: string) => {
     const colors: Record<string, string> = {
-      VENDA: "bg-emerald-100 text-emerald-700 border-emerald-200",
-      COMPRA: "bg-orange-100 text-orange-700 border-orange-200",
-      DESPESA: "bg-red-100 text-red-700 border-red-200",
-      RECEITA: "bg-blue-100 text-blue-700 border-blue-200",
-      TRANSFERENCIA: "bg-purple-100 text-purple-700 border-purple-200",
+      VENDA: "bg-success/10 text-success border-success/30",
+      COMPRA: "bg-warning/10 text-warning border-orange-200",
+      DESPESA: "bg-destructive/10 text-destructive border-destructive/30",
+      RECEITA: "bg-info/10 text-info border-info/30",
+      TRANSFERENCIA: "bg-primary/10 text-white border-purple-200",
     };
-    return colors[tipo] || "bg-gray-100 text-gray-700 border-gray-200";
+    return colors[tipo] || "bg-surface-2 text-white border-border";
   };
 
   // Função para limpar filtros
@@ -188,10 +188,10 @@ export default function MovimentacoesContaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-2 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-[#de4838]" />
-          <p className="text-sm text-gray-500">Carregando movimentações...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Carregando movimentações...</p>
         </div>
       </div>
     );
@@ -199,10 +199,10 @@ export default function MovimentacoesContaPage() {
 
   if (!conta) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-2 flex items-center justify-center">
         <div className="text-center">
-          <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 mb-2">Conta não encontrada.</p>
+          <Building2 className="h-12 w-12 text-muted-foreground/70 mx-auto mb-4" />
+          <p className="text-muted-foreground mb-2">Conta não encontrada.</p>
           <Button onClick={() => router.back()} variant="outline">
             Voltar
           </Button>
@@ -212,29 +212,29 @@ export default function MovimentacoesContaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm flex-wrap gap-4">
+      <div className="sticky top-0 z-10 bg-surface border-b border-border px-6 py-4 flex items-center justify-between shadow-sm flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={() => router.back()} 
-            className="rounded-full hover:bg-gray-100"
+            className="rounded-full hover:bg-surface-2"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
+            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
           </Button>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gray-100 rounded-full">
+            <div className="p-2 bg-surface-2 rounded-full">
               {getIcon(conta.tipo)}
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-800">{conta.nome}</h1>
-              <p className="text-sm text-gray-500 flex items-center gap-2">
+              <h1 className="text-xl font-semibold text-white">{conta.nome}</h1>
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <span>Movimentações</span>
                 {conta.instituicao && (
                   <>
-                    <span className="text-gray-300">•</span>
+                    <span className="text-muted-foreground/70">•</span>
                     <span>{conta.instituicao}</span>
                   </>
                 )}
@@ -246,7 +246,7 @@ export default function MovimentacoesContaPage() {
           <Button 
             variant="outline" 
             onClick={exportarCSV} 
-            className="rounded-full border-gray-200 hover:bg-gray-100"
+            className="rounded-full border-border hover:bg-surface-2"
             disabled={movimentacoes.length === 0}
           >
             <Download className="mr-2 h-4 w-4" />
@@ -255,7 +255,7 @@ export default function MovimentacoesContaPage() {
           <Button
             variant="outline"
             onClick={carregarDados}
-            className="rounded-full border-gray-200 hover:bg-gray-100"
+            className="rounded-full border-border hover:bg-surface-2"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Atualizar
@@ -297,17 +297,17 @@ export default function MovimentacoesContaPage() {
         </div>
 
         {/* Filtros */}
-        <div className="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-100 p-4 border-b border-gray-100">
+        <div className="mt-6 bg-surface rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-surface-2 p-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-[#de4838]" />
-              <h3 className="font-semibold text-gray-800">Filtros</h3>
+              <Filter className="h-4 w-4 text-primary" />
+              <h3 className="font-semibold text-white">Filtros</h3>
             </div>
           </div>
           <div className="p-5">
             <div className="grid gap-4 md:grid-cols-4">
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600">Data Início</Label>
+                <Label className="text-xs font-medium text-muted-foreground">Data Início</Label>
                 <Input
                   type="date"
                   value={filtros.dataInicio}
@@ -316,7 +316,7 @@ export default function MovimentacoesContaPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600">Data Fim</Label>
+                <Label className="text-xs font-medium text-muted-foreground">Data Fim</Label>
                 <Input
                   type="date"
                   value={filtros.dataFim}
@@ -325,9 +325,9 @@ export default function MovimentacoesContaPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600">Tipo</Label>
+                <Label className="text-xs font-medium text-muted-foreground">Tipo</Label>
                 <select
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none"
+                  className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
                   value={filtros.tipo}
                   onChange={(e) => setFiltros({ ...filtros, tipo: e.target.value })}
                 >
@@ -340,7 +340,7 @@ export default function MovimentacoesContaPage() {
                 </select>
               </div>
               <div className="flex items-end gap-2">
-                <Button onClick={carregarDados} className="flex-1 bg-[#de4838] hover:bg-[#c73d2e] rounded-lg">
+                <Button onClick={carregarDados} className="flex-1 bg-primary hover:bg-primary/90 rounded-lg">
                   Filtrar
                 </Button>
                 <Button 
@@ -356,31 +356,31 @@ export default function MovimentacoesContaPage() {
         </div>
 
         {/* Tabela de Movimentações */}
-        <div className="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-100 p-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2">
+        <div className="mt-6 bg-surface rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-surface-2 p-4 border-b border-border flex items-center justify-between flex-wrap gap-2">
             <div>
-              <h3 className="font-semibold text-gray-800">Histórico de Transações</h3>
-              <p className="text-xs text-gray-500 mt-1">
+              <h3 className="font-semibold text-white">Histórico de Transações</h3>
+              <p className="text-xs text-muted-foreground mt-1">
                 {movimentacoes.length} movimentação(ões) encontrada(s)
               </p>
             </div>
             {movimentacoes.length > 0 && (
-              <Badge variant="outline" className="bg-gray-100 text-gray-700">
+              <Badge variant="outline" className="bg-surface-2 text-white">
                 {new Date().toLocaleDateString('pt-BR')}
               </Badge>
             )}
           </div>
           <div className="p-0 overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-100 border-b border-gray-200">
+              <thead className="bg-surface-2 border-b border-border">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conta Contábil</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente/Fornecedor</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Data</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Descrição</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Conta Contábil</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Cliente/Fornecedor</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Tipo</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Entrada</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Saída</th>
                 </tr>
               </thead>
               <tbody>
@@ -388,11 +388,11 @@ export default function MovimentacoesContaPage() {
                   <tr>
                     <td colSpan={7} className="py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
-                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                          <Calendar className="h-6 w-6 text-gray-400" />
+                        <div className="w-12 h-12 bg-surface-2 rounded-full flex items-center justify-center">
+                          <Calendar className="h-6 w-6 text-muted-foreground/70" />
                         </div>
-                        <p className="text-gray-500 font-medium">Nenhuma movimentação encontrada</p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-muted-foreground font-medium">Nenhuma movimentação encontrada</p>
+                        <p className="text-xs text-muted-foreground/70">
                           {filtros.dataInicio || filtros.dataFim 
                             ? "Tente ajustar os filtros de data" 
                             : "Esta conta ainda não possui movimentações"}
@@ -402,15 +402,15 @@ export default function MovimentacoesContaPage() {
                   </tr>
                 ) : (
                   movimentacoes.map((mov) => (
-                    <tr key={mov.id} className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
-                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDate(mov.data)}</td>
-                      <td className="px-4 py-3 font-medium text-gray-800 max-w-[200px] truncate" title={mov.descricao}>
+                    <tr key={mov.id} className="border-b border-border hover:bg-surface-2 transition-colors">
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(mov.data)}</td>
+                      <td className="px-4 py-3 font-medium text-white max-w-[200px] truncate" title={mov.descricao}>
                         {mov.descricao}
                       </td>
-                      <td className="px-4 py-3 text-gray-600 max-w-[150px] truncate" title={mov.conta}>
+                      <td className="px-4 py-3 text-muted-foreground max-w-[150px] truncate" title={mov.conta}>
                         {mov.conta}
                       </td>
-                      <td className="px-4 py-3 text-gray-500 max-w-[150px] truncate" title={mov.clienteFornecedor || ""}>
+                      <td className="px-4 py-3 text-muted-foreground max-w-[150px] truncate" title={mov.clienteFornecedor || ""}>
                         {mov.clienteFornecedor || "-"}
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -418,10 +418,10 @@ export default function MovimentacoesContaPage() {
                           {getTipoLabel(mov.tipo)}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-emerald-600">
+                      <td className="px-4 py-3 text-right font-medium text-success">
                         {mov.entrada > 0 ? formatCurrency(mov.entrada) : "-"}
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-red-500">
+                      <td className="px-4 py-3 text-right font-medium text-destructive">
                         {mov.saida > 0 ? formatCurrency(mov.saida) : "-"}
                       </td>
                     </tr>
@@ -429,11 +429,11 @@ export default function MovimentacoesContaPage() {
                 )}
               </tbody>
               {movimentacoes.length > 0 && (
-                <tfoot className="border-t-2 border-gray-200 bg-gray-100 font-bold">
+                <tfoot className="border-t-2 border-border bg-surface-2 font-bold">
                   <tr>
                     <td colSpan={5} className="px-4 py-3 text-right">TOTAIS NO PERÍODO:</td>
-                    <td className="px-4 py-3 text-right text-emerald-600">{formatCurrency(totalEntradas)}</td>
-                    <td className="px-4 py-3 text-right text-red-500">{formatCurrency(totalSaidas)}</td>
+                    <td className="px-4 py-3 text-right text-success">{formatCurrency(totalEntradas)}</td>
+                    <td className="px-4 py-3 text-right text-destructive">{formatCurrency(totalSaidas)}</td>
                   </tr>
                 </tfoot>
               )}
@@ -444,26 +444,26 @@ export default function MovimentacoesContaPage() {
         {/* Resumo adicional */}
         {movimentacoes.length > 0 && (
           <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-gradient-to-r from-emerald-50 to-emerald-100 border-emerald-200">
+            <Card className="bg-gradient-to-r from-emerald-50 to-emerald-100 border-success/30">
               <CardContent className="p-4">
-                <p className="text-xs text-emerald-700 font-medium">Média de Entrada</p>
-                <p className="text-lg font-bold text-emerald-700">
+                <p className="text-xs text-success font-medium">Média de Entrada</p>
+                <p className="text-lg font-bold text-success">
                   {formatCurrency(totalEntradas / (movimentacoes.filter(m => m.entrada > 0).length || 1))}
                 </p>
               </CardContent>
             </Card>
-            <Card className="bg-gradient-to-r from-red-50 to-red-100 border-red-200">
+            <Card className="bg-gradient-to-r from-red-50 to-red-100 border-destructive/30">
               <CardContent className="p-4">
-                <p className="text-xs text-red-700 font-medium">Média de Saída</p>
-                <p className="text-lg font-bold text-red-700">
+                <p className="text-xs text-destructive font-medium">Média de Saída</p>
+                <p className="text-lg font-bold text-destructive">
                   {formatCurrency(totalSaidas / (movimentacoes.filter(m => m.saida > 0).length || 1))}
                 </p>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
               <CardContent className="p-4">
-                <p className="text-xs text-purple-700 font-medium">Total de Transações</p>
-                <p className="text-lg font-bold text-purple-700">{movimentacoes.length}</p>
+                <p className="text-xs text-white font-medium">Total de Transações</p>
+                <p className="text-lg font-bold text-white">{movimentacoes.length}</p>
               </CardContent>
             </Card>
           </div>

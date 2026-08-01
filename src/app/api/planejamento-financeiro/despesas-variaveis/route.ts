@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { garantirDespesasVariaveisMes } from '@/lib/planejamento/rollover'
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -14,9 +15,20 @@ export async function GET(request: NextRequest) {
   const mes = searchParams.get('mes') ? parseInt(searchParams.get('mes')!) : undefined
 
   try {
+    const empresaIdAtual = session.user.empresaId || 'sem-empresa'
+
+    // Virada de mês: replica a configuração do último mês preenchido.
+    const hoje = new Date()
+    const mesAlvo = mes ?? (ano === hoje.getFullYear() ? hoje.getMonth() + 1 : 1)
+    try {
+      await garantirDespesasVariaveisMes(empresaIdAtual, session.user.id, ano, mesAlvo)
+    } catch (rolloverError) {
+      console.error('Erro na virada de mês das despesas variáveis:', rolloverError)
+    }
+
     const whereClause: any = {
       userId: session.user.id,
-      empresaId: session.user.empresaId || 'sem-empresa',
+      empresaId: empresaIdAtual,
       ano
     }
 
@@ -27,6 +39,7 @@ export async function GET(request: NextRequest) {
     const dados = await prisma.planejamentoDespesaVariavelNovo.findMany({
       where: whereClause
     })
+
 
     // Buscar faturamento do mês para preencher faturamentoBase
     const mesAtual = mes !== undefined ? mes : new Date().getMonth() + 1

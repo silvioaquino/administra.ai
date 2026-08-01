@@ -64,47 +64,51 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="relative min-h-screen bg-background flex items-center justify-center p-4 overflow-hidden">
+      {/* Ambient background */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.35] [background-image:linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
+      <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-[42rem] -translate-x-1/2 rounded-full bg-primary/20 blur-[120px]" />
+
+      <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="h-22 w-22 rounded-2xl bg-gradient-to-br  flex items-center justify-center shadow-lg overflow-hidden">
+          <div className="flex justify-center mb-5">
+            <div className="h-20 w-20 rounded-2xl border border-border bg-card flex items-center justify-center shadow-lg overflow-hidden">
               <Image
                 src="/logo1.png"
                 alt="Logo SeuGerente"
-                width={80}
-                height={80}
-                className="object-contain rounded-2xl"
+                width={72}
+                height={72}
+                className="object-contain rounded-xl"
                 priority
               />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">SeuGerente.ai</h1>
-          <p className="text-sm text-gray-500 mt-2">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">SeuGerente.ai</h1>
+          <p className="text-sm text-muted-foreground mt-2">
             Faça login para acessar o sistema
           </p>
         </div>
 
         {/* Formulário */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="surface-card rounded-2xl border border-border bg-card shadow-xl overflow-hidden">
           <div className="p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-5">
               {error && (
-                <Alert className="bg-red-50 border-red-200 rounded-xl">
-                  <AlertCircle className="h-4 w-4 text-red-600" />
-                  <AlertDescription className="text-sm text-red-700">{error}</AlertDescription>
+                <Alert variant="destructive" className="rounded-xl">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-sm">{error}</AlertDescription>
                 </Alert>
               )}
 
-              <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">E-mail</Label>
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-[0.12em]">E-mail</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type="email"
                     placeholder="seu@email.com"
-                    className="pl-9 rounded-lg border-gray-200 focus:ring-[#de4838] focus:border-[#de4838]"
+                    className="pl-9 h-11 rounded-lg bg-background"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
@@ -112,22 +116,22 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Senha</Label>
-                  <Link 
-                    href="/forgot-password" 
-                    className="text-xs text-[#de4838] hover:text-[#c73d2e] transition-colors"
+                  <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-[0.12em]">Senha</Label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-primary hover:underline transition-colors"
                   >
                     Esqueceu a senha?
                   </Link>
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
-                    className="pl-9 pr-9 rounded-lg border-gray-200 focus:ring-[#de4838] focus:border-[#de4838]"
+                    className="pl-9 pr-9 h-11 rounded-lg bg-background"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
@@ -135,17 +139,17 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg py-2.5" 
-                disabled={loading} 
+              <Button
+                type="submit"
+                className="w-full h-11 rounded-lg"
+                disabled={loading}
                 size="lg"
               >
                 {loading ? "Entrando..." : "Entrar"}
@@ -153,23 +157,23 @@ export default function LoginPage() {
 
               <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
+                  <div className="w-full border-t border-border"></div>
                 </div>
                 <div className="relative flex justify-center text-xs">
-                  <span className="bg-white px-2 text-gray-400">ou</span>
+                  <span className="bg-card px-2 text-muted-foreground">ou</span>
                 </div>
               </div>
 
-              <p className="text-center text-sm text-gray-600">
+              <p className="text-center text-sm text-muted-foreground">
                 Não tem uma conta?{" "}
-                <Link href="/register" className="text-[#de4838] font-medium hover:underline">
+                <Link href="/register" className="text-primary font-medium hover:underline">
                   Cadastre-se grátis
                 </Link>
               </p>
 
-              <div className="bg-orange-50 rounded-xl p-3 text-center">
-                <p className="text-xs text-orange-700">
-                  🎉 Teste grátis por 7 dias. Não exige cartão de crédito.
+              <div className="rounded-xl border border-border bg-muted/40 p-3 text-center">
+                <p className="text-xs text-muted-foreground">
+                  Teste grátis por 7 dias. Não exige cartão de crédito.
                 </p>
               </div>
             </form>
@@ -178,9 +182,9 @@ export default function LoginPage() {
 
         {/* Termos */}
         <div className="mt-6 text-center">
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             Ao fazer login, você concorda com os{" "}
-            <Link href="/termos" className="text-[#de4838] hover:underline">
+            <Link href="/termos" className="text-primary hover:underline">
               termos de uso
             </Link>
           </p>

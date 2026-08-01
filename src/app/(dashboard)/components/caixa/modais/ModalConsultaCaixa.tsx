@@ -48,16 +48,16 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl mx-4 max-h-[90vh] overflow-y-auto animate-slide-in">
+      <div className="bg-surface rounded-lg shadow-xl w-full max-w-5xl mx-4 max-h-[90vh] overflow-y-auto animate-slide-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border bg-blue-600">
+        <div className="flex items-center justify-between p-4 border-b border-border bg-info">
           <h2 className="text-xl font-semibold text-white flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             Consulta de Caixa - Detalhado
           </h2>
-          <button onClick={onClose} className="text-white hover:text-gray-200 transition-colors">
+          <button onClick={onClose} className="text-white hover:text-white/80 transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -69,7 +69,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
             <>
               {/* Informações do Caixa */}
               <div className="border border-border rounded-lg mb-6">
-                <div className="bg-gray-100 px-4 py-2 border-b border-border">
+                <div className="bg-surface-2 px-4 py-2 border-b border-border">
                   <h6 className="font-semibold text-foreground flex items-center gap-2">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -87,8 +87,8 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
                     <div>
                       <p className="text-sm"><strong className="text-foreground">Status:</strong>
                         <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${
-                          valores.status === 'FECHADO' ? 'bg-green-100 text-green-800' :
-                          valores.status === 'ABERTO' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                          valores.status === 'FECHADO' ? 'bg-success/10 text-green-800' :
+                          valores.status === 'ABERTO' ? 'bg-yellow-100 text-yellow-800' : 'bg-surface-2 text-white'
                         }`}>{valores.status}</span>
                       </p>
                       <p className="text-sm mt-2"><strong className="text-foreground">Observação:</strong> <span className="text-muted-foreground">{valores.observacao}</span></p>
@@ -101,20 +101,20 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
               {/* Resumo Financeiro */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="border border-green-200 rounded-lg p-3 text-center bg-green-50">
-                  <h6 className="text-xs text-green-700 font-medium">Valor Abertura</h6>
-                  <h4 className="text-lg font-bold text-green-700">{formatarMoeda(valores.valorAbertura || 0)}</h4>
+                  <h6 className="text-xs text-success font-medium">Valor Abertura</h6>
+                  <h4 className="text-lg font-bold text-success">{formatarMoeda(valores.valorAbertura || 0)}</h4>
                 </div>
-                <div className="border border-blue-200 rounded-lg p-3 text-center bg-blue-50">
-                  <h6 className="text-xs text-blue-700 font-medium">Vendas Dinheiro</h6>
-                  <h4 className="text-lg font-bold text-blue-700">{formatarMoeda(valores.vendasDinheiro || 0)}</h4>
+                <div className="border border-info/30 rounded-lg p-3 text-center bg-info/5">
+                  <h6 className="text-xs text-info font-medium">Vendas Dinheiro</h6>
+                  <h4 className="text-lg font-bold text-info">{formatarMoeda(valores.vendasDinheiro || 0)}</h4>
                 </div>
                 <div className="border border-cyan-200 rounded-lg p-3 text-center bg-cyan-50">
                   <h6 className="text-xs text-cyan-700 font-medium">Total Vendas</h6>
                   <h4 className="text-lg font-bold text-cyan-700">{formatarMoeda(valores.totalVendas || 0)}</h4>
                 </div>
-                <div className="border border-amber-200 rounded-lg p-3 text-center bg-amber-50">
-                  <h6 className="text-xs text-amber-700 font-medium">Saldo Final</h6>
-                  <h4 className={`text-lg font-bold ${(valores.saldoFinal || 0) < 0 ? 'text-red-600' : 'text-amber-700'}`}>
+                <div className="border border-amber-200 rounded-lg p-3 text-center bg-warning/5">
+                  <h6 className="text-xs text-warning font-medium">Saldo Final</h6>
+                  <h4 className={`text-lg font-bold ${(valores.saldoFinal || 0) < 0 ? 'text-destructive' : 'text-warning'}`}>
                     {formatarMoeda(valores.saldoFinal || 0)}
                   </h4>
                 </div>
@@ -123,7 +123,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
               {/* Fechamento Oficial */}
               {dadosCaixa.fechamento && (
                 <div className="border border-green-200 rounded-lg mb-6 bg-green-50">
-                  <div className="bg-green-600 px-4 py-2 rounded-t-lg">
+                  <div className="bg-success px-4 py-2 rounded-t-lg">
                     <h6 className="font-semibold text-white flex items-center gap-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -147,7 +147,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
               {/* Vendas por Forma Pagamento */}
               {dadosCaixa.vendas_por_forma_pagamento && (
                 <div className="border border-border rounded-lg mb-6">
-                  <div className="bg-gray-100 px-4 py-2 border-b border-border">
+                  <div className="bg-surface-2 px-4 py-2 border-b border-border">
                     <h6 className="font-semibold text-foreground flex items-center gap-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -163,12 +163,12 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
                         return (
                           <div key={tipo} className="flex justify-between items-center p-2 border border-border rounded-lg">
                             <span className="text-muted-foreground">{formatarTipoPagamento(tipo)}:</span>
-                            <strong className="text-green-600">{formatarMoeda(totalTipo)}</strong>
+                            <strong className="text-success">{formatarMoeda(totalTipo)}</strong>
                           </div>
                         )
                       })}
                     </div>
-                    <div className="mt-4 p-3 bg-gray-100 rounded-lg flex justify-between items-center">
+                    <div className="mt-4 p-3 bg-surface-2 rounded-lg flex justify-between items-center">
                       <strong className="text-foreground">TOTAL GERAL DE VENDAS:</strong>
                       <strong className="text-foreground text-lg">{formatarMoeda(valores.totalVendas || 0)}</strong>
                     </div>
@@ -184,7 +184,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
 
               {/* Retiradas Realizadas */}
               <div className="border border-border rounded-lg mb-6">
-                <div className="bg-gray-100 px-4 py-2 border-b border-border">
+                <div className="bg-surface-2 px-4 py-2 border-b border-border">
                   <h6 className="font-semibold text-foreground flex items-center gap-2">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm0 0v-4" />
@@ -196,7 +196,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
                   {Array.isArray(dadosCaixa?.retiradas) && dadosCaixa.retiradas.length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
-                        <thead className="bg-gray-100">
+                        <thead className="bg-surface-2">
                           <tr>
                             <th className="text-left p-2">Data/Hora</th>
                             <th className="text-left p-2">Valor</th>
@@ -207,7 +207,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
                           {dadosCaixa.retiradas.map((retirada, index) => (
                             <tr key={index} className="border-b border-border">
                               <td className="p-2">{formatarData(retirada.data)}</td>
-                              <td className="p-2 text-red-600 font-medium">{formatarMoeda(retirada.valor)}</td>
+                              <td className="p-2 text-destructive font-medium">{formatarMoeda(retirada.valor)}</td>
                               <td className="p-2 text-muted-foreground">{retirada.observacao || '-'}</td>
                             </tr>
                           ))}
@@ -215,7 +215,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
                         <tfoot>
                           <tr className="bg-yellow-50">
                             <td className="p-2 font-bold">TOTAL DE RETIRADAS:</td>
-                            <td colSpan={2} className="p-2 text-red-600 font-bold">{formatarMoeda(valores.totalRetiradas || 0)}</td>
+                            <td colSpan={2} className="p-2 text-destructive font-bold">{formatarMoeda(valores.totalRetiradas || 0)}</td>
                           </tr>
                         </tfoot>
                       </table>
@@ -242,12 +242,12 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <div className="flex justify-between py-1"><span>Valor de Abertura:</span><strong>{formatarMoeda(valores.valorAbertura || 0)}</strong></div>
-                      <div className="flex justify-between py-1"><span>Total de Vendas:</span><strong className="text-green-600">{formatarMoeda(valores.totalVendas || 0)}</strong></div>
-                      <div className="flex justify-between py-1"><span>Total de Retiradas:</span><strong className="text-red-600">{formatarMoeda(valores.totalRetiradas || 0)}</strong></div>
+                      <div className="flex justify-between py-1"><span>Total de Vendas:</span><strong className="text-success">{formatarMoeda(valores.totalVendas || 0)}</strong></div>
+                      <div className="flex justify-between py-1"><span>Total de Retiradas:</span><strong className="text-destructive">{formatarMoeda(valores.totalRetiradas || 0)}</strong></div>
                     </div>
                     <div>
                       <div className="flex justify-between py-1"><span>Vendas em Dinheiro:</span><strong>{formatarMoeda(valores.vendasDinheiro || 0)}</strong></div>
-                      <div className="flex justify-between py-1"><span>Saldo em Dinheiro:</span><strong className={(valores.saldoFinal || 0) < 0 ? 'text-red-600' : 'text-green-600'}>{formatarMoeda(valores.saldoFinal || 0)}</strong></div>
+                      <div className="flex justify-between py-1"><span>Saldo em Dinheiro:</span><strong className={(valores.saldoFinal || 0) < 0 ? 'text-destructive' : 'text-success'}>{formatarMoeda(valores.saldoFinal || 0)}</strong></div>
                       <div className="flex justify-between py-1"><span>Faturamento Líquido:</span><strong className="text-primary">{formatarMoeda(faturamentoLiquido)}</strong></div>
                     </div>
                   </div>
@@ -270,7 +270,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
 
         {/* Footer */}
         <div className="flex justify-end gap-3 p-4 border-t border-border">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-1000 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
+          <button onClick={onClose} className="px-4 py-2 bg-surface-20 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
             Fechar
           </button>
           {dadosCaixa && (

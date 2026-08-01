@@ -37,21 +37,21 @@ export function Modal({ isOpen, onClose, title, subtitle, children, footer }: Mo
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 animate-in fade-in zoom-in duration-200">
+      <div className="relative bg-card rounded-2xl shadow-xl w-full max-w-2xl mx-4 animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
+        <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-4 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
-              {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
+              <h2 className="text-xl font-semibold text-foreground">{title}</h2>
+              {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="rounded-full hover:bg-gray-100 h-8 w-8"
+              className="rounded-full hover:bg-muted h-8 w-8"
             >
-              <X className="h-4 w-4 text-gray-500" />
+              <X className="h-4 w-4 text-muted-foreground" />
             </Button>
           </div>
         </div>
@@ -63,7 +63,7 @@ export function Modal({ isOpen, onClose, title, subtitle, children, footer }: Mo
 
         {/* Footer */}
         {footer && (
-          <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 rounded-b-2xl">
+          <div className="sticky bottom-0 bg-card border-t border-border px-6 py-4 rounded-b-2xl">
             {footer}
           </div>
         )}

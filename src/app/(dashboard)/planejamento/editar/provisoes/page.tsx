@@ -126,35 +126,35 @@ export default function EditarProvisoesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
+      <div className="min-h-screen bg-surface-2 flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-10 bg-surface border-b border-border px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={() => router.back()}
-            className="rounded-full hover:bg-gray-100"
+            className="rounded-full hover:bg-surface-2"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
+            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
           </Button>
           <div>
-            <h1 className="text-xl font-semibold text-gray-800">Configurar Provisões</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-xl font-semibold text-white">Configurar Provisões</h1>
+            <p className="text-sm text-muted-foreground">
               Configure as provisões da folha salarial (13º, férias, FGTS, INSS Patronal)
             </p>
           </div>
         </div>
         <Button 
           onClick={salvarProvisoes}
-          className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-5"
+          className="bg-primary hover:bg-primary/90 text-white rounded-full px-5"
           disabled={saving}
         >
           <Save className="mr-2 h-4 w-4" />
@@ -164,40 +164,40 @@ export default function EditarProvisoesPage() {
 
       {/* Main Content */}
       <div className="container mx-auto p-6 max-w-6xl">
-        <Alert className="mb-6 bg-blue-50 border-blue-200 rounded-xl">
-          <AlertDescription className="text-sm text-blue-700">
+        <Alert className="mb-6 bg-info/5 border-info/30 rounded-xl">
+          <AlertDescription className="text-sm text-info">
             As provisões são calculadas automaticamente com base nos salários dos funcionários.
             Você pode ativar/desativar cada provisão individualmente por funcionário.
           </AlertDescription>
         </Alert>
 
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-100 p-4 border-b border-gray-100">
+        <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-surface-2 p-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-[#de4838]" />
-              <h3 className="font-semibold text-gray-800">Provisões por Funcionário</h3>
+              <Shield className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-white">Provisões por Funcionário</h3>
             </div>
           </div>
           <div className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-100 border-b border-gray-200">
-                  <tr className="border-b border-gray-200">
-                    <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Provisão</th>
-                    <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Funcionário</th>
-                    <th rowSpan={2} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ativo</th>
-                    <th rowSpan={2} className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Impacto Mensal (R$)</th>
+                <thead className="bg-surface-2 border-b border-border">
+                  <tr className="border-b border-border">
+                    <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Provisão</th>
+                    <th rowSpan={2} className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Funcionário</th>
+                    <th rowSpan={2} className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Ativo</th>
+                    <th rowSpan={2} className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Impacto Mensal (R$)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {PROVISOES_CONFIG.map((prov, provIdx) => (
                     <React.Fragment key={prov.key}>
-                      <tr className="bg-gray-100">
+                      <tr className="bg-surface-2">
                         <td colSpan={4} className="px-4 py-3">
                           <div className="flex items-center justify-between">
                             <div>
-                              <span className="font-medium text-gray-800">{prov.nome}</span>
-                              <span className="ml-2 text-xs text-gray-500">({prov.descricao})</span>
+                              <span className="font-medium text-white">{prov.nome}</span>
+                              <span className="ml-2 text-xs text-muted-foreground">({prov.descricao})</span>
                             </div>
                           </div>
                         </td>
@@ -207,13 +207,13 @@ export default function EditarProvisoesPage() {
                         const valorMensal = func.salario * prov.percentual
                         
                         return (
-                          <tr key={`${func.nome}-${prov.key}`} className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
+                          <tr key={`${func.nome}-${prov.key}`} className="border-b border-border hover:bg-surface-2 transition-colors">
                             {funcIdx === 0 && provIdx === 0 && (
                               <td className="px-4 py-2 align-middle" rowSpan={PROVISOES_CONFIG.length * funcionarios.length}>
                                 {/* Espaço reservado */}
                               </td>
                             )}
-                            <td className="px-4 py-2 text-gray-700">{func.nome}</td>
+                            <td className="px-4 py-2 text-white">{func.nome}</td>
                             <td className="px-4 py-2 text-center">
                               <Switch
                                 checked={isAtivo}
@@ -221,7 +221,7 @@ export default function EditarProvisoesPage() {
                               />
                             </td>
                             <td className="px-4 py-2 text-right">
-                              <span className={isAtivo ? "text-emerald-600 font-medium" : "text-gray-400 line-through"}>
+                              <span className={isAtivo ? "text-success font-medium" : "text-muted-foreground/70 line-through"}>
                                 {formatCurrency(valorMensal)}
                               </span>
                             </td>
@@ -231,28 +231,28 @@ export default function EditarProvisoesPage() {
                     </React.Fragment>
                   ))}
                 </tbody>
-                <tfoot className="border-t-2 border-gray-200 bg-gray-100">
+                <tfoot className="border-t-2 border-border bg-surface-2">
                   <tr className="font-semibold">
-                    <td colSpan={3} className="px-4 py-3 text-right text-gray-800">TOTAL DA FOLHA:</td>
-                    <td className="px-4 py-3 text-right text-[#de4838] text-lg">{formatCurrency(totalSalarios)}</td>
+                    <td colSpan={3} className="px-4 py-3 text-right text-white">TOTAL DA FOLHA:</td>
+                    <td className="px-4 py-3 text-right text-primary text-lg">{formatCurrency(totalSalarios)}</td>
                    </tr>
                 </tfoot>
               </table>
             </div>
 
-            <div className="p-5 border-t border-gray-100">
+            <div className="p-5 border-t border-border">
               <div className="flex gap-3">
                 <Button 
                   type="button" 
                   variant="outline" 
-                  className="flex-1 rounded-lg border-gray-200 hover:bg-gray-100"
+                  className="flex-1 rounded-lg border-border hover:bg-surface-2"
                   onClick={() => router.back()}
                 >
                   Cancelar
                 </Button>
                 <Button 
                   onClick={salvarProvisoes} 
-                  className="flex-1 bg-[#de4838] hover:bg-[#c73d2e] rounded-lg"
+                  className="flex-1 bg-primary hover:bg-primary/90 rounded-lg"
                   disabled={saving}
                 >
                   <Save className="mr-2 h-4 w-4" />

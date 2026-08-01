@@ -20,7 +20,7 @@ const TableHeader = React.forwardRef<
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className }, ref) => (
   <thead
-    className={cn("bg-gray-100 border-b border-gray-200", className)}
+    className={cn("bg-muted border-b border-border", className)}
     ref={ref}
   />
 ))
@@ -43,7 +43,7 @@ const TableFooter = React.forwardRef<
 >(({ className }, ref) => (
   <tfoot
     className={cn(
-      "border-t bg-gray-100/50 font-semibold [&_tr]:last:border-0",
+      "border-t bg-muted/40 font-semibold [&_tr]:last:border-0",
       className
     )}
     ref={ref}
@@ -57,7 +57,7 @@ const TableRow = React.forwardRef<
 >(({ className }, ref) => (
   <tr
     className={cn(
-      "border-b border-gray-100 transition-colors hover:bg-gray-100/50",
+      "border-b border-border transition-colors hover:bg-muted/40",
       className
     )}
     ref={ref}
@@ -71,7 +71,7 @@ const TableHead = React.forwardRef<
 >(({ className }, ref) => (
   <th
     className={cn(
-      "h-10 px-2 py-3 text-left align-middle text-xs font-medium text-gray-500 uppercase tracking-wider",
+      "h-10 px-2 py-3 text-left align-middle text-xs font-medium text-muted-foreground uppercase tracking-wider",
       className
     )}
     ref={ref}
@@ -84,7 +84,7 @@ const TableCell = React.forwardRef<
   React.HTMLAttributes<HTMLTableCellElement>
 >(({ className }, ref) => (
   <td
-    className={cn("p-2 align-middle text-sm text-gray-700", className)}
+    className={cn("p-2 align-middle text-sm text-foreground", className)}
     ref={ref}
   />
 ))
@@ -95,7 +95,7 @@ const TableCaption = React.forwardRef<
   React.HTMLAttributes<HTMLTableCaptionElement>
 >(({ className }, ref) => (
   <caption
-    className={cn("text-sm text-gray-500 font-medium", className)}
+    className={cn("text-sm text-muted-foreground font-medium", className)}
     ref={ref}
   />
 ))

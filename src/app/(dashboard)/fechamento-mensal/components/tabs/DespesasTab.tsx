@@ -96,18 +96,18 @@ export function DespesasTab({ despesas, contas, onRecarregar }: DespesasTabProps
   const getStatusColor = (status: string) => {
     switch (status) {
       case "PAGO":
-        return "text-emerald-600 bg-emerald-100";
+        return "text-success bg-success/10";
       case "VENCIDO":
-        return "text-red-600 bg-red-100";
+        return "text-destructive bg-destructive/10";
       default:
-        return "text-amber-600 bg-amber-100";
+        return "text-warning bg-warning/10";
     }
   };
 
   return (
     <div className="space-y-4">
       {/* Formulário de adição */}
-      <div className="border rounded-lg p-4 bg-gray-100">
+      <div className="border rounded-lg p-4 bg-surface-2">
         <h4 className="font-semibold mb-3">Adicionar Despesa / Lançamento</h4>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div>
@@ -153,7 +153,7 @@ export function DespesasTab({ despesas, contas, onRecarregar }: DespesasTabProps
             </Select>
           </div>
         </div>
-        <Button onClick={adicionarDespesa} disabled={salvando} className="mt-3 bg-[#de4838] hover:bg-[#c73d2e]">
+        <Button onClick={adicionarDespesa} disabled={salvando} className="mt-3 bg-primary hover:bg-primary/90">
           <Plus className="mr-2 h-4 w-4" />
           {salvando ? "Salvando..." : "Adicionar"}
         </Button>
@@ -161,17 +161,17 @@ export function DespesasTab({ despesas, contas, onRecarregar }: DespesasTabProps
 
       {/* Resumo */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-gray-100 rounded-lg p-3 text-center">
-          <p className="text-sm text-gray-500">Total</p>
+        <div className="bg-surface-2 rounded-lg p-3 text-center">
+          <p className="text-sm text-muted-foreground">Total</p>
           <p className="text-lg font-bold">R$ {totalDespesas.toFixed(2)}</p>
         </div>
-        <div className="bg-amber-50 rounded-lg p-3 text-center">
-          <p className="text-sm text-amber-500">Pendentes</p>
-          <p className="text-lg font-bold text-amber-600">R$ {despesasPendentes.toFixed(2)}</p>
+        <div className="bg-warning/5 rounded-lg p-3 text-center">
+          <p className="text-sm text-warning">Pendentes</p>
+          <p className="text-lg font-bold text-warning">R$ {despesasPendentes.toFixed(2)}</p>
         </div>
-        <div className="bg-emerald-50 rounded-lg p-3 text-center">
-          <p className="text-sm text-emerald-500">Pagas</p>
-          <p className="text-lg font-bold text-emerald-600">R$ {despesasPagas.toFixed(2)}</p>
+        <div className="bg-success/5 rounded-lg p-3 text-center">
+          <p className="text-sm text-success">Pagas</p>
+          <p className="text-lg font-bold text-success">R$ {despesasPagas.toFixed(2)}</p>
         </div>
       </div>
 
@@ -190,7 +190,7 @@ export function DespesasTab({ despesas, contas, onRecarregar }: DespesasTabProps
         <TableBody>
           {despesas.length === 0 ? (
             <TableRow>
-              <td colSpan={6} className="text-center text-gray-500 py-8">
+              <td colSpan={6} className="text-center text-muted-foreground py-8">
                 Nenhuma despesa para este mês.
               </td>
             </TableRow>
@@ -200,7 +200,7 @@ export function DespesasTab({ despesas, contas, onRecarregar }: DespesasTabProps
                 <TableCell className="font-medium">{d.nome}</TableCell>
                 <TableCell className="text-right">R$ {d.valor.toFixed(2)}</TableCell>
                 <TableCell>{new Date(d.dataVencimento).toLocaleDateString()}</TableCell>
-                <TableCell className="text-xs text-gray-600">{d.contaNome || "—"}</TableCell>
+                <TableCell className="text-xs text-muted-foreground">{d.contaNome || "—"}</TableCell>
                 <TableCell>
                   <Select value={d.status} onValueChange={(v) => atualizarStatus(d, v as string)}>
                     <SelectTrigger className={`h-7 ${getStatusColor(d.status)}`}>
@@ -220,13 +220,13 @@ export function DespesasTab({ despesas, contas, onRecarregar }: DespesasTabProps
                       variant="ghost"
                       size="sm"
                       onClick={() => marcarPago(d)}
-                      className="text-emerald-600 hover:text-emerald-700"
+                      className="text-success hover:text-success"
                       title="Marcar como pago"
                     >
                       <CheckCircle className="h-4 w-4" />
                     </Button>
                   ) : (
-                    <CheckCircle className="h-4 w-4 text-emerald-500 mx-auto" />
+                    <CheckCircle className="h-4 w-4 text-success mx-auto" />
                   )}
                 </TableCell>
               </TableRow>

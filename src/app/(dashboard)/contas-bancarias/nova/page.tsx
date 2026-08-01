@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export default function NovaContaPage() {
   const router = useRouter();
@@ -51,8 +53,8 @@ export default function NovaContaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb]">
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-10 bg-surface border-b border-border px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -60,18 +62,18 @@ export default function NovaContaPage() {
             onClick={() => router.back()}
             className="rounded-full"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
+            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
           </Button>
           <div>
-            <h1 className="text-xl font-semibold text-gray-800">Nova Conta Financeira</h1>
-            <p className="text-sm text-gray-500">Cadastre uma nova conta para controle de fluxo</p>
+            <h1 className="text-xl font-semibold text-white">Nova Conta Financeira</h1>
+            <p className="text-sm text-muted-foreground">Cadastre uma nova conta para controle de fluxo</p>
           </div>
         </div>
         <Button
           type="submit"
           form="conta-form"
           disabled={loading}
-          className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full"
+          className="bg-primary hover:bg-primary/90 text-white rounded-full"
         >
           <Save className="mr-2 h-4 w-4" />
           {loading ? "Salvando..." : "Salvar Conta"}
@@ -79,40 +81,40 @@ export default function NovaContaPage() {
       </div>
 
       <div className="container mx-auto p-6 max-w-3xl">
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-100 p-4 border-b border-gray-100">
+        <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-surface-2 p-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-[#de4838]" />
-              <h3 className="font-semibold text-gray-800">Dados da Conta</h3>
+              <Building2 className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-white">Dados da Conta</h3>
             </div>
           </div>
           <div className="p-6">
             {error && (
-              <Alert variant="destructive" className="mb-6 bg-red-50 border-red-200">
+              <Alert variant="destructive" className="mb-6 bg-destructive/5 border-destructive/30">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
             <form id="conta-form" onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Nome da Conta *
                 </Label>
                 <Input
                   placeholder="Ex: Caixa Econômica, Dinheiro Físico, Conta iFood..."
                   value={formData.nome}
                   onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  className="rounded-lg border-gray-300"
+                  className="rounded-lg border-border"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Tipo
                   </Label>
                   <select
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm"
+                    className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm"
                     value={formData.tipo}
                     onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
                   >
@@ -124,24 +126,24 @@ export default function NovaContaPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Instituição
                   </Label>
                   <Input
                     placeholder="Ex: Banco do Brasil, Nubank, Caixa..."
                     value={formData.instituicao}
                     onChange={(e) => setFormData({ ...formData, instituicao: e.target.value })}
-                    className="rounded-lg border-gray-300"
+                    className="rounded-lg border-border"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Saldo Inicial
                 </Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">R$</span>
                   <Input
                     type="number"
                     step="0.01"
@@ -150,10 +152,10 @@ export default function NovaContaPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, saldoInicial: parseFloat(e.target.value) || 0 })
                     }
-                    className="pl-8 rounded-lg border-gray-300"
+                    className="pl-8 rounded-lg border-border"
                   />
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Saldo que esta conta possuía antes de começar a usar o sistema.
                 </p>
               </div>

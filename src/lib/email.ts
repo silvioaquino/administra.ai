@@ -1,10 +1,12 @@
 // lib/email.ts
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY ?? 're_placeholder')
+}
 
 export async function sendResetPasswordEmail(email: string, resetUrl: string) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: 'onboarding@resend.dev',
     to: email,
     subject: 'Redefinição de senha - SeuGerente',

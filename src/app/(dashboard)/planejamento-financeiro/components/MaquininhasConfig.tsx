@@ -68,12 +68,12 @@ export function MaquininhasConfig({ maquininhas, onSalvar }: MaquininhasConfigPr
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="font-semibold text-gray-800">Maquininhas</h4>
+        <h4 className="font-semibold text-white">Maquininhas</h4>
         <Button
           variant="outline"
           size="sm"
           onClick={adicionarMaquininha}
-          className="rounded-lg border-gray-200 hover:border-[#de4838] hover:cursor-pointer transition-all"
+          className="rounded-lg border-border hover:border-primary hover:cursor-pointer transition-all"
         >
           <Plus className="h-4 w-4 mr-1" />
           Adicionar
@@ -82,7 +82,7 @@ export function MaquininhasConfig({ maquininhas, onSalvar }: MaquininhasConfigPr
 
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {lista.map((maq, index) => (
-          <Card key={index} className="border border-gray-200">
+          <Card key={index} className="border border-border">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between">
                 <Input
@@ -101,7 +101,7 @@ export function MaquininhasConfig({ maquininhas, onSalvar }: MaquininhasConfigPr
                     variant="ghost"
                     size="sm"
                     onClick={() => removerMaquininha(index)}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/5 rounded-full"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -111,7 +111,7 @@ export function MaquininhasConfig({ maquininhas, onSalvar }: MaquininhasConfigPr
             <CardContent className="pt-0">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs text-gray-500">Taxa Débito (%)</Label>
+                  <Label className="text-xs text-muted-foreground">Taxa Débito (%)</Label>
                   <Input
                     type="number"
                     value={maq.taxaDebito || ''}
@@ -122,7 +122,7 @@ export function MaquininhasConfig({ maquininhas, onSalvar }: MaquininhasConfigPr
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-gray-500">Taxa Crédito (%)</Label>
+                  <Label className="text-xs text-muted-foreground">Taxa Crédito (%)</Label>
                   <Input
                     type="number"
                     value={maq.taxaCredito || ''}
@@ -133,7 +133,7 @@ export function MaquininhasConfig({ maquininhas, onSalvar }: MaquininhasConfigPr
                   />
                 </div>
                 <div className="col-span-2">
-                  <Label className="text-xs text-gray-500">Aluguel (R$)</Label>
+                  <Label className="text-xs text-muted-foreground">Aluguel (R$)</Label>
                   <Input
                     type="number"
                     value={maq.aluguel || ''}
@@ -151,7 +151,7 @@ export function MaquininhasConfig({ maquininhas, onSalvar }: MaquininhasConfigPr
 
       <Button
         onClick={salvarDados}
-        className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-4 py-2 mt-4"
+        className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 py-2 mt-4"
       >
         Salvar Maquininhas
       </Button>

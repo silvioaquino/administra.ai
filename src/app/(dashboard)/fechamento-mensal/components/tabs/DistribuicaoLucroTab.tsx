@@ -135,34 +135,34 @@ export function DistribuicaoLucroTab({
         <Alert
           className={
             mensagem.tipo === "sucesso"
-              ? "bg-emerald-50 border-emerald-200/80 rounded-xl"
-              : "bg-red-50 border-red-200/80 rounded-xl"
+              ? "bg-success/5 border-success/30/80 rounded-xl"
+              : "bg-destructive/5 border-destructive/30/80 rounded-xl"
           }
         >
           {mensagem.tipo === "sucesso" ? (
-            <CheckCircle className="h-4 w-4 text-emerald-600" />
+            <CheckCircle className="h-4 w-4 text-success" />
           ) : (
-            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertCircle className="h-4 w-4 text-destructive" />
           )}
-          <AlertDescription className={mensagem.tipo === "sucesso" ? "text-sm text-emerald-700" : "text-sm text-red-700"}>
+          <AlertDescription className={mensagem.tipo === "sucesso" ? "text-sm text-success" : "text-sm text-destructive"}>
             {mensagem.texto}
           </AlertDescription>
         </Alert>
       )}
 
-      <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gray-50/80 border-b border-gray-100">
+      <Card className="border-border shadow-sm rounded-2xl overflow-hidden">
+        <CardHeader className="bg-surface-2/80 border-b border-border">
           <CardTitle className="text-lg">Distribuição de Lucros</CardTitle>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Defina o percentual de cada destino. A soma deve fechar 100%.
           </p>
         </CardHeader>
         <CardContent className="p-4 md:p-5">
           {carregando ? (
-            <p className="text-sm text-gray-500 py-6 text-center">Carregando...</p>
+            <p className="text-sm text-muted-foreground py-6 text-center">Carregando...</p>
           ) : (
             <div className="space-y-3">
-              <div className="hidden md:grid md:grid-cols-12 gap-2 text-xs font-medium text-gray-500 uppercase tracking-wider px-2">
+              <div className="hidden md:grid md:grid-cols-12 gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider px-2">
                 <div className="col-span-4">Destino</div>
                 <div className="col-span-2 text-right">% </div>
                 <div className="col-span-3 text-right">Valor (R$)</div>
@@ -172,13 +172,13 @@ export function DistribuicaoLucroTab({
               {linhas.map((l, idx) => (
                 <div
                   key={idx}
-                  className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center p-3 bg-gray-50 rounded-xl border border-gray-100"
+                  className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center p-3 bg-surface-2 rounded-xl border border-border"
                 >
                   <div className="col-span-4">
                     <Input
                       value={l.nome}
                       onChange={(e) => atualizar(idx, "nome", e.target.value)}
-                      className="bg-white"
+                      className="bg-surface"
                     />
                   </div>
                   <div className="col-span-2">
@@ -187,10 +187,10 @@ export function DistribuicaoLucroTab({
                       step="0.01"
                       value={l.percentual}
                       onChange={(e) => atualizar(idx, "percentual", Number(e.target.value))}
-                      className="bg-white text-right"
+                      className="bg-surface text-right"
                     />
                   </div>
-                  <div className="col-span-3 text-right font-bold text-gray-800">
+                  <div className="col-span-3 text-right font-bold text-white">
                     {formatCurrency(l.valor)}
                   </div>
                   <div className="col-span-3">
@@ -199,7 +199,7 @@ export function DistribuicaoLucroTab({
                       onChange={(e) =>
                         atualizar(idx, "contaId", e.target.value ? parseInt(e.target.value) : null)
                       }
-                      className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                      className="w-full rounded-md border border-border px-2 py-1.5 text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="">Selecione a conta...</option>
                       {contas.map((c) => (
@@ -212,25 +212,25 @@ export function DistribuicaoLucroTab({
                 </div>
               ))}
 
-              <div className="border-t-2 border-gray-200 pt-3 mt-2 flex justify-between items-center">
-                <span className="font-semibold text-gray-800">Total</span>
+              <div className="border-t-2 border-border pt-3 mt-2 flex justify-between items-center">
+                <span className="font-semibold text-white">Total</span>
                 <div className="text-right">
-                  <p className={`font-bold ${percentualOk ? "text-emerald-600" : "text-red-600"}`}>
+                  <p className={`font-bold ${percentualOk ? "text-success" : "text-destructive"}`}>
                     {totalPercentual.toFixed(2)}%
                   </p>
-                  <p className="text-sm text-gray-500">{formatCurrency(totalValor)}</p>
+                  <p className="text-sm text-muted-foreground">{formatCurrency(totalValor)}</p>
                 </div>
               </div>
 
               <Button
                 onClick={registrar}
                 disabled={salvando || !percentualOk}
-                className="w-full bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-xl shadow-lg shadow-[#de4838]/25"
+                className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/25"
               >
                 {salvando ? "Registrando..." : jaRegistrada ? "Atualizar distribuição" : "Registrar distribuição"}
               </Button>
               {!percentualOk && (
-                <p className="text-xs text-red-500 text-center">
+                <p className="text-xs text-destructive text-center">
                   Ajuste os percentuais para totalizarem 100% antes de registrar.
                 </p>
               )}

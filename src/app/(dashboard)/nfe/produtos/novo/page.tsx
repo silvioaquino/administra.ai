@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { PageContainer } from "@/components/layout/PageContainer"
+import { PageHeader } from "@/components/layout/PageHeader"
 
 export default function NovoProdutoPage() {
   const router = useRouter()
@@ -89,27 +91,27 @@ export default function NovoProdutoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb]">
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-10 bg-surface border-b border-border px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={() => router.back()}
-            className="rounded-full hover:bg-gray-100"
+            className="rounded-full hover:bg-surface-2"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
+            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
           </Button>
           <div>
-            <h1 className="text-xl font-semibold text-gray-800">Novo Produto</h1>
-            <p className="text-sm text-gray-500">Cadastre um novo produto no sistema</p>
+            <h1 className="text-xl font-semibold text-white">Novo Produto</h1>
+            <p className="text-sm text-muted-foreground">Cadastre um novo produto no sistema</p>
           </div>
         </div>
         <Button 
           type="submit" 
           form="produto-form"
           disabled={loading}
-          className="bg-[#de4838] hover:bg-[#c73d2e] text-white px-6 rounded-full shadow-sm"
+          className="bg-primary hover:bg-primary/90 text-white px-6 rounded-full shadow-sm"
         >
           <Save className="mr-2 h-4 w-4" />
           {loading ? "Salvando..." : "Salvar Produto"}
@@ -117,41 +119,41 @@ export default function NovoProdutoPage() {
       </div>
 
       <div className="container mx-auto p-6 max-w-4xl">
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-100 p-4 border-b border-gray-100">
+        <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-surface-2 p-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-[#de4838]" />
-              <h3 className="font-semibold text-gray-800">Dados do Produto</h3>
+              <Package className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-white">Dados do Produto</h3>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Preencha as informações básicas do produto</p>
+            <p className="text-xs text-muted-foreground mt-1">Preencha as informações básicas do produto</p>
           </div>
           <div className="p-6">
             {error && (
-              <Alert variant="destructive" className="mb-6 bg-red-50 border-red-200 text-red-800">
-                <AlertCircle className="h-4 w-4 text-red-600" />
+              <Alert variant="destructive" className="mb-6 bg-destructive/5 border-destructive/30 text-red-800">
+                <AlertCircle className="h-4 w-4 text-destructive" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
             
             <form id="produto-form" onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
-                  Nome do Produto <span className="text-[#de4838]">*</span>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Nome do Produto <span className="text-primary">*</span>
                 </Label>
                 <Input
                   value={formData.descricao}
                   onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
                   placeholder="Ex: X-Burger Completo"
-                  className="rounded-lg border-gray-300"
+                  className="rounded-lg border-border"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Unidade de Medida</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Unidade de Medida</Label>
                   <select
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm"
+                    className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm"
                     value={formData.unidade}
                     onChange={(e) => setFormData({ ...formData, unidade: e.target.value })}
                   >
@@ -164,18 +166,18 @@ export default function NovoProdutoPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Valor Total da Compra (R$) <span className="text-[#de4838]">*</span>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Valor Total da Compra (R$) <span className="text-primary">*</span>
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
                     <Input
                       type="number"
                       step="0.01"
                       min="0"
                       value={formData.precoVenda}
                       onChange={(e) => setFormData({ ...formData, precoVenda: Number(e.target.value) })}
-                      className="pl-8 rounded-lg border-gray-300"
+                      className="pl-8 rounded-lg border-border"
                       placeholder="0,00"
                       required
                     />
@@ -185,42 +187,42 @@ export default function NovoProdutoPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Quantidade Comprada</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Quantidade Comprada</Label>
                   <Input
                     type="number"
                     step="0.01"
                     min="0"
                     value={formData.quantidade}
                     onChange={(e) => setFormData({ ...formData, quantidade: Number(e.target.value) })}
-                    className="rounded-lg border-gray-300"
+                    className="rounded-lg border-border"
                     placeholder="0"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Fornecedor</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Fornecedor</Label>
                   <Input
                     value={formData.fornecedor}
                     onChange={(e) => setFormData({ ...formData, fornecedor: e.target.value })}
                     placeholder="Nome do fornecedor (opcional)"
-                    className="rounded-lg border-gray-300"
+                    className="rounded-lg border-border"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Data da Compra</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Data da Compra</Label>
                 <Input
                   type="date"
                   value={formData.dataCompra}
                   onChange={(e) => setFormData({ ...formData, dataCompra: e.target.value })}
-                  className="rounded-lg border-gray-300"
+                  className="rounded-lg border-border"
                 />
               </div>
 
-              <div className="pt-4 border-t border-gray-200">
-                <div className="bg-blue-50 rounded-xl p-4">
-                  <p className="text-sm text-blue-700">
+              <div className="pt-4 border-t border-border">
+                <div className="bg-info/5 rounded-xl p-4">
+                  <p className="text-sm text-info">
                     💡 Após cadastrar, o produto estará disponível para venda e será registrado no estoque.
                   </p>
                 </div>

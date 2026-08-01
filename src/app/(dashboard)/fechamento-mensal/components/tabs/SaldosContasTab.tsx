@@ -33,17 +33,17 @@ export function SaldosContasTab({ contas, despesas = [], onChange, onSalvar }: S
     <div className="space-y-4">
       {/* Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-50 rounded-lg p-4">
-          <p className="text-sm text-blue-600">Saldo Total</p>
-          <p className="text-2xl font-bold text-blue-700">R$ {totalSaldo.toFixed(2)}</p>
+        <div className="bg-info/5 rounded-lg p-4">
+          <p className="text-sm text-info">Saldo Total</p>
+          <p className="text-2xl font-bold text-info">R$ {totalSaldo.toFixed(2)}</p>
         </div>
-        <div className="bg-emerald-50 rounded-lg p-4">
-          <p className="text-sm text-emerald-600">Total Sobra</p>
-          <p className="text-2xl font-bold text-emerald-700">R$ {totalSobra.toFixed(2)}</p>
+        <div className="bg-success/5 rounded-lg p-4">
+          <p className="text-sm text-success">Total Sobra</p>
+          <p className="text-2xl font-bold text-success">R$ {totalSobra.toFixed(2)}</p>
         </div>
         <div className="bg-purple-50 rounded-lg p-4">
-          <p className="text-sm text-purple-600">Despesas do Mês</p>
-          <p className="text-2xl font-bold text-purple-700">R$ {totalDespesas.toFixed(2)}</p>
+          <p className="text-sm text-primary/80">Despesas do Mês</p>
+          <p className="text-2xl font-bold text-white">R$ {totalDespesas.toFixed(2)}</p>
         </div>
       </div>
 
@@ -51,7 +51,7 @@ export function SaldosContasTab({ contas, despesas = [], onChange, onSalvar }: S
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-border">
               <th className="text-left py-3 px-2">Conta</th>
               <th className="text-right py-3 px-2">Saldo Atual</th>
               <th className="text-right py-3 px-2">Despesas</th>
@@ -61,7 +61,7 @@ export function SaldosContasTab({ contas, despesas = [], onChange, onSalvar }: S
           </thead>
           <tbody>
             {contas.map((conta) => (
-              <tr key={conta.id} className="border-b border-gray-100">
+              <tr key={conta.id} className="border-b border-border">
                 <td className="py-2 px-2 font-medium">{conta.nome}</td>
                 <td className="py-2 px-2 text-right">
                   {editandoId === conta.id ? (
@@ -78,14 +78,14 @@ export function SaldosContasTab({ contas, despesas = [], onChange, onSalvar }: S
                     </span>
                   )}
                 </td>
-                <td className="py-2 px-2 text-right text-gray-500">
+                <td className="py-2 px-2 text-right text-muted-foreground">
                   R$ {conta.despesas.toFixed(2)}
                 </td>
                 <td className="py-2 px-2 text-right font-medium">
                   R$ {calcularSobra(conta).toFixed(2)}
                 </td>
                 <td className="py-2 px-2 text-center">
-                  <Edit className="h-4 w-4 text-gray-400" />
+                  <Edit className="h-4 w-4 text-muted-foreground/70" />
                 </td>
               </tr>
             ))}

@@ -66,17 +66,17 @@ export default function TelaInicial({
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-surface-2">
       {/* Header - mesmo estilo da página Fichas Técnicas */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-10 bg-surface border-b border-border px-6 py-4 flex items-center justify-between shadow-sm">
         <div>
-          <h1 className="text-xl font-semibold text-gray-800">Abrir e Fechar Caixa Diário</h1>
-          <p className="text-sm text-gray-500">Gerencie seu caixa de forma simples e eficiente</p>
+          <h1 className="text-xl font-semibold text-white">Abrir e Fechar Caixa Diário</h1>
+          <p className="text-sm text-muted-foreground">Gerencie seu caixa de forma simples e eficiente</p>
         </div>
         <Button 
           onClick={handleAbrirCaixa}
           disabled={loading}
-          className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-5"
+          className="bg-primary hover:bg-primary/90 text-white rounded-full px-5"
         >
           {loading ? (
             <>
@@ -95,23 +95,23 @@ export default function TelaInicial({
       {/* Main Content */}
       <div className="container mx-auto px-6 py-6 max-w-7xl">
         {/* Consultar Caixa */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden max-w-md mx-auto">
-          <div className="bg-gradient-to-r from-blue-500/10 to-transparent p-4 border-b border-gray-100">
+        <div className="bg-surface rounded-2xl shadow-sm overflow-hidden max-w-md mx-auto">
+          <div className="bg-gradient-to-r from-blue-500/10 to-transparent p-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <Search className="h-5 w-5 text-blue-600" />
-              <h3 className="font-semibold text-gray-800">Consultar Caixa</h3>
+              <Search className="h-5 w-5 text-info" />
+              <h3 className="font-semibold text-white">Consultar Caixa</h3>
             </div>
           </div>
           <div className="p-5">
             <div className="mb-4">
-              <label htmlFor="dataConsulta" className="block text-xs font-medium text-gray-600 uppercase tracking-wider mb-1">
+              <label htmlFor="dataConsulta" className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
                 Selecione a Data
               </label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
                 <input 
                   type="date" 
-                  className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent bg-white text-sm"
+                  className="w-full pl-9 pr-3 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-surface text-sm"
                   id="dataConsulta"
                   value={dataConsulta}
                   onChange={(e) => setDataConsulta(e.target.value)}
@@ -120,7 +120,7 @@ export default function TelaInicial({
               </div>
             </div>
             <button 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full bg-info hover:bg-info/90 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
               onClick={handleConsultarCaixa}
               disabled={loading}
             >
@@ -136,27 +136,27 @@ export default function TelaInicial({
                 </>
               )}
             </button>
-            <p className="text-xs text-gray-400 text-center mt-3">
+            <p className="text-xs text-muted-foreground/70 text-center mt-3">
               Consulte caixas abertos ou fechados em qualquer data
             </p>
           </div>
         </div>
 
         {/* Status do Sistema 
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden max-w-md mx-auto mt-4">
-          <div className="bg-gradient-to-r from-emerald-500/10 to-transparent py-2.5 px-4 border-b border-gray-100">
+        <div className="bg-surface rounded-2xl shadow-sm overflow-hidden max-w-md mx-auto mt-4">
+          <div className="bg-gradient-to-r from-emerald-500/10 to-transparent py-2.5 px-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-emerald-600" />
-              <h3 className="font-semibold text-gray-800 text-sm">Status do Sistema</h3>
+              <Activity className="h-4 w-4 text-success" />
+              <h3 className="font-semibold text-white text-sm">Status do Sistema</h3>
             </div>
           </div>
           <div className="py-3 px-4">
             <div className="flex items-center justify-between gap-2">
               {/ Backend Status /}
-              <div className="flex-1 flex items-center justify-between py-1.5 px-2 bg-gray-100 rounded-lg">
-                <span className="text-xs font-medium text-gray-600">Backend:</span>
+              <div className="flex-1 flex items-center justify-between py-1.5 px-2 bg-surface-2 rounded-lg">
+                <span className="text-xs font-medium text-muted-foreground">Backend:</span>
                 <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                  statusBackend === 'Online' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                  statusBackend === 'Online' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'
                 }`}>
                   {statusBackend === 'Online' ? (
                     <CheckCircle className="h-2.5 w-2.5" />
@@ -168,10 +168,10 @@ export default function TelaInicial({
               </div>
 
               {/ Database Status /}
-              <div className="flex-1 flex items-center justify-between py-1.5 px-2 bg-gray-100 rounded-lg">
-                <span className="text-xs font-medium text-gray-600">Banco:</span>
+              <div className="flex-1 flex items-center justify-between py-1.5 px-2 bg-surface-2 rounded-lg">
+                <span className="text-xs font-medium text-muted-foreground">Banco:</span>
                 <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                  statusDatabase === 'Conectado' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                  statusDatabase === 'Conectado' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
                 }`}>
                   {statusDatabase === 'Conectado' ? (
                     <CheckCircle className="h-2.5 w-2.5" />
@@ -184,7 +184,7 @@ export default function TelaInicial({
 
               {/ Botão Refresh /}
               <button 
-                className="flex items-center justify-center gap-1 px-2 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-all duration-200"
+                className="flex items-center justify-center gap-1 px-2 py-1.5 bg-surface-2 hover:bg-surface-2 text-white text-xs font-medium rounded-lg transition-all duration-200"
                 onClick={verificarStatus}
                 disabled={loading}
               >
@@ -195,14 +195,14 @@ export default function TelaInicial({
         </div>*/}
 
         {/* Dica rápida */}
-        <div className="bg-gradient-to-r from-[#de4838]/5 to-transparent rounded-xl p-4 border border-[#de4838]/10 max-w-md mx-auto mt-4">
+        <div className="bg-gradient-to-r from-[#de4838]/5 to-transparent rounded-xl p-4 border border-primary/10 max-w-md mx-auto mt-4">
           <div className="flex items-start gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#de4838]/10 flex-shrink-0">
-              <Sparkles className="h-4 w-4 text-[#de4838]" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 flex-shrink-0">
+              <Sparkles className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-700">Dica rápida</p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-sm font-medium text-white">Dica rápida</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Mantenha o caixa sempre organizado para um melhor controle financeiro do seu negócio!
               </p>
             </div>

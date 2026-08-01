@@ -211,7 +211,7 @@ export default function RegisterPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-muted">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Coluna Esquerda - Showcase */}
@@ -220,41 +220,42 @@ export default function RegisterPage() {
               {/* Logo */}
               <div className="flex justify-center">
                 <div className="flex items-center gap-2">
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#de4838] to-[#de4838]/80 flex items-center justify-center shadow-md">
-                    <Store className="h-5 w-5 text-white" />
+                  <div className="h-10 w-10 rounded-xl bg-linear-to-br from-primary to-primary/70 flex items-center justify-center shadow-md">
+                    <Store className="h-5 w-5 text-primary-foreground" />
+                    <Store className="h-5 w-5 text-primary-foreground" />
                   </div>
-                  <span className="text-xl font-bold text-[#de4838]">SeuGerente</span>
+                  <span className="text-xl font-bold text-primary">SeuGerente</span>
                 </div>
               </div>
 
               {/* Card de Destaque - Dashboard Preview */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="bg-gradient-to-r from-[#de4838]/10 via-transparent to-[#de4838]/5 p-6">
+              <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-linear-to-r from-primary/10 via-transparent to-primary/5 p-6">
                   <div className="w-full max-w-md mx-auto">
-                    <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
+                    <div className="bg-card rounded-xl p-4 shadow-md border border-border">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="h-12 w-12 rounded-xl bg-[#de4838]/10 flex items-center justify-center">
-                          <Store className="h-6 w-6 text-[#de4838]" />
+                        <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Store className="h-6 w-6 text-primary" />
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-800">Sua Loja</p>
-                          <p className="text-sm text-gray-500">Cardápio Digital</p>
+                          <p className="font-semibold text-foreground">Sua Loja</p>
+                          <p className="text-sm text-muted-foreground">Cardápio Digital</p>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <div className="flex justify-between text-xs text-gray-500 mb-1">
+                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
                           <span>Pedidos hoje</span>
                           <span>R$ 2.450,00</span>
                         </div>
-                        <div className="h-2 w-full bg-gray-100 rounded-full">
-                          <div className="h-2 w-3/4 bg-[#de4838] rounded-full" />
+                        <div className="h-2 w-full bg-muted rounded-full">
+                          <div className="h-2 w-3/4 bg-primary rounded-full" />
                         </div>
-                        <div className="flex justify-between text-xs text-gray-500 mb-1 mt-2">
+                        <div className="flex justify-between text-xs text-muted-foreground mb-1 mt-2">
                           <span>Meta mensal</span>
                           <span>R$ 32.500,00</span>
                         </div>
-                        <div className="h-2 w-full bg-gray-100 rounded-full">
-                          <div className="h-2 w-1/2 bg-[#de4838] rounded-full" />
+                        <div className="h-2 w-full bg-muted rounded-full">
+                          <div className="h-2 w-1/2 bg-primary rounded-full" />
                         </div>
                       </div>
                     </div>
@@ -264,22 +265,22 @@ export default function RegisterPage() {
 
               {/* Planos */}
               <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-gray-800 mb-3">Planos disponíveis</h3>
+                <h3 className="text-sm font-semibold text-foreground mb-3">Planos disponíveis</h3>
                 {planos.map((plano, idx) => (
                   <div 
                     key={idx} 
-                    className={`bg-white rounded-xl p-4 shadow-sm border ${plano.destaque ? 'border-[#de4838]/20 bg-gradient-to-r from-white to-[#de4838]/5' : 'border-gray-100'}`}
+                    className={`bg-card rounded-xl p-4 shadow-sm border ${plano.destaque ? 'border-primary/20 bg-primary/5' : 'border-border'}`}
                   >
                     <div className="flex justify-between items-center mb-2">
-                      <span className="font-semibold text-gray-800">{plano.nome}</span>
+                      <span className="font-semibold text-foreground">{plano.nome}</span>
                       <div className="text-right">
-                        <span className="text-xl font-bold text-[#de4838]">R$ {plano.preco}</span>
-                        <span className="text-sm text-gray-400">/mês</span>
+                        <span className="text-xl font-bold text-primary">R$ {plano.preco}</span>
+                        <span className="text-sm text-muted-foreground">/mês</span>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-500">{plano.descricao}</p>
+                    <p className="text-sm text-muted-foreground">{plano.descricao}</p>
                     {plano.destaque && (
-                      <div className="mt-2 inline-block px-2 py-0.5 bg-[#de4838]/10 rounded-full text-xs text-[#de4838]">
+                      <div className="mt-2 inline-block px-2 py-0.5 bg-primary/10 rounded-full text-xs text-primary">
                         Mais popular
                       </div>
                     )}
@@ -288,16 +289,16 @@ export default function RegisterPage() {
               </div>
 
               {/* Benefícios */}
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <p className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-[#de4838]" />
+              <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
+                <p className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
                   Benefícios
                 </p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   {beneficios.map((beneficio, idx) => (
                     <div key={idx} className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500" />
-                      <span className="text-gray-600">{beneficio}</span>
+                      <span className="text-muted-foreground">{beneficio}</span>
                     </div>
                   ))}
                 </div>
@@ -306,19 +307,19 @@ export default function RegisterPage() {
           </div>
 
           {/* Coluna Direita - Formulário */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <div className="p-6 md:p-8">
               <div className="text-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Teste 100% grátis</h1>
-                <p className="text-sm text-gray-500 mt-1">
+                <h1 className="text-2xl font-bold text-foreground">Teste 100% grátis</h1>
+                <p className="text-sm text-muted-foreground mt-1">
                   Não exigimos cartão para o teste. Todas as funções por 7 dias!
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
-                  <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-700 rounded-xl">
-                    <AlertCircle className="h-4 w-4 text-red-600" />
+                  <Alert variant="destructive" className="bg-destructive/10 border-destructive/30 text-destructive-foreground rounded-xl">
+                    <AlertCircle className="h-4 w-4 text-destructive" />
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
@@ -332,14 +333,14 @@ export default function RegisterPage() {
 
                 {/* Nome da loja */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Nome da loja <span className="text-[#de4838]">*</span>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Nome da loja <span className="text-primary">*</span>
                   </Label>
                   <div className="relative">
-                    <Store className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Store className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       placeholder="Digite o nome da sua loja"
-                      className="pl-9 rounded-lg border-gray-200 focus:ring-[#de4838] focus:border-[#de4838]"
+                      className="pl-9 rounded-lg border-border focus:ring-primary focus:border-primary"
                       value={formData.establishment}
                       onChange={(e) => setFormData({ ...formData, establishment: e.target.value })}
                       required
@@ -350,16 +351,16 @@ export default function RegisterPage() {
                 {/* WhatsApp e Segmento */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
-                      WhatsApp da loja <span className="text-[#de4838]">*</span>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      WhatsApp da loja <span className="text-primary">*</span>
                     </Label>
                     <div className="relative">
-                      <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+                      <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12.032 2.001c-5.514 0-9.996 4.48-9.996 9.991 0 1.76.458 3.483 1.324 4.98L2.09 21.262l4.481-1.283c1.457.795 3.115 1.213 4.824 1.213 5.514 0 9.996-4.48 9.996-9.99 0-5.51-4.482-9.991-9.996-9.991zm0 18.416c-1.504 0-2.978-.405-4.247-1.165l-.306-.182-2.667.764.71-2.59-.19-.312c-.825-1.315-1.26-2.828-1.26-4.396 0-4.641 3.778-8.417 8.42-8.417 4.64 0 8.418 3.776 8.418 8.417s-3.778 8.417-8.418 8.417zm4.617-6.294c-.254-.127-1.502-.742-1.735-.827-.233-.084-.402-.127-.572.127-.17.254-.658.827-.806.997-.148.17-.297.191-.55.064-.254-.127-1.07-.394-2.038-1.257-.754-.675-1.263-1.507-1.41-1.762-.148-.255-.016-.393.111-.52.114-.114.254-.297.381-.446.127-.149.17-.255.254-.425.085-.17.043-.319-.021-.447-.064-.127-.572-1.377-.783-1.886-.206-.496-.416-.429-.572-.437-.148-.008-.318-.008-.488-.008-.17 0-.446.064-.68.319-.234.255-.892.871-.892 2.124 0 1.253.913 2.464 1.04 2.635.127.17 1.794 2.738 4.346 3.839 2.552 1.101 2.552.734 3.013.688.461-.046 1.486-.607 1.695-1.194.209-.587.209-1.089.146-1.194-.063-.105-.233-.17-.487-.297z"/>
                       </svg>
                       <Input
                         placeholder="(00) 00000-0000"
-                        className="pl-9 rounded-lg border-gray-200 focus:ring-[#de4838]"
+                        className="pl-9 rounded-lg border-border focus:ring-primary"
                         value={formData.whatsapp}
                         onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
                         required
@@ -368,30 +369,30 @@ export default function RegisterPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
-                      Segmento <span className="text-[#de4838]">*</span>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Segmento <span className="text-primary">*</span>
                     </Label>
                     <div className="relative">
                       <button
                         type="button"
                         onClick={() => setSegmentoOpen(!segmentoOpen)}
-                        className="w-full flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                        className="w-full flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                       >
-                        <span className={formData.segmento ? "text-gray-800" : "text-gray-400"}>
+                        <span className={formData.segmento ? "text-foreground" : "text-muted-foreground"}>
                           {formData.segmento || "Selecione o segmento"}
                         </span>
-                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
                       </button>
                       
                       {segmentoOpen && (
-                        <div className="absolute z-10 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-lg">
-                          <div className="p-2 border-b border-gray-100">
+                        <div className="absolute z-10 mt-1 w-full rounded-xl border border-border bg-card shadow-lg">
+                          <div className="p-2 border-b border-border">
                             <div className="relative">
-                              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                               <input
                                 type="text"
                                 placeholder="Pesquisar segmento"
-                                className="w-full rounded-lg border border-gray-200 pl-8 pr-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                                className="w-full rounded-lg border border-border pl-8 pr-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                 value={segmentoSearch}
                                 onChange={(e) => setSegmentoSearch(e.target.value)}
                               />
@@ -402,7 +403,7 @@ export default function RegisterPage() {
                               <button
                                 key={seg}
                                 type="button"
-                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                                 onClick={() => {
                                   setFormData({ ...formData, segmento: seg })
                                   setSegmentoOpen(false)
@@ -413,7 +414,7 @@ export default function RegisterPage() {
                               </button>
                             ))}
                             {segmentosFiltrados.length === 0 && (
-                              <div className="px-3 py-2 text-sm text-gray-400 text-center">
+                              <div className="px-3 py-2 text-sm text-muted-foreground text-center">
                                 Nenhum segmento encontrado
                               </div>
                             )}
@@ -426,12 +427,12 @@ export default function RegisterPage() {
 
                 {/* Nome do responsável */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Seu nome</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Seu nome</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       placeholder="Seu nome completo"
-                      className="pl-9 rounded-lg border-gray-200 focus:ring-[#de4838]"
+                      className="pl-9 rounded-lg border-border focus:ring-primary"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
@@ -441,15 +442,15 @@ export default function RegisterPage() {
                 {/* Email e Senha */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
-                      E-mail <span className="text-[#de4838]">*</span>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      E-mail <span className="text-primary">*</span>
                     </Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         type="email"
                         placeholder="seu@email.com"
-                        className="pl-9 rounded-lg border-gray-200 focus:ring-[#de4838]"
+                        className="pl-9 rounded-lg border-border focus:ring-primary"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         required
@@ -458,15 +459,15 @@ export default function RegisterPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
-                      Senha <span className="text-[#de4838]">*</span>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Senha <span className="text-primary">*</span>
                     </Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        className="pl-9 pr-9 rounded-lg border-gray-200 focus:ring-[#de4838]"
+                        className="pl-9 pr-9 rounded-lg border-border focus:ring-primary"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         required
@@ -474,26 +475,26 @@ export default function RegisterPage() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">Mínimo 8 caracteres</p>
+                    <p className="text-xs text-muted-foreground mt-1">Mínimo 8 caracteres</p>
                   </div>
                 </div>
 
                 {/* Confirmar senha */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Confirmar senha <span className="text-[#de4838]">*</span>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Confirmar senha <span className="text-primary">*</span>
                   </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="••••••••"
-                      className="pl-9 pr-9 rounded-lg border-gray-200 focus:ring-[#de4838]"
+                      className="pl-9 pr-9 rounded-lg border-border focus:ring-primary"
                       value={formData.confirmPassword}
                       onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                       required
@@ -501,7 +502,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                     >
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -513,7 +514,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setShowAddress(!showAddress)}
-                    className="text-sm text-[#de4838] hover:underline flex items-center gap-1"
+                    className="text-sm text-primary hover:underline flex items-center gap-1"
                   >
                     <MapPin className="h-4 w-4" />
                     {showAddress ? "Ocultar endereço" : "Adicionar endereço da loja (opcional)"}
@@ -521,14 +522,14 @@ export default function RegisterPage() {
                 </div>
 
                 {showAddress && (
-                  <div className="space-y-4 p-4 bg-gray-100 rounded-xl">
+                  <div className="space-y-4 p-4 bg-muted rounded-xl">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-1">
-                        <Label className="text-xs font-medium text-gray-600">CEP</Label>
+                        <Label className="text-xs font-medium text-muted-foreground">CEP</Label>
                         <div className="relative">
                           <Input
                             placeholder="00000-000"
-                            className="rounded-lg border-gray-200"
+                            className="rounded-lg border-border"
                             value={formData.cep}
                             onChange={(e) => {
                               const newCep = e.target.value
@@ -538,45 +539,45 @@ export default function RegisterPage() {
                           />
                           {buscandoCep && (
                             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#de4838]"></div>
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-primary"></div>
                             </div>
                           )}
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs font-medium text-gray-600">Número</Label>
+                        <Label className="text-xs font-medium text-muted-foreground">Número</Label>
                         <Input
                           placeholder="Número"
-                          className="rounded-lg border-gray-200"
+                          className="rounded-lg border-border"
                           value={formData.number}
                           onChange={(e) => setFormData({ ...formData, number: e.target.value })}
                         />
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs font-medium text-gray-600">Endereço</Label>
+                      <Label className="text-xs font-medium text-muted-foreground">Endereço</Label>
                       <Input
                         placeholder="Rua, Avenida..."
-                        className="rounded-lg border-gray-200"
+                        className="rounded-lg border-border"
                         value={formData.address}
                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-1">
-                        <Label className="text-xs font-medium text-gray-600">Bairro</Label>
+                        <Label className="text-xs font-medium text-muted-foreground">Bairro</Label>
                         <Input
                           placeholder="Bairro"
-                          className="rounded-lg border-gray-200"
+                          className="rounded-lg border-border"
                           value={formData.district}
                           onChange={(e) => setFormData({ ...formData, district: e.target.value })}
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs font-medium text-gray-600">Cidade</Label>
+                        <Label className="text-xs font-medium text-muted-foreground">Cidade</Label>
                         <Input
                           placeholder="Cidade"
-                          className="rounded-lg border-gray-200"
+                          className="rounded-lg border-border"
                           value={formData.city}
                           onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                         />
@@ -587,7 +588,7 @@ export default function RegisterPage() {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg py-2.5" 
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg py-2.5" 
                   disabled={loading} 
                   size="lg"
                 >
@@ -596,28 +597,28 @@ export default function RegisterPage() {
 
                 <div className="relative my-4">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200"></div>
+                    <div className="w-full border-t border-border"></div>
                   </div>
                   <div className="relative flex justify-center text-xs">
-                    <span className="bg-white px-2 text-gray-400">ou</span>
+                    <span className="bg-card px-2 text-muted-foreground">ou</span>
                   </div>
                 </div>
 
-                <p className="text-center text-xs text-gray-400">
+                <p className="text-center text-xs text-muted-foreground">
                   Ao prosseguir você concorda com os{" "}
-                  <Link href="/termos" className="text-[#de4838] hover:underline">
+                  <Link href="/termos" className="text-primary hover:underline">
                     termos de uso
                   </Link>{" "}
                   e{" "}
-                  <Link href="/privacidade" className="text-[#de4838] hover:underline">
+                  <Link href="/privacidade" className="text-primary hover:underline">
                     política de privacidade
                   </Link>
                   .
                 </p>
 
-                <p className="text-center text-sm text-gray-600">
+                <p className="text-center text-sm text-muted-foreground">
                   Já tem uma conta?{" "}
-                  <Link href="/login" className="text-[#de4838] font-medium hover:underline">
+                  <Link href="/login" className="text-primary font-medium hover:underline">
                     Faça login
                   </Link>
                 </p>

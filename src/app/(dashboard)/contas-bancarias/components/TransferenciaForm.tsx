@@ -81,15 +81,15 @@ export function TransferenciaForm({ contas, onSuccess }: TransferenciaFormProps)
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {error && (
-        <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-700">
+        <Alert variant="destructive" className="bg-destructive/5 border-destructive/30 text-destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       <div className="space-y-1">
-        <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Conta de Origem *</Label>
+        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Conta de Origem *</Label>
         <select
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+          className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           value={formData.contaOrigemId}
           onChange={(e) => setFormData({ ...formData, contaOrigemId: e.target.value })}
           required
@@ -104,9 +104,9 @@ export function TransferenciaForm({ contas, onSuccess }: TransferenciaFormProps)
       </div>
 
       <div className="space-y-1">
-        <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Conta de Destino *</Label>
+        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Conta de Destino *</Label>
         <select
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+          className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           value={formData.contaDestinoId}
           onChange={(e) => setFormData({ ...formData, contaDestinoId: e.target.value })}
           required
@@ -121,42 +121,42 @@ export function TransferenciaForm({ contas, onSuccess }: TransferenciaFormProps)
       </div>
 
       <div className="space-y-1">
-        <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Valor *</Label>
+        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Valor *</Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70">R$</span>
           <Input
             type="number"
             step="0.01"
             placeholder="0,00"
             value={formData.valor}
             onChange={(e) => setFormData({ ...formData, valor: parseFloat(e.target.value) || 0 })}
-            className="pl-8 rounded-lg border-gray-300"
+            className="pl-8 rounded-lg border-border"
             required
           />
         </div>
       </div>
 
       <div className="space-y-1">
-        <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Data</Label>
+        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Data</Label>
         <Input
           type="date"
           value={formData.data}
           onChange={(e) => setFormData({ ...formData, data: e.target.value })}
-          className="rounded-lg border-gray-300"
+          className="rounded-lg border-border"
         />
       </div>
 
       <div className="space-y-1">
-        <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Descrição (Opcional)</Label>
+        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Descrição (Opcional)</Label>
         <Input
           placeholder="Ex: Retirada de lucro, Pagamento de fornecedor..."
           value={formData.descricao}
           onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-          className="rounded-lg border-gray-300"
+          className="rounded-lg border-border"
         />
       </div>
 
-      <Button type="submit" disabled={loading} className="w-full bg-[#de4838] hover:bg-[#c73d2e] rounded-lg">
+      <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary/90 rounded-lg">
         {loading ? "Processando..." : "Confirmar Transferência"}
       </Button>
     </form>

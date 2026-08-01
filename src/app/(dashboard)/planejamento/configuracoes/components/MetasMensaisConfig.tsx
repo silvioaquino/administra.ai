@@ -92,7 +92,7 @@ export function MetasMensaisConfig({ metas, onUpdate, onSave, saving }: MetasMen
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b bg-gray-100">
+            <thead className="border-b bg-surface-2">
               <tr>
                 <th className="px-3 py-2 text-left">Mês</th>
                 <th className="px-3 py-2 text-right">Meta Diária Almoço</th>
@@ -153,7 +153,7 @@ export function MetasMensaisConfig({ metas, onUpdate, onSave, saving }: MetasMen
                 )
               })}
             </tbody>
-            <tfoot className="border-t bg-gray-100 font-bold">
+            <tfoot className="border-t bg-surface-2 font-bold">
               <tr>
                 <td className="px-3 py-3">TOTAL ANUAL</td>
                 <td colSpan={2} className="px-3 py-3 text-center">{formatCurrency(totais.almoco)}</td>

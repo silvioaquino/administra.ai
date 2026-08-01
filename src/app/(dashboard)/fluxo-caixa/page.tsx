@@ -40,6 +40,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { PageContainer } from '@/components/layout/PageContainer';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 // Interface para edição
 interface EditingState {
@@ -234,7 +236,7 @@ export default function FluxoCaixaPage() {
     const editando = editandoNormalizacao === produto.id;
 
     return (
-      <tr key={produto.id} className="border-b border-gray-100 hover:bg-gray-100">
+      <tr key={produto.id} className="border-b border-border hover:bg-surface-2">
         <td className="px-4 py-2 text-xs font-medium">
           {editando ? (
             <Input
@@ -255,7 +257,7 @@ export default function FluxoCaixaPage() {
           const valor = produto.valoresPorMes?.[mesNum] || 0;
           const isMesAtual = idx === mesAtual - 1;
           return (
-            <td key={idx} className={`px-2 py-2 text-[9px] lg:text-[10px] text-center min-w-[60px] sm:min-w-0 ${isMesAtual ? 'bg-red-200 text-gray-800' : ''}`}>
+            <td key={idx} className={`px-2 py-2 text-[9px] lg:text-[10px] text-center min-w-[60px] sm:min-w-0 ${isMesAtual ? 'bg-red-200 text-white' : ''}`}>
               {hideValues ? '••••' : formatValor(valor)}
             </td>
           );
@@ -271,7 +273,7 @@ export default function FluxoCaixaPage() {
                 variant="ghost"
                 onClick={() => confirmarNormalizacao(produto)}
                 disabled={salvandoNormalizacao || !valorNormalizacao.trim()}
-                className="h-7 w-7 text-green-600 hover:bg-green-50"
+                className="h-7 w-7 text-success hover:bg-green-50"
               >
                 <Check className="h-4 w-4" />
               </Button>
@@ -280,7 +282,7 @@ export default function FluxoCaixaPage() {
                 variant="ghost"
                 onClick={cancelarNormalizacao}
                 disabled={salvandoNormalizacao}
-                className="h-7 w-7 text-gray-500 hover:bg-gray-100"
+                className="h-7 w-7 text-muted-foreground hover:bg-surface-2"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -289,7 +291,7 @@ export default function FluxoCaixaPage() {
             <Button
               variant="outline"
               onClick={() => iniciarNormalizacao(produto)}
-              className="rounded-lg border-gray-200 hover:bg-gray-100 text-[10px] h-7 px-1"
+              className="rounded-lg border-border hover:bg-surface-2 text-[10px] h-7 px-1"
             >
               Normalizar
             </Button>
@@ -401,21 +403,19 @@ export default function FluxoCaixaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 ml-6 mr-6 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-800">Fluxo de Caixa / DRE</h1>
-          <p className="text-sm text-gray-500">
-            Demonstrativo de Resultados do Exercício (DRE) - {anoAtual}
-          </p>
-        </div>
-        <div className="flex gap-2">
+      <PageContainer>
+        <PageHeader
+          title="Fluxo de Caixa / DRE"
+          subtitle={`Demonstrativo de Resultados do Exercício (DRE) - ${anoAtual}`}
+          backHref="/gerenciamento"
+        >
           <Button
             variant="outline"
             size="sm"
             onClick={() => setHideValues(!hideValues)}
-            className="gap-2 rounded-full border-gray-200"
+            className="gap-2 rounded-full border-border"
           >
             {hideValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             {hideValues ? 'Mostrar' : 'Ocultar'}
@@ -423,7 +423,7 @@ export default function FluxoCaixaPage() {
           <Button
             variant="outline"
             onClick={sincronizarDados}
-            className="rounded-full border-gray-200"
+            className="rounded-full border-border"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Sincronizar
@@ -431,7 +431,7 @@ export default function FluxoCaixaPage() {
           <Button
             variant="outline"
             onClick={exportCSV}
-            className="rounded-full border-gray-200"
+            className="rounded-full border-border"
           >
             <Download className="mr-2 h-4 w-4" />
             Exportar
@@ -439,27 +439,17 @@ export default function FluxoCaixaPage() {
           <Button
             variant="outline"
             onClick={() => { resetForm(); setShowModal(true); }}
-            className="rounded-full bg-[#de4838] hover:bg-[#c73d2e] text-white px-5"
+            className="rounded-full bg-primary hover:bg-primary/90 text-white px-5"
           >
             <Plus className="mr-2 h-4 w-4" />
             Adicionar Categoria
           </Button>
-          {/*<Button
-            onClick={() => router.push('/fluxo-caixa/configuracoes')}
-            className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full"
-          >
-            <Settings className="mr-2 h-4 w-4" />
-            Configurar Metas
-          </Button>*/}
-        </div>
-      </div>
-
-      <div className="container mx-auto p-6 max-w-7xl">
+        </PageHeader>
         {/* Seletor de Ano */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <select
-              className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm"
+              className="rounded-lg border border-border bg-surface px-4 py-2 text-sm"
               value={anoAtual}
               onChange={(e) => setAnoAtual(parseInt(e.target.value))}
             >
@@ -468,7 +458,7 @@ export default function FluxoCaixaPage() {
               <option value={2026}>2026</option>
             </select>
             <select
-              className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm"
+              className="rounded-lg border border-border bg-surface px-4 py-2 text-sm"
               value={mesAtual}
               onChange={(e) => setMesAtual(parseInt(e.target.value))}
             >
@@ -476,18 +466,18 @@ export default function FluxoCaixaPage() {
                 <option key={idx} value={idx + 1}>{m}</option>
               ))}
             </select>
-            <Badge variant="outline" className="bg-gray-100">
+            <Badge variant="outline" className="bg-surface-2">
               Ano de Referência
             </Badge>
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             Total Previsão: {hideValues ? '••••••••' : formatCurrency(totaisAno.previsao)}
           </div>
         </div>
 
         {/* Cards de Resumo Anual */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          <Card className="relative overflow-hidden bg-gradient-to-r from-emerald-500 to-emerald-600 text-white h-full min-h-[92px] sm:min-h-[105px]">
+          <Card className="relative overflow-hidden bg-gradient-to-r from-success to-success/80 text-white h-full min-h-[92px] sm:min-h-[105px]">
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] sm:text-sm font-medium opacity-90 leading-tight">Previsão Anual</p>
@@ -499,7 +489,7 @@ export default function FluxoCaixaPage() {
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 text-white h-full min-h-[92px] sm:min-h-[105px]">
+          <Card className="relative overflow-hidden bg-gradient-to-r from-info to-info/80 text-white h-full min-h-[92px] sm:min-h-[105px]">
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] sm:text-sm font-medium opacity-90 leading-tight">Realizado Anual</p>
@@ -511,7 +501,7 @@ export default function FluxoCaixaPage() {
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden bg-gradient-to-r from-purple-500 to-purple-600 text-white h-full min-h-[92px] sm:min-h-[105px]">
+          <Card className="relative overflow-hidden bg-gradient-to-r from-primary/80 to-primary/70 text-white h-full min-h-[92px] sm:min-h-[105px]">
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] sm:text-sm font-medium opacity-90 leading-tight">Diferença</p>
@@ -523,7 +513,7 @@ export default function FluxoCaixaPage() {
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden bg-gradient-to-r from-orange-500 to-orange-600 text-white h-full min-h-[92px] sm:min-h-[105px]">
+          <Card className="relative overflow-hidden bg-gradient-to-r from-warning to-warning/80 text-white h-full min-h-[92px] sm:min-h-[105px]">
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] sm:text-sm font-medium opacity-90 leading-tight">Acurácia</p>
@@ -537,14 +527,14 @@ export default function FluxoCaixaPage() {
         </div>
 
         {/* Tabela DRE Interativa - Nova estrutura */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="bg-white-150 p-4 border-b border-gray-100">
+        <div className="bg-surface rounded-2xl shadow-sm overflow-hidden mb-6">
+          <div className="bg-surface-150 p-4 border-b border-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-[#de4838]" />
-                <h3 className="font-semibold text-gray-800">Demonstrativo de Resultados - {anoAtual}</h3>
+                <BarChart3 className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-white">Demonstrativo de Resultados - {anoAtual}</h3>
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted-foreground">
                 <Filter className="h-4 w-4 inline mr-1" />
                 <span>Filtros: Ano {anoAtual}</span>
               </div>
@@ -553,17 +543,17 @@ export default function FluxoCaixaPage() {
 
           <ScrollArea className="h-[700px]">
             <table className="w-full table-fixed text-xs min-w-[820px] sm:min-w-0">
-              <thead className="bg-emerald-200 border-b border-gray-200 sticky top-0 z-10">
+              <thead className="border-success/30 border-b border-border sticky top-0 z-10">
                 <tr>
-                  <th className="px-4 py-3 text-left text-[11px] font-bold text-gray-800 uppercase w-[13%]">DESPESAS</th>
-                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase w-[8%]">PREVISÃO</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-bold text-white uppercase w-[13%]">DESPESAS</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-white uppercase w-[8%]">PREVISÃO</th>
                   {meses.map((mes, idx) => (
-                    <th key={idx} className={`px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase ${idx === mesAtual - 1 ? 'bg-red-200' : ''}`}>
+                    <th key={idx} className={`px-2 py-3 text-center text-xs font-bold text-white uppercase ${idx === mesAtual - 1 ? 'bg-red-200' : ''}`}>
                       {mes.substring(0, 3)}
                     </th>
                   ))}
-                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase w-[5%]">A.V.%</th>
-                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase w-[5%]">A.H.%</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-white uppercase w-[5%]">A.V.%</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-white uppercase w-[5%]">A.H.%</th>
                 </tr>
               </thead>
               <tbody>
@@ -571,8 +561,8 @@ export default function FluxoCaixaPage() {
                   <tr>
                     <td colSpan={16} className="py-12 text-center">
                       <div className="flex justify-center items-center gap-2">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#de4838] border-t-transparent" />
-                        <span className="text-sm text-gray-500">Carregando DRE...</span>
+                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        <span className="text-sm text-muted-foreground">Carregando DRE...</span>
                       </div>
                     </td>
                   </tr>
@@ -588,20 +578,20 @@ export default function FluxoCaixaPage() {
 
                     // Cores baseadas no tipo
                     const rowClass = isTotal
-                      ? 'bg-gray-900 text-white border-b border-gray-200'
+                      ? 'bg-gray-900 text-white border-b border-border'
                       : isCalcRow
-                        ? 'bg-yellow-100 border-b border-gray-200 hover:bg-yellow-200'
+                        ? 'bg-yellow-100 border-b border-border hover:bg-yellow-200'
                         : isSubtotal
-                          ? 'bg-blue-50 font-semibold border-b border-gray-200 hover:bg-blue-100'
+                          ? 'bg-info/5 font-semibold border-b border-border hover:bg-info/10'
                           : isHeader
                             ? item.tipo === 'receita'
-                              ? 'bg-emerald-200 border-b border-gray-200 hover:bg-emerald-300'
-                              : 'bg-blue-200 border-b border-gray-200 hover:bg-blue-300'
+                              ? 'border-success/30 border-b border-border hover:bg-emerald-300'
+                              : 'bg-info/20 border-b border-border hover:bg-blue-300'
                             : item.tipo === 'receita'
-                              ? 'bg-green-50/50 border-b border-gray-100 hover:bg-gray-100'
+                              ? 'bg-green-50/50 border-b border-border hover:bg-surface-2'
                               : item.tipo === 'despesa'
-                                ? 'bg-red-50/50 border-b border-gray-100 hover:bg-gray-100'
-                                : 'border-b border-gray-100 hover:bg-gray-100';
+                                ? 'bg-destructive/5/50 border-b border-border hover:bg-surface-2'
+                                : 'border-b border-border hover:bg-surface-2';
 
                     // Handler para edição
                     const handleDoubleClick = (id: string) => {
@@ -657,7 +647,7 @@ export default function FluxoCaixaPage() {
                           ) : (
                             <span
                               onDoubleClick={() => handleDoubleClick(item.id)}
-                              className={`cursor-pointer hover:bg-gray-200/50 rounded px-1 ${isCalcRow ? 'font-semibold' : ''}`}
+                              className={`cursor-pointer hover:bg-surface-2/50 rounded px-1 ${isCalcRow ? 'font-semibold' : ''}`}
                             >
                               {formatValor(item.previsao)}
                             </span>
@@ -680,11 +670,11 @@ export default function FluxoCaixaPage() {
                           const isMesAtual = idx === mesAtual - 1;
 
                           return (
-                            <td key={idx} className={`px-2 py-2 text-[9px] lg:text-[10px] text-center min-w-[60px] sm:min-w-0 ${isMesAtual ? 'bg-red-200 text-gray-800' : ''} ${isCalcRow ? 'font-semibold' : ''}`}>
+                            <td key={idx} className={`px-2 py-2 text-[9px] lg:text-[10px] text-center min-w-[60px] sm:min-w-0 ${isMesAtual ? 'bg-red-200 text-white' : ''} ${isCalcRow ? 'font-semibold' : ''}`}>
                               {hideValues ? (
                                 <span>••••••</span>
                               ) : isTotal ? (
-                                <span className={`font-bold ${isMesAtual ? 'text-gray-800' : 'text-white'}`}>{formatValor(valor)}</span>
+                                <span className={`font-bold ${isMesAtual ? 'text-white' : 'text-white'}`}>{formatValor(valor)}</span>
                               ) : (
                                 formatValor(valor)
                               )}
@@ -707,14 +697,14 @@ export default function FluxoCaixaPage() {
         </div>
 
         {/* Lista de Produtos/Insumos agrupados por nome normalizado */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="p-4 border-b border-gray-100">
+        <div className="bg-surface rounded-2xl shadow-sm overflow-hidden mb-6">
+          <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-[#de4838]" />
-                <h3 className="font-semibold text-gray-800">Produtos / Insumos Agrupados - {anoAtual}</h3>
+                <BarChart3 className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-white">Produtos / Insumos Agrupados - {anoAtual}</h3>
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted-foreground">
                 <Filter className="h-4 w-4 inline mr-1" />
                 <span>
                   {insumosAgrupados.length} agrupados · {insumosNaoAgrupados.length} não agrupados
@@ -725,17 +715,17 @@ export default function FluxoCaixaPage() {
 
           <ScrollArea className="h-[500px]">
             <table className="w-full table-fixed text-xs min-w-[900px] sm:min-w-0">
-              <thead className="bg-blue-200 border-b border-gray-200 sticky top-0 z-10">
+              <thead className="bg-info/20 border-b border-border sticky top-0 z-10">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-800 uppercase w-[13%]">PRODUTO / INSUMO</th>
-                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase w-[6%]">ORIGEM</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase w-[13%]">PRODUTO / INSUMO</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-white uppercase w-[6%]">ORIGEM</th>
                   {meses.map((mes, idx) => (
-                    <th key={idx} className={`px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase min-w-[60px] sm:min-w-0 ${idx === mesAtual - 1 ? 'bg-red-200' : ''}`}>
+                    <th key={idx} className={`px-2 py-3 text-center text-xs font-bold text-white uppercase min-w-[60px] sm:min-w-0 ${idx === mesAtual - 1 ? 'bg-red-200' : ''}`}>
                       {mes.substring(0, 3)}
                     </th>
                   ))}
-                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase w-[8%]">TOTAL</th>
-                  <th className="px-2 py-3 text-center text-xs font-bold text-gray-800 uppercase w-[7%]">AÇÃO</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-white uppercase w-[8%]">TOTAL</th>
+                  <th className="px-2 py-3 text-center text-xs font-bold text-white uppercase w-[7%]">AÇÃO</th>
                 </tr>
               </thead>
               <tbody>
@@ -743,14 +733,14 @@ export default function FluxoCaixaPage() {
                   <tr>
                     <td colSpan={16} className="py-12 text-center">
                       <div className="flex justify-center items-center gap-2">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#de4838] border-t-transparent" />
-                        <span className="text-sm text-gray-500">Carregando...</span>
+                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        <span className="text-sm text-muted-foreground">Carregando...</span>
                       </div>
                     </td>
                   </tr>
                 ) : produtosPorMes.length === 0 ? (
                   <tr>
-                    <td colSpan={16} className="py-10 text-center text-sm text-gray-500">
+                    <td colSpan={16} className="py-10 text-center text-sm text-muted-foreground">
                       Nenhum produto/insumo encontrado para {anoAtual}.
                     </td>
                   </tr>
@@ -759,7 +749,7 @@ export default function FluxoCaixaPage() {
                     {insumosAgrupados.map(renderLinhaInsumo)}
                     {insumosNaoAgrupados.length > 0 && (
                       <tr>
-                        <td colSpan={16} className="bg-amber-100 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-amber-800">
+                        <td colSpan={16} className="bg-warning/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-amber-800">
                           Não agrupados ({insumosNaoAgrupados.length})
                         </td>
                       </tr>
@@ -773,9 +763,9 @@ export default function FluxoCaixaPage() {
         </div>
 
         {/* Legenda */}
-        <div className="mt-4 rounded-xl bg-blue-50 p-4 border border-blue-200">
+        <div className="mt-4 rounded-xl bg-info/5 p-4 border border-info/30">
           <p className="text-sm font-medium text-blue-800">📊 Como ler o DRE:</p>
-          <div className="mt-2 grid gap-2 text-xs text-blue-700 sm:grid-cols-3">
+          <div className="mt-2 grid gap-2 text-xs text-info sm:grid-cols-3">
             <div>
               <span className="font-semibold">Previsão:</span>
               <span> Valores planejados para o mês</span>
@@ -793,11 +783,11 @@ export default function FluxoCaixaPage() {
 
         {/* Modal Adicionar Categoria - Mesmo layout do Livro Diário */}
         <Dialog open={showModal} onOpenChange={setShowModal}>
-          <DialogContent className="max-w-xl bg-white rounded-2xl p-0 border-none shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogContent className="max-w-xl bg-surface rounded-2xl p-0 border-none shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header fixo */}
-            <div className="sticky top-0 z-10 bg-white px-6 py-5 border-b border-gray-100 rounded-t-2xl">
+            <div className="sticky top-0 z-10 bg-surface px-6 py-5 border-b border-border rounded-t-2xl">
               <DialogHeader>
-                <DialogTitle className="text-xl font-semibold text-gray-800">
+                <DialogTitle className="text-xl font-semibold text-white">
                   Adicionar Nova Categoria
                 </DialogTitle>
               </DialogHeader>
@@ -807,21 +797,21 @@ export default function FluxoCaixaPage() {
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Nome da Categoria *</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Nome da Categoria *</Label>
                   <Input
                     value={novaCat.nome}
                     onChange={(e) => setNovaCat({ ...novaCat, nome: e.target.value })}
                     placeholder="Digite o nome da categoria..."
-                    className="rounded-lg border-gray-200 focus:ring-[#de4838] focus:border-[#de4838]"
+                    className="rounded-lg border-border focus:ring-primary focus:border-primary"
                     required
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Tipo *</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tipo *</Label>
                   <div className="relative">
                     <select
-                      className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                      className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
                       value={novaCat.tipo}
                       onChange={(e) => setNovaCat({ ...novaCat, tipo: e.target.value as 'receita' | 'despesa' })}
                       required
@@ -829,17 +819,17 @@ export default function FluxoCaixaPage() {
                       <option value="receita">Receita</option>
                       <option value="despesa">Despesa</option>
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
                       <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Categoria Pai</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Categoria Pai</Label>
                   <div className="relative">
                     <select
-                      className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                      className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
                       value={novaCat.parentId || ''}
                       onChange={(e) => setNovaCat({ ...novaCat, parentId: e.target.value || undefined })}
                     >
@@ -852,17 +842,17 @@ export default function FluxoCaixaPage() {
                           </option>
                         ))}
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
                       <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Nível *</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Nível *</Label>
                   <div className="relative">
                     <select
-                      className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none"
+                      className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
                       value={novaCat.nivel}
                       onChange={(e) => setNovaCat({ ...novaCat, nivel: parseInt(e.target.value) })}
                       required
@@ -872,7 +862,7 @@ export default function FluxoCaixaPage() {
                       <option value={2}>Nível 2 (Sub-Categoria)</option>
                       <option value={3}>Nível 3 (Item)</option>
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
                       <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
                     </div>
                   </div>
@@ -881,19 +871,19 @@ export default function FluxoCaixaPage() {
             </div>
 
             {/* Footer fixo */}
-            <div className="sticky bottom-0 z-10 bg-white px-6 py-4 border-t border-gray-100 rounded-b-2xl">
+            <div className="sticky bottom-0 z-10 bg-surface px-6 py-4 border-t border-border rounded-b-2xl">
               <DialogFooter className="flex gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 rounded-lg border-gray-200 hover:bg-gray-100"
+                  className="flex-1 rounded-lg border-border hover:bg-surface-2"
                 >
                   Cancelar
                 </Button>
                 <Button
                   onClick={salvarCategoria}
-                  className="flex-1 bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg"
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white rounded-lg"
                 >
                   Adicionar Categoria
                 </Button>
@@ -901,7 +891,7 @@ export default function FluxoCaixaPage() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+      </PageContainer>
     </div>
   );
 }

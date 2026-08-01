@@ -15,6 +15,8 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/utils";
 import { TransferenciaForm } from "./components/TransferenciaForm";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 interface ContaFinanceira {
   id: number;
@@ -78,15 +80,15 @@ export default function ContasBancariasPage() {
   const getIcon = (tipo: string) => {
     switch (tipo) {
       case "CONTA_CORRENTE":
-        return <Building2 className="h-5 w-5 text-blue-500" />;
+        return <Building2 className="h-5 w-5 text-info" />;
       case "CARTEIRA":
-        return <Wallet className="h-5 w-5 text-emerald-500" />;
+        return <Wallet className="h-5 w-5 text-success" />;
       case "APLICACAO":
-        return <TrendingUp className="h-5 w-5 text-purple-500" />;
+        return <TrendingUp className="h-5 w-5 text-primary/80" />;
       case "CONTA_IFOOD":
-        return <Building2 className="h-5 w-5 text-orange-500" />;
+        return <Building2 className="h-5 w-5 text-warning" />;
       default:
-        return <Building2 className="h-5 w-5 text-gray-500" />;
+        return <Building2 className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
@@ -106,25 +108,22 @@ export default function ContasBancariasPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb]">
-      <div className="sticky top-0 z-10 ml-6 mr-6 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-800">Contas Financeiras</h1>
-          <p className="text-sm text-gray-500">Gerencie suas contas e rastreie movimentações</p>
-        </div>
-        <div className="flex gap-2">
+    <div className="min-h-screen bg-background">
+      <PageContainer>
+        <PageHeader
+          title="Contas Financeiras"
+          subtitle="Gerencie suas contas e rastreie movimentações"
+          backHref="/gerenciamento"
+        >
           <Button onClick={() => setTransferModalOpen(true)} variant="outline" className="rounded-full">
             <ArrowRightLeft className="mr-2 h-4 w-4" />
             Transferir
           </Button>
-          <Button onClick={() => router.push("/contas-bancarias/nova")} className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full">
+          <Button onClick={() => router.push("/contas-bancarias/nova")} className="bg-primary hover:bg-primary/90 text-white rounded-full">
             <Plus className="mr-2 h-4 w-4" />
             Nova Conta
           </Button>
-        </div>
-      </div>
-
-      <div className="container mx-auto p-6 max-w-7xl">
+        </PageHeader>
         {/* Cards de Resumo */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white h-full min-h-[92px] sm:min-h-[105px]">
@@ -164,21 +163,21 @@ export default function ContasBancariasPage() {
         </div>
 
         {/* Lista de Contas */}
-        <div className="mt-8 bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="bg-gray-100 p-4 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-800">Suas Contas</h3>
-            <p className="text-xs text-gray-500 mt-1">Clique em uma conta para ver suas movimentações</p>
+        <div className="mt-8 bg-surface rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-surface-2 p-4 border-b border-border">
+            <h3 className="font-semibold text-white">Suas Contas</h3>
+            <p className="text-xs text-muted-foreground mt-1">Clique em uma conta para ver suas movimentações</p>
           </div>
           <div className="p-0 overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-100 border-b border-gray-200">
+              <thead className="bg-surface-2 border-b border-border">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conta</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instituição</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Inicial</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Atual</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Conta</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Tipo</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Instituição</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Saldo Inicial</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Saldo Atual</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -186,16 +185,16 @@ export default function ContasBancariasPage() {
                   <tr>
                     <td colSpan={6} className="py-12 text-center">
                       <div className="flex justify-center items-center gap-2">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#de4838] border-t-transparent" />
-                        <span className="text-sm text-gray-500">Carregando contas...</span>
+                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        <span className="text-sm text-muted-foreground">Carregando contas...</span>
                       </div>
                     </td>
                   </tr>
                 ) : contas.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center">
-                      <p className="text-gray-500">Nenhuma conta cadastrada.</p>
-                      <Button onClick={() => router.push("/contas-bancarias/nova")} className="mt-4 bg-[#de4838] hover:bg-[#c73d2e]">
+                      <p className="text-muted-foreground">Nenhuma conta cadastrada.</p>
+                      <Button onClick={() => router.push("/contas-bancarias/nova")} className="mt-4 bg-primary hover:bg-primary/90">
                         Criar primeira conta
                       </Button>
                     </td>
@@ -204,26 +203,26 @@ export default function ContasBancariasPage() {
                   contas.map((conta) => (
                     <tr 
                       key={conta.id} 
-                      className="border-b border-gray-100 hover:bg-gray-100 transition-colors cursor-pointer"
+                      className="border-b border-border hover:bg-surface-2 transition-colors cursor-pointer"
                       onClick={() => router.push(`/contas-bancarias/${conta.id}/movimentacoes`)}
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           {getIcon(conta.tipo)}
-                          <span className="font-medium text-gray-800">{conta.nome}</span>
+                          <span className="font-medium text-white">{conta.nome}</span>
                         </div>
                        </td>
                       <td className="px-4 py-3">
-                        <Badge variant="outline" className="bg-gray-100 text-gray-700 rounded-full">
+                        <Badge variant="outline" className="bg-surface-2 text-white rounded-full">
                           {getTipoLabel(conta.tipo)}
                         </Badge>
                        </td>
-                      <td className="px-4 py-3 text-gray-600">{conta.instituicao || "-"}</td>
-                      <td className="px-4 py-3 text-right text-gray-600">{formatCurrency(conta.saldoInicial)}</td>
-                      <td className="px-4 py-3 text-right font-bold text-gray-800">{formatCurrency(conta.saldoAtual)}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{conta.instituicao || "-"}</td>
+                      <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(conta.saldoInicial)}</td>
+                      <td className="px-4 py-3 text-right font-bold text-white">{formatCurrency(conta.saldoAtual)}</td>
                       <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
-                          <DropdownMenuTrigger className="h-8 w-8 p-0 rounded-full bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900">
+                          <DropdownMenuTrigger className="h-8 w-8 p-0 rounded-full bg-transparent text-muted-foreground hover:bg-surface-2 hover:text-gray-900">
                             <MoreHorizontal className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -231,7 +230,7 @@ export default function ContasBancariasPage() {
                               <Edit2 className="mr-2 h-4 w-4" />
                               Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDelete(conta.id)} className="text-red-600">
+                            <DropdownMenuItem onClick={() => handleDelete(conta.id)} className="text-destructive">
                               <Trash2 className="mr-2 h-4 w-4" />
                               Excluir
                             </DropdownMenuItem>
@@ -243,10 +242,10 @@ export default function ContasBancariasPage() {
                 )}
               </tbody>
               {contas.length > 0 && (
-                <tfoot className="border-t-2 border-gray-200 bg-gray-100 font-bold">
+                <tfoot className="border-t-2 border-border bg-surface-2 font-bold">
                   <tr>
                     <td colSpan={4} className="px-4 py-3 text-right">SALDO TOTAL:</td>
-                    <td className="px-4 py-3 text-right text-[#de4838] text-lg">{formatCurrency(saldoTotal)}</td>
+                    <td className="px-4 py-3 text-right text-primary text-lg">{formatCurrency(saldoTotal)}</td>
                     <td className="px-4 py-3"></td>
                   </tr>
                 </tfoot>
@@ -257,8 +256,8 @@ export default function ContasBancariasPage() {
 
         {/* Diálogo de Transferência */}
         <Dialog open={transferModalOpen} onOpenChange={setTransferModalOpen}>
-          <DialogContent className="max-w-md bg-white rounded-2xl p-0">
-            <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100">
+          <DialogContent className="max-w-md bg-surface rounded-2xl p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
               <DialogTitle className="text-xl font-semibold">Transferir entre Contas</DialogTitle>
             </DialogHeader>
             <div className="p-6">
@@ -269,7 +268,7 @@ export default function ContasBancariasPage() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+      </PageContainer>
     </div>
   );
 }
