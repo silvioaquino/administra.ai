@@ -36,6 +36,8 @@ import { DistribuicaoLucroTab } from "./components/tabs/DistribuicaoLucroTab";
 import { ModalEditarConta, type ContaParaEditar } from "./components/modais/ModalEditarConta";
 import { ModalNovaConta } from "./components/modais/ModalNovaConta";
 import { formatCurrency, formatPercentage, formatDate } from "@/lib/utils";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 import type { FuncionarioFechamento, DespesaFechamento, ContaSaldo } from "@/types/fechamento";
 
 interface DreLinha {
@@ -300,16 +302,16 @@ export default function FechamentoMensalPage() {
     action?: React.ReactNode
   }) => (
     <div 
-      className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+      className="flex items-center justify-between p-4 cursor-pointer hover:bg-surface-2 transition-colors"
       onClick={() => toggleSection(section)}
     >
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-[#de4838]/10 text-[#de4838]">
+        <div className="p-2 rounded-lg bg-primary/10 text-primary">
           <Icon className="h-4 w-4" />
         </div>
-        <h3 className="font-semibold text-gray-800">{title}</h3>
+        <h3 className="font-semibold text-white">{title}</h3>
         {badge && (
-          <span className="inline-flex items-center rounded-full bg-[#de4838]/10 px-2.5 py-0.5 text-xs font-medium text-[#de4838]">
+          <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
             {badge}
           </span>
         )}
@@ -317,7 +319,7 @@ export default function FechamentoMensalPage() {
       <div className="flex items-center gap-2">
         {action}
         <ChevronDownIcon 
-          className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${
+          className={`h-5 w-5 text-muted-foreground/70 transition-transform duration-200 ${
             sectionsExpanded[section] ? 'rotate-180' : ''
           }`}
         />
@@ -330,33 +332,33 @@ export default function FechamentoMensalPage() {
     const hasChildren = linha.children && linha.children.length > 0;
     const valorFormatado = formatCurrency(linha.valor);
 
-    let valorClass = "text-gray-800";
+    let valorClass = "text-white";
     let bgClass = "";
 
     if (linha.id === "RECEITA_BRUTA") {
-      valorClass = "text-emerald-600 font-bold";
-      bgClass = "bg-emerald-50/50";
+      valorClass = "text-success font-bold";
+      bgClass = "bg-success/5/50";
     } else if (linha.id === "LUCRO_BRUTO" || linha.id === "LUCRO_LIQUIDO") {
-      valorClass = linha.valor >= 0 ? "text-emerald-600 font-bold" : "text-red-600 font-bold";
-      bgClass = linha.valor >= 0 ? "bg-emerald-50/50" : "bg-red-50/50";
+      valorClass = linha.valor >= 0 ? "text-success font-bold" : "text-destructive font-bold";
+      bgClass = linha.valor >= 0 ? "bg-success/5/50" : "bg-destructive/5/50";
     } else if (linha.id === "CMV" || linha.id === "DESPESAS_OPERACIONAIS") {
-      valorClass = "text-red-500";
+      valorClass = "text-destructive";
     }
 
     return (
       <React.Fragment key={linha.id}>
-        <tr className={`border-b border-gray-100 ${bgClass} hover:bg-gray-100 transition-colors`}>
+        <tr className={`border-b border-border ${bgClass} hover:bg-surface-2 transition-colors`}>
           <td className="px-4 py-3" style={{ paddingLeft: `${20 + nivel * 16}px` }}>
             <div className="flex items-center gap-2">
               {hasChildren && (
                 <button
                   onClick={() => toggleGroup(linha.id)}
-                  className="p-0.5 hover:bg-gray-200 rounded"
+                  className="p-0.5 hover:bg-surface-2 rounded"
                 >
                   {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </button>
               )}
-              <span className={`text-sm ${linha.isGroup ? "font-semibold" : "text-gray-600"}`}>
+              <span className={`text-sm ${linha.isGroup ? "font-semibold" : "text-muted-foreground"}`}>
                 {linha.descricao}
               </span>
             </div>
@@ -364,7 +366,7 @@ export default function FechamentoMensalPage() {
           <td className="px-4 py-3 text-right font-medium">
             {hideValues ? "••••••" : valorFormatado}
           </td>
-          <td className="px-4 py-3 text-right text-gray-500">
+          <td className="px-4 py-3 text-right text-muted-foreground">
             {formatPercentage(linha.percentual)}
           </td>
           {!isAcumulado && (
@@ -398,26 +400,20 @@ export default function FechamentoMensalPage() {
   const despesasPendentes = despesas.filter((d) => d.status !== "PAGO");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-200/80 px-6 py-4 flex items-center justify-between shadow-sm">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-            Fechamento Mensal
-            <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
-              {meses[mesAtual - 1]} {anoAtual}
-            </span>
-          </h1>
-          <p className="text-sm text-gray-500 hidden sm:block">
-            Demonstrativo de Resultados do Exercício (DRE)
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
+      <PageContainer>
+        <PageHeader
+          title="Fechamento Mensal"
+          subtitle={`${meses[mesAtual - 1]} ${anoAtual}`}
+          backHref="/gerenciamento"
+        >
+          <div className="flex items-center gap-2 flex-wrap justify-end">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setHideValues(!hideValues)}
-            className="gap-2 rounded-full border-gray-200 hover:bg-gray-100"
+            className="gap-2 rounded-full border-border hover:bg-surface-2"
           >
             {hideValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             <span className="hidden sm:inline">{hideValues ? "Mostrar" : "Ocultar"}</span>
@@ -425,7 +421,7 @@ export default function FechamentoMensalPage() {
           <Button
             variant="outline"
             onClick={gerarRelatorio}
-            className="rounded-full border-gray-200 hover:bg-gray-100"
+            className="rounded-full border-border hover:bg-surface-2"
           >
             <Download className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">PDF</span>
@@ -433,7 +429,7 @@ export default function FechamentoMensalPage() {
           <Button
             variant="outline"
             onClick={exportarExcel}
-            className="rounded-full border-gray-200 hover:bg-gray-100"
+            className="rounded-full border-border hover:bg-surface-2"
           >
             <FileText className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">Excel</span>
@@ -442,7 +438,7 @@ export default function FechamentoMensalPage() {
             <Button
               variant="outline"
               onClick={reabrirFechamento}
-              className="rounded-full border-amber-500 text-amber-600 hover:bg-amber-50"
+              className="rounded-full border-amber-500 text-warning hover:bg-warning/5"
             >
               <Unlock className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Reabrir</span>
@@ -450,22 +446,20 @@ export default function FechamentoMensalPage() {
           ) : (
             <Button
               onClick={realizarFechamento}
-              className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full shadow-lg shadow-[#de4838]/25"
+              className="bg-primary hover:bg-primary/90 text-white rounded-full shadow-lg shadow-primary/25"
             >
               <Lock className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Fechar Mês</span>
             </Button>
           )}
         </div>
-      </div>
-
-      <div className="container mx-auto p-4 md:p-6 max-w-7xl">
+        </PageHeader>
         {/* Seletor de Mês/Ano */}
         <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 p-1 shadow-sm">
+            <div className="flex items-center gap-2 bg-surface rounded-xl border border-border p-1 shadow-sm">
               <select
-                className="rounded-lg bg-transparent px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                className="rounded-lg bg-transparent px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 value={mesAtual}
                 onChange={(e) => setMesAtual(parseInt(e.target.value))}
                 disabled={isFechado && fechamento?.mes === mesAtual && fechamento?.ano === anoAtual}
@@ -476,9 +470,9 @@ export default function FechamentoMensalPage() {
                   </option>
                 ))}
               </select>
-              <span className="text-gray-300">|</span>
+              <span className="text-muted-foreground/70">|</span>
               <select
-                className="rounded-lg bg-transparent px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                className="rounded-lg bg-transparent px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 value={anoAtual}
                 onChange={(e) => setAnoAtual(parseInt(e.target.value))}
                 disabled={isFechado && fechamento?.mes === mesAtual && fechamento?.ano === anoAtual}
@@ -489,7 +483,7 @@ export default function FechamentoMensalPage() {
               </select>
             </div>
             {fechamento && (
-              <Badge className={`${isFechado ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"} px-3 py-1`}>
+              <Badge className={`${isFechado ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"} px-3 py-1`}>
                 {isFechado ? (
                   <>
                     <Lock className="mr-1 h-3 w-3" />
@@ -504,23 +498,23 @@ export default function FechamentoMensalPage() {
               </Badge>
             )}
           </div>
-          <div className="text-right bg-white rounded-xl px-4 py-2 border border-gray-200 shadow-sm">
-            <p className="text-xs text-gray-500">Margem Líquida</p>
-            <p className={`text-lg font-bold ${margemLiquida >= 20 ? "text-emerald-600" : margemLiquida >= 10 ? "text-amber-600" : "text-red-600"}`}>
+          <div className="text-right bg-surface rounded-xl px-4 py-2 border border-border shadow-sm">
+            <p className="text-xs text-muted-foreground">Margem Líquida</p>
+            <p className={`text-lg font-bold ${margemLiquida >= 20 ? "text-success" : margemLiquida >= 10 ? "text-warning" : "text-destructive"}`}>
               {formatPercentage(margemLiquida)}
             </p>
           </div>
         </div>
 
         {/* Seção: Cards de Resumo */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden transition-all duration-200 hover:shadow-md mb-6">
+        <div className="bg-surface rounded-2xl shadow-sm border border-border/50 overflow-hidden transition-all duration-200 hover:shadow-md mb-6">
           <SectionHeader 
             title="Resumo do Período" 
             icon={BarChart3} 
             section="summary"
           />
           {sectionsExpanded.summary && (
-            <div className="p-4 md:p-5 pt-0 border-t border-gray-100">
+            <div className="p-4 md:p-5 pt-0 border-t border-border">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl p-4 text-white shadow-lg shadow-emerald-500/20">
                   <div className="flex items-center gap-2 mb-1">
@@ -571,7 +565,7 @@ export default function FechamentoMensalPage() {
         </div>
 
         {/* Seção: Saldos das Contas */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden transition-all duration-200 hover:shadow-md mb-6">
+        <div className="bg-surface rounded-2xl shadow-sm border border-border/50 overflow-hidden transition-all duration-200 hover:shadow-md mb-6">
           <SectionHeader 
             title="Saldos das Contas" 
             icon={DollarSign} 
@@ -579,29 +573,29 @@ export default function FechamentoMensalPage() {
             badge={`${contas.length} contas`}
           />
           {sectionsExpanded.accounts && (
-            <div className="p-4 md:p-5 pt-0 border-t border-gray-100">
+            <div className="p-4 md:p-5 pt-0 border-t border-border">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {contas.map((conta) => (
-                  <div key={conta.id} className="border rounded-xl p-3 bg-gray-50/50 hover:bg-gray-100 transition-colors">
+                  <div key={conta.id} className="border rounded-xl p-3 bg-surface-2/50 hover:bg-surface-2 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-800 truncate">{conta.nome}</p>
-                        <p className="text-xs text-gray-500">Saldo atual</p>
+                        <p className="font-medium text-white truncate">{conta.nome}</p>
+                        <p className="text-xs text-muted-foreground">Saldo atual</p>
                       </div>
                       <div className="text-right flex items-center gap-1">
-                        <p className="text-lg font-bold text-gray-800">
+                        <p className="text-lg font-bold text-white">
                           {hideValues ? "••••••" : formatCurrency(conta.saldoAtual)}
                         </p>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="p-1 h-7 w-7 rounded-lg hover:bg-gray-200"
+                          className="p-1 h-7 w-7 rounded-lg hover:bg-surface-2"
                           onClick={() => {
                             setContaEditando(conta);
                             setModalEditarOpen(true);
                           }}
                         >
-                          <Edit className="h-3 w-3 text-gray-400" />
+                          <Edit className="h-3 w-3 text-muted-foreground/70" />
                         </Button>
                       </div>
                     </div>
@@ -609,21 +603,21 @@ export default function FechamentoMensalPage() {
                 ))}
 
                 <div
-                  className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-white hover:bg-gray-50 transition-colors cursor-pointer flex items-center justify-center flex-col gap-2"
+                  className="border-2 border-dashed border-border rounded-xl p-4 bg-surface hover:bg-surface-2 transition-colors cursor-pointer flex items-center justify-center flex-col gap-2"
                   onClick={() => setModalNovaOpen(true)}
                 >
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                    <Plus className="h-5 w-5 text-emerald-600" />
+                  <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
+                    <Plus className="h-5 w-5 text-success" />
                   </div>
-                  <p className="font-medium text-gray-700">Nova Conta</p>
-                  <p className="text-xs text-gray-500">Adicionar conta</p>
+                  <p className="font-medium text-white">Nova Conta</p>
+                  <p className="text-xs text-muted-foreground">Adicionar conta</p>
                 </div>
               </div>
 
-              <div className="border-t border-gray-200 pt-4 mt-4">
+              <div className="border-t border-border pt-4 mt-4">
                 <div className="flex justify-between items-center">
-                  <p className="font-semibold text-lg text-gray-800">Total em Contas</p>
-                  <p className="text-2xl font-bold text-[#de4838]">
+                  <p className="font-semibold text-lg text-white">Total em Contas</p>
+                  <p className="text-2xl font-bold text-primary">
                     {hideValues ? "••••••" : formatCurrency(saldoTotal)}
                   </p>
                 </div>
@@ -633,7 +627,7 @@ export default function FechamentoMensalPage() {
         </div>
 
         {/* Seção: Despesas Pendentes do Mês */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden transition-all duration-200 hover:shadow-md mb-6">
+        <div className="bg-surface rounded-2xl shadow-sm border border-border/50 overflow-hidden transition-all duration-200 hover:shadow-md mb-6">
           <SectionHeader
             title="Despesas Pendentes do Mês"
             icon={DollarSign}
@@ -644,52 +638,52 @@ export default function FechamentoMensalPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setMostrarPagas(!mostrarPagas)}
-                className="rounded-full border-gray-200 hover:bg-gray-100 text-xs"
+                className="rounded-full border-border hover:bg-surface-2 text-xs"
               >
                 {mostrarPagas ? "Ocultar pagas" : "Mostrar pagas"}
               </Button>
             }
           />
           {sectionsExpanded.fixedExpenses && (
-            <div className="p-4 md:p-5 pt-0 border-t border-gray-100">
+            <div className="p-4 md:p-5 pt-0 border-t border-border">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-100/80 border-b border-gray-200">
+                  <thead className="bg-surface-2/80 border-b border-border">
                     <tr>
-                      <th className="px-3 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Despesa</th>
-                      <th className="px-3 py-2.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
-                      <th className="px-3 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Venc.</th>
-                      <th className="px-3 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Conta</th>
-                      <th className="px-3 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-3 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
+                      <th className="px-3 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Despesa</th>
+                      <th className="px-3 py-2.5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Valor</th>
+                      <th className="px-3 py-2.5 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Venc.</th>
+                      <th className="px-3 py-2.5 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">Conta</th>
+                      <th className="px-3 py-2.5 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                      <th className="px-3 py-2.5 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Ação</th>
                     </tr>
                   </thead>
                   <tbody>
                     {listaDespesas.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-8 text-center text-gray-500">
-                          <DollarSign className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                        <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                          <DollarSign className="h-8 w-8 text-muted-foreground/70 mx-auto mb-2" />
                           Nenhuma despesa pendente neste mês.
                         </td>
                       </tr>
                     ) : (
                       listaDespesas.map((d) => (
-                        <tr key={`${d.origem}-${d.id}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                          <td className="px-3 py-2.5 font-medium text-gray-800">{d.nome}</td>
-                          <td className="px-3 py-2.5 text-right text-gray-700 font-mono">
+                        <tr key={`${d.origem}-${d.id}`} className="border-b border-border hover:bg-surface-2 transition-colors">
+                          <td className="px-3 py-2.5 font-medium text-white">{d.nome}</td>
+                          <td className="px-3 py-2.5 text-right text-white font-mono">
                             {hideValues ? "••••••" : formatCurrency(d.valor)}
                           </td>
-                          <td className="px-3 py-2.5 text-center text-gray-600 hidden sm:table-cell">
+                          <td className="px-3 py-2.5 text-center text-muted-foreground hidden sm:table-cell">
                             {new Date(d.dataVencimento).toLocaleDateString()}
                           </td>
-                          <td className="px-3 py-2.5 text-center hidden md:table-cell text-xs text-gray-600">
+                          <td className="px-3 py-2.5 text-center hidden md:table-cell text-xs text-muted-foreground">
                             {d.contaNome || "—"}
                           </td>
                           <td className="px-3 py-2.5 text-center">
                             {d.status === "PAGO" ? (
-                              <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Pago</span>
+                              <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">Pago</span>
                             ) : (
-                              <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">Pendente</span>
+                              <span className="inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">Pendente</span>
                             )}
                           </td>
                           <td className="px-3 py-2.5 text-center">
@@ -698,13 +692,13 @@ export default function FechamentoMensalPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => marcarPago(d)}
-                                className="rounded-full border-emerald-500 text-emerald-600 hover:bg-emerald-50 text-xs"
+                                className="rounded-full border-emerald-500 text-success hover:bg-success/5 text-xs"
                               >
                                 <CheckCircle className="mr-1 h-3 w-3" />
                                 Pagar
                               </Button>
                             ) : (
-                              <CheckCircle className="h-4 w-4 text-emerald-500 mx-auto" />
+                              <CheckCircle className="h-4 w-4 text-success mx-auto" />
                             )}
                           </td>
                         </tr>
@@ -712,15 +706,15 @@ export default function FechamentoMensalPage() {
                     )}
                   </tbody>
                   {listaDespesas.length > 0 && (
-                    <tfoot className="border-t-2 border-gray-200 bg-gray-100/80">
+                    <tfoot className="border-t-2 border-border bg-surface-2/80">
                       <tr>
-                        <td colSpan={2} className="px-3 py-3 text-right font-semibold text-gray-700">
+                        <td colSpan={2} className="px-3 py-3 text-right font-semibold text-white">
                           Total:
                         </td>
-                        <td className="px-3 py-3 text-right font-bold text-red-600 hidden sm:table-cell">
+                        <td className="px-3 py-3 text-right font-bold text-destructive hidden sm:table-cell">
                           {hideValues ? "••••••" : formatCurrency(listaDespesas.reduce((sum, d) => sum + d.valor, 0))}
                         </td>
-                        <td colSpan={4} className="px-3 py-3 text-right font-bold text-red-600">
+                        <td colSpan={4} className="px-3 py-3 text-right font-bold text-destructive">
                           {hideValues ? "••••••" : formatCurrency(listaDespesas.reduce((sum, d) => sum + d.valor, 0))}
                         </td>
                       </tr>
@@ -734,27 +728,27 @@ export default function FechamentoMensalPage() {
 
         {/* Seção: Alertas */}
         {(lucroLiquidoDRE < 0 || (margemLiquida < 10 && margemLiquida > 0)) && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden transition-all duration-200 hover:shadow-md mb-6">
+          <div className="bg-surface rounded-2xl shadow-sm border border-border/50 overflow-hidden transition-all duration-200 hover:shadow-md mb-6">
             <SectionHeader 
               title="Alertas" 
               icon={AlertCircle} 
               section="alerts"
             />
             {sectionsExpanded.alerts && (
-              <div className="p-4 md:p-5 pt-0 border-t border-gray-100 space-y-3">
+              <div className="p-4 md:p-5 pt-0 border-t border-border space-y-3">
                 {lucroLiquidoDRE < 0 && (
-                  <Alert className="bg-red-50 border-red-200/80 rounded-xl">
-                    <AlertCircle className="h-4 w-4 text-red-600" />
-                    <AlertDescription className="text-sm text-red-700">
+                  <Alert className="bg-destructive/5 border-destructive/30/80 rounded-xl">
+                    <AlertCircle className="h-4 w-4 text-destructive" />
+                    <AlertDescription className="text-sm text-destructive">
                       Atenção! Você está operando com prejuízo neste período. Analise seus custos e despesas para identificar oportunidades de redução.
                     </AlertDescription>
                   </Alert>
                 )}
 
                 {margemLiquida < 10 && margemLiquida > 0 && (
-                  <Alert className="bg-amber-50 border-amber-200/80 rounded-xl">
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                    <AlertDescription className="text-sm text-amber-700">
+                  <Alert className="bg-warning/5 border-amber-200/80 rounded-xl">
+                    <AlertCircle className="h-4 w-4 text-warning" />
+                    <AlertDescription className="text-sm text-warning">
                       Sua margem líquida está abaixo de 10%. Considere revisar preços ou reduzir custos operacionais.
                     </AlertDescription>
                   </Alert>
@@ -766,79 +760,79 @@ export default function FechamentoMensalPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="mensal" className="mt-6">
-          <TabsList className="bg-white border border-gray-200 rounded-xl p-1 w-full justify-start overflow-x-auto shadow-sm">
-            <TabsTrigger value="mensal" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4 whitespace-nowrap">
+          <TabsList className="bg-surface border border-border rounded-xl p-1 w-full justify-start overflow-x-auto shadow-sm">
+            <TabsTrigger value="mensal" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white px-4 whitespace-nowrap">
               DRE do Mês
             </TabsTrigger>
-            <TabsTrigger value="despesas" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4 whitespace-nowrap">
+            <TabsTrigger value="despesas" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white px-4 whitespace-nowrap">
               Despesas
             </TabsTrigger>
-            <TabsTrigger value="folha" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4 whitespace-nowrap">
+            <TabsTrigger value="folha" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white px-4 whitespace-nowrap">
               Folha
             </TabsTrigger>
-            <TabsTrigger value="saldos" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4 whitespace-nowrap">
+            <TabsTrigger value="saldos" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white px-4 whitespace-nowrap">
               Saldos
             </TabsTrigger>
-            <TabsTrigger value="acumulado" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4 whitespace-nowrap">
+            <TabsTrigger value="acumulado" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white px-4 whitespace-nowrap">
               Acumulado
             </TabsTrigger>
-            <TabsTrigger value="comparativo" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4 whitespace-nowrap">
+            <TabsTrigger value="comparativo" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white px-4 whitespace-nowrap">
               Comparativo
             </TabsTrigger>
-            <TabsTrigger value="fechamento" className="rounded-lg data-[state=active]:bg-[#de4838] data-[state=active]:text-white px-4 whitespace-nowrap">
+            <TabsTrigger value="fechamento" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white px-4 whitespace-nowrap">
               Distribuição
             </TabsTrigger>
           </TabsList>
 
           {/* Tab - DRE do Mês */}
           <TabsContent value="mensal" className="mt-6">
-            <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
-              <CardHeader className="bg-gray-50/80 border-b border-gray-100">
+            <Card className="border-border shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="bg-surface-2/80 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <FileText className="h-5 w-5 text-[#de4838]" />
+                  <FileText className="h-5 w-5 text-primary" />
                   Demonstrativo de Resultados - {meses[mesAtual - 1]}/{anoAtual}
                 </CardTitle>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Valores em R$ e percentuais de participação sobre a Receita Bruta
                 </p>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-100/80 border-b border-gray-200">
+                    <thead className="bg-surface-2/80 border-b border-border">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           Descrição
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           Valor (R$)
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           % Receita
                         </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           Contas
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr className="border-b border-gray-100">
+                        <tr className="border-b border-border">
                           <td colSpan={4} className="py-12 text-center">
                             <div className="flex justify-center items-center gap-2">
-                              <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#de4838] border-t-transparent" />
-                              <span className="text-sm text-gray-500">Carregando DRE...</span>
+                              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                              <span className="text-sm text-muted-foreground">Carregando DRE...</span>
                             </div>
                           </td>
                         </tr>
                       ) : dre.length === 0 ? (
-                        <tr className="border-b border-gray-100">
-                          <td colSpan={4} className="py-12 text-center text-gray-500">
+                        <tr className="border-b border-border">
+                          <td colSpan={4} className="py-12 text-center text-muted-foreground">
                             Nenhum dado disponível para este período.
                             <Button
                               variant="link"
                               onClick={() => carregarDados()}
-                              className="text-[#de4838] ml-2"
+                              className="text-primary ml-2"
                             >
                               Clique aqui para atualizar
                             </Button>
@@ -856,13 +850,13 @@ export default function FechamentoMensalPage() {
 
           {/* Tab - Despesas */}
           <TabsContent value="despesas" className="mt-6">
-            <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
-              <CardHeader className="bg-gray-50/80 border-b border-gray-100">
+            <Card className="border-border shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="bg-surface-2/80 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <DollarSign className="h-5 w-5 text-[#de4838]" />
+                  <DollarSign className="h-5 w-5 text-primary" />
                   Gestão de Despesas
                 </CardTitle>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Controle de despesas fixas e variáveis do mês
                 </p>
               </CardHeader>
@@ -878,13 +872,13 @@ export default function FechamentoMensalPage() {
 
           {/* Tab - Folha de Pagamento */}
           <TabsContent value="folha" className="mt-6">
-            <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
-              <CardHeader className="bg-gray-50/80 border-b border-gray-100">
+            <Card className="border-border shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="bg-surface-2/80 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <FileText className="h-5 w-5 text-[#de4838]" />
+                  <FileText className="h-5 w-5 text-primary" />
                   Folha de Pagamento
                 </CardTitle>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Controle de salários e encargos trabalhistas
                 </p>
               </CardHeader>
@@ -899,13 +893,13 @@ export default function FechamentoMensalPage() {
 
           {/* Tab - Saldos de Contas */}
           <TabsContent value="saldos" className="mt-6">
-            <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
-              <CardHeader className="bg-gray-50/80 border-b border-gray-100">
+            <Card className="border-border shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="bg-surface-2/80 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <PieChart className="h-5 w-5 text-[#de4838]" />
+                  <PieChart className="h-5 w-5 text-primary" />
                   Saldos de Contas
                 </CardTitle>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Controle de saldos bancários e fluxo de caixa
                 </p>
               </CardHeader>
@@ -925,45 +919,45 @@ export default function FechamentoMensalPage() {
 
           {/* Tab - DRE Acumulado */}
           <TabsContent value="acumulado" className="mt-6">
-            <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
-              <CardHeader className="bg-gray-50/80 border-b border-gray-100">
+            <Card className="border-border shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="bg-surface-2/80 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <TrendingUp className="h-5 w-5 text-[#de4838]" />
+                  <TrendingUp className="h-5 w-5 text-primary" />
                   DRE Acumulado - {anoAtual}
                 </CardTitle>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Resultados acumulados de Janeiro a {meses[mesAtual - 1]}
                 </p>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-100/80 border-b border-gray-200">
+                    <thead className="bg-surface-2/80 border-b border-border">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           Descrição
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           Valor Acumulado (R$)
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           % Receita
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr className="border-b border-gray-100">
+                        <tr className="border-b border-border">
                           <td colSpan={3} className="py-12 text-center">
                             <div className="flex justify-center items-center gap-2">
-                              <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#de4838] border-t-transparent" />
-                              <span className="text-sm text-gray-500">Carregando DRE Acumulado...</span>
+                              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                              <span className="text-sm text-muted-foreground">Carregando DRE Acumulado...</span>
                             </div>
                           </td>
                         </tr>
                       ) : acumuladoAno.length === 0 ? (
-                        <tr className="border-b border-gray-100">
-                          <td colSpan={3} className="py-12 text-center text-gray-500">
+                        <tr className="border-b border-border">
+                          <td colSpan={3} className="py-12 text-center text-muted-foreground">
                             Nenhum dado disponível para o acumulado do ano.
                           </td>
                         </tr>
@@ -979,43 +973,43 @@ export default function FechamentoMensalPage() {
 
           {/* Tab - Comparativo Mensal */}
           <TabsContent value="comparativo" className="mt-6">
-            <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
-              <CardHeader className="bg-gray-50/80 border-b border-gray-100">
+            <Card className="border-border shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="bg-surface-2/80 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <Calendar className="h-5 w-5 text-[#de4838]" />
+                  <Calendar className="h-5 w-5 text-primary" />
                   Comparativo Mensal - {anoAtual}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 md:p-5">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-100/80 border-b border-gray-200">
+                    <thead className="bg-surface-2/80 border-b border-border">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Mês</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Receita Bruta</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">CMV</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Lucro Bruto</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Despesas OP</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">Lucro Líquido</th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500">Margem %</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Mês</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Receita Bruta</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">CMV</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Lucro Bruto</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Despesas OP</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Lucro Líquido</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground">Margem %</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr className="border-b border-gray-100">
+                        <tr className="border-b border-border">
                           <td colSpan={7} className="py-12 text-center">
                             <div className="flex justify-center items-center gap-2">
-                              <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#de4838] border-t-transparent" />
-                              <span className="text-sm text-gray-500">Carregando...</span>
+                              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                              <span className="text-sm text-muted-foreground">Carregando...</span>
                             </div>
                           </td>
                         </tr>
                       ) : (
-                        <tr className="border-b border-gray-100">
-                          <td colSpan={7} className="py-12 text-center text-gray-500">
-                            <Calendar className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                        <tr className="border-b border-border">
+                          <td colSpan={7} className="py-12 text-center text-muted-foreground">
+                            <Calendar className="h-8 w-8 text-muted-foreground/70 mx-auto mb-2" />
                             Funcionalidade em desenvolvimento.
-                            <p className="text-xs text-gray-400 mt-1">Em breve você poderá comparar todos os meses do ano.</p>
+                            <p className="text-xs text-muted-foreground/70 mt-1">Em breve você poderá comparar todos os meses do ano.</p>
                           </td>
                         </tr>
                       )}
@@ -1038,21 +1032,21 @@ export default function FechamentoMensalPage() {
 
         {/* Observações do Fechamento */}
         {fechamento?.observacao && (
-          <div className="mt-6 bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider flex items-center gap-2">
+          <div className="mt-6 bg-surface rounded-xl p-4 border border-border shadow-sm">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
               <FileText className="h-3 w-3" />
               Observações do Fechamento
             </p>
-            <p className="text-sm text-gray-700 mt-1">{fechamento.observacao}</p>
+            <p className="text-sm text-white mt-1">{fechamento.observacao}</p>
           </div>
         )}
 
         {/* Botão de ação flutuante para mobile */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-gray-200 md:hidden z-10">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-surface/95 backdrop-blur-md border-t border-border md:hidden z-10">
           {isFechado ? (
             <Button
               onClick={reabrirFechamento}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-lg shadow-amber-500/30"
+              className="w-full bg-warning/50 hover:bg-amber-600 text-white rounded-xl shadow-lg shadow-amber-500/30"
             >
               <Unlock className="mr-2 h-4 w-4" />
               Reabrir Mês
@@ -1060,7 +1054,7 @@ export default function FechamentoMensalPage() {
           ) : (
             <Button
               onClick={realizarFechamento}
-              className="w-full bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-xl shadow-lg shadow-[#de4838]/30"
+              className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-[#de4838]/30"
             >
               <Lock className="mr-2 h-4 w-4" />
               Fechar Mês
@@ -1080,7 +1074,7 @@ export default function FechamentoMensalPage() {
           onClose={() => setModalNovaOpen(false)}
           onSave={async (dados) => { await criarConta(dados); }}
         />
-      </div>
+      </PageContainer>
     </div>
   );
 }

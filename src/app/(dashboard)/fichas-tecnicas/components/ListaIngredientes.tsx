@@ -27,10 +27,10 @@ export function ListaIngredientes({ ingredientes, onRemove, readOnly = false }: 
 
   if (ingredientes.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-gray-100 p-8 text-center">
-        <Package className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-        <p className="text-sm text-gray-400">Nenhum ingrediente adicionado</p>
-        <p className="text-xs text-gray-300 mt-1">Adicione produtos ou fichas técnicas</p>
+      <div className="rounded-xl border border-border bg-surface-2 p-8 text-center">
+        <Package className="h-8 w-8 text-muted-foreground/70 mx-auto mb-2" />
+        <p className="text-sm text-muted-foreground/70">Nenhum ingrediente adicionado</p>
+        <p className="text-xs text-muted-foreground/70 mt-1">Adicione produtos ou fichas técnicas</p>
       </div>
     )
   }
@@ -38,38 +38,38 @@ export function ListaIngredientes({ ingredientes, onRemove, readOnly = false }: 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="bg-gray-100 border-b border-gray-200">
-          <tr className="border-b border-gray-200">
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ingrediente</th>
-            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Quantidade</th>
-            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Unitário</th>
-            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Custo</th>
+        <thead className="bg-surface-2 border-b border-border">
+          <tr className="border-b border-border">
+            <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Ingrediente</th>
+            <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Quantidade</th>
+            <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Valor Unitário</th>
+            <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Custo</th>
             {!readOnly && <th className="px-4 py-3 text-center w-10"></th>}
           </tr>
         </thead>
         <tbody>
           {ingredientes.map((ing) => (
-            <tr key={ing.id} className="border-b border-gray-100 hover:bg-gray-100 transition-colors">
+            <tr key={ing.id} className="border-b border-border hover:bg-surface-2 transition-colors">
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2">
                   {ing.isProdutoAcabado ? (
-                    <BookOpen className="h-3 w-3 text-blue-500" />
+                    <BookOpen className="h-3 w-3 text-info" />
                   ) : (
-                    <Package className="h-3 w-3 text-[#de4838]" />
+                    <Package className="h-3 w-3 text-primary" />
                   )}
-                  <span className="text-gray-700">{ing.nome}</span>
+                  <span className="text-white">{ing.nome}</span>
                   {ing.isProdutoAcabado && (
-                    <span className="inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                    <span className="inline-flex rounded-full bg-info/10 px-2 py-0.5 text-xs font-medium text-info">
                       Ficha
                     </span>
                   )}
                 </div>
               </td>
-              <td className="px-4 py-3 text-right font-mono text-gray-600">
+              <td className="px-4 py-3 text-right font-mono text-muted-foreground">
                 {ing.quantidade.toFixed(3)} {ing.unidade}
               </td>
-              <td className="px-4 py-3 text-right font-mono text-gray-600">{formatCurrency(ing.valorUnitario)}</td>
-              <td className="px-4 py-3 text-right font-mono font-medium text-gray-800">{formatCurrency(ing.custo)}</td>
+              <td className="px-4 py-3 text-right font-mono text-muted-foreground">{formatCurrency(ing.valorUnitario)}</td>
+              <td className="px-4 py-3 text-right font-mono font-medium text-white">{formatCurrency(ing.custo)}</td>
               {!readOnly && (
                 <td className="px-4 py-3 text-center">
                   <Button
@@ -77,19 +77,19 @@ export function ListaIngredientes({ ingredientes, onRemove, readOnly = false }: 
                     variant="ghost"
                     size="sm"
                     onClick={() => onRemove(ing.id)}
-                    className="h-8 w-8 p-0 rounded-lg hover:bg-red-50"
+                    className="h-8 w-8 p-0 rounded-lg hover:bg-destructive/5"
                   >
-                    <Trash2 className="h-4 w-4 text-red-500" />
+                    <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </td>
               )}
             </tr>
           ))}
         </tbody>
-        <tfoot className="border-t-2 border-gray-200 bg-gray-100">
+        <tfoot className="border-t-2 border-border bg-surface-2">
           <tr className="font-semibold">
-            <td colSpan={3} className="px-4 py-3 text-right text-gray-700">Custo Total:</td>
-            <td className="px-4 py-3 text-right text-[#de4838] text-lg">{formatCurrency(custoTotal)}</td>
+            <td colSpan={3} className="px-4 py-3 text-right text-white">Custo Total:</td>
+            <td className="px-4 py-3 text-right text-primary text-lg">{formatCurrency(custoTotal)}</td>
             {!readOnly && <td className="px-4 py-3"></td>}
           </tr>
         </tfoot>

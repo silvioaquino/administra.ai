@@ -129,13 +129,13 @@ export function FuncionariosConfig({ funcionarios, onUpdate, onSave, onReset, sa
                   </td>
                   <td className="px-3 py-2 text-center">
                     <Button variant="ghost" size="sm" onClick={() => removerFuncionario(idx)} className="h-8 w-8 p-0">
-                      <Trash2 className="h-4 w-4 text-red-500" />
+                      <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </td>
                 </tr>
               ))}
             </tbody>
-            <tfoot className="border-t bg-gray-100">
+            <tfoot className="border-t bg-surface-2">
               <tr className="font-bold">
                 <td className="px-3 py-3">TOTAL DA FOLHA</td>
                 <td className="px-3 py-3 text-right text-primary">{formatCurrency(totalSalarios)}</td>

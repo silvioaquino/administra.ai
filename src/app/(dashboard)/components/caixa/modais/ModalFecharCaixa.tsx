@@ -202,7 +202,7 @@ export default function ModalFecharCaixa({
     <>
       {/* Modal Principal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto animate-slide-in">
+        <div className="bg-surface rounded-lg shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto animate-slide-in">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-border">
             <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
@@ -267,10 +267,10 @@ export default function ModalFecharCaixa({
                   <div className="flex justify-between"><span className="text-muted-foreground">Valor de Abertura:</span><strong>{formatarMoeda(valorAbertura)}</strong></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Vendas em Dinheiro:</span><strong>{formatarMoeda(vendasDinheiro)}</strong></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Total Faturado:</span><strong>{formatarMoeda(totalGeralVendas)}</strong></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Total de Retiradas:</span><strong className="text-red-600">{formatarMoeda(totalRetiradas)}</strong></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Total de Retiradas:</span><strong className="text-destructive">{formatarMoeda(totalRetiradas)}</strong></div>
                   <div className="flex justify-between pt-2 border-t border-border">
                     <span className="font-bold">Saldo Final:</span>
-                    <span className={`font-bold ${saldoFinal < 0 ? 'text-red-600' : 'text-green-600'}`}>{formatarMoeda(saldoFinal)}</span>
+                    <span className={`font-bold ${saldoFinal < 0 ? 'text-destructive' : 'text-success'}`}>{formatarMoeda(saldoFinal)}</span>
                   </div>
                   {valorRetiradaFinal && parseFloat(valorRetiradaFinal) > 0 && (
                     <div className="flex justify-between">
@@ -295,7 +295,7 @@ export default function ModalFecharCaixa({
                   const totalTipo = totaisPorTipo[tipo] || 0
                   if (totalTipo === 0) return null
                   return (
-                    <div key={tipo} className="flex justify-between items-center p-2 bg-gray-100 rounded-lg">
+                    <div key={tipo} className="flex justify-between items-center p-2 bg-surface-2 rounded-lg">
                       <span className="text-muted-foreground">{formatarTipoPagamento(tipo)}:</span>
                       <strong>{formatarMoeda(totalTipo)}</strong>
                     </div>
@@ -307,7 +307,7 @@ export default function ModalFecharCaixa({
 
           {/* Footer */}
           <div className="flex justify-end gap-3 p-4 border-t border-border">
-            <button onClick={onClose} disabled={loading} className="px-4 py-2 bg-gray-1000 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
+            <button onClick={onClose} disabled={loading} className="px-4 py-2 bg-surface-20 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
               Cancelar
             </button>
             <button onClick={() => setShowPreview(true)} disabled={loading} className="px-4 py-2 border border-primary text-primary hover:bg-primary/10 font-medium rounded-lg transition-colors flex items-center gap-2">
@@ -317,7 +317,7 @@ export default function ModalFecharCaixa({
               </svg>
               Pré-visualizar
             </button>
-            <button onClick={handleSubmit} disabled={loading} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2">
+            <button onClick={handleSubmit} disabled={loading} className="px-4 py-2 bg-destructive hover:bg-destructive/90 text-white font-medium rounded-lg transition-colors flex items-center gap-2">
               {loading ? (
                 <>
                   <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -342,7 +342,7 @@ export default function ModalFecharCaixa({
       {/* Modal de Pré-visualização */}
       {showPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 animate-slide-in">
+          <div className="bg-surface rounded-lg shadow-xl w-full max-w-lg mx-4 animate-slide-in">
             <div className="flex items-center justify-between p-4 border-b border-border">
               <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -362,16 +362,16 @@ export default function ModalFecharCaixa({
                 Esta é uma pré-visualização do comprovante que será impresso na impressora térmica.
               </div>
               <div 
-                className="border p-3 bg-white mx-auto"
+                className="border p-3 bg-surface mx-auto"
                 style={{ fontFamily: 'Courier New, monospace', fontSize: '12px', lineHeight: '1.2', maxWidth: '80mm' }}
                 dangerouslySetInnerHTML={{ __html: gerarConteudoImpressaoTermica() }}
               />
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+              <div className="mt-4 p-3 bg-info/5 rounded-lg text-sm text-blue-800">
                 <strong>Largura:</strong> 80mm (impressora térmica) | <strong>Fonte:</strong> Courier New
               </div>
             </div>
             <div className="flex justify-end gap-3 p-4 border-t border-border">
-              <button onClick={() => setShowPreview(false)} className="px-4 py-2 bg-gray-1000 hover:bg-gray-600 text-white rounded-lg">Fechar</button>
+              <button onClick={() => setShowPreview(false)} className="px-4 py-2 bg-surface-20 hover:bg-gray-600 text-white rounded-lg">Fechar</button>
               <button onClick={async () => { await imprimirComprovanteTermico(); setShowPreview(false); }} className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />

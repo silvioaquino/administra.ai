@@ -15,7 +15,7 @@ export function OnboardingButton() {
         variant="ghost"
         size="sm"
         onClick={() => setIsOpen(true)}
-        className="text-xs text-gray-500"
+        className="text-xs text-muted-foreground"
       >
         <HelpCircle className="mr-1 h-3 w-3" />
         Ajuda de configuração

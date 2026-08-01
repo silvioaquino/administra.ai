@@ -133,7 +133,7 @@ export function OnboardingHighlight({ steps, onComplete, onSkip }: OnboardingHig
 
       {/* Tooltip */}
       <div
-        className="fixed z-50 w-80 bg-white rounded-xl shadow-2xl"
+        className="fixed z-50 w-80 bg-surface rounded-xl shadow-2xl"
         style={{
           top: elementPosition ? elementPosition.bottom + 16 : "50%",
           left: elementPosition ? elementPosition.left + elementPosition.width / 2 - 160 : "50%",
@@ -144,21 +144,21 @@ export function OnboardingHighlight({ steps, onComplete, onSkip }: OnboardingHig
         <div className="p-4 border-b bg-gradient-to-r from-[#de4838]/5 to-transparent">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-[#de4838]" />
-              <span className="text-xs font-medium text-[#de4838]">
+              <Target className="h-4 w-4 text-primary" />
+              <span className="text-xs font-medium text-primary">
                 Passo {currentStep + 1} de {steps.length}
               </span>
             </div>
             <button
               onClick={skipOnboarding}
-              className="rounded-full p-1 hover:bg-gray-100 transition-colors"
+              className="rounded-full p-1 hover:bg-surface-2 transition-colors"
             >
-              <X className="h-3 w-3 text-gray-400" />
+              <X className="h-3 w-3 text-muted-foreground/70" />
             </button>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
+          <div className="w-full bg-surface-2 rounded-full h-1 mt-2">
             <div
-              className="bg-[#de4838] h-1 rounded-full transition-all duration-300"
+              className="bg-primary h-1 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -166,13 +166,13 @@ export function OnboardingHighlight({ steps, onComplete, onSkip }: OnboardingHig
 
         {/* Conteúdo */}
         <div className="p-4">
-          <h3 className="font-semibold text-gray-800 mb-1">{step.title}</h3>
-          <p className="text-sm text-gray-500 mb-3">{step.description}</p>
+          <h3 className="font-semibold text-white mb-1">{step.title}</h3>
+          <p className="text-sm text-muted-foreground mb-3">{step.description}</p>
           
           {step.tips && step.tips.length > 0 && (
-            <div className="bg-blue-50 rounded-lg p-2 mb-3">
+            <div className="bg-info/5 rounded-lg p-2 mb-3">
               <p className="text-xs font-medium text-blue-800 mb-1">💡 Dica:</p>
-              <p className="text-xs text-blue-700">{step.tips[0]}</p>
+              <p className="text-xs text-info">{step.tips[0]}</p>
             </div>
           )}
 
@@ -193,7 +193,7 @@ export function OnboardingHighlight({ steps, onComplete, onSkip }: OnboardingHig
               <Button
                 size="sm"
                 onClick={handleAction}
-                className="flex-1 bg-[#de4838] hover:bg-[#c73d2e] rounded-lg text-white"
+                className="flex-1 bg-primary hover:bg-primary/90 rounded-lg text-white"
               >
                 {step.action.label}
                 <ChevronRight className="ml-1 h-3 w-3" />
@@ -212,7 +212,7 @@ export function OnboardingHighlight({ steps, onComplete, onSkip }: OnboardingHig
         </div>
 
         {/* Footer */}
-        <div className="p-2 border-t bg-gray-100 rounded-b-xl">
+        <div className="p-2 border-t bg-surface-2 rounded-b-xl">
           <div className="flex justify-center gap-1">
             {steps.map((_, idx) => (
               <button
@@ -223,10 +223,10 @@ export function OnboardingHighlight({ steps, onComplete, onSkip }: OnboardingHig
                 }}
                 className={`h-1 rounded-full transition-all ${
                   idx === currentStep
-                    ? "w-4 bg-[#de4838]"
+                    ? "w-4 bg-primary"
                     : idx < currentStep
-                    ? "w-1 bg-[#de4838]/50"
-                    : "w-1 bg-gray-300"
+                    ? "w-1 bg-primary/50"
+                    : "w-1 bg-surface-2"
                 }`}
               />
             ))}

@@ -9,7 +9,7 @@ import {
   Store, DollarSign, TrendingUp, AlertCircle, Zap,
   ArrowRight, Calendar, Clock, PieChart, Trophy,
   AlertTriangle, CheckCircle, Info, ArrowUpCircle, ArrowDownCircle,
-  Filter, CalendarRange
+  Filter, CalendarRange, FileSpreadsheet, FileText
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -28,6 +28,8 @@ import {
 } from "recharts"
 import { IndicadoresCard } from "./components/IndicadoresCard"
 import { ProdutividadeChart } from "@/components/produtividade-chart"
+import { DrilldownModal, type DrilldownFilter } from "./components/DrilldownModal"
+import { exportDashboardExcel, exportDashboardPdf } from "@/lib/export/dashboard-export"
 
 type PeriodoType = "hoje" | "mes" | "ano" | "especifico"
 
@@ -104,9 +106,12 @@ export default function DashboardPage() {
   const [chartData, setChartData] = useState<ChartData[]>([])
   const [chartLoading, setChartLoading] = useState(false)
   const [periodo, setPeriodo] = useState<PeriodoType>("mes")
+  const [ano, setAno] = useState<number>(new Date().getFullYear())
+  const [mes, setMes] = useState<number>(new Date().getMonth() + 1)
   const [dataInicio, setDataInicio] = useState<string>("")
   const [dataFim, setDataFim] = useState<string>("")
   const [periodoTexto, setPeriodoTexto] = useState<string>("Carregando período...")
+  const [drilldown, setDrilldown] = useState<DrilldownFilter | null>(null)
   const [metas, setMetas] = useState<{
     faturamento: MetaItem
     despesa: MetaDespesa
@@ -138,8 +143,8 @@ export default function DashboardPage() {
     try {
       const params = new URLSearchParams({
         periodo,
-        ano: String(new Date().getFullYear()),
-        mes: String(new Date().getMonth() + 1)
+        ano: String(ano),
+        mes: String(mes)
       })
 
       if (periodo === "especifico") {
@@ -278,7 +283,56 @@ export default function DashboardPage() {
     }, 0)
 
     return () => window.clearTimeout(timeout)
-  }, [periodo, dataInicio, dataFim])
+  }, [periodo, ano, mes, dataInicio, dataFim])
+
+  // Intervalo efetivo do filtro atual, usado no drill-down.
+  function intervaloAtual(): { inicio: string; fim: string } {
+    const iso = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+    const hoje = new Date()
+
+    if (periodo === "hoje") return { inicio: iso(hoje), fim: iso(hoje) }
+    if (periodo === "ano") return { inicio: `${ano}-01-01`, fim: `${ano}-12-31` }
+    if (periodo === "especifico" && dataInicio) {
+      return { inicio: dataInicio, fim: dataFim || dataInicio }
+    }
+    return { inicio: iso(new Date(ano, mes - 1, 1)), fim: iso(new Date(ano, mes, 0)) }
+  }
+
+  function abrirDrilldown(tipo: DrilldownFilter["tipo"], titulo: string) {
+    const range = intervaloAtual()
+    setDrilldown({ titulo: `${titulo} · ${periodoTexto}`, ...range, tipo })
+  }
+
+  function abrirDrilldownDia(labelPeriodo: string) {
+    const partes = labelPeriodo.split("/")
+    if (partes.length !== 3) return
+    const [dia, mesLabel, anoLabel] = partes.map(Number)
+    const iso = `${anoLabel}-${String(mesLabel).padStart(2, "0")}-${String(dia).padStart(2, "0")}`
+    setDrilldown({ titulo: `Lançamentos de ${labelPeriodo}`, inicio: iso, fim: iso, tipo: "todos" })
+  }
+
+  function montarPayloadExport() {
+    return {
+      periodoTexto,
+      empresa: session?.user?.name || undefined,
+      stats: {
+        totalReceitas: stats.totalReceitas,
+        totalDespesas: stats.totalDespesas,
+        saldo: stats.saldo,
+        margem: stats.margem
+      },
+      chartData,
+      lancamentos: ultimosLancamentos.map(l => ({
+        data: l.data,
+        descricao: l.descricao,
+        clienteFornecedor: l.cliente_fornecedor,
+        entrada: l.entrada,
+        saida: l.saida
+      }))
+    }
+  }
+
 
   const formatTooltipValue = (value: number | string | readonly (string | number)[] | undefined): string => {
     if (Array.isArray(value)) {
@@ -295,39 +349,39 @@ export default function DashboardPage() {
   }
 
   const getTipoClass = (entrada: number) => {
-    if (entrada > 0) return "text-emerald-600"
-    return "text-red-600"
+    if (entrada > 0) return "text-success"
+    return "text-destructive"
   }
 
   const getTipoIcon = (entrada: number) => {
-    if (entrada > 0) return <ArrowUpCircle className="h-4 w-4 text-emerald-600" />
-    return <ArrowDownCircle className="h-4 w-4 text-red-600" />
+    if (entrada > 0) return <ArrowUpCircle className="h-4 w-4 text-success" />
+    return <ArrowDownCircle className="h-4 w-4 text-destructive" />
   }
 
   const getAlertIcon = (type: string) => {
     switch (type) {
-      case "danger": return <AlertTriangle className="h-4 w-4 text-red-600" />
-      case "warning": return <AlertCircle className="h-4 w-4 text-amber-600" />
-      case "success": return <CheckCircle className="h-4 w-4 text-emerald-600" />
-      default: return <Info className="h-4 w-4 text-blue-600" />
+      case "danger": return <AlertTriangle className="h-4 w-4 text-destructive" />
+      case "warning": return <AlertCircle className="h-4 w-4 text-warning" />
+      case "success": return <CheckCircle className="h-4 w-4 text-success" />
+      default: return <Info className="h-4 w-4 text-primary" />
     }
   }
 
   const getAlertBg = (type: string) => {
     switch (type) {
-      case "danger": return "bg-red-50 border-red-200"
-      case "warning": return "bg-amber-50 border-amber-200"
-      case "success": return "bg-emerald-50 border-emerald-200"
-      default: return "bg-blue-50 border-blue-200"
+      case "danger": return "bg-destructive/10 border-destructive/30"
+      case "warning": return "bg-warning/5 border-amber-200"
+      case "success": return "bg-success/10 border-success/30"
+      default: return "bg-primary/10 border-info/30"
     }
   }
 
   const getAlertText = (type: string) => {
     switch (type) {
-      case "danger": return "text-red-700"
-      case "warning": return "text-amber-700"
-      case "success": return "text-emerald-700"
-      default: return "text-blue-700"
+      case "danger": return "text-destructive"
+      case "warning": return "text-warning"
+      case "success": return "text-success"
+      default: return "text-info"
     }
   }
 
@@ -353,7 +407,7 @@ export default function DashboardPage() {
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-gray-150 flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     )
   }
@@ -364,33 +418,38 @@ export default function DashboardPage() {
     ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - new Date().setHours(0, 0, 0, 0)) / 86400000))
     : 0
 
-  const statsCards = [
+  const statsCards: Array<{
+    title: string
+    value: string
+    icon: typeof TrendingUp
+    detail: string
+    drill?: { tipo: DrilldownFilter["tipo"]; titulo: string }
+  }> = [
     {
       title: "Receita Total",
       value: formatCurrency(stats.totalReceitas),
       icon: TrendingUp,
-      gradient: "from-blue-600 to-blue-500",
-      detail: "total em receitas"
+      detail: "total em receitas",
+      drill: { tipo: "receitas", titulo: "Receitas" }
     },
     {
       title: "Despesas",
       value: formatCurrency(stats.totalDespesas),
       icon: DollarSign,
-      gradient: "from-red-600 to-red-500",
-      detail: "total em despesas"
+      detail: "total em despesas",
+      drill: { tipo: "despesas", titulo: "Despesas" }
     },
     {
       title: "Lucro",
       value: formatCurrency(stats.saldo),
       icon: TrendingUp,
-      gradient: "from-emerald-600 to-emerald-500",
-      detail: "saldo do período"
+      detail: "saldo do período",
+      drill: { tipo: "todos", titulo: "Resultado" }
     },
     {
       title: "Margem de Lucro",
       value: `${stats.margem.toFixed(1)}%`,
       icon: PieChart,
-      gradient: "from-orange-500 to-orange-600",
       detail: "margem sobre receitas"
     }
   ]
@@ -408,35 +467,61 @@ export default function DashboardPage() {
     { value: "especifico", label: "Data Específica" }
   ]
 
+  const mesesOptions = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ]
+
+  const anoAtual = new Date().getFullYear()
+  const anosOptions = [anoAtual - 2, anoAtual - 1, anoAtual, anoAtual + 1]
+
 
   const totalReceitasChart = chartData.reduce((sum, item) => sum + item.receitas, 0)
   const totalDespesasChart = chartData.reduce((sum, item) => sum + item.despesas, 0)
   const lucroTotal = totalReceitasChart - totalDespesasChart
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb]">
-      <div className="container mx-auto p-6 max-w-7xl">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto p-8 max-w-7xl space-y-8">
         {/* Header */}
-        <div className="sticky top-0 z-10 ml-1 mb-5 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-800">Dashboard</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-2xl font-bold tracking-tight text-white">Dashboard</h1>
+            <p className="text-sm text-muted-foreground">
               Bem-vindo, {session?.user?.name || "Usuário"}!
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-gray-100 text-gray-600 rounded-full">
+            <Badge variant="outline" className="bg-surface-2 text-slate-300 rounded-full hidden sm:inline-flex">
               <Calendar className="h-3 w-3 mr-1" />
               {new Date().toLocaleDateString("pt-BR")}
             </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportDashboardExcel(montarPayloadExport())}
+              className="rounded-xl"
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-1.5" />
+              Excel
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportDashboardPdf(montarPayloadExport())}
+              className="rounded-xl"
+            >
+              <FileText className="h-4 w-4 mr-1.5" />
+              PDF
+            </Button>
           </div>
         </div>
 
         {/* Trial Alerta */}
         {isInTrial && (
-          <Alert className={`mb-6 rounded-xl ${daysLeft <= 3 ? "bg-orange-50 border-orange-200" : "bg-blue-50 border-blue-200"}`}>
-            <AlertCircle className={`h-4 w-4 ${daysLeft <= 3 ? "text-orange-600" : "text-blue-600"}`} />
-            <AlertDescription className={`text-sm ${daysLeft <= 3 ? "text-orange-700" : "text-blue-700"}`}>
+          <Alert className={`mb-6 rounded-xl ${daysLeft <= 3 ? "bg-warning/5 border-orange-200" : "bg-primary/10 border-info/30"}`}>
+            <AlertCircle className={`h-4 w-4 ${daysLeft <= 3 ? "text-warning" : "text-primary"}`} />
+            <AlertDescription className={`text-sm ${daysLeft <= 3 ? "text-warning" : "text-info"}`}>
               Você está no período de teste gratuito. {daysLeft} dias restantes.
               {daysLeft <= 3 && " Assine um plano para continuar usando o sistema!"}
             </AlertDescription>
@@ -444,12 +529,12 @@ export default function DashboardPage() {
         )}
 
         {/* Filtros */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+        <div className="surface-card overflow-hidden">
           <div className="py-3 px-5">
             <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1">
               <div className="flex items-center gap-1 flex-shrink-0">
-                <Filter className="h-4 w-4 text-[#de4838]" />
-                <h3 className="font-semibold text-gray-800 text-sm hidden sm:inline">Filtros</h3>
+                <Filter className="h-4 w-4 text-primary" />
+                <h3 className="panel-title text-base text-sm hidden sm:inline">Filtros</h3>
               </div>
 
               <div className="flex items-center gap-2 flex-grow min-w-0">
@@ -457,13 +542,13 @@ export default function DashboardPage() {
                   <select
                     value={periodo}
                     onChange={(e) => setPeriodo(e.target.value as PeriodoType)}
-                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8 min-w-[120px]"
+                    className="rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none pr-8 min-w-[120px]"
                   >
                     {periodOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
                     <svg className="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                   </div>
                 </div>
@@ -474,76 +559,110 @@ export default function DashboardPage() {
                       type="date"
                       value={dataInicio}
                       onChange={(e) => setDataInicio(e.target.value)}
-                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] min-w-[120px]"
+                      className="rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary min-w-[120px]"
                       placeholder="Início"
                     />
-                    <span className="text-gray-400 flex-shrink-0">até</span>
+                    <span className="text-muted-foreground flex-shrink-0">até</span>
                     <input
                       type="date"
                       value={dataFim}
                       onChange={(e) => setDataFim(e.target.value)}
-                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] min-w-[120px]"
+                      className="rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary min-w-[120px]"
                       placeholder="Fim"
                     />
                   </div>
                 )}
 
-                <div className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 flex-shrink-0">
+                {periodo === "mes" && (
+                  <select
+                    value={mes}
+                    onChange={(e) => setMes(Number(e.target.value))}
+                    className="rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary flex-shrink-0"
+                  >
+                    {mesesOptions.map((nome, index) => (
+                      <option key={nome} value={index + 1}>{nome}</option>
+                    ))}
+                  </select>
+                )}
+
+                {(periodo === "mes" || periodo === "ano") && (
+                  <select
+                    value={ano}
+                    onChange={(e) => setAno(Number(e.target.value))}
+                    className="rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary flex-shrink-0"
+                  >
+                    {anosOptions.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                )}
+
+                <div className="rounded-lg bg-surface-2 px-3 py-2 text-sm font-medium text-slate-200 flex-shrink-0">
                   <CalendarRange className="h-4 w-4 inline mr-1" />
                   {periodoTexto}
                 </div>
+
+                <button
+                  onClick={() => abrirDrilldown("todos", "Todos os lançamentos")}
+                  className="rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-surface hover:text-white flex-shrink-0"
+                >
+                  Ver lançamentos
+                </button>
               </div>
             </div>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {statsCards.map((card, idx) => (
             <Card
               key={idx}
-              className={`relative overflow-hidden bg-gradient-to-r ${card.gradient} text-white border-0 hover:scale-105 transition-transform duration-200 cursor-pointer h-full min-h-[92px] sm:min-h-[105px]`}
+              onClick={card.drill ? () => abrirDrilldown(card.drill!.tipo, card.drill!.titulo) : undefined}
+              className={`relative overflow-hidden surface-card card-hover text-white h-full min-h-[110px] ${
+                card.drill ? "cursor-pointer" : ""
+              }`}
             >
-              <CardContent className="p-2 sm:p-4">
+              <CardContent className="p-5">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] sm:text-sm font-medium opacity-90 leading-tight">{card.title}</p>
-                  <card.icon className="h-3 w-3 sm:h-4 sm:w-4 opacity-80" />
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground leading-tight">{card.title}</p>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10"><card.icon className="h-4 w-4 text-primary" /></span>
                 </div>
-                <div className="mt-1 text-sm sm:text-xl font-bold leading-tight">
+                <div className="mt-2 text-lg sm:text-2xl font-bold leading-tight panel-title">
                   {card.value}
                 </div>
-                <p className="mt-0.5 text-[9px] sm:text-xs opacity-80">{card.detail}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {card.drill ? "Clique para detalhar" : card.detail}
+                </p>
               </CardContent>
-              <div className="absolute -bottom-3 -right-3 opacity-10">
-                <card.icon className="h-12 w-12" />
-              </div>
+              
             </Card>
           ))}
         </div>
 
         {/* Metas */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="bg-gray-100 py-3 px-5 border-b border-gray-100">
+        <div className="surface-card overflow-hidden">
+          <div className="px-6 py-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-[#de4838]" />
-              <h3 className="font-semibold text-gray-800">Metas</h3>
+              <Trophy className="h-5 w-5 text-primary" />
+              <h3 className="panel-title text-base">Metas</h3>
             </div>
           </div>
           <CardContent className="py-4 px-5">
             <div className="grid gap-3 md:grid-cols-3">
               {/* Meta Faturamento */}
-              <div className="space-y-2 bg-gradient-to-r from-blue-200 to-blue-500 rounded-xl py-3 px-4">
+              <div className="space-y-2 bg-gradient-to-r from-primary/20 to-primary/5 border border-border rounded-xl py-3 px-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                    <span className="text-xs font-medium text-gray-700">🎯 Meta Faturamento</span>
+                    <div className="h-2 w-2 rounded-full bg-primary/100"></div>
+                    <span className="text-xs font-medium text-slate-200">🎯 Meta Faturamento</span>
                   </div>
-                  <span className="text-xs font-bold text-gray-700">
+                  <span className="text-xs font-bold text-slate-200">
                     {formatCurrency(metas.faturamento.atual)} / {formatCurrency(metas.faturamento.meta)}
                   </span>
                 </div>
                 
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-surface-2 rounded-full h-2 overflow-hidden">
                   <div 
                     className="bg-gradient-to-r from-blue-600 to-blue-500 h-full rounded-full transition-all duration-500"
                     style={{ width: `${Math.min(100, Math.max(0, metas.faturamento.percentual))}%` }}
@@ -551,76 +670,76 @@ export default function DashboardPage() {
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">Progresso</span>
-                  <span className="text-xs font-semibold text-gray-600">
+                  <span className="text-xs text-muted-foreground">Progresso</span>
+                  <span className="text-xs font-semibold text-slate-300">
                     {Math.min(100, Math.max(0, metas.faturamento.percentual)).toFixed(0)}%
                   </span>
                 </div>
               </div>
 
               {/* Meta Despesa */}
-              <div className="space-y-2 bg-gradient-to-r from-yellow-200 to-yellow-500 rounded-xl py-3 px-4">
+              <div className="space-y-2 bg-gradient-to-r from-warning/20 to-warning/5 border border-border rounded-xl py-3 px-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-red-500"></div>
-                    <span className="text-xs font-medium text-gray-700">💰 Meta Despesa</span>
+                    <div className="h-2 w-2 rounded-full bg-destructive/100"></div>
+                    <span className="text-xs font-medium text-slate-200">💰 Meta Despesa</span>
                   </div>
-                  <span className="text-xs font-bold text-gray-700">
+                  <span className="text-xs font-bold text-slate-200">
                     {formatCurrency(metas.despesa.atual)} / {formatCurrency(metas.despesa.meta)}
                   </span>
                 </div>
                 
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-surface-2 rounded-full h-2 overflow-hidden">
                   <div 
                     className={`h-full rounded-full transition-all duration-500 ${
                       metas.despesa.percentual >= 100 
                         ? "bg-gradient-to-r from-red-600 to-red-500" 
                         : metas.despesa.percentual > 80 
-                          ? "bg-gradient-to-r from-blue-500 to-blue-600" 
-                          : "bg-gradient-to-r from-orange-500 to-orange-600"
+                          ? "bg-gradient-to-r from-info to-info/80" 
+                          : "bg-gradient-to-r from-warning to-warning/80"
                     }`}
                     style={{ width: `${Math.min(100, Math.max(0, metas.despesa.percentual))}%` }}
                   />
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">Utilizado</span>
+                  <span className="text-xs text-muted-foreground">Utilizado</span>
                   <span className={`text-xs font-semibold ${
                     metas.despesa.percentual >= 100 
-                      ? "text-red-600" 
+                      ? "text-destructive" 
                       : metas.despesa.percentual > 80 
-                        ? "text-gray-600" 
-                        : "text-gray-700"
+                        ? "text-slate-300" 
+                        : "text-slate-200"
                   }`}>
                     {Math.min(100, Math.max(0, metas.despesa.percentual)).toFixed(0)}%
                   </span>
                 </div>
                 
-                <div className="mt-1 flex justify-between text-[10px] text-gray-800">
+                <div className="mt-1 flex justify-between text-[10px] text-white">
                   <span>Meta: {formatCurrency(metas.despesa.meta)}</span>
                   <span>Diário: {formatCurrency(metas.despesa.diaria)}</span>
                 </div>
               </div>
 
               {/* Meta Lucro */}
-              <div className="space-y-2 bg-gradient-to-r from-emerald-200 to-emerald-500 rounded-xl py-3 px-4">
+              <div className="space-y-2 bg-gradient-to-r from-success/20 to-success/5 border border-border rounded-xl py-3 px-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
-                    <span className="text-xs font-medium text-gray-700">📈 Meta Lucro</span>
+                    <div className="h-2 w-2 rounded-full bg-success/100"></div>
+                    <span className="text-xs font-medium text-slate-200">📈 Meta Lucro</span>
                   </div>
-                  <span className="text-xs font-bold text-gray-700">
+                  <span className="text-xs font-bold text-slate-200">
                     {metas.lucro.atual.toFixed(1)}% / {metas.lucro.meta}%
                   </span>
                 </div>
                 
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-surface-2 rounded-full h-2 overflow-hidden">
                   <div 
                     className={`h-full rounded-full transition-all duration-500 ${
                       metas.lucro.percentual >= 100 
                         ? "bg-gradient-to-r from-emerald-600 to-emerald-500" 
                         : metas.lucro.percentual >= 70 
-                          ? "bg-gradient-to-r from-blue-500 to-blue-600" 
+                          ? "bg-gradient-to-r from-info to-info/80" 
                           : "bg-gradient-to-r from-amber-500 to-amber-600"
                     }`}
                     style={{ width: `${Math.min(100, Math.max(0, metas.lucro.percentual))}%` }}
@@ -628,19 +747,19 @@ export default function DashboardPage() {
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">Alcance</span>
+                  <span className="text-xs text-slate-300">Alcance</span>
                   <span className={`text-xs font-semibold ${
                     metas.lucro.percentual >= 100 
-                      ? "text-gray-600" 
+                      ? "text-slate-300" 
                       : metas.lucro.percentual >= 70 
-                        ? "text-gray-600" 
-                        : "text-gray-600"
+                        ? "text-slate-300" 
+                        : "text-slate-300"
                   }`}>
                     {Math.min(100, Math.max(0, metas.lucro.percentual)).toFixed(0)}%
                   </span>
                 </div>
                 
-                <div className="mt-1 flex justify-between text-[10px] text-gray-800">
+                <div className="mt-1 flex justify-between text-[10px] text-white">
                   <span>Mínimo ideal: 15%</span>
                   <span>Excelente: &gt;20%</span>
                 </div>
@@ -661,12 +780,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Gráfico de Receitas vs Despesas */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="bg-gray-100 p-4 border-b border-gray-100">
+        <div className="surface-card overflow-hidden">
+          <div className="px-6 py-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-[#de4838]" />
-              <h3 className="font-semibold text-gray-800">Evolução Financeira</h3>
-              <Badge variant="outline" className="bg-gray-200 text-gray-700 rounded-full">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <h3 className="panel-title text-base">Evolução Financeira</h3>
+              <Badge variant="outline" className="bg-surface-2 text-slate-200 rounded-full">
                 {periodo === "hoje" ? "Por Hora" : periodo === "mes" ? "Por Dia" : periodo === "ano" ? "Por Mês" : "Por Hora"}
               </Badge>
             </div>
@@ -674,33 +793,39 @@ export default function DashboardPage() {
           <CardContent className="p-5">
             {chartLoading ? (
               <div className="flex h-80 items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
               </div>
             ) : chartData.length > 0 ? (
               <>
-                <div className="mb-4 grid grid-cols-3 gap-2 pb-3 border-b border-gray-100">
-                  <div className="rounded-lg bg-blue-50 p-2 text-center">
-                    <p className="text-[10px] text-gray-500 leading-tight">Total Receitas</p>
-                    <p className="mt-1 text-xs sm:text-lg font-bold text-blue-600 leading-tight">
+                <div className="mb-4 grid grid-cols-3 gap-2 pb-3 border-b border-border">
+                  <div className="rounded-lg bg-primary/10 p-2 text-center">
+                    <p className="text-[10px] text-muted-foreground leading-tight">Total Receitas</p>
+                    <p className="mt-1 text-xs sm:text-lg font-bold text-primary leading-tight">
                       {formatCurrency(totalReceitasChart)}
                     </p>
                   </div>
-                  <div className="rounded-lg bg-red-50 p-2 text-center">
-                    <p className="text-[10px] text-gray-500 leading-tight">Total Despesas</p>
-                    <p className="mt-1 text-xs sm:text-lg font-bold text-red-600 leading-tight">
+                  <div className="rounded-lg bg-destructive/10 p-2 text-center">
+                    <p className="text-[10px] text-muted-foreground leading-tight">Total Despesas</p>
+                    <p className="mt-1 text-xs sm:text-lg font-bold text-destructive leading-tight">
                       {formatCurrency(totalDespesasChart)}
                     </p>
                   </div>
-                  <div className="rounded-lg bg-emerald-50 p-2 text-center">
-                    <p className="text-[10px] text-gray-500 leading-tight">Lucro Líquido</p>
-                    <p className={`mt-1 text-xs sm:text-lg font-bold leading-tight ${lucroTotal >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                  <div className="rounded-lg bg-success/10 p-2 text-center">
+                    <p className="text-[10px] text-muted-foreground leading-tight">Lucro Líquido</p>
+                    <p className={`mt-1 text-xs sm:text-lg font-bold leading-tight ${lucroTotal >= 0 ? "text-success" : "text-destructive"}`}>
                       {formatCurrency(lucroTotal)}
                     </p>
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={320} >
-                  <LineChart data={chartData} margin={{ top: 5, right: 12, left: 4, bottom: 28 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <LineChart
+                    data={chartData}
+                    margin={{ top: 5, right: 12, left: 4, bottom: 28 }}
+                    onClick={(state: { activeLabel?: string | number }) => {
+                      if (state?.activeLabel) abrirDrilldownDia(String(state.activeLabel))
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e1e5a" />
                     <XAxis 
                       dataKey="periodo" 
                       tick={{ fontSize: periodo === "ano" ? 10 : periodo === "mes" ? 9 : 10 }}
@@ -711,7 +836,7 @@ export default function DashboardPage() {
                     />
                     <YAxis 
                       tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
-                      tick={{ fontSize: 11 }}
+                      tick={{ fontSize: 11, fill: "#94a3b8" }}
                     />
                     <Tooltip 
                       formatter={formatTooltipValue}
@@ -721,34 +846,34 @@ export default function DashboardPage() {
                         if (periodo === "hoje") return `Hora: ${label}`
                         return `Período: ${label}`
                       }}
-                      contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                      contentStyle={{ borderRadius: "12px", border: "1px solid #1e1e5a", background: "#141432", color: "#e2e8f0" }}
                     />
                     <Legend wrapperStyle={{ fontSize: "11px" }} />
                     <Line 
                       type="monotone" 
                       dataKey="receitas" 
-                      stroke="#3b82f6" 
+                      stroke="#4f46e5" 
                       strokeWidth={2}
-                      dot={{ fill: "#3b82f6", strokeWidth: 2, r: 3 }}
+                      dot={{ fill: "#4f46e5", strokeWidth: 2, r: 3 }}
                       activeDot={{ r: 5 }}
                       name="Receitas"
                     />
                     <Line 
                       type="monotone" 
                       dataKey="despesas" 
-                      stroke="#ef4444" 
+                      stroke="#f43f5e" 
                       strokeWidth={2}
-                      dot={{ fill: "#ef4444", strokeWidth: 2, r: 3 }}
+                      dot={{ fill: "#f43f5e", strokeWidth: 2, r: 3 }}
                       activeDot={{ r: 5 }}
                       name="Despesas"
                     />
                     <Line 
                       type="monotone" 
                       dataKey="lucro" 
-                      stroke="#10b981" 
+                      stroke="#34d399" 
                       strokeWidth={2}
                       strokeDasharray="5 5"
-                      dot={{ fill: "#10b981", strokeWidth: 2, r: 2 }}
+                      dot={{ fill: "#34d399", strokeWidth: 2, r: 2 }}
                       name="Lucro"
                     />
                   </LineChart>
@@ -756,7 +881,7 @@ export default function DashboardPage() {
               </>
             ) : (
               <div className="flex h-80 items-center justify-center">
-                <p className="text-gray-500">
+                <p className="text-muted-foreground">
                   {periodo === "especifico" && (!dataInicio || !dataFim)
                     ? "Selecione o período (data inicial e final) para visualizar o gráfico"
                     : "Nenhum dado disponível para o período selecionado"}
@@ -767,11 +892,11 @@ export default function DashboardPage() {
         </div>
 
         {/* Produtividade por funcionário 
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="bg-gray-100 p-4 border-b border-gray-100">
+        <div className="surface-card overflow-hidden">
+          <div className="px-6 py-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-[#de4838]" />
-              <h3 className="font-semibold text-gray-800">Produtividade</h3>
+              <Trophy className="h-5 w-5 text-primary" />
+              <h3 className="panel-title text-base">Produtividade</h3>
             </div>
           </div>
           <CardContent className="p-5">
@@ -780,25 +905,25 @@ export default function DashboardPage() {
         </div>*/}
 
         {/* Últimos Lançamentos e Alertas */}
-        <div className="grid gap-6 md:grid-cols-2 mb-6">
+        <div className="grid gap-8 md:grid-cols-2">
           {/* Últimos Lançamentos */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-100 p-4 border-b border-gray-100">
+          <div className="surface-card overflow-hidden">
+            <div className="px-6 py-4 border-b border-border">
               <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-[#de4838]" />
-                <h3 className="font-semibold text-gray-800">Últimos Lançamentos</h3>
+                <Clock className="h-5 w-5 text-primary" />
+                <h3 className="panel-title text-base">Últimos Lançamentos</h3>
               </div>
             </div>
             <CardContent className="p-5">
               <div className="space-y-3 max-h-80 overflow-y-auto">
                 {ultimosLancamentos.length > 0 ? (
                   ultimosLancamentos.map((lanc) => (
-                    <div key={lanc.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors">
+                    <div key={lanc.id} className="flex items-center justify-between p-3 rounded-xl border border-border hover:border-primary transition-colors">
                       <div className="flex items-center gap-3">
                         {getTipoIcon(lanc.entrada)}
                         <div>
-                          <p className="font-medium text-gray-800 text-sm">{lanc.descricao}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="font-medium text-white text-sm">{lanc.descricao}</p>
+                          <p className="text-xs text-muted-foreground">
                             {new Date(lanc.data).toLocaleDateString("pt-BR")} • {lanc.cliente_fornecedor || "-"}
                           </p>
                         </div>
@@ -809,7 +934,7 @@ export default function DashboardPage() {
                     </div>
                   ))
                 ) : (
-                  <div className="text-center text-gray-500 py-8">
+                  <div className="text-center text-muted-foreground py-8">
                     <p>Nenhum lançamento encontrado</p>
                   </div>
                 )}
@@ -818,11 +943,11 @@ export default function DashboardPage() {
           </div>
 
           {/* Alertas */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gray-100 p-4 border-b border-gray-100">
+          <div className="surface-card overflow-hidden">
+            <div className="px-6 py-4 border-b border-border">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-[#de4838]" />
-                <h3 className="font-semibold text-gray-800">Alertas</h3>
+                <AlertTriangle className="h-5 w-5 text-primary" />
+                <h3 className="panel-title text-base">Alertas</h3>
               </div>
             </div>
             <CardContent className="p-5">
@@ -837,8 +962,8 @@ export default function DashboardPage() {
                     </div>
                   ))
                 ) : (
-                  <div className="text-center text-gray-500 py-8">
-                    <CheckCircle className="h-8 w-8 mx-auto mb-2 text-emerald-500" />
+                  <div className="text-center text-muted-foreground py-8">
+                    <CheckCircle className="h-8 w-8 mx-auto mb-2 text-success" />
                     <p className="text-sm">Tudo certo! Nenhum alerta no momento.</p>
                   </div>
                 )}
@@ -847,63 +972,65 @@ export default function DashboardPage() {
           </div>
         </div>
         {/* Informações do Sistema - Largura total */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-          <div className="bg-gray-100 p-4 border-b border-gray-100">
+        <div className="surface-card overflow-hidden">
+          <div className="px-6 py-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <Store className="h-5 w-5 text-[#de4838]" />
-              <h3 className="font-semibold text-gray-800">Informações do Sistema</h3>
+              <Store className="h-5 w-5 text-primary" />
+              <h3 className="panel-title text-base">Informações do Sistema</h3>
             </div>
           </div>
           <div className="p-5 space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               {/* Coluna Esquerda */}
               <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-500">Status da assinatura:</span>
-                  <Badge className={isInTrial ? "bg-blue-100 text-blue-700 rounded-full" : "bg-emerald-100 text-emerald-700 rounded-full"}>
+                <div className="flex justify-between items-center py-2 border-b border-border">
+                  <span className="text-sm text-muted-foreground">Status da assinatura:</span>
+                  <Badge className={isInTrial ? "bg-primary/15 text-primary rounded-full" : "bg-success/15 text-success rounded-full"}>
                     {isInTrial ? "Período de teste" : session?.user?.subscriptionStatus === "active" ? "Ativa" : "Não ativa"}
                   </Badge>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-500">Fim do teste:</span>
-                  <span className="font-medium text-gray-700">{trialEndsAt ? new Date(trialEndsAt).toLocaleDateString("pt-BR") : "-"}</span>
+                <div className="flex justify-between items-center py-2 border-b border-border">
+                  <span className="text-sm text-muted-foreground">Fim do teste:</span>
+                  <span className="font-medium text-slate-200">{trialEndsAt ? new Date(trialEndsAt).toLocaleDateString("pt-BR") : "-"}</span>
                 </div>
               </div>
               {/* Coluna Direita */}
               <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-500">Total de Produtos:</span>
-                  <span className="font-medium text-gray-700">{stats.totalProdutos}</span>
+                <div className="flex justify-between items-center py-2 border-b border-border">
+                  <span className="text-sm text-muted-foreground">Total de Produtos:</span>
+                  <span className="font-medium text-slate-200">{stats.totalProdutos}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-500">Fichas Técnicas:</span>
-                  <span className="font-medium text-gray-700">{stats.totalFichas}</span>
+                <div className="flex justify-between items-center py-2 border-b border-border">
+                  <span className="text-sm text-muted-foreground">Fichas Técnicas:</span>
+                  <span className="font-medium text-slate-200">{stats.totalFichas}</span>
                 </div>
               </div>
             </div>
             <div className="flex justify-between items-center pt-2">
-              <span className="text-sm text-gray-500">Versão do sistema:</span>
-              <span className="font-medium text-gray-700">2.0.0</span>
+              <span className="text-sm text-muted-foreground">Versão do sistema:</span>
+              <span className="font-medium text-slate-200">2.0.0</span>
             </div>
           </div>
         </div>
 
         {/* Dica rápida */}
 
-        <div className="mt-6 bg-gradient-to-r from-[#de4838]/5 to-transparent rounded-xl p-4 border border-[#de4838]/10">
+        <div className="mt-6 bg-gradient-to-r from-primary/10 to-transparent rounded-2xl p-4 border border-primary/20">
           <div className="flex items-start gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#de4838]/10">
-              <Zap className="h-4 w-4 text-[#de4838]" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+              <Zap className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-700">Dica rápida</p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-sm font-medium text-slate-200">Dica rápida</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Utilize os filtros de período para analisar seus resultados diários, mensais ou anuais!
               </p>
             </div>
           </div>
         </div>
       </div>
+
+      <DrilldownModal filter={drilldown} onClose={() => setDrilldown(null)} />
     </div>
   )
 }

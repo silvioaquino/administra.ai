@@ -80,7 +80,7 @@ export function FolhaPagamentoTab({ funcionarios, onChange }: FolhaPagamentoTabP
   return (
     <div className="space-y-4">
       {/* Formulário de adição */}
-      <div className="border rounded-lg p-4 bg-gray-100">
+      <div className="border rounded-lg p-4 bg-surface-2">
         <h4 className="font-semibold mb-3">Adicionar Funcionário</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
@@ -109,7 +109,7 @@ export function FolhaPagamentoTab({ funcionarios, onChange }: FolhaPagamentoTabP
             />
           </div>
         </div>
-        <Button onClick={adicionarFuncionario} className="mt-3 bg-[#de4838] hover:bg-[#c73d2e]">
+        <Button onClick={adicionarFuncionario} className="mt-3 bg-primary hover:bg-primary/90">
           <Plus className="mr-2 h-4 w-4" />
           Adicionar
         </Button>
@@ -119,7 +119,7 @@ export function FolhaPagamentoTab({ funcionarios, onChange }: FolhaPagamentoTabP
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-border">
               <th className="text-left py-3 px-2">Funcionário</th>
               <th className="text-right py-3 px-2">Salário</th>
               <th className="text-right py-3 px-2">INSS</th>
@@ -131,7 +131,7 @@ export function FolhaPagamentoTab({ funcionarios, onChange }: FolhaPagamentoTabP
           </thead>
           <tbody>
             {funcionarios.map((f) => (
-              <tr key={f.id} className="border-b border-gray-100">
+              <tr key={f.id} className="border-b border-border">
                 <td className="py-2 px-2">
                   <Input value={f.nome} onChange={(e) => atualizarFuncionario(f.id, 'nome', e.target.value)} />
                 </td>
@@ -149,7 +149,7 @@ export function FolhaPagamentoTab({ funcionarios, onChange }: FolhaPagamentoTabP
                 </td>
                 <td className="py-2 px-2 text-right font-bold">R$ {f.total.toFixed(2)}</td>
                 <td className="py-2 px-2 text-center">
-                  <Button variant="ghost" onClick={() => removerFuncionario(f.id)} className="text-red-600 hover:text-red-700">
+                  <Button variant="ghost" onClick={() => removerFuncionario(f.id)} className="text-destructive hover:text-destructive">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </td>
@@ -163,7 +163,7 @@ export function FolhaPagamentoTab({ funcionarios, onChange }: FolhaPagamentoTabP
       <div className="border-t pt-4 mt-4">
         <div className="flex justify-between items-center text-lg font-bold">
           <span>Total da Folha:</span>
-          <span className="text-[#de4838]">R$ {totalGeral.toFixed(2)}</span>
+          <span className="text-primary">R$ {totalGeral.toFixed(2)}</span>
         </div>
       </div>
     </div>

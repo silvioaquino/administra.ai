@@ -237,21 +237,21 @@ export function MetaFaturamentoTable({ dados, anoAtual, onSalvar }: MetaFaturame
   }, [periodosSelecionados])
 
   const renderHeader = () => (
-    <thead className="bg-gray-50 border-b border-gray-200">
+    <thead className="bg-surface-2 border-b border-border">
       <tr>
-        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mês</th>
+        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mês</th>
         {periodosAtivos.map(p => {
           const config = PERIODOS_CONFIG.find(c => c.id === p)!
           return (
-            <th key={p} className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+            <th key={p} className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider w-32">
               Faturamento {config.shortLabel} Dia (R$)
             </th>
           )
         })}
-        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider w-24">
           Dias Trabalhados
         </th>
-        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Meta Total (R$)
         </th>
       </tr>
@@ -259,8 +259,8 @@ export function MetaFaturamentoTable({ dados, anoAtual, onSalvar }: MetaFaturame
   )
 
   const renderRow = (linha: MetaFaturamentoRow) => (
-    <tr key={linha.mes} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-      <td className="px-4 py-3 text-gray-700 font-medium">
+    <tr key={linha.mes} className="border-b border-border hover:bg-surface-2 transition-colors">
+      <td className="px-4 py-3 text-white font-medium">
         {meses.find(m => m.value === linha.mes)?.label || linha.mes}
       </td>
       {periodosAtivos.map((p: PeriodoRefeicao) => {
@@ -290,7 +290,7 @@ export function MetaFaturamentoTable({ dados, anoAtual, onSalvar }: MetaFaturame
           max="31"
         />
       </td>
-      <td className="px-4 py-3 text-right font-mono text-gray-800">
+      <td className="px-4 py-3 text-right font-mono text-white">
         {formatCurrency(linha.metaTotal)}
       </td>
     </tr>
@@ -312,16 +312,16 @@ export function MetaFaturamentoTable({ dados, anoAtual, onSalvar }: MetaFaturame
     })
 
     return (
-      <tfoot className="border-t border-gray-200 bg-gray-100">
+      <tfoot className="border-t border-border bg-surface-2">
         <tr className="font-semibold">
-          <td className="px-4 py-3 text-gray-800">TOTAL</td>
+          <td className="px-4 py-3 text-white">TOTAL</td>
           {periodosAtivos.map((p: PeriodoRefeicao) => (
-            <td key={p} className="px-4 py-3 text-right font-mono text-gray-600">
+            <td key={p} className="px-4 py-3 text-right font-mono text-muted-foreground">
               {formatCurrency(totaisPorPeriodo[p] * (linhas[0]?.diasTrabalhados || 26))}
             </td>
           ))}
           <td className="px-4 py-3 text-right"></td>
-          <td className="px-4 py-3 text-right text-[#de4838] font-bold">
+          <td className="px-4 py-3 text-right text-primary font-bold">
             {formatCurrency(totalGeral)}
           </td>
         </tr>
@@ -330,16 +330,16 @@ export function MetaFaturamentoTable({ dados, anoAtual, onSalvar }: MetaFaturame
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className="bg-gray-100 p-4 border-b border-gray-100">
+    <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-surface-2 p-4 border-b border-border">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="text-lg">💰</span>
-            <h3 className="font-semibold text-gray-800">Meta de Faturamento</h3>
+            <h3 className="font-semibold text-white">Meta de Faturamento</h3>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1 bg-white rounded-lg p-1 border border-gray-200">
+            <div className="flex items-center gap-1 bg-surface rounded-lg p-1 border border-border">
               {PERIODOS_CONFIG.map(config => (
                 <Button
                   key={config.id}
@@ -350,8 +350,8 @@ export function MetaFaturamentoTable({ dados, anoAtual, onSalvar }: MetaFaturame
                   className={`
                     rounded-md text-xs font-medium transition-all min-w-0 px-2 py-1
                     ${periodosSelecionados.includes(config.id)
-                      ? 'bg-[#de4838] text-white shadow-sm'
-                      : 'text-gray-600 hover:bg-gray-50 border-gray-200'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-muted-foreground hover:bg-surface-2 border-border'
                     }
                   `}
                   disabled={config.id === 'turnoUnico' && periodosSelecionados.length > 1 && !periodosSelecionados.includes('turnoUnico')}
@@ -364,7 +364,7 @@ export function MetaFaturamentoTable({ dados, anoAtual, onSalvar }: MetaFaturame
             <select
               value={ano.toString()}
               onChange={e => setAno(parseInt(e.target.value))}
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#de4838] bg-white"
+              className="border border-border rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary bg-surface"
             >
               <option value={2024}>2024</option>
               <option value={2025}>2025</option>
@@ -375,7 +375,7 @@ export function MetaFaturamentoTable({ dados, anoAtual, onSalvar }: MetaFaturame
           </div>
         </div>
 
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-muted-foreground">
           {periodosSelecionados.includes('turnoUnico') && periodosSelecionados.length === 1
             ? 'Modo: Turno Único — Um faturamento diário único'
             : `Modo: ${periodosSelecionados.filter(p => p !== 'turnoUnico').map(p => PERIODOS_CONFIG.find(c => c.id === p)?.shortLabel).join(' + ')} — Faturamento separado por refeição`}
@@ -392,11 +392,11 @@ export function MetaFaturamentoTable({ dados, anoAtual, onSalvar }: MetaFaturame
         </table>
       </div>
 
-      <div className="p-4 border-t border-gray-100 flex justify-end">
+      <div className="p-4 border-t border-border flex justify-end">
         <Button
           onClick={salvarDados}
           disabled={salvando}
-          className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-4 py-2 hover:cursor-pointer transition-all disabled:opacity-50"
+          className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 py-2 hover:cursor-pointer transition-all disabled:opacity-50"
         >
           <Save className="mr-2 h-4 w-4" />
           {salvando ? 'Salvando...' : 'Salvar'}

@@ -5,7 +5,9 @@ import crypto from "crypto"
 import { Resend } from 'resend'
 
 // Inicializar Resend com sua API key
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY ?? 're_placeholder')
+}
 
 export async function POST(req: Request) {
   try {
@@ -58,7 +60,7 @@ export async function POST(req: Request) {
 
     // Enviar e-mail usando Resend
     try {
-      const { data, error } = await resend.emails.send({
+      const { data, error } = await getResend().emails.send({
         from: process.env.EMAIL_FROM || "SeuGerente <onboarding@resend.dev>",
         to: email,
         subject: "Redefinição de senha - SeuGerente",

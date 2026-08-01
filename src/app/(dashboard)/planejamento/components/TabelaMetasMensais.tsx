@@ -198,18 +198,18 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar, periodosExternos
   }, [periodosSelecionados])
 
   const renderHeader = () => (
-    <thead className="bg-gray-50 border-b border-gray-200">
+    <thead className="bg-surface-2 border-b border-border">
       <tr>
-        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mês</th>
+        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Mês</th>
         {periodosAtivos.map(p => {
           const config = PERIODOS_CONFIG.find(c => c.id === p)!
           return (
-            <th key={p} className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+            <th key={p} className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider w-32">
               Faturamento {config.shortLabel} Dia (R$)
             </th>
           )
         })}
-        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider w-24">
           Dias Trabalhados
         </th>
         <th className="px-4 py-3 text-right text-xs font-medium text-gray-505 uppercase tracking-wider">
@@ -220,8 +220,8 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar, periodosExternos
   )
 
   const renderRow = (linha: MetaFaturamentoRow) => (
-    <tr key={linha.mes} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-      <td className="px-4 py-3 text-gray-700 font-medium">
+    <tr key={linha.mes} className="border-b border-border hover:bg-surface-2 transition-colors">
+      <td className="px-4 py-3 text-white font-medium">
         {meses.find(m => m.value === linha.mes)?.label || linha.mes}
       </td>
       {periodosAtivos.map((p: PeriodoRefeicao) => {
@@ -251,7 +251,7 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar, periodosExternos
           max="31"
         />
       </td>
-      <td className="px-4 py-3 text-right font-mono text-gray-800">
+      <td className="px-4 py-3 text-right font-mono text-white">
         {formatCurrency(linha.metaTotal)}
       </td>
     </tr>
@@ -273,16 +273,16 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar, periodosExternos
     })
 
     return (
-      <tfoot className="border-t border-gray-200 bg-gray-100">
+      <tfoot className="border-t border-border bg-surface-2">
         <tr className="font-semibold">
-          <td className="px-4 py-3 text-gray-800">TOTAL</td>
+          <td className="px-4 py-3 text-white">TOTAL</td>
           {periodosAtivos.map((p: PeriodoRefeicao) => (
-            <td key={p} className="px-4 py-3 text-right font-mono text-gray-600">
+            <td key={p} className="px-4 py-3 text-right font-mono text-muted-foreground">
               {formatCurrency(totaisPorPeriodo[p] * (linhas[0]?.diasTrabalhados || 26))}
             </td>
           ))}
           <td className="px-4 py-3 text-right"></td>
-          <td className="px-4 py-3 text-right text-[#de4838] font-bold">
+          <td className="px-4 py-3 text-right text-primary font-bold">
             {formatCurrency(totalGeral)}
           </td>
         </tr>
@@ -291,11 +291,11 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar, periodosExternos
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className="bg-gray-100 p-4 border-b border-gray-100">
+    <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-surface-2 p-4 border-b border-border">
         <div className="flex items-center gap-2">
           <span className="text-lg">💰</span>
-          <h3 className="font-semibold text-gray-800">Meta de Faturamento</h3>
+          <h3 className="font-semibold text-white">Meta de Faturamento</h3>
         </div>
       </div>
       <div className="p-0">
@@ -309,11 +309,11 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar, periodosExternos
           </table>
         </div>
 
-        <div className="p-4 border-t border-gray-100 flex justify-end">
+        <div className="p-4 border-t border-border flex justify-end">
           <Button
             onClick={salvarDados}
             disabled={salvando}
-            className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-4 py-2 hover:cursor-pointer transition-all"
+            className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 py-2 hover:cursor-pointer transition-all"
           >
             {salvando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
             {salvando ? 'Salvando...' : 'Salvar Metas'}

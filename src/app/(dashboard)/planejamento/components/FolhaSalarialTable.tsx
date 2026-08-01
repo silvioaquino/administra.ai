@@ -365,29 +365,29 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
         <div className="p-8 text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent mx-auto" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-50 p-4 border-b border-gray-100">
+      <div className="bg-surface-2 p-4 border-b border-border">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-[#de4838]" />
-            <h3 className="font-semibold text-gray-800">Folha Salarial & Provisões</h3>
+            <Users className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold text-white">Folha Salarial & Provisões</h3>
           </div>
           <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={onEdit}
-              className="rounded-lg border-gray-200 hover:border-[#de4838]"
+              className="rounded-lg border-border hover:border-primary"
             >
               <Settings className="mr-1 h-3 w-3" />
               Editar Funcionários
@@ -396,7 +396,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
               variant="outline"
               size="sm"
               onClick={onConfigProvisoes}
-              className="rounded-lg border-gray-200 hover:border-[#de4838]"
+              className="rounded-lg border-border hover:border-primary"
             >
               <Calculator className="mr-1 h-3 w-3" />
               Configurar Provisões
@@ -406,7 +406,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
               size="sm"
               onClick={salvarTodasProvisoes}
               disabled={saving}
-              className="bg-[#de4838] hover:bg-[#c73d2e]"
+              className="bg-primary hover:bg-primary/90"
             >
               {saving ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Save className="mr-1 h-3 w-3" />}
               {saving ? "Salvando..." : "Salvar Todas"}
@@ -419,56 +419,56 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
       <div className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-surface-2 border-b border-border">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8"></th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Funcionário</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Salário</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-8"></th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Funcionário</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Salário</th>
                 {provisoesAtivas.decimo_terceiro && (
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     13º Salário
                   </th>
                 )}
                 {provisoesAtivas.ferias && (
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Férias + 1/3
                   </th>
                 )}
                 {provisoesAtivas.fgts && (
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     FGTS (8%)
                   </th>
                 )}
                 {provisoesAtivas.inss_patronal && (
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     INSS Patronal (20%)
                   </th>
                 )}
                 {provisoesAtivas.inss && (
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     INSS
                   </th>
                 )}
               </tr>
               {/* Sub-header para indicar valor + switch */}
-              <tr className="border-b border-gray-200 bg-gray-100">
+              <tr className="border-b border-border bg-surface-2">
                 <td className="px-4 py-2"></td>
                 <td className="px-4 py-2"></td>
                 <td className="px-4 py-2"></td>
                 {provisoesAtivas.decimo_terceiro && (
-                  <td className="px-4 py-2 text-center text-xs text-gray-500">Valor / Status</td>
+                  <td className="px-4 py-2 text-center text-xs text-muted-foreground">Valor / Status</td>
                 )}
                 {provisoesAtivas.ferias && (
-                  <td className="px-4 py-2 text-center text-xs text-gray-500">Valor / Status</td>
+                  <td className="px-4 py-2 text-center text-xs text-muted-foreground">Valor / Status</td>
                 )}
                 {provisoesAtivas.fgts && (
-                  <td className="px-4 py-2 text-center text-xs text-gray-500">Valor / Status</td>
+                  <td className="px-4 py-2 text-center text-xs text-muted-foreground">Valor / Status</td>
                 )}
                 {provisoesAtivas.inss_patronal && (
-                  <td className="px-4 py-2 text-center text-xs text-gray-500">Valor / Status</td>
+                  <td className="px-4 py-2 text-center text-xs text-muted-foreground">Valor / Status</td>
                 )}
                 {provisoesAtivas.inss && (
-                  <td className="px-4 py-2 text-center text-xs text-gray-500">Valor / Status</td>
+                  <td className="px-4 py-2 text-center text-xs text-muted-foreground">Valor / Status</td>
                 )}
               </tr>
             </thead>
@@ -480,11 +480,11 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                 return (
                   <React.Fragment key={func.nome}>
                     {/* Linha principal */}
-                    <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <tr className="border-b border-border hover:bg-surface-2 transition-colors">
                       <td className="px-4 py-3">
                         <button
                           onClick={() => toggleRow(func.nome)}
-                          className="text-gray-400 hover:text-gray-600"
+                          className="text-muted-foreground/70 hover:text-muted-foreground"
                         >
                           {isExpanded ? (
                             <ChevronDown className="h-4 w-4" />
@@ -493,21 +493,21 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                           )}
                         </button>
                       </td>
-                      <td className="px-4 py-3 font-medium text-gray-800">{func.nome}</td>
-                      <td className="px-4 py-3 text-right font-mono text-gray-700">{formatCurrency(func.salario)}</td>
+                      <td className="px-4 py-3 font-medium text-white">{func.nome}</td>
+                      <td className="px-4 py-3 text-right font-mono text-white">{formatCurrency(func.salario)}</td>
                       
                       {/* 13º Salário */}
                       {provisoesAtivas.decimo_terceiro && (
                         <td className="px-4 py-3">
                           <div className="flex flex-col items-center gap-2">
-                            <span className={`font-mono text-sm ${getProvisaoStatus(func.nome, "decimo_terceiro") ? 'text-green-600' : 'text-gray-400 line-through'}`}>
+                            <span className={`font-mono text-sm ${getProvisaoStatus(func.nome, "decimo_terceiro") ? 'text-success' : 'text-muted-foreground/70 line-through'}`}>
                               {formatCurrency(valores.decimo)}
                             </span>
                             <Switch
                               checked={getProvisaoStatus(func.nome, "decimo_terceiro")}
                               onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "decimo_terceiro", checked)}
                               size="xs"
-                              className="data-checked:bg-emerald-500 data-checked:border-emerald-500 border-gray-300 dark:border-gray-600"
+                              className="data-checked:bg-success/50 data-checked:border-emerald-500 border-border dark:border-gray-600"
                             />
                           </div>
                         </td>
@@ -517,14 +517,14 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                       {provisoesAtivas.ferias && (
                         <td className="px-4 py-3">
                           <div className="flex flex-col items-center gap-2">
-                            <span className={`font-mono text-sm ${getProvisaoStatus(func.nome, "ferias") ? 'text-green-600' : 'text-gray-400 line-through'}`}>
+                            <span className={`font-mono text-sm ${getProvisaoStatus(func.nome, "ferias") ? 'text-success' : 'text-muted-foreground/70 line-through'}`}>
                               {formatCurrency(valores.ferias)}
                             </span>
                             <Switch
                               checked={getProvisaoStatus(func.nome, "ferias")}
                               onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "ferias", checked)}
                               size="xs"
-                              className="data-checked:bg-emerald-500 data-checked:border-emerald-500 border-gray-300 dark:border-gray-600"
+                              className="data-checked:bg-success/50 data-checked:border-emerald-500 border-border dark:border-gray-600"
                             />
                           </div>
                         </td>
@@ -534,14 +534,14 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                       {provisoesAtivas.fgts && (
                         <td className="px-4 py-3">
                           <div className="flex flex-col items-center gap-2">
-                            <span className={`font-mono text-sm ${getProvisaoStatus(func.nome, "fgts") ? 'text-green-600' : 'text-gray-400 line-through'}`}>
+                            <span className={`font-mono text-sm ${getProvisaoStatus(func.nome, "fgts") ? 'text-success' : 'text-muted-foreground/70 line-through'}`}>
                               {formatCurrency(valores.fgts)}
                             </span>
                             <Switch
                               checked={getProvisaoStatus(func.nome, "fgts")}
                               onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "fgts", checked)}
                               size="xs"
-                              className="data-checked:bg-emerald-500 data-checked:border-emerald-500 border-gray-300 dark:border-gray-600"
+                              className="data-checked:bg-success/50 data-checked:border-emerald-500 border-border dark:border-gray-600"
                             />
                           </div>
                         </td>
@@ -551,14 +551,14 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                       {provisoesAtivas.inss_patronal && (
                         <td className="px-4 py-3">
                           <div className="flex flex-col items-center gap-2">
-                            <span className={`font-mono text-sm ${getProvisaoStatus(func.nome, "inss_patronal") ? 'text-green-600' : 'text-gray-400 line-through'}`}>
+                            <span className={`font-mono text-sm ${getProvisaoStatus(func.nome, "inss_patronal") ? 'text-success' : 'text-muted-foreground/70 line-through'}`}>
                               {formatCurrency(valores.inssPatronal)}
                             </span>
                             <Switch
                               checked={getProvisaoStatus(func.nome, "inss_patronal")}
                               onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "inss_patronal", checked)}
                               size="xs"
-                              className="data-checked:bg-emerald-500 data-checked:border-emerald-500 border-gray-300 dark:border-gray-600"
+                              className="data-checked:bg-success/50 data-checked:border-emerald-500 border-border dark:border-gray-600"
                             />
                           </div>
                         </td>
@@ -568,14 +568,14 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                       {provisoesAtivas.inss && (
                         <td className="px-4 py-3">
                           <div className="flex flex-col items-center gap-2">
-                            <span className={`font-mono text-sm ${getProvisaoStatus(func.nome, "inss") ? 'text-green-600' : 'text-gray-400 line-through'}`}>
+                            <span className={`font-mono text-sm ${getProvisaoStatus(func.nome, "inss") ? 'text-success' : 'text-muted-foreground/70 line-through'}`}>
                               {formatCurrency(valores.inss)}
                             </span>
                             <Switch
                               checked={getProvisaoStatus(func.nome, "inss")}
                               onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "inss", checked)}
                               size="xs"
-                              className="data-checked:bg-emerald-500 data-checked:border-emerald-500 border-gray-300 dark:border-gray-600"
+                              className="data-checked:bg-success/50 data-checked:border-emerald-500 border-border dark:border-gray-600"
                             />
                           </div>
                         </td>
@@ -584,12 +584,12 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
 
                     {/* Linha expandida com detalhes das provisões */}
                     {isExpanded && (
-                      <tr key={`${func.nome}-expanded`} className="bg-gray-50">
+                      <tr key={`${func.nome}-expanded`} className="bg-surface-2">
                         <td colSpan={7} className="px-4 py-3">
                           <div className="space-y-3">
                             <div className="flex items-center gap-2 mb-2">
-                              <Calculator className="h-4 w-4 text-[#de4838]" />
-                              <span className="font-medium text-gray-700">Detalhes das Provisões - {func.nome}</span>
+                              <Calculator className="h-4 w-4 text-primary" />
+                              <span className="font-medium text-white">Detalhes das Provisões - {func.nome}</span>
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                               {Object.entries(PROVISOES_CONFIG).map(([key, config]) => {
@@ -608,27 +608,27 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                                 }
 
                                 return (
-                                  <div key={key} className="bg-white rounded-lg p-3 border border-gray-100">
+                                  <div key={key} className="bg-surface rounded-lg p-3 border border-border">
                                     <div className="flex justify-between items-start mb-2">
-                                      <p className="text-sm font-medium text-gray-800">{config.nome}</p>
+                                      <p className="text-sm font-medium text-white">{config.nome}</p>
                                       <Switch
                                         checked={isAtivo}
                                         onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, key, checked)}
-                                        className="data-checked:bg-emerald-500 data-checked:border-emerald-500 border-gray-300 dark:border-gray-600"
+                                        className="data-checked:bg-success/50 data-checked:border-emerald-500 border-border dark:border-gray-600"
                                       />
                                     </div>
-                                    <p className={`text-lg font-bold ${isAtivo ? 'text-green-600' : 'text-gray-400 line-through'}`}>
+                                    <p className={`text-lg font-bold ${isAtivo ? 'text-success' : 'text-muted-foreground/70 line-through'}`}>
                                       {formatCurrency(valor)}
                                     </p>
-                                    <p className="text-xs text-gray-400 mt-1">{config.descricao}</p>
-                                    <p className="text-xs text-gray-400 mt-1">
+                                    <p className="text-xs text-muted-foreground/70 mt-1">{config.descricao}</p>
+                                    <p className="text-xs text-muted-foreground/70 mt-1">
                                       {percentualTexto}
                                     </p>
                                   </div>
                                 )
                               })}
                             </div>
-                            <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
+                            <div className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
                               <span className="font-medium">Total de encargos mensais:</span> {formatCurrency(valores.decimo + valores.ferias + valores.fgts + valores.inss + valores.inssPatronal)}
                             </div>
                           </div>
@@ -639,31 +639,31 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                 )
               })}
             </tbody>
-            <tfoot className="border-t border-gray-200 bg-gray-50">
+            <tfoot className="border-t border-border bg-surface-2">
               <tr className="font-semibold">
                 <td className="px-4 py-3"></td>
-                <td className="px-4 py-3 text-gray-800">TOTAL</td>
-                <td className="px-4 py-3 text-right text-gray-800">{formatCurrency(totais.totalSalarios)}</td>
+                <td className="px-4 py-3 text-white">TOTAL</td>
+                <td className="px-4 py-3 text-right text-white">{formatCurrency(totais.totalSalarios)}</td>
                 {provisoesAtivas.decimo_terceiro && (
-                  <td className="px-4 py-3 text-center text-gray-800">{formatCurrency(totais.totalDecimo)}</td>
+                  <td className="px-4 py-3 text-center text-white">{formatCurrency(totais.totalDecimo)}</td>
                 )}
                 {provisoesAtivas.ferias && (
-                  <td className="px-4 py-3 text-center text-gray-800">{formatCurrency(totais.totalFerias)}</td>
+                  <td className="px-4 py-3 text-center text-white">{formatCurrency(totais.totalFerias)}</td>
                 )}
                 {provisoesAtivas.fgts && (
-                  <td className="px-4 py-3 text-center text-gray-800">{formatCurrency(totais.totalFgts)}</td>
+                  <td className="px-4 py-3 text-center text-white">{formatCurrency(totais.totalFgts)}</td>
                 )}
                 {provisoesAtivas.inss_patronal && (
-                  <td className="px-4 py-3 text-center text-gray-800">{formatCurrency(totais.totalInssPatronal)}</td>
+                  <td className="px-4 py-3 text-center text-white">{formatCurrency(totais.totalInssPatronal)}</td>
                 )}
                 {provisoesAtivas.inss && (
-                  <td className="px-4 py-3 text-center text-gray-800">{formatCurrency(totais.totalInss)}</td>
+                  <td className="px-4 py-3 text-center text-white">{formatCurrency(totais.totalInss)}</td>
                 )}
               </tr>
               <tr className="bg-yellow-50">
                 <td className="px-4 py-3"></td>
-                <td colSpan={6} className="px-4 py-3 font-bold text-gray-700">TOTAL Folha + Encargos Mensal</td>
-                <td className="px-4 py-3 text-right font-bold text-[#de4838] text-lg">{formatCurrency(totalMensal)}</td>
+                <td colSpan={6} className="px-4 py-3 font-bold text-white">TOTAL Folha + Encargos Mensal</td>
+                <td className="px-4 py-3 text-right font-bold text-primary text-lg">{formatCurrency(totalMensal)}</td>
               </tr>
             </tfoot>
           </table>
@@ -671,13 +671,13 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
       </div>
 
       {/* Informação sobre provisões */}
-      <div className="bg-gray-50 p-3 border-t border-gray-100 text-xs text-gray-500 flex items-center gap-2 flex-wrap">
+      <div className="bg-surface-2 p-3 border-t border-border text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          <div className="w-3 h-3 rounded-full bg-success"></div>
           <span>Ativo</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-gray-300"></div>
+          <div className="w-3 h-3 rounded-full bg-surface-2"></div>
           <span>Desativado</span>
         </div>
         <div className="ml-auto text-xs text-muted-foreground">

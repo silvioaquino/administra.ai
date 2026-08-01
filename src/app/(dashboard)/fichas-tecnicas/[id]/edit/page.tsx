@@ -535,23 +535,23 @@ export default function EditarFichaTecnicaPage() {
     children?: React.ReactNode
   }) => (
     <div 
-      className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+      className="flex items-center justify-between p-4 cursor-pointer hover:bg-surface-2 transition-colors"
       onClick={() => toggleSection(section)}
     >
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-[#de4838]/10 text-[#de4838]">
+        <div className="p-2 rounded-lg bg-primary/10 text-primary">
           <Icon className="h-4 w-4" />
         </div>
-        <h3 className="font-semibold text-gray-800">{title}</h3>
+        <h3 className="font-semibold text-white">{title}</h3>
         {badge && (
-          <span className="inline-flex items-center rounded-full bg-[#de4838]/10 px-2.5 py-0.5 text-xs font-medium text-[#de4838]">
+          <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
             {badge}
           </span>
         )}
         {children}
       </div>
       <ChevronDown 
-        className={`h-5 w-5 text-gray-400 transition-transform duration-200 ${
+        className={`h-5 w-5 text-muted-foreground/70 transition-transform duration-200 ${
           sectionsExpanded[section] ? 'rotate-180' : ''
         }`}
       />
@@ -562,8 +562,8 @@ export default function EditarFichaTecnicaPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
-          <p className="text-sm text-gray-500">Carregando ficha técnica...</p>
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Carregando ficha técnica...</p>
         </div>
       </div>
     )
@@ -572,24 +572,24 @@ export default function EditarFichaTecnicaPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header - mais moderno e com sombra */}
-      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-200/80 px-6 py-4 flex items-center justify-between shadow-sm">
+      <div className="sticky top-0 z-20 bg-surface/80 backdrop-blur-md border-b border-border/80 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={() => router.back()}
-            className="rounded-full hover:bg-gray-100 transition-all duration-200"
+            className="rounded-full hover:bg-surface-2 transition-all duration-200"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
+            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
           </Button>
           <div>
-            <h1 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+            <h1 className="text-xl font-semibold text-white flex items-center gap-2">
               Editar Ficha Técnica
-              <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+              <span className="text-xs font-normal text-muted-foreground/70 bg-surface-2 px-2 py-1 rounded-full">
                 {formData.nome || "Sem nome"}
               </span>
             </h1>
-            <p className="text-sm text-gray-500 hidden sm:block">
+            <p className="text-sm text-muted-foreground hidden sm:block">
               Atualize a receita com seus ingredientes e custos
             </p>
           </div>
@@ -598,7 +598,7 @@ export default function EditarFichaTecnicaPage() {
           <Button 
             variant="outline"
             onClick={() => router.back()}
-            className="hidden sm:flex rounded-full border-gray-200 hover:bg-gray-50"
+            className="hidden sm:flex rounded-full border-border hover:bg-surface-2"
           >
             Cancelar
           </Button>
@@ -606,7 +606,7 @@ export default function EditarFichaTecnicaPage() {
             type="submit" 
             form="ficha-form"
             disabled={saving}
-            className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-6 shadow-lg shadow-[#de4838]/25 transition-all duration-200 hover:shadow-[#de4838]/40"
+            className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 shadow-lg shadow-primary/25 transition-all duration-200 hover:shadow-[#de4838]/40"
           >
             <Save className="mr-2 h-4 w-4" />
             {saving ? (
@@ -626,32 +626,32 @@ export default function EditarFichaTecnicaPage() {
         <form id="ficha-form" onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           
           {/* Seção: Informações Básicas */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden transition-all duration-200 hover:shadow-md">
+          <div className="bg-surface rounded-2xl shadow-sm border border-border/50 overflow-hidden transition-all duration-200 hover:shadow-md">
             <SectionHeader 
               title="Informações Básicas" 
               icon={Package} 
               section="basicInfo"
             />
             {sectionsExpanded.basicInfo && (
-              <div className="p-4 md:p-5 pt-0 space-y-4 border-t border-gray-100">
+              <div className="p-4 md:p-5 pt-0 space-y-4 border-t border-border">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider flex items-center gap-1">
-                    Nome do Prato <span className="text-[#de4838]">*</span>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                    Nome do Prato <span className="text-primary">*</span>
                   </Label>
                   <Input
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                     placeholder="Ex: Macarrão ao Molho, Frango Grelhado..."
-                    className="rounded-xl border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent transition-all"
+                    className="rounded-xl border-border focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     required
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Categoria</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Categoria</Label>
                     <div className="relative">
                       <select
-                        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none transition-all"
+                        className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none transition-all"
                         value={showNovaCategoria ? "__nova__" : formData.categoria}
                         onChange={(e) => {
                           if (e.target.value === "__nova__") {
@@ -668,7 +668,7 @@ export default function EditarFichaTecnicaPage() {
                         ))}
                         <option value="__nova__">+ Adicionar nova categoria</option>
                       </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
                     </div>
                     {showNovaCategoria && (
                       <div className="mt-2 flex flex-wrap gap-2">
@@ -677,7 +677,7 @@ export default function EditarFichaTecnicaPage() {
                           value={novaCategoria}
                           onChange={(e) => setNovaCategoria(e.target.value)}
                           placeholder="Nome da nova categoria"
-                          className="flex-1 rounded-xl border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent"
+                          className="flex-1 rounded-xl border-border focus:ring-2 focus:ring-primary focus:border-transparent"
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault()
@@ -688,7 +688,7 @@ export default function EditarFichaTecnicaPage() {
                         <Button
                           type="button"
                           onClick={confirmarNovaCategoria}
-                          className="bg-[#de4838] hover:bg-[#c73d2e] rounded-xl"
+                          className="bg-primary hover:bg-primary/90 rounded-xl"
                         >
                           <Plus className="h-4 w-4 mr-1" />
                           Adicionar
@@ -697,7 +697,7 @@ export default function EditarFichaTecnicaPage() {
                           type="button"
                           variant="outline"
                           onClick={() => { setShowNovaCategoria(false); setNovaCategoria("") }}
-                          className="rounded-xl border-gray-200 hover:border-gray-300"
+                          className="rounded-xl border-border hover:border-border"
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -705,43 +705,43 @@ export default function EditarFichaTecnicaPage() {
                     )}
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Rendimento (porções)</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Rendimento (porções)</Label>
                     <Input
                       type="number"
                       min="1"
                       value={formData.rendimentoPorcoes}
                       onChange={(e) => setFormData({ ...formData, rendimentoPorcoes: parseInt(e.target.value) || 1 })}
-                      className="rounded-xl border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent transition-all"
+                      className="rounded-xl border-border focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Fator de Oscilação (%)
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">%</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 font-medium">%</span>
                     <Input
                       type="number"
                       step="0.01"
                       min="0"
                       value={fatorOscilacao}
                       onChange={(e) => setFatorOscilacao(parseFloat(e.target.value) || 0)}
-                      className="pl-8 rounded-xl border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent transition-all"
+                      className="pl-8 rounded-xl border-border focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                     />
                   </div>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-muted-foreground/70">
                     Margem de segurança para variação de preços (opcional). Ex.: 10 adiciona 10% ao custo final.
                   </p>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Modo de Preparo</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Modo de Preparo</Label>
                   <Textarea
                     value={formData.modoPreparo}
                     onChange={(e) => setFormData({ ...formData, modoPreparo: e.target.value })}
                     rows={3}
                     placeholder="Instruções de preparo..."
-                    className="rounded-xl border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent transition-all resize-none"
+                    className="rounded-xl border-border focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
                   />
                 </div>
               </div>
@@ -749,7 +749,7 @@ export default function EditarFichaTecnicaPage() {
           </div>
 
           {/* Seção: Ingredientes */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden transition-all duration-200 hover:shadow-md">
+          <div className="bg-surface rounded-2xl shadow-sm border border-border/50 overflow-hidden transition-all duration-200 hover:shadow-md">
             <SectionHeader 
               title="Ingredientes" 
               icon={BookOpen} 
@@ -757,21 +757,21 @@ export default function EditarFichaTecnicaPage() {
               badge={`${ingredientes.length} itens`}
             />
             {sectionsExpanded.ingredients && (
-              <div className="p-4 md:p-5 pt-0 space-y-4 border-t border-gray-100">
+              <div className="p-4 md:p-5 pt-0 space-y-4 border-t border-border">
                 {/* Grid de adição de ingredientes */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {/* Adicionar Produto */}
-                  <div className="rounded-xl border border-gray-200 overflow-hidden bg-gray-50/50">
-                    <div className="bg-gray-100/80 px-4 py-2.5 border-b border-gray-100">
+                  <div className="rounded-xl border border-border overflow-hidden bg-surface-2/50">
+                    <div className="bg-surface-2/80 px-4 py-2.5 border-b border-border">
                       <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4 text-[#de4838]" />
-                        <h4 className="text-sm font-medium text-gray-700">Produto</h4>
+                        <Package className="h-4 w-4 text-primary" />
+                        <h4 className="text-sm font-medium text-white">Produto</h4>
                       </div>
                     </div>
                     <div className="p-3 space-y-3">
                       <div className="relative">
                         <select
-                          className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none transition-all"
+                          className="w-full rounded-lg border border-border bg-surface px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none transition-all"
                           value={selectedProdutoId}
                           onChange={(e) => {
                             setSelectedProdutoId(e.target.value)
@@ -786,7 +786,7 @@ export default function EditarFichaTecnicaPage() {
                             </option>
                           ))}
                         </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
                       </div>
                       {produtoSelecionado ? (
                         <>
@@ -805,7 +805,7 @@ export default function EditarFichaTecnicaPage() {
                           />
                           <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
-                              <Label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                              <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
                                 Peso Bruto (g)
                               </Label>
                               <Input
@@ -815,11 +815,11 @@ export default function EditarFichaTecnicaPage() {
                                 placeholder="Ex: 1000"
                                 value={pesoBruto || ''}
                                 onChange={(e) => setPesoBruto(parseFloat(e.target.value) || 0)}
-                                className="rounded-lg border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent"
+                                className="rounded-lg border-border focus:ring-2 focus:ring-primary focus:border-transparent"
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                              <Label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
                                 Peso Líquido (g)
                               </Label>
                               <Input
@@ -829,19 +829,19 @@ export default function EditarFichaTecnicaPage() {
                                 placeholder="Ex: 700"
                                 value={pesoLiquido || ''}
                                 onChange={(e) => setPesoLiquido(parseFloat(e.target.value) || 0)}
-                                className="rounded-lg border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent"
+                                className="rounded-lg border-border focus:ring-2 focus:ring-primary focus:border-transparent"
                               />
                             </div>
                           </div>
                           {pesoBruto > 0 && pesoLiquido > 0 && (
-                            <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 flex items-center justify-between">
+                            <div className="text-xs text-warning bg-warning/5 border border-amber-200 rounded-lg p-2 flex items-center justify-between">
                               <span>Fator de correção (perda):</span>
                               <span className="font-semibold">{(pesoBruto / pesoLiquido).toFixed(2)}x</span>
                             </div>
                           )}
-                          <div className="text-xs text-gray-500 bg-gray-100 rounded-lg p-2 flex items-center justify-between">
+                          <div className="text-xs text-muted-foreground bg-surface-2 rounded-lg p-2 flex items-center justify-between">
                             <span>Custo unitário:</span>
-                            <span className="font-medium text-gray-700">{formatCurrency(getCustoUnitario(produtoSelecionado))}</span>
+                            <span className="font-medium text-white">{formatCurrency(getCustoUnitario(produtoSelecionado))}</span>
                           </div>
                         </>
                       ) : (
@@ -851,14 +851,14 @@ export default function EditarFichaTecnicaPage() {
                           placeholder="Quantidade"
                           value={quantidade}
                           onChange={(e) => setQuantidade(parseFloat(e.target.value) || 0)}
-                          className="rounded-lg border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent"
+                          className="rounded-lg border-border focus:ring-2 focus:ring-primary focus:border-transparent"
                         />
                       )}
                       <Button
                         type="button"
                         onClick={adicionarIngrediente}
                         disabled={!selectedProdutoId}
-                        className="w-full bg-[#de4838] hover:bg-[#c73d2e] rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-primary hover:bg-primary/90 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Plus className="h-4 w-4 mr-1" />
                         Adicionar Produto
@@ -867,17 +867,17 @@ export default function EditarFichaTecnicaPage() {
                   </div>
 
                   {/* Adicionar Produto Acabado */}
-                  <div className="rounded-xl border border-gray-200 overflow-hidden bg-gray-50/50">
-                    <div className="bg-gray-100/80 px-4 py-2.5 border-b border-gray-100">
+                  <div className="rounded-xl border border-border overflow-hidden bg-surface-2/50">
+                    <div className="bg-surface-2/80 px-4 py-2.5 border-b border-border">
                       <div className="flex items-center gap-2">
-                        <BookOpen className="h-4 w-4 text-[#de4838]" />
-                        <h4 className="text-sm font-medium text-gray-700">Ficha Técnica</h4>
+                        <BookOpen className="h-4 w-4 text-primary" />
+                        <h4 className="text-sm font-medium text-white">Ficha Técnica</h4>
                       </div>
                     </div>
                     <div className="p-3 space-y-3">
                       <div className="relative">
                         <select
-                          className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none transition-all"
+                          className="w-full rounded-lg border border-border bg-surface px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none transition-all"
                           value={selectedFichaId}
                           onChange={(e) => setSelectedFichaId(e.target.value)}
                         >
@@ -888,7 +888,7 @@ export default function EditarFichaTecnicaPage() {
                             </option>
                           ))}
                         </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
                       </div>
                       <div className="flex gap-2">
                         <Input
@@ -897,21 +897,21 @@ export default function EditarFichaTecnicaPage() {
                           placeholder="Quantidade"
                           value={quantidade}
                           onChange={(e) => setQuantidade(parseFloat(e.target.value) || 0)}
-                          className="flex-1 rounded-lg border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent"
+                          className="flex-1 rounded-lg border-border focus:ring-2 focus:ring-primary focus:border-transparent"
                         />
                         <Button 
                           type="button" 
                           onClick={adicionarProdutoAcabado} 
                           disabled={!selectedFichaId}
-                          className="bg-[#de4838] hover:bg-[#c73d2e] rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="bg-primary hover:bg-primary/90 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
                       {fichaSelecionada && (
-                        <div className="text-xs text-gray-500 bg-gray-100 rounded-lg p-2 flex items-center justify-between">
+                        <div className="text-xs text-muted-foreground bg-surface-2 rounded-lg p-2 flex items-center justify-between">
                           <span>Custo unitário:</span>
-                          <span className="font-medium text-gray-700">{formatCurrency(fichaSelecionada.custoTotal || 0)}</span>
+                          <span className="font-medium text-white">{formatCurrency(fichaSelecionada.custoTotal || 0)}</span>
                         </div>
                       )}
                     </div>
@@ -921,31 +921,31 @@ export default function EditarFichaTecnicaPage() {
                 {/* Lista de Ingredientes */}
                 <div className="mt-2">
                   <div className="flex items-center justify-between mb-2">
-                    <Label className="text-sm font-medium text-gray-700">Lista de Ingredientes</Label>
-                    <span className="text-xs text-gray-400">
+                    <Label className="text-sm font-medium text-white">Lista de Ingredientes</Label>
+                    <span className="text-xs text-muted-foreground/70">
                       {ingredientes.length} {ingredientes.length === 1 ? 'item' : 'itens'}
                     </span>
                   </div>
-                  <div className="border rounded-xl border-gray-200 overflow-hidden shadow-sm">
+                  <div className="border rounded-xl border-border overflow-hidden shadow-sm">
                     <div className="max-h-64 overflow-y-auto">
                       <table className="w-full text-sm">
-                        <thead className="bg-gray-100/80 border-b border-gray-200 sticky top-0 z-10">
+                        <thead className="bg-surface-2/80 border-b border-border sticky top-0 z-10">
                           <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ingrediente</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Qtd</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Valor Unit.</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Custo</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Fator</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Ingrediente</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Qtd</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Valor Unit.</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Custo</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">Fator</th>
                             <th className="px-4 py-3 text-center w-10"></th>
                           </tr>
                         </thead>
                         <tbody>
                           {ingredientes.length === 0 ? (
                             <tr>
-                              <td colSpan={5} className="py-8 text-center text-gray-400">
-                                <Package className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                              <td colSpan={5} className="py-8 text-center text-muted-foreground/70">
+                                <Package className="h-8 w-8 text-muted-foreground/70 mx-auto mb-2" />
                                 Nenhum ingrediente adicionado
-                                <p className="text-xs text-gray-400 mt-1">Adicione produtos ou fichas técnicas acima</p>
+                                <p className="text-xs text-muted-foreground/70 mt-1">Adicione produtos ou fichas técnicas acima</p>
                               </td>
                             </tr>
                           ) : (
@@ -953,25 +953,25 @@ export default function EditarFichaTecnicaPage() {
                               const editando = editingId === ing.id
                               const podeEditarFator = !ing.isProdutoAcabado && !!ing.produtoId
                               return (
-                              <tr key={ing.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                              <tr key={ing.id} className="border-b border-border hover:bg-surface-2/50 transition-colors">
                                 <td className="px-4 py-2.5">
                                   <div className="flex items-center gap-2">
                                     {ing.isProdutoAcabado ? (
-                                      <BookOpen className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+                                      <BookOpen className="h-3.5 w-3.5 text-info flex-shrink-0" />
                                     ) : (
-                                      <Package className="h-3.5 w-3.5 text-[#de4838] flex-shrink-0" />
+                                      <Package className="h-3.5 w-3.5 text-primary flex-shrink-0" />
                                     )}
-                                    <span className="text-gray-700 truncate max-w-[120px] sm:max-w-none" title={ing.nome}>
+                                    <span className="text-white truncate max-w-[120px] sm:max-w-none" title={ing.nome}>
                                       {ing.nome}
                                     </span>
                                     {ing.isProdutoAcabado && (
-                                      <span className="inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700 flex-shrink-0">
+                                      <span className="inline-flex rounded-full bg-info/10 px-2 py-0.5 text-[10px] font-medium text-info flex-shrink-0">
                                         Ficha
                                       </span>
                                     )}
                                   </div>
                                 </td>
-                                <td className="px-4 py-2.5 text-right font-mono text-gray-600 whitespace-nowrap">
+                                <td className="px-4 py-2.5 text-right font-mono text-muted-foreground whitespace-nowrap">
                                   {editando ? (
                                     <div className="flex flex-col items-end gap-1">
                                       <div className="flex items-center gap-1">
@@ -981,15 +981,15 @@ export default function EditarFichaTecnicaPage() {
                                           min="0"
                                           value={editQtd || ''}
                                           onChange={(e) => setEditQtd(parseFloat(e.target.value) || 0)}
-                                          className="w-20 h-8 rounded-lg border border-gray-200 px-2 text-right text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                                          className="w-20 h-8 rounded-lg border border-border px-2 text-right text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                         />
                                         {ing.isProdutoAcabado ? (
-                                          <span className="text-xs text-gray-400 px-1">UN</span>
+                                          <span className="text-xs text-muted-foreground/70 px-1">UN</span>
                                         ) : (
                                           <select
                                             value={editUnidade}
                                             onChange={(e) => setEditUnidade(e.target.value as UnitType)}
-                                            className="h-8 rounded-lg border border-gray-200 px-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                                            className="h-8 rounded-lg border border-border px-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary"
                                           >
                                             {['G', 'KG', 'MG', 'L', 'ML', 'UN'].map(u => (
                                               <option key={u} value={u}>{u}</option>
@@ -998,7 +998,7 @@ export default function EditarFichaTecnicaPage() {
                                         )}
                                       </div>
                                       {podeEditarFator && (
-                                        <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground/70">
                                           <input
                                             type="number"
                                             step="0.001"
@@ -1006,7 +1006,7 @@ export default function EditarFichaTecnicaPage() {
                                             placeholder="Bruto"
                                             value={editPesoBruto || ''}
                                             onChange={(e) => setEditPesoBruto(parseFloat(e.target.value) || 0)}
-                                            className="w-16 h-7 rounded-md border border-gray-200 px-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                                            className="w-16 h-7 rounded-md border border-border px-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-primary"
                                           />
                                           <input
                                             type="number"
@@ -1015,7 +1015,7 @@ export default function EditarFichaTecnicaPage() {
                                             placeholder="Líq."
                                             value={editPesoLiquido || ''}
                                             onChange={(e) => setEditPesoLiquido(parseFloat(e.target.value) || 0)}
-                                            className="w-16 h-7 rounded-md border border-gray-200 px-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                                            className="w-16 h-7 rounded-md border border-border px-1.5 text-right text-xs focus:outline-none focus:ring-2 focus:ring-primary"
                                           />
                                         </div>
                                       )}
@@ -1024,10 +1024,10 @@ export default function EditarFichaTecnicaPage() {
                                     <>{ing.quantidade.toFixed(3)} {ing.unidade}</>
                                   )}
                                 </td>
-                                <td className="px-4 py-2.5 text-right font-mono text-gray-600 hidden sm:table-cell">
+                                <td className="px-4 py-2.5 text-right font-mono text-muted-foreground hidden sm:table-cell">
                                   {formatCurrency(ing.valorUnitario)}
                                 </td>
-                                <td className="px-4 py-2.5 text-right font-mono font-medium text-gray-800 whitespace-nowrap">
+                                <td className="px-4 py-2.5 text-right font-mono font-medium text-white whitespace-nowrap">
                                   {editando && podeEditarFator
                                     ? formatCurrency(
                                         recalcularCustoIngrediente(
@@ -1036,7 +1036,7 @@ export default function EditarFichaTecnicaPage() {
                                       )
                                     : formatCurrency(ing.custo)}
                                 </td>
-                                <td className="px-4 py-2.5 text-right font-mono text-amber-600 whitespace-nowrap hidden md:table-cell">
+                                <td className="px-4 py-2.5 text-right font-mono text-warning whitespace-nowrap hidden md:table-cell">
                                   {editando && podeEditarFator
                                     ? (editPesoBruto > 0 && editPesoLiquido > 0
                                         ? `${(editPesoBruto / editPesoLiquido).toFixed(2)}x`
@@ -1053,20 +1053,20 @@ export default function EditarFichaTecnicaPage() {
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => salvarEdicaoIngrediente(ing)}
-                                        className="h-8 w-8 p-0 rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                                        className="h-8 w-8 p-0 rounded-lg hover:bg-success/5 hover:text-success transition-colors"
                                         title="Salvar"
                                       >
-                                        <Check className="h-4 w-4 text-emerald-500" />
+                                        <Check className="h-4 w-4 text-success" />
                                       </Button>
                                       <Button
                                         type="button"
                                         variant="ghost"
                                         size="sm"
                                         onClick={cancelarEdicaoIngrediente}
-                                        className="h-8 w-8 p-0 rounded-lg hover:bg-gray-100 transition-colors"
+                                        className="h-8 w-8 p-0 rounded-lg hover:bg-surface-2 transition-colors"
                                         title="Cancelar"
                                       >
-                                        <X className="h-4 w-4 text-gray-400" />
+                                        <X className="h-4 w-4 text-muted-foreground/70" />
                                       </Button>
                                     </div>
                                   ) : (
@@ -1076,20 +1076,20 @@ export default function EditarFichaTecnicaPage() {
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => iniciarEdicaoIngrediente(ing)}
-                                        className="h-8 w-8 p-0 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                        className="h-8 w-8 p-0 rounded-lg hover:bg-info/5 hover:text-info transition-colors"
                                         title="Editar quantidade"
                                       >
-                                        <Pencil className="h-4 w-4 text-blue-400" />
+                                        <Pencil className="h-4 w-4 text-info" />
                                       </Button>
                                       <Button
                                         type="button"
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => removerIngrediente(ing.id)}
-                                        className="h-8 w-8 p-0 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors"
+                                        className="h-8 w-8 p-0 rounded-lg hover:bg-destructive/5 hover:text-destructive transition-colors"
                                         title="Remover"
                                       >
-                                        <Trash2 className="h-4 w-4 text-red-400 hover:text-red-600" />
+                                        <Trash2 className="h-4 w-4 text-red-400 hover:text-destructive" />
                                       </Button>
                                     </div>
                                   )}
@@ -1100,12 +1100,12 @@ export default function EditarFichaTecnicaPage() {
                           )}
                         </tbody>
                         {ingredientes.length > 0 && (
-                          <tfoot className="border-t-2 border-gray-200 bg-gray-100/80 sticky bottom-0">
+                          <tfoot className="border-t-2 border-border bg-surface-2/80 sticky bottom-0">
                             <tr className="font-semibold">
-                              <td colSpan={3} className="px-4 py-3 text-right text-gray-700 hidden sm:table-cell">
+                              <td colSpan={3} className="px-4 py-3 text-right text-white hidden sm:table-cell">
                                 Custo dos Ingredientes:
                               </td>
-                              <td colSpan={2} className="px-4 py-3 text-right text-[#de4838] text-lg">
+                              <td colSpan={2} className="px-4 py-3 text-right text-primary text-lg">
                                 {formatCurrency(custoTotal)}
                               </td>
                               <td className="px-4 py-3"></td>
@@ -1122,14 +1122,14 @@ export default function EditarFichaTecnicaPage() {
 
           {/* Seção: Detalhamento de Custos - apenas se houver ingredientes */}
           {ingredientes.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden transition-all duration-200 hover:shadow-md">
+            <div className="bg-surface rounded-2xl shadow-sm border border-border/50 overflow-hidden transition-all duration-200 hover:shadow-md">
               <SectionHeader 
                 title="Detalhamento de Custos" 
                 icon={Calculator} 
                 section="costBreakdown"
               />
               {sectionsExpanded.costBreakdown && (
-                <div className="p-4 md:p-5 pt-0 border-t border-gray-100">
+                <div className="p-4 md:p-5 pt-0 border-t border-border">
                   <CostBreakdown
                     items={custoItems}
                     totalCost={custoFinal}
@@ -1142,86 +1142,86 @@ export default function EditarFichaTecnicaPage() {
           )}
 
           {/* Seção: Análise Financeira */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden transition-all duration-200 hover:shadow-md">
+          <div className="bg-surface rounded-2xl shadow-sm border border-border/50 overflow-hidden transition-all duration-200 hover:shadow-md">
             <SectionHeader 
               title="Análise Financeira" 
               icon={Calculator} 
               section="financialAnalysis"
             />
             {sectionsExpanded.financialAnalysis && (
-              <div className="p-4 md:p-5 pt-0 border-t border-gray-100">
+              <div className="p-4 md:p-5 pt-0 border-t border-border">
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider flex items-center gap-1">
-                        Preço de Venda Praticado <span className="text-[#de4838]">*</span>
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                        Preço de Venda Praticado <span className="text-primary">*</span>
                       </Label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">R$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 font-medium">R$</span>
                         <Input
                           type="number"
                           step="0.01"
                           min="0"
                           value={formData.precoVenda}
                           onChange={(e) => setFormData({ ...formData, precoVenda: parseFloat(e.target.value) || 0 })}
-                          className="pl-8 rounded-xl border-gray-200 focus:ring-2 focus:ring-[#de4838] focus:border-transparent transition-all"
+                          className="pl-8 rounded-xl border-border focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                           required
                         />
                       </div>
                     </div>
-                    <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 p-4 border border-blue-200/50">
-                      <p className="text-sm font-medium text-blue-700 mb-1 flex items-center gap-2">
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                    <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 p-4 border border-info/30/50">
+                      <p className="text-sm font-medium text-info mb-1 flex items-center gap-2">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-info/50 animate-pulse"></span>
                         Preço Sugerido
                       </p>
                       {metaFaltando ? (
-                        <p className="text-sm text-blue-600 mt-1">
+                        <p className="text-sm text-info mt-1">
                           Defina a meta do mês atual no Planejamento para calcular o mark-up sugerido.
                         </p>
                       ) : markup > 0 ? (
                         <>
-                          <p className="text-2xl font-bold text-blue-600">{formatCurrency(precoSugerido)}</p>
-                          <p className="text-xs text-blue-600/80 mt-1">
+                          <p className="text-2xl font-bold text-info">{formatCurrency(precoSugerido)}</p>
+                          <p className="text-xs text-info/80 mt-1">
                             Custo × Mark-up de {markup.toFixed(2)}x (da página Planejamento)
                           </p>
                         </>
                       ) : (
-                        <p className="text-sm text-blue-600 mt-1">
+                        <p className="text-sm text-info mt-1">
                           Carregando mark-up do Planejamento...
                         </p>
                       )}
                     </div>
                   </div>
-                  <div className="space-y-2.5 bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <div className="space-y-2.5 bg-surface-2 rounded-xl p-4 border border-border">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Custo dos Ingredientes:</span>
-                      <span className="font-medium text-gray-700">{formatCurrency(custoTotal)}</span>
+                      <span className="text-muted-foreground">Custo dos Ingredientes:</span>
+                      <span className="font-medium text-white">{formatCurrency(custoTotal)}</span>
                     </div>
                     {fatorOscilacao > 0 && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Fator de Oscilação ({formatPercentage(fatorOscilacao)}):</span>
-                        <span className="font-medium text-emerald-600">+ {formatCurrency(valorOscilacao)}</span>
+                        <span className="text-muted-foreground">Fator de Oscilação ({formatPercentage(fatorOscilacao)}):</span>
+                        <span className="font-medium text-success">+ {formatCurrency(valorOscilacao)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
-                      <span className="font-semibold text-gray-700">Custo Final:</span>
-                      <span className="font-bold text-[#de4838]">{formatCurrency(custoFinal)}</span>
+                    <div className="flex justify-between text-sm pt-2 border-t border-border">
+                      <span className="font-semibold text-white">Custo Final:</span>
+                      <span className="font-bold text-primary">{formatCurrency(custoFinal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Custo por Porção:</span>
-                      <span className="font-medium text-gray-700">{formatCurrency(custoPorPorcao)}</span>
+                      <span className="text-muted-foreground">Custo por Porção:</span>
+                      <span className="font-medium text-white">{formatCurrency(custoPorPorcao)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Despesas Fixas ({formatPercentage(despesasFixasPercentual)}):</span>
-                      <span className="text-gray-700">{formatCurrency(formData.precoVenda * despesasFixasPercentual / 100)}</span>
+                      <span className="text-muted-foreground">Despesas Fixas ({formatPercentage(despesasFixasPercentual)}):</span>
+                      <span className="text-white">{formatCurrency(formData.precoVenda * despesasFixasPercentual / 100)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Despesas Variáveis ({formatPercentage(despesasVariaveisPercentual)}):</span>
-                      <span className="text-gray-700">{formatCurrency(formData.precoVenda * despesasVariaveisPercentual / 100)}</span>
+                      <span className="text-muted-foreground">Despesas Variáveis ({formatPercentage(despesasVariaveisPercentual)}):</span>
+                      <span className="text-white">{formatCurrency(formData.precoVenda * despesasVariaveisPercentual / 100)}</span>
                     </div>
-                    <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
-                      <span className="font-semibold text-gray-700">Lucro:</span>
-                      <span className={`font-bold ${lucro >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                    <div className="flex justify-between text-sm pt-2 border-t border-border">
+                      <span className="font-semibold text-white">Lucro:</span>
+                      <span className={`font-bold ${lucro >= 0 ? 'text-success' : 'text-destructive'}`}>
                         {formatCurrency(lucro)} ({formatPercentage(margem)})
                       </span>
                     </div>
@@ -1232,13 +1232,13 @@ export default function EditarFichaTecnicaPage() {
                 <div className="mt-5">
                   <div className="flex h-8 rounded-lg overflow-hidden shadow-inner">
                     <div 
-                      className="bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center text-xs text-white font-medium transition-all duration-500"
+                      className="bg-gradient-to-r from-destructive to-destructive/80 flex items-center justify-center text-xs text-white font-medium transition-all duration-500"
                       style={{ width: `${Math.min(100, (custoPorPorcao / formData.precoVenda) * 100)}%` }}
                     >
                       {((custoPorPorcao / formData.precoVenda) * 100) > 8 ? `Custo ${formatPercentage((custoPorPorcao / formData.precoVenda) * 100)}` : ''}
                     </div>
                     <div 
-                      className="bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-xs text-white font-medium transition-all duration-500"
+                      className="bg-gradient-to-r from-info to-info/80 flex items-center justify-center text-xs text-white font-medium transition-all duration-500"
                       style={{ width: `${despesasFixasPercentual}%` }}
                     >
                       {despesasFixasPercentual > 8 ? `Fixas ${formatPercentage(despesasFixasPercentual)}` : ''}
@@ -1250,13 +1250,13 @@ export default function EditarFichaTecnicaPage() {
                       {despesasVariaveisPercentual > 8 ? `Variáveis ${formatPercentage(despesasVariaveisPercentual)}` : ''}
                     </div>
                     <div 
-                      className="bg-gradient-to-r from-emerald-500 to-emerald-600 flex items-center justify-center text-xs text-white font-medium transition-all duration-500"
+                      className="bg-gradient-to-r from-success to-success/80 flex items-center justify-center text-xs text-white font-medium transition-all duration-500"
                       style={{ width: `${Math.max(0, Math.min(100, margem))}%` }}
                     >
                       {Math.max(0, margem) > 8 ? `Lucro ${formatPercentage(Math.max(0, margem))}` : ''}
                     </div>
                   </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1.5 px-1">
+                  <div className="flex justify-between text-xs text-muted-foreground/70 mt-1.5 px-1">
                     <span>Custo</span>
                     <span>Despesas Fixas</span>
                     <span>Despesas Variáveis</span>
@@ -1266,9 +1266,9 @@ export default function EditarFichaTecnicaPage() {
 
                 {/* Alertas */}
                 {formData.precoVenda > 0 && margem < 30 && margem > 0 && (
-                  <Alert className="mt-4 bg-amber-50 border-amber-200/80 rounded-xl">
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                    <AlertDescription className="text-sm text-amber-700">
+                  <Alert className="mt-4 bg-warning/5 border-amber-200/80 rounded-xl">
+                    <AlertCircle className="h-4 w-4 text-warning" />
+                    <AlertDescription className="text-sm text-warning">
                       Margem de lucro está baixa ({formatPercentage(margem)}). 
                       Considere aumentar o preço de venda ou reduzir custos.
                     </AlertDescription>
@@ -1276,9 +1276,9 @@ export default function EditarFichaTecnicaPage() {
                 )}
 
                 {formData.precoVenda > 0 && margem >= 50 && (
-                  <Alert className="mt-4 bg-emerald-50 border-emerald-200/80 rounded-xl">
-                    <AlertCircle className="h-4 w-4 text-emerald-600" />
-                    <AlertDescription className="text-sm text-emerald-700">
+                  <Alert className="mt-4 bg-success/5 border-success/30/80 rounded-xl">
+                    <AlertCircle className="h-4 w-4 text-success" />
+                    <AlertDescription className="text-sm text-success">
                       Excelente! Margem de lucro de {formatPercentage(margem)}. Continue assim!
                     </AlertDescription>
                   </Alert>
@@ -1288,12 +1288,12 @@ export default function EditarFichaTecnicaPage() {
           </div>
 
           {/* Botão de ação flutuante para mobile */}
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-gray-200 md:hidden z-10">
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-surface/95 backdrop-blur-md border-t border-border md:hidden z-10">
             <Button 
               type="submit" 
               form="ficha-form"
               disabled={saving}
-              className="w-full bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-xl shadow-lg shadow-[#de4838]/30"
+              className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-[#de4838]/30"
             >
               <Save className="mr-2 h-4 w-4" />
               {saving ? "Salvando..." : "Salvar Alterações"}

@@ -35,13 +35,13 @@ export function OutrasTaxas({
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-5">
-      <h4 className="font-semibold text-gray-800 mb-4">Outras Taxas</h4>
+    <div className="bg-surface rounded-2xl shadow-sm p-5">
+      <h4 className="font-semibold text-white mb-4">Outras Taxas</h4>
 
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label className="text-xs text-gray-500 mb-1">Taxa Voucher (%)</Label>
+            <Label className="text-xs text-muted-foreground mb-1">Taxa Voucher (%)</Label>
             <Input
               type="number"
               value={v || ''}
@@ -53,7 +53,7 @@ export function OutrasTaxas({
             />
           </div>
           <div>
-            <Label className="text-xs text-gray-500 mb-1">Simples Nacional (%)</Label>
+            <Label className="text-xs text-muted-foreground mb-1">Simples Nacional (%)</Label>
             <Input
               type="number"
               value={sn || ''}
@@ -66,7 +66,7 @@ export function OutrasTaxas({
         </div>
 
         <div>
-          <Label className="text-xs text-gray-500 mb-1">Manutenção (%)</Label>
+          <Label className="text-xs text-muted-foreground mb-1">Manutenção (%)</Label>
           <Input
             type="number"
             value={m || ''}
@@ -77,10 +77,10 @@ export function OutrasTaxas({
           />
         </div>
 
-        <div className="pt-2 border-t border-gray-100">
+        <div className="pt-2 border-t border-border">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-gray-500">Faturamento Total:</span>
-            <span className="font-bold text-gray-700">{new Intl.NumberFormat('pt-BR', {
+            <span className="text-sm text-muted-foreground">Faturamento Total:</span>
+            <span className="font-bold text-white">{new Intl.NumberFormat('pt-BR', {
               style: 'currency',
               currency: 'BRL'
             }).format(faturamentoTotal)}</span>
@@ -89,7 +89,7 @@ export function OutrasTaxas({
 
         <Button
           onClick={salvarDados}
-          className="w-full bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg"
+          className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg"
         >
           Salvar Outras Taxas
         </Button>

@@ -28,7 +28,7 @@ export default function ModalPreviewImpressao({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto animate-slide-in">
+      <div className="bg-surface rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto animate-slide-in">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
@@ -70,7 +70,7 @@ export default function ModalPreviewImpressao({
         <div className="flex justify-end p-4 border-t border-border">
           <button 
             type="button" 
-            className="px-4 py-2 bg-gray-1000 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+            className="px-4 py-2 bg-surface-20 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
             onClick={onClose}
           >
             Fechar

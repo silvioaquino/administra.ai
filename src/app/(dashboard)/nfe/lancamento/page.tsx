@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatCurrency } from "@/lib/utils";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { useContasFinanceiras } from "@/hooks/useContasFinanceiras";
 
 interface Produto {
@@ -164,40 +166,28 @@ export default function LancamentoManualPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb]">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.back()}
-            className="rounded-full hover:bg-gray-100"
-          >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-semibold text-gray-800">Lançamento Manual</h1>
-            <p className="text-sm text-gray-500">Registre vendas e compras manualmente</p>
-          </div>
-        </div>
-        <Button
-          type="submit"
-          form="lancamento-form"
-          disabled={loading || !formData.produtoId}
-          className="bg-[#de4838] hover:bg-[#c73d2e] text-white px-6 rounded-full shadow-sm"
+      <PageContainer>
+        <PageHeader
+          title="Lançamento Manual"
+          subtitle="Registre vendas e compras manualmente"
+          onBack={() => router.back()}
         >
-          <Save className="mr-2 h-4 w-4" />
-          {loading
-            ? "Processando..."
-            : formData.tipoLancamento === "VENDA"
-            ? "Lançar Venda"
-            : "Lançar Compra"}
-        </Button>
-      </div>
-
-      {/* Main Content - Two columns */}
-      <div className="container mx-auto p-6 max-w-7xl">
+          <Button
+            type="submit"
+            form="lancamento-form"
+            disabled={loading || !formData.produtoId}
+            className="bg-primary hover:bg-primary/90 text-white px-6 rounded-full shadow-sm"
+          >
+            <Save className="mr-2 h-4 w-4" />
+            {loading
+              ? "Processando..."
+              : formData.tipoLancamento === "VENDA"
+              ? "Lançar Venda"
+              : "Lançar Compra"}
+          </Button>
+        </PageHeader>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column - Form Fields */}
           <div className="space-y-6">
@@ -206,12 +196,12 @@ export default function LancamentoManualPage() {
                 {/* Tipo and Date Row */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Tipo
                     </Label>
                     <div className="relative">
                       <select
-                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none"
+                        className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
                         value={formData.tipoLancamento}
                         onChange={e =>
                           setFormData({ ...formData, tipoLancamento: e.target.value })
@@ -220,7 +210,7 @@ export default function LancamentoManualPage() {
                         <option value="VENDA">💰 Venda (Entrada - Receita)</option>
                         <option value="COMPRA">📦 Compra (Saída - Despesa)</option>
                       </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
                         <svg
                           className="fill-current h-4 w-4"
                           xmlns="http://www.w3.org/2000/svg"
@@ -232,26 +222,26 @@ export default function LancamentoManualPage() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Data
                     </Label>
                     <Input
                       type="date"
                       value={formData.data}
                       onChange={e => setFormData({ ...formData, data: e.target.value })}
-                      className="rounded-lg border-gray-300 focus:ring-[#de4838] focus:border-[#de4838]"
+                      className="rounded-lg border-border focus:ring-primary focus:border-primary"
                     />
                   </div>
                 </div>
 
                 {/* Forma de Pagamento */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Forma de Pagamento
                   </Label>
                   <div className="relative">
                     <select
-                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none"
+                      className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
                       value={formData.formaPagamento}
                       onChange={e =>
                         setFormData({ ...formData, formaPagamento: e.target.value })
@@ -263,7 +253,7 @@ export default function LancamentoManualPage() {
                       <option value="PIX">📱 PIX</option>
                       <option value="IFOOD">🍔 iFood</option>
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
                       <svg
                         className="fill-current h-4 w-4"
                         xmlns="http://www.w3.org/2000/svg"
@@ -277,12 +267,12 @@ export default function LancamentoManualPage() {
 
                 {/* Origem/Destino - NOVO CAMPO */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Origem/Destino (Conta Financeira)
                   </Label>
                   <div className="relative">
                     <select
-                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none"
+                      className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
                       value={formData.origemDestino}
                       onChange={e =>
                         setFormData({ ...formData, origemDestino: e.target.value })
@@ -295,11 +285,11 @@ export default function LancamentoManualPage() {
                         </option>
                       ))}
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                      <Building2 className="h-4 w-4 text-gray-400" />
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                      <Building2 className="h-4 w-4 text-muted-foreground/70" />
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Indique de onde veio o dinheiro (venda) ou para onde foi
                     (compra/despesa).
                   </p>
@@ -307,13 +297,13 @@ export default function LancamentoManualPage() {
 
                 {/* Produto */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Produto
                   </Label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <select
-                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none"
+                        className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
                         value={formData.produtoId}
                         onChange={e => {
                           const produto = produtos.find(p => p.id === Number(e.target.value));
@@ -331,7 +321,7 @@ export default function LancamentoManualPage() {
                           </option>
                         ))}
                       </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
                         <svg
                           className="fill-current h-4 w-4"
                           xmlns="http://www.w3.org/2000/svg"
@@ -345,9 +335,9 @@ export default function LancamentoManualPage() {
                       type="button"
                       variant="outline"
                       onClick={() => router.push("/nfe/produtos/novo")}
-                      className="border-gray-300 rounded-lg hover:bg-gray-100"
+                      className="border-border rounded-lg hover:bg-surface-2"
                     >
-                      <Package className="h-4 w-4 text-gray-500" />
+                      <Package className="h-4 w-4 text-muted-foreground" />
                     </Button>
                   </div>
                 </div>
@@ -355,7 +345,7 @@ export default function LancamentoManualPage() {
                 {/* Quantidade e Valor */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Quantidade
                     </Label>
                     <Input
@@ -366,11 +356,11 @@ export default function LancamentoManualPage() {
                       onChange={e =>
                         setFormData({ ...formData, quantidade: Number(e.target.value) })
                       }
-                      className="rounded-lg border-gray-300 focus:ring-[#de4838]"
+                      className="rounded-lg border-border focus:ring-primary"
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Valor Unitário (R$)
                     </Label>
                     <Input
@@ -380,14 +370,14 @@ export default function LancamentoManualPage() {
                       onChange={e =>
                         setFormData({ ...formData, valorUnitario: Number(e.target.value) })
                       }
-                      className="rounded-lg border-gray-300 focus:ring-[#de4838]"
+                      className="rounded-lg border-border focus:ring-primary"
                     />
                   </div>
                 </div>
 
                 {/* Cliente/Fornecedor */}
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     {formData.tipoLancamento === "VENDA" ? "Cliente" : "Fornecedor"}
                   </Label>
                   <Input
@@ -400,19 +390,19 @@ export default function LancamentoManualPage() {
                     onChange={e =>
                       setFormData({ ...formData, clienteFornecedor: e.target.value })
                     }
-                    className="rounded-lg border-gray-300 focus:ring-[#de4838]"
+                    className="rounded-lg border-border focus:ring-primary"
                   />
                 </div>
 
                 {/* Conta para COMPRA */}
                 {formData.tipoLancamento === "COMPRA" && (
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Conta de Despesa
                     </Label>
                     <div className="relative">
                       <select
-                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none"
+                        className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
                         value={formData.contaDespesa}
                         onChange={e =>
                           setFormData({ ...formData, contaDespesa: e.target.value })
@@ -431,7 +421,7 @@ export default function LancamentoManualPage() {
                           ))
                         )}
                       </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
                         <svg
                           className="fill-current h-4 w-4"
                           xmlns="http://www.w3.org/2000/svg"
@@ -447,12 +437,12 @@ export default function LancamentoManualPage() {
                 {/* Conta para VENDA */}
                 {formData.tipoLancamento === "VENDA" && (
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Conta de Destino
                     </Label>
                     <div className="relative">
                       <select
-                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none"
+                        className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
                         value={formData.contaDestino}
                         onChange={e =>
                           setFormData({ ...formData, contaDestino: e.target.value })
@@ -463,7 +453,7 @@ export default function LancamentoManualPage() {
                         <option value="iFood">🍔 iFood</option>
                         <option value="Infinity Empório">🏪 Infinity Empório</option>
                       </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
                         <svg
                           className="fill-current h-4 w-4"
                           xmlns="http://www.w3.org/2000/svg"
@@ -477,9 +467,9 @@ export default function LancamentoManualPage() {
                 )}
 
                 {/* Alerta informativo */}
-                <Alert variant="default" className="bg-[#de4838]/10 border-[#de4838]/20 rounded-xl">
-                  <AlertCircle className="h-4 w-4 text-[#de4838]" />
-                  <AlertDescription className="text-sm text-gray-700">
+                <Alert variant="default" className="bg-primary/10 border-primary/20 rounded-xl">
+                  <AlertCircle className="h-4 w-4 text-primary" />
+                  <AlertDescription className="text-sm text-white">
                     {formData.tipoLancamento === "VENDA"
                       ? "💰 Venda: O valor será registrado como RECEITA (Entrada no caixa)"
                       : "📦 Compra: O valor será registrado como DESPESA (Saída do caixa)"}
@@ -487,10 +477,10 @@ export default function LancamentoManualPage() {
                 </Alert>
 
                 {/* Total */}
-                <div className="pt-4 border-t border-gray-200">
+                <div className="pt-4 border-t border-border">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-600">Valor Total:</span>
-                    <span className="text-2xl font-bold text-[#de4838]">
+                    <span className="text-sm font-medium text-muted-foreground">Valor Total:</span>
+                    <span className="text-2xl font-bold text-primary">
                       {formatCurrency(valorTotal)}
                     </span>
                   </div>
@@ -501,68 +491,68 @@ export default function LancamentoManualPage() {
 
           {/* Right Column - Preview Card */}
           <div className="lg:sticky lg:top-24 h-fit">
-            <Card className="overflow-hidden border-0 shadow-lg rounded-2xl bg-white">
-              <div className="bg-gray-100 p-4 border-b border-gray-100">
-                <h3 className="font-semibold text-gray-800">Pré-visualização do lançamento</h3>
-                <p className="text-xs text-gray-500">Confira os detalhes antes de salvar</p>
+            <Card className="overflow-hidden border-0 shadow-lg rounded-2xl bg-surface">
+              <div className="bg-surface-2 p-4 border-b border-border">
+                <h3 className="font-semibold text-white">Pré-visualização do lançamento</h3>
+                <p className="text-xs text-muted-foreground">Confira os detalhes antes de salvar</p>
               </div>
               <CardContent className="p-6 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                  <span className="text-sm text-gray-500">Tipo:</span>
+                <div className="flex items-center justify-between pb-3 border-b border-border">
+                  <span className="text-sm text-muted-foreground">Tipo:</span>
                   <span
                     className={`text-sm font-medium px-2 py-1 rounded-full ${
                       formData.tipoLancamento === "VENDA"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-orange-100 text-orange-700"
+                        ? "bg-success/10 text-success"
+                        : "bg-warning/10 text-warning"
                     }`}
                   >
                     {formData.tipoLancamento === "VENDA" ? "Venda (Entrada)" : "Compra (Saída)"}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Produto:</span>
-                  <span className="font-medium text-gray-800 text-right">
+                  <span className="text-muted-foreground">Produto:</span>
+                  <span className="font-medium text-white text-right">
                     {produtoSelecionado?.descricao || "—"}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Quantidade:</span>
-                  <span className="font-medium text-gray-800">
+                  <span className="text-muted-foreground">Quantidade:</span>
+                  <span className="font-medium text-white">
                     {formData.quantidade} {produtoSelecionado?.unidade || ""}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Valor Unitário:</span>
-                  <span className="font-medium text-gray-800">
+                  <span className="text-muted-foreground">Valor Unitário:</span>
+                  <span className="font-medium text-white">
                     {formatCurrency(produtoSelecionado?.preco_venda || formData.valorUnitario)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Forma de Pagto:</span>
-                  <span className="font-medium text-gray-800 capitalize">
+                  <span className="text-muted-foreground">Forma de Pagto:</span>
+                  <span className="font-medium text-white capitalize">
                     {formData.formaPagamento.toLowerCase().replace("_", " ")}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">
+                  <span className="text-muted-foreground">
                     {formData.tipoLancamento === "VENDA" ? "Cliente" : "Fornecedor"}:
                   </span>
-                  <span className="font-medium text-gray-800">
+                  <span className="font-medium text-white">
                     {formData.clienteFornecedor || "—"}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Origem/Destino:</span>
-                  <span className="font-medium text-gray-800">
+                  <span className="text-muted-foreground">Origem/Destino:</span>
+                  <span className="font-medium text-white">
                     {formData.origemDestino || "—"}
                   </span>
                 </div>
-                <div className="pt-4 mt-2 border-t border-dashed border-gray-200">
+                <div className="pt-4 mt-2 border-t border-dashed border-border">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-gray-700">
+                    <span className="text-sm font-semibold text-white">
                       Total a {formData.tipoLancamento === "VENDA" ? "receber" : "pagar"}:
                     </span>
-                    <span className="text-xl font-bold text-[#de4838]">
+                    <span className="text-xl font-bold text-primary">
                       {formatCurrency(valorTotal)}
                     </span>
                   </div>
@@ -571,7 +561,7 @@ export default function LancamentoManualPage() {
             </Card>
           </div>
         </div>
-      </div>
+      </PageContainer>
     </div>
   );
 }

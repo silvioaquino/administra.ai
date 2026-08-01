@@ -112,7 +112,15 @@ export async function carregarProvisoesAtivas(
   if (cfg?.dados) {
     return { ...PROVISOES_ATIVAS_PADRAO, ...(cfg.dados as Partial<ProvisoesAtivasTipos>) };
   }
+  // Virada de ano: herda a configuração do ano anterior.
+  const anterior = await prisma.planejamentoConfig.findFirst({
+    where: { empresaId, userId, tipo: 'provisoes_ativas', anoReferencia: ano - 1 },
+  });
+  if (anterior?.dados) {
+    return { ...PROVISOES_ATIVAS_PADRAO, ...(anterior.dados as Partial<ProvisoesAtivasTipos>) };
+  }
   return PROVISOES_ATIVAS_PADRAO;
+
 }
 
 /** Persiste os switches globais por tipo de provisão em planejamentoConfig. */
@@ -139,8 +147,15 @@ async function carregarMapaProvisoesFuncionarios(
   const provs = await prisma.provisaoFuncionario.findMany({
     where: { empresaId, userId, ano },
   });
+  // Virada de ano: herda as provisões por funcionário do ano anterior.
+  const base = provs.length
+    ? provs
+    : await prisma.provisaoFuncionario.findMany({
+        where: { empresaId, userId, ano: ano - 1 },
+      });
+
   const mapa: MapaProvisoes = {};
-  for (const p of provs) {
+  for (const p of base) {
     if (!mapa[p.funcionarioNome]) mapa[p.funcionarioNome] = {};
     (mapa[p.funcionarioNome] as Record<string, boolean>)[p.provisao] = p.ativo;
   }

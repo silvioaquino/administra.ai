@@ -74,18 +74,18 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
   const pctDespesasFixas = metaTotal > 0 ? Math.min((totalDespesas / metaTotal) * 100, 10000) : 0
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className="bg-gray-100 p-4 border-b border-gray-100">
+    <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-surface-2 p-4 border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-lg">💰</span>
-            <h3 className="font-semibold text-gray-800">Despesas Fixas</h3>
+            <h3 className="font-semibold text-white">Despesas Fixas</h3>
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={adicionarLinha}
-            className="rounded-lg border-gray-200 hover:border-[#de4838] hover:cursor-pointer transition-all"
+            className="rounded-lg border-border hover:border-primary hover:cursor-pointer transition-all"
           >
             <Plus className="h-4 w-4" />
           </Button>
@@ -94,12 +94,12 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-surface-2 border-b border-border">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Despesa</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor (R$)</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">% da Fatia</th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Despesa</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Valor (R$)</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">% da Fatia</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -108,13 +108,13 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
               const pctFatia = metaTotal > 0 ? (valor / metaTotal) * 100 : 0
 
               return (
-                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr key={index} className="border-b border-border hover:bg-surface-2 transition-colors">
                   <td className="px-4 py-3">
                     <Input
                       type="text"
                       value={desp.nome}
                       onChange={e => atualizarDespesa(index, 'nome', e.target.value)}
-                      className="text-sm font-medium text-gray-700"
+                      className="text-sm font-medium text-white"
                       placeholder="Nome da despesa"
                     />
                   </td>
@@ -123,11 +123,11 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
                       type="number"
                       value={valor || ''}
                       onChange={e => atualizarDespesa(index, 'valor', parseFloat(e.target.value) || 0)}
-                      className="text-right text-sm font-mono text-gray-700"
+                      className="text-right text-sm font-mono text-white"
                       placeholder="0,00"
                     />
                   </td>
-                  <td className="px-4 py-3 text-right font-mono text-gray-500">
+                  <td className="px-4 py-3 text-right font-mono text-muted-foreground">
                     {pctFatia.toFixed(2)}%
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -135,7 +135,7 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
                       variant="ghost"
                       size="sm"
                       onClick={() => removerLinha(index)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/5 rounded-full"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -146,7 +146,7 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
 
             {/* Linha de Aluguel das Maquininhas (somente leitura) */}
             {aluguelTotal > 0 && (
-              <tr className="border-b border-gray-100 bg-blue-50 hover:bg-blue-50 transition-colors">
+              <tr className="border-b border-border bg-info/5 hover:bg-info/5 transition-colors">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2 text-blue-800 font-medium">
                     <span className="text-lg">🏪</span>
@@ -156,31 +156,31 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
                 <td className="px-4 py-3 text-right font-mono text-blue-800 font-semibold">
                   {formatCurrency(aluguelTotal)}
                 </td>
-                <td className="px-4 py-3 text-right font-mono text-blue-600">
+                <td className="px-4 py-3 text-right font-mono text-info">
                   {metaTotal > 0 ? ((aluguelTotal / metaTotal) * 100).toFixed(2) : '0.00'}%
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className="text-xs text-blue-500 bg-blue-100 px-2 py-1 rounded-full">Automático</span>
+                  <span className="text-xs text-info bg-info/10 px-2 py-1 rounded-full">Automático</span>
                 </td>
               </tr>
             )}
           </tbody>
-          <tfoot className="border-t border-gray-200 bg-gray-100">
+          <tfoot className="border-t border-border bg-surface-2">
             <tr className="font-semibold">
-              <td className="px-4 py-3 text-gray-800">TOTAL</td>
-              <td className="px-4 py-3 text-right text-gray-800">{formatCurrency(totalDespesas)}</td>
-              <td className="px-4 py-3 text-right text-[#de4838] font-bold">{pctDespesasFixas.toFixed(2)}%</td>
+              <td className="px-4 py-3 text-white">TOTAL</td>
+              <td className="px-4 py-3 text-right text-white">{formatCurrency(totalDespesas)}</td>
+              <td className="px-4 py-3 text-right text-primary font-bold">{pctDespesasFixas.toFixed(2)}%</td>
               <td className="px-4 py-3 text-center"></td>
             </tr>
           </tfoot>
         </table>
       </div>
 
-      <div className="p-4 border-t border-gray-100 flex justify-end">
+      <div className="p-4 border-t border-border flex justify-end">
         <Button
           onClick={salvarDados}
           disabled={salvando}
-          className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-full px-4 py-2 hover:cursor-pointer transition-all"
+          className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 py-2 hover:cursor-pointer transition-all"
         >
           <Settings className="mr-2 h-4 w-4" />
           {salvando ? 'Salvando...' : 'Salvar'}

@@ -109,11 +109,11 @@ export default function AdminDashboard({
   })
 
   const cards = [
-    { label: "Total de clientes", value: metrics.totalClientes, icon: Users, cor: "text-blue-400 bg-blue-500/10" },
-    { label: "Trials ativos", value: metrics.trialsAtivos, icon: Crown, cor: "text-orange-400 bg-orange-500/10" },
-    { label: "Assinaturas ativas", value: metrics.assinaturasAtivas, icon: CheckCircle2, cor: "text-emerald-400 bg-emerald-500/10" },
-    { label: "MRR estimado", value: formatCurrency(metrics.receitaMRR), icon: TrendingUp, cor: "text-[#de4838] bg-[#de4838]/10" },
-    { label: "Novos (30 dias)", value: metrics.novosUltimos30Dias, icon: Calendar, cor: "text-purple-400 bg-purple-500/10" },
+    { label: "Total de clientes", value: metrics.totalClientes, icon: Users, cor: "text-info bg-info/50/10" },
+    { label: "Trials ativos", value: metrics.trialsAtivos, icon: Crown, cor: "text-orange-400 bg-warning/50/10" },
+    { label: "Assinaturas ativas", value: metrics.assinaturasAtivas, icon: CheckCircle2, cor: "text-emerald-400 bg-success/50/10" },
+    { label: "MRR estimado", value: formatCurrency(metrics.receitaMRR), icon: TrendingUp, cor: "text-primary bg-primary/10" },
+    { label: "Novos (30 dias)", value: metrics.novosUltimos30Dias, icon: Calendar, cor: "text-purple-400 bg-primary/80/10" },
   ]
 
   const abrirNovo = () => {
@@ -196,12 +196,12 @@ export default function AdminDashboard({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#de4838]/20">
-          <Shield className="h-5 w-5 text-[#de4838]" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20">
+          <Shield className="h-5 w-5 text-primary" />
         </div>
         <div>
           <h1 className="text-xl font-bold text-white">Administração do SaaS</h1>
-          <p className="text-sm text-gray-400">Visão geral de clientes, assinaturas e planos.</p>
+          <p className="text-sm text-muted-foreground/70">Visão geral de clientes, assinaturas e planos.</p>
         </div>
       </div>
 
@@ -213,7 +213,7 @@ export default function AdminDashboard({
               <c.icon className="h-4 w-4" />
             </div>
             <p className="text-lg font-bold text-white">{c.value}</p>
-            <p className="text-[11px] text-gray-400">{c.label}</p>
+            <p className="text-[11px] text-muted-foreground/70">{c.label}</p>
           </div>
         ))}
       </div>
@@ -230,8 +230,8 @@ export default function AdminDashboard({
             className={cn(
               "flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-all",
               aba === t.id
-                ? "border-[#de4838] text-[#de4838]"
-                : "border-transparent text-gray-400 hover:text-white"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground/70 hover:text-white"
             )}
           >
             <t.icon className="h-4 w-4" />
@@ -246,8 +246,8 @@ export default function AdminDashboard({
           className={cn(
             "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm",
             msg.tipo === "ok"
-              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-              : "border-red-500/30 bg-red-500/10 text-red-400"
+              ? "border-emerald-500/30 bg-success/50/10 text-emerald-400"
+              : "border-red-500/30 bg-destructive/50/10 text-red-400"
           )}
         >
           {msg.tipo === "ok" ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
@@ -259,7 +259,7 @@ export default function AdminDashboard({
       {aba === "clientes" && (
         <div className="overflow-hidden rounded-xl border border-gray-800">
           <table className="w-full text-sm">
-            <thead className="bg-gray-800/80 text-left text-[11px] uppercase tracking-wider text-gray-400">
+            <thead className="bg-gray-800/80 text-left text-[11px] uppercase tracking-wider text-muted-foreground/70">
               <tr>
                 <th className="px-3 py-2.5">Cliente</th>
                 <th className="px-3 py-2.5">Segmento</th>
@@ -271,7 +271,7 @@ export default function AdminDashboard({
             <tbody>
               {clientes.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-3 py-6 text-center text-gray-500">
+                  <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
                     Nenhum cliente cadastrado.
                   </td>
                 </tr>
@@ -279,28 +279,28 @@ export default function AdminDashboard({
               {clientes.map((c) => {
                 const ativo = c.subscription?.status === "active"
                 const status = ativo
-                  ? { texto: "Assinatura ativa", cor: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400", icon: CheckCircle2 }
+                  ? { texto: "Assinatura ativa", cor: "border-emerald-500/30 bg-success/50/10 text-emerald-400", icon: CheckCircle2 }
                   : c.isInTrial
-                  ? { texto: `Trial · ${c.diasTrial}d`, cor: "border-orange-500/30 bg-orange-500/10 text-orange-400", icon: Crown }
-                  : { texto: "Expirado", cor: "border-gray-600/30 bg-gray-700/30 text-gray-400", icon: AlertTriangle }
+                  ? { texto: `Trial · ${c.diasTrial}d`, cor: "border-orange-500/30 bg-warning/50/10 text-orange-400", icon: Crown }
+                  : { texto: "Expirado", cor: "border-gray-600/30 bg-gray-700/30 text-muted-foreground/70", icon: AlertTriangle }
                 return (
                   <tr key={c.id} className="border-t border-gray-800 hover:bg-gray-800/40">
                     <td className="px-3 py-3">
                       <p className="font-medium text-white">{c.nome}</p>
-                      <p className="text-xs text-gray-500">{c.email}</p>
+                      <p className="text-xs text-muted-foreground">{c.email}</p>
                     </td>
-                    <td className="px-3 py-3 text-gray-300">{c.segmento || "—"}</td>
-                    <td className="px-3 py-3 text-gray-300">
+                    <td className="px-3 py-3 text-muted-foreground/70">{c.segmento || "—"}</td>
+                    <td className="px-3 py-3 text-muted-foreground/70">
                       {c.cidade ? `${c.cidade}${c.estado ? `/${c.estado}` : ""}` : "—"}
                     </td>
-                    <td className="px-3 py-3 text-gray-300">{formatarData(c.createdAt)}</td>
+                    <td className="px-3 py-3 text-muted-foreground/70">{formatarData(c.createdAt)}</td>
                     <td className="px-3 py-3">
                       <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs", status.cor)}>
                         <status.icon className="h-3 w-3" />
                         {status.texto}
                       </span>
                       {ativo && c.subscription?.plan && (
-                        <p className="mt-1 text-[11px] text-gray-500">{c.subscription.plan.name}</p>
+                        <p className="mt-1 text-[11px] text-muted-foreground">{c.subscription.plan.name}</p>
                       )}
                     </td>
                   </tr>
@@ -317,7 +317,7 @@ export default function AdminDashboard({
           <div className="flex justify-end">
             <button
               onClick={abrirNovo}
-              className="flex items-center gap-2 rounded-lg bg-[#de4838] px-3 py-2 text-sm font-medium text-white transition-all hover:bg-[#de4838]/90"
+              className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition-all hover:bg-primary/90"
             >
               <Plus className="h-4 w-4" /> Novo plano
             </button>
@@ -331,15 +331,15 @@ export default function AdminDashboard({
                     <h3 className="font-semibold text-white">{p.name}</h3>
                     <p className="mt-1 text-lg font-bold text-white">
                       {formatCurrency(p.price)}
-                      <span className="text-xs font-normal text-gray-400">/mês</span>
+                      <span className="text-xs font-normal text-muted-foreground/70">/mês</span>
                     </p>
                   </div>
                   <span
                     className={cn(
                       "rounded-full border px-2 py-0.5 text-xs",
                       p.isActive
-                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-                        : "border-gray-600/30 bg-gray-700/30 text-gray-400"
+                        ? "border-emerald-500/30 bg-success/50/10 text-emerald-400"
+                        : "border-gray-600/30 bg-gray-700/30 text-muted-foreground/70"
                     )}
                   >
                     {p.isActive ? "Ativo" : "Inativo"}
@@ -348,20 +348,20 @@ export default function AdminDashboard({
 
                 <ul className="mt-3 flex-1 space-y-1">
                   {p.features.slice(0, 6).map((f, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs text-gray-300">
-                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                    <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground/70">
+                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" />
                       {f}
                     </li>
                   ))}
                   {p.features.length > 6 && (
-                    <li className="text-xs text-gray-500">+{p.features.length - 6} outros recursos</li>
+                    <li className="text-xs text-muted-foreground">+{p.features.length - 6} outros recursos</li>
                   )}
                 </ul>
 
                 <div className="mt-4 flex gap-2 border-t border-gray-700 pt-3">
                   <button
                     onClick={() => abrirEditar(p)}
-                    className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-gray-700 px-2 py-1.5 text-xs text-gray-300 transition-all hover:bg-gray-700/50"
+                    className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-gray-700 px-2 py-1.5 text-xs text-muted-foreground/70 transition-all hover:bg-gray-700/50"
                   >
                     <Pencil className="h-3.5 w-3.5" /> Editar
                   </button>
@@ -370,8 +370,8 @@ export default function AdminDashboard({
                     className={cn(
                       "flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-all",
                       p.isActive
-                        ? "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
-                        : "bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30"
+                        ? "bg-gray-700/50 text-muted-foreground/70 hover:bg-gray-700"
+                        : "bg-success/20 text-emerald-400 hover:bg-success/30"
                     )}
                   >
                     {p.isActive ? "Inativar" : "Ativar"}
@@ -380,7 +380,7 @@ export default function AdminDashboard({
               </div>
             ))}
             {planos.length === 0 && (
-              <p className="col-span-full rounded-xl border border-gray-800 bg-gray-800/60 p-6 text-center text-gray-500">
+              <p className="col-span-full rounded-xl border border-gray-800 bg-gray-800/60 p-6 text-center text-muted-foreground">
                 Nenhum plano cadastrado.
               </p>
             )}
@@ -398,7 +398,7 @@ export default function AdminDashboard({
               </h3>
               <button
                 onClick={() => setFormOpen(false)}
-                className="rounded-lg p-1 text-gray-400 hover:bg-gray-800 hover:text-white"
+                className="rounded-lg p-1 text-muted-foreground/70 hover:bg-gray-800 hover:text-white"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -406,51 +406,51 @@ export default function AdminDashboard({
 
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs text-gray-400">Nome</label>
+                <label className="mb-1 block text-xs text-muted-foreground/70">Nome</label>
                 <input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-[#de4838]"
+                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-primary"
                   placeholder="Ex: PDV Básico"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs text-gray-400">Preço (R$/mês)</label>
+                <label className="mb-1 block text-xs text-muted-foreground/70">Preço (R$/mês)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={form.price}
                   onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-[#de4838]"
+                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-primary"
                   placeholder="49.90"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs text-gray-400">
+                <label className="mb-1 block text-xs text-muted-foreground/70">
                   Recursos (um por linha)
                 </label>
                 <textarea
                   value={form.features}
                   onChange={(e) => setForm({ ...form, features: e.target.value })}
                   rows={4}
-                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-[#de4838]"
+                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-primary"
                   placeholder={"Integração iFood\nPedidos ilimitados"}
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs text-gray-400">Stripe Price ID</label>
+                <label className="mb-1 block text-xs text-muted-foreground/70">Stripe Price ID</label>
                 <input
                   value={form.stripePriceId}
                   onChange={(e) => setForm({ ...form, stripePriceId: e.target.value })}
-                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-[#de4838]"
+                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-primary"
                   placeholder="price_..."
                 />
               </div>
 
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-300">
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground/70">
                 <input
                   type="checkbox"
                   checked={form.isActive}
@@ -464,14 +464,14 @@ export default function AdminDashboard({
             <div className="mt-5 flex justify-end gap-2">
               <button
                 onClick={() => setFormOpen(false)}
-                className="rounded-lg border border-gray-700 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800"
+                className="rounded-lg border border-gray-700 px-3 py-2 text-sm text-muted-foreground/70 hover:bg-gray-800"
               >
                 Cancelar
               </button>
               <button
                 onClick={salvar}
                 disabled={saving}
-                className="flex items-center gap-1 rounded-lg bg-[#de4838] px-3 py-2 text-sm font-medium text-white hover:bg-[#de4838]/90 disabled:opacity-60"
+                className="flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-60"
               >
                 {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                 Salvar

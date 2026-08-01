@@ -10,6 +10,8 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { formatCurrency, formatPercentage } from "@/lib/utils"
+import { PageContainer } from "@/components/layout/PageContainer"
+import { PageHeader } from "@/components/layout/PageHeader"
 import { toast } from 'sonner'
 import { calcularIndicadores, type MaquininhaIndicador } from "@/lib/planejamento/calcularIndicadores"
 
@@ -500,16 +502,14 @@ export default function PlanejamentoPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#e5e7eb]">
+    <div className="min-h-screen bg-background">
       {/* Header com botões de períodos */}
-      <div className="sticky top-0 z-10 ml-3 mr-3 sm:ml-6 sm:mr-6 bg-white border-b border-gray-200 px-3 py-3 sm:px-6 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-800">Planejamento Financeiro</h1>
-        </div>
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+      <PageContainer>
+        <PageHeader title="Planejamento Financeiro">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           {/* Botões de seleção de períodos - NOVO HEADER */}
-          <div className="flex items-center gap-1 bg-gray-50 rounded-lg p-1 border border-gray-200">
-            <span className="text-xs font-medium text-gray-600 px-2">Períodos:</span>
+          <div className="flex items-center gap-1 bg-surface-2 rounded-lg p-1 border border-border">
+            <span className="text-xs font-medium text-muted-foreground px-2">Períodos:</span>
             {PERIODOS_CONFIG.map(config => (
               <Button
                 key={config.id}
@@ -520,8 +520,8 @@ export default function PlanejamentoPage() {
                 className={`
                   rounded-md text-xs font-medium transition-all min-w-0 px-2 py-1 h-7
                   ${periodosSelecionados.includes(config.id)
-                    ? 'bg-[#de4838] text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-100 border-gray-200'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-muted-foreground hover:bg-surface-2 border-border'
                   }
                 `}
               >
@@ -531,7 +531,7 @@ export default function PlanejamentoPage() {
           </div>
           <div className="relative">
             <select
-              className="rounded-full border border-gray-200 bg-white px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] appearance-none pr-8 cursor-pointer hover:border-red-500 transition-colors"
+              className="rounded-full border border-border bg-surface px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none pr-8 cursor-pointer hover:border-red-500 transition-colors"
               value={anoAtual}
               onChange={(e) => setAnoAtual(parseInt(e.target.value))}
             >
@@ -539,23 +539,20 @@ export default function PlanejamentoPage() {
               <option value={2025}>2025</option>
               <option value={2026}>2026</option>
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
               <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
             </div>
           </div>
           <Button
             variant="outline"
             onClick={sincronizarDadosReais}
-            className="rounded-full border-gray-200 hover:bg-gray-100 hover:border-red-500 hover:cursor-pointer transition-all whitespace-nowrap text-xs sm:text-sm"
+            className="rounded-full border-border hover:bg-surface-2 hover:border-red-500 hover:cursor-pointer transition-all whitespace-nowrap text-xs sm:text-sm"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Sincronizar
           </Button>
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto p-6 max-w-7xl">
+        </PageHeader>
         {/* Cards Resumo */}
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {cardsResumo.map((card, idx) => (
@@ -607,8 +604,8 @@ export default function PlanejamentoPage() {
                   onClick={() => setActiveTab(periodo)}
                   className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all w-24 justify-center hover:cursor-pointer hover:border-2 hover:border-red-500 text-[13px] ${
                     activeTab === periodo
-                      ? "bg-white shadow-sm text-gray-800 border-2 border-red-500"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      ? "bg-surface shadow-sm text-white border-2 border-red-500"
+                      : "bg-surface-2 text-muted-foreground hover:bg-surface-2"
                   }`}
                 >
                   <Icon className="h-3 w-3" />
@@ -693,7 +690,7 @@ export default function PlanejamentoPage() {
 
         {/* Tabela de Metas Mensais */}
         <div className="mt-8">
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
             <div className="p-0">
               <TabelaMetasMensais
                 metas={metasMensais}
@@ -724,7 +721,7 @@ export default function PlanejamentoPage() {
 
         {/* Folha Salarial & Provisões */}
         <div className="mt-8">
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
             <div className="p-0">
               <FolhaSalarialTable
                 funcionarios={funcionarios}
@@ -739,7 +736,7 @@ export default function PlanejamentoPage() {
 
         {/* Comparativo Real x Meta */}
         <div className="mt-8">
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
             <div className="p-0">
               <TabelaAcompanhamento
                 metas={metasMensais}
@@ -764,12 +761,12 @@ export default function PlanejamentoPage() {
             onLucroSave={handleLucroSave}
           />
         </div>
-      </div>
+      </PageContainer>
 
       {/* Botão Ajuda */}
       <button
         onClick={() => navegarPara("/planejamento/configuracoes?tab=ajuda")}
-        className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-[#de4838] text-white shadow-lg transition-all hover:scale-110 hover:bg-[#c73d2e] hover:cursor-pointer hover:border-2 hover:border-red-500"
+        className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-110 hover:bg-primary/90 hover:cursor-pointer hover:border-2 hover:border-red-500"
       >
         <HelpCircle className="h-6 w-6" />
       </button>

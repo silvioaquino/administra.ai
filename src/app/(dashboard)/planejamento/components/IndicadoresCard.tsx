@@ -30,11 +30,11 @@ export function IndicadoresCard({
 
   if (metaFaltando) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="bg-gray-100 p-3 border-b border-gray-100">
+      <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-surface-2 p-3 border-b border-border">
           <div className="flex items-center gap-2">
-            <Activity className="h-4 w-4 text-[#de4838]" />
-            <h3 className="font-semibold text-gray-800 text-sm">Indicadores Ideais vs Atuais</h3>
+            <Activity className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold text-white text-sm">Indicadores Ideais vs Atuais</h3>
           </div>
         </div>
         <div className="p-4">
@@ -63,27 +63,27 @@ export function IndicadoresCard({
     switch (status) {
       case 'ideal':
         return {
-          bg: 'bg-emerald-50',
-          border: 'border-emerald-200',
-          text: 'text-emerald-700',
-          progressBg: 'bg-emerald-100',
-          progressFill: 'bg-emerald-500',
-          iconBg: 'bg-emerald-100',
-          iconColor: 'text-emerald-600',
+          bg: 'bg-success/5',
+          border: 'border-success/30',
+          text: 'text-success',
+          progressBg: 'bg-success/10',
+          progressFill: 'bg-success/50',
+          iconBg: 'bg-success/10',
+          iconColor: 'text-success',
           statusText: 'Ideal ✓',
-          statusColor: 'text-emerald-600'
+          statusColor: 'text-success'
         }
       case 'abaixo':
         return {
-          bg: 'bg-amber-50',
+          bg: 'bg-warning/5',
           border: 'border-amber-200',
-          text: 'text-amber-700',
-          progressBg: 'bg-amber-100',
-          progressFill: 'bg-amber-500',
-          iconBg: 'bg-amber-100',
-          iconColor: 'text-amber-600',
+          text: 'text-warning',
+          progressBg: 'bg-warning/10',
+          progressFill: 'bg-warning/50',
+          iconBg: 'bg-warning/10',
+          iconColor: 'text-warning',
           statusText: 'Abaixo da faixa ↓',
-          statusColor: 'text-amber-600'
+          statusColor: 'text-warning'
         }
       case 'acima':
         return {
@@ -143,11 +143,11 @@ export function IndicadoresCard({
       cor: "info",
       valor: cmv,
       unidade: "%",
-      min: 35,
-      max: 45,
-      tooltip: "Ideal: entre 35% e 45% do faturamento",
-      getStatus: (v: number) => getStatusType(v, 35, 45),
-      isIdeal: (v: number) => v >= 35 && v <= 45
+      min: 30,
+      max: 40,
+      tooltip: "Ideal: entre 30% e 40% do faturamento",
+      getStatus: (v: number) => getStatusType(v, 30, 40),
+      isIdeal: (v: number) => v >= 30 && v <= 40
     },
     {
       nome: "Lucro Desejado",
@@ -166,20 +166,20 @@ export function IndicadoresCard({
   const indicadoresIdeais = indicadores.filter(i => i.isIdeal(i.valor)).length
 
   const getSaudeFinanceira = () => {
-    if (indicadoresIdeais >= 4) return { icon: "🟢", text: "Excelente! Saúde Financeira Ótima", color: "text-emerald-600", bg: "bg-emerald-50" }
-    if (indicadoresIdeais >= 3) return { icon: "🟡", text: "Boa, mas com margem para melhoria", color: "text-amber-600", bg: "bg-amber-50" }
-    if (indicadoresIdeais >= 2) return { icon: "🟠", text: "Atenção! Necessita ajustes", color: "text-orange-600", bg: "bg-orange-50" }
-    return { icon: "🔴", text: "Crítico! Revise seus custos urgentemente", color: "text-red-600", bg: "bg-red-50" }
+    if (indicadoresIdeais >= 4) return { icon: "🟢", text: "Excelente! Saúde Financeira Ótima", color: "text-success", bg: "bg-success/5" }
+    if (indicadoresIdeais >= 3) return { icon: "🟡", text: "Boa, mas com margem para melhoria", color: "text-warning", bg: "bg-warning/5" }
+    if (indicadoresIdeais >= 2) return { icon: "🟠", text: "Atenção! Necessita ajustes", color: "text-warning", bg: "bg-warning/5" }
+    return { icon: "🔴", text: "Crítico! Revise seus custos urgentemente", color: "text-destructive", bg: "bg-destructive/5" }
   }
 
   const saude = getSaudeFinanceira()
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className="bg-gray-100 p-3 border-b border-gray-100">
+    <div className="bg-surface rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-surface-2 p-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <Activity className="h-4 w-4 text-[#de4838]" />
-          <h3 className="font-semibold text-gray-800 text-sm">Indicadores Ideais vs Atuais</h3>
+          <Activity className="h-4 w-4 text-primary" />
+          <h3 className="font-semibold text-white text-sm">Indicadores Ideais vs Atuais</h3>
         </div>
       </div>
       <div className="p-4">
@@ -213,7 +213,7 @@ export function IndicadoresCard({
                     <div className={`p-1 rounded-md ${colors.iconBg}`}>
                       <Icon className={`h-2 w-2 ${colors.iconColor}`} />
                     </div>
-                    <h6 className="font-semibold text-gray-800 text-[9px] sm:text-xs leading-tight">{ind.nome}</h6>
+                    <h6 className="font-semibold text-white text-[9px] sm:text-xs leading-tight">{ind.nome}</h6>
                   </div>
                   <span className={`rounded-full px-1 py-0.5 text-[7px] sm:text-[8px] font-medium ${colors.iconBg} ${colors.text}`}>
                     Ideal: {ind.min}{ind.unidade} - {ind.max}{ind.unidade}
@@ -221,7 +221,7 @@ export function IndicadoresCard({
                 </div>
                 <div className="my-1 text-center">
                   <span className={`text-sm sm:text-lg font-bold ${colors.text}`}>{ind.valor.toFixed(1)}</span>
-                  <span className="text-gray-500 ml-0.5 text-[8px] sm:text-[9px]">{ind.unidade}</span>
+                  <span className="text-muted-foreground ml-0.5 text-[8px] sm:text-[9px]">{ind.unidade}</span>
                 </div>
 
                 {/* Custom Progress Bar */}
@@ -233,11 +233,11 @@ export function IndicadoresCard({
                 </div>
 
                 <div className="mt-1 flex justify-between text-[8px] sm:text-[9px]">
-                  <span className="text-gray-500">Min: {ind.min}{ind.unidade}</span>
+                  <span className="text-muted-foreground">Min: {ind.min}{ind.unidade}</span>
                   <span className={`font-medium ${colors.statusColor}`}>
                     {colors.statusText}
                   </span>
-                  <span className="text-gray-500">Max: {ind.max}{ind.unidade}</span>
+                  <span className="text-muted-foreground">Max: {ind.max}{ind.unidade}</span>
                 </div>
               </div>
             )
@@ -245,14 +245,14 @@ export function IndicadoresCard({
 
           {/* Resumo da Saúde Financeira */}
           <div className={`rounded-lg ${saude.bg} p-2 shadow-sm h-full min-h-[67px] sm:min-h-[76px]`}>
-            <h6 className="mb-1 font-semibold text-gray-800 flex items-center gap-1 text-xs">
+            <h6 className="mb-1 font-semibold text-white flex items-center gap-1 text-xs">
               <Activity className="h-3 w-3" />
               Resumo
             </h6>
             <div className="text-center">
               <div className="text-xl">{saude.icon}</div>
               <div className={`mt-1 font-bold ${saude.color} text-[9px] sm:text-xs leading-tight`}>{saude.text}</div>
-              <div className="mt-1 text-[8px] sm:text-[9px] text-gray-500">
+              <div className="mt-1 text-[8px] sm:text-[9px] text-muted-foreground">
                 {indicadoresIdeais}/5 ideais
               </div>
             </div>
@@ -260,18 +260,18 @@ export function IndicadoresCard({
         </div>
 
         {/* Legenda */}
-        <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-3 justify-center text-xs">
+        <div className="mt-4 pt-3 border-t border-border flex flex-wrap gap-3 justify-center text-xs">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-emerald-100 border border-emerald-200"></div>
-            <span className="text-gray-600">Ideal</span>
+            <div className="w-3 h-3 rounded bg-success/10 border border-success/30"></div>
+            <span className="text-muted-foreground">Ideal</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-amber-100 border border-amber-200"></div>
-            <span className="text-gray-600">Abaixo da faixa</span>
+            <div className="w-3 h-3 rounded bg-warning/10 border border-amber-200"></div>
+            <span className="text-muted-foreground">Abaixo da faixa</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded bg-rose-100 border border-rose-200"></div>
-            <span className="text-gray-600">Acima da faixa</span>
+            <span className="text-muted-foreground">Acima da faixa</span>
           </div>
         </div>
       </div>

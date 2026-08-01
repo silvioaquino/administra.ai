@@ -114,7 +114,7 @@ export function ProvisoesConfig({
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b bg-gray-100">
+            <thead className="border-b bg-surface-2">
               <tr>
                 <th className="px-3 py-2 text-left">Provisão</th>
                 <th className="px-3 py-2 text-left">Funcionário</th>
@@ -124,7 +124,7 @@ export function ProvisoesConfig({
             </thead>
             <tbody>
               {PROVISOES_CONFIG.map((prov) => (
-                <tr key={prov.key} className="border-b bg-gray-100">
+                <tr key={prov.key} className="border-b bg-surface-2">
                   <td colSpan={4} className="px-3 py-2">
                     <div className="flex items-center justify-between">
                       <div>
@@ -164,7 +164,7 @@ export function ProvisoesConfig({
                         />
                       </td>
                       <td className="px-3 py-2 text-right">
-                        <span className={isFuncAtivo && isAtivo ? "text-green-600 font-medium" : "text-gray-400 line-through"}>
+                        <span className={isFuncAtivo && isAtivo ? "text-success font-medium" : "text-muted-foreground/70 line-through"}>
                           {formatCurrency(valorMensal)}
                         </span>
                       </td>
@@ -173,7 +173,7 @@ export function ProvisoesConfig({
                 })
               ))}
             </tbody>
-            <tfoot className="border-t bg-gray-100 font-bold">
+            <tfoot className="border-t bg-surface-2 font-bold">
               <tr>
                 <td colSpan={3} className="px-3 py-3 text-right">TOTAL DE PROVISÕES ATIVAS:</td>
                 <td className="px-3 py-3 text-right text-primary">{formatCurrency(totalProvisoes)}</td>

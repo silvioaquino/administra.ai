@@ -77,7 +77,7 @@ export function ModalEditarConta({
               value={saldoInicial}
               onChange={(e) => setSaldoInicial(Number(e.target.value))}
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground/70 mt-1">
               O saldo atual é calculado a partir do saldo inicial + movimentações.
             </p>
           </div>
@@ -86,7 +86,7 @@ export function ModalEditarConta({
             <select
               value={tipo}
               onChange={(e) => setTipo(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+              className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="CONTA_CORRENTE">Conta Corrente</option>
               <option value="POUPANCA">Poupança</option>
@@ -98,7 +98,7 @@ export function ModalEditarConta({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={salvar} disabled={salvando} className="bg-[#de4838] hover:bg-[#c73d2e]">
+          <Button onClick={salvar} disabled={salvando} className="bg-primary hover:bg-primary/90">
             {salvando ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>

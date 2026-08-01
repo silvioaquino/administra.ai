@@ -122,7 +122,7 @@ export function DespesasVariaveisConfig({
                   ({maquininhasAtivas.length} ativa{maquininhasAtivas.length !== 1 ? 's' : ''})
                 </span>
               </CardTitle>
-              <Button size="sm" onClick={adicionarMaquininha} className="bg-[#de4838] hover:bg-[#c73d2e]">
+              <Button size="sm" onClick={adicionarMaquininha} className="bg-primary hover:bg-primary/90">
                 <Plus className="h-4 w-4 mr-1" />
                 Adicionar
               </Button>
@@ -133,7 +133,7 @@ export function DespesasVariaveisConfig({
               {config.maquininhas.map((maquina) => (
                 <div 
                   key={maquina.id} 
-                  className={`border rounded-xl p-4 transition-all ${maquina.ativo ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-100 opacity-60'}`}
+                  className={`border rounded-xl p-4 transition-all ${maquina.ativo ? 'border-border bg-surface' : 'border-border bg-surface-2 opacity-60'}`}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -141,9 +141,9 @@ export function DespesasVariaveisConfig({
                         type="checkbox"
                         checked={maquina.ativo}
                         onChange={(e) => atualizarMaquininha(maquina.id, 'ativo', e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300 text-[#de4838] focus:ring-[#de4838]"
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                       />
-                      <Label className="text-sm font-medium text-gray-700">
+                      <Label className="text-sm font-medium text-white">
                         {maquina.ativo ? 'Ativa' : 'Inativa'}
                       </Label>
                     </div>
@@ -153,7 +153,7 @@ export function DespesasVariaveisConfig({
                           size="sm"
                           variant="ghost"
                           onClick={() => removerMaquininha(maquina.id)}
-                          className="h-8 w-8 p-0 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-yellow-600 hover:bg-yellow-50"
                           title="Desativar maquininha"
                         >
                           <span className="text-xs">⏸</span>
@@ -163,7 +163,7 @@ export function DespesasVariaveisConfig({
                         size="sm"
                         variant="ghost"
                         onClick={() => excluirMaquininha(maquina.id)}
-                        className="h-8 w-8 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5"
                         title="Excluir maquininha"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -173,45 +173,45 @@ export function DespesasVariaveisConfig({
 
                   <div className="space-y-2">
                     <div>
-                      <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Nome</Label>
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Nome</Label>
                       <Input
                         type="text"
                         value={maquina.nome}
                         onChange={(e) => atualizarMaquininha(maquina.id, 'nome', e.target.value)}
-                        className="rounded-lg border-gray-200 focus:ring-[#de4838] text-sm"
+                        className="rounded-lg border-border focus:ring-primary text-sm"
                         placeholder="Nome da operadora"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Taxa Débito %</Label>
+                        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Taxa Débito %</Label>
                         <Input
                           type="number"
                           step="0.01"
                           value={maquina.taxaDebito}
                           onChange={(e) => atualizarMaquininha(maquina.id, 'taxaDebito', Number(e.target.value))}
-                          className="rounded-lg border-gray-200 focus:ring-[#de4838] text-sm"
+                          className="rounded-lg border-border focus:ring-primary text-sm"
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Taxa Crédito %</Label>
+                        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Taxa Crédito %</Label>
                         <Input
                           type="number"
                           step="0.01"
                           value={maquina.taxaCredito}
                           onChange={(e) => atualizarMaquininha(maquina.id, 'taxaCredito', Number(e.target.value))}
-                          className="rounded-lg border-gray-200 focus:ring-[#de4838] text-sm"
+                          className="rounded-lg border-border focus:ring-primary text-sm"
                         />
                       </div>
                     </div>
                     <div>
-                      <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Aluguel (R$)</Label>
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Aluguel (R$)</Label>
                       <Input
                         type="number"
                         step="0.01"
                         value={maquina.aluguel}
                         onChange={(e) => atualizarMaquininha(maquina.id, 'aluguel', Number(e.target.value))}
-                        className="rounded-lg border-gray-200 focus:ring-[#de4838] text-sm"
+                        className="rounded-lg border-border focus:ring-primary text-sm"
                       />
                     </div>
                   </div>
@@ -320,33 +320,33 @@ export function DespesasVariaveisConfig({
         {/* Resultados */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-green-600">📈 RESULTADOS DOS CÁLCULOS</CardTitle>
+            <CardTitle className="text-success">📈 RESULTADOS DOS CÁLCULOS</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              <div className="rounded-lg bg-blue-50 p-2 text-center">
+              <div className="rounded-lg bg-info/5 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Taxa Débito Média</p>
-                <p className="text-lg font-bold text-blue-600">{formatPercentage(resultados.debitoMedia)}</p>
+                <p className="text-lg font-bold text-info">{formatPercentage(resultados.debitoMedia)}</p>
               </div>
-              <div className="rounded-lg bg-blue-50 p-2 text-center">
+              <div className="rounded-lg bg-info/5 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Taxa Crédito Média</p>
-                <p className="text-lg font-bold text-blue-600">{formatPercentage(resultados.creditoMedia)}</p>
+                <p className="text-lg font-bold text-info">{formatPercentage(resultados.creditoMedia)}</p>
               </div>
               <div className="rounded-lg bg-yellow-50 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Taxa Média Geral</p>
                 <p className="text-lg font-bold text-yellow-600">{formatPercentage(resultados.taxaMediaGeral)}</p>
               </div>
-              <div className="rounded-lg bg-gray-100 p-2 text-center">
+              <div className="rounded-lg bg-surface-2 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Aluguel Total</p>
-                <p className="text-lg font-bold text-gray-600">{formatCurrency(resultados.aluguelTotal)}</p>
+                <p className="text-lg font-bold text-muted-foreground">{formatCurrency(resultados.aluguelTotal)}</p>
               </div>
-              <div className="rounded-lg bg-gray-100 p-2 text-center">
+              <div className="rounded-lg bg-surface-2 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Aluguel % (base {formatCurrency(faturamentoBase)})</p>
-                <p className="text-lg font-bold text-gray-600">{formatPercentage(resultados.percentualAluguel)}</p>
+                <p className="text-lg font-bold text-muted-foreground">{formatPercentage(resultados.percentualAluguel)}</p>
               </div>
               <div className="rounded-lg bg-green-50 p-2 text-center">
                 <p className="text-xs text-muted-foreground">🎯 TOTAL DESPESAS VARIÁVEIS</p>
-                <p className="text-lg font-bold text-green-600">{formatPercentage(resultados.totalDespesasVariaveis)}</p>
+                <p className="text-lg font-bold text-success">{formatPercentage(resultados.totalDespesasVariaveis)}</p>
               </div>
             </div>
             <Alert className="mt-4" variant="info">

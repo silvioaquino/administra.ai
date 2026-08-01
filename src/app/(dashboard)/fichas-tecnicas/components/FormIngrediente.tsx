@@ -182,11 +182,11 @@ export function FormIngrediente({
   return (
     <div className="space-y-4">
       {/* Adicionar Produto */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-        <div className="bg-gray-100 px-4 py-3 border-b border-gray-100">
+      <div className="rounded-xl border border-border bg-surface overflow-hidden">
+        <div className="bg-surface-2 px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
-            <Package className="h-4 w-4 text-[#de4838]" />
-            <h4 className="text-sm font-medium text-gray-700">Adicionar Produto</h4>
+            <Package className="h-4 w-4 text-primary" />
+            <h4 className="text-sm font-medium text-white">Adicionar Produto</h4>
           </div>
         </div>
         <div className="p-4 space-y-3">
@@ -194,28 +194,28 @@ export function FormIngrediente({
             <button
               type="button"
               onClick={() => setProdutoOpen(!produtoOpen)}
-              className="w-full flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+              className="w-full flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={disabled}
             >
-              <span className={selectedProdutoId ? "text-gray-800" : "text-gray-400"}>
+              <span className={selectedProdutoId ? "text-white" : "text-muted-foreground/70"}>
                 {selectedProdutoId && produtoSelecionado 
                   ? `${produtoSelecionado.nome || produtoSelecionado.descricao} - Custo: ${formatCurrency(Number(produtoSelecionado.valorUnitario) || 0)}/${produtoSelecionado.unidade}`
                   : "Selecione um produto..."}
               </span>
-              <svg className={`h-4 w-4 text-gray-400 transition-transform ${produtoOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className={`h-4 w-4 text-muted-foreground/70 transition-transform ${produtoOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
             
             {produtoOpen && (
-              <div className="absolute z-10 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-lg">
-                <div className="p-2 border-b border-gray-100">
+              <div className="absolute z-10 mt-1 w-full rounded-xl border border-border bg-surface shadow-lg">
+                <div className="p-2 border-b border-border">
                   <div className="relative">
-                    <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
                     <input
                       type="text"
                       placeholder="Pesquisar produto..."
-                      className="w-full rounded-lg border border-gray-200 pl-8 pr-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                      className="w-full rounded-lg border border-border pl-8 pr-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                       value={produtoSearch}
                       onChange={(e) => setProdutoSearch(e.target.value)}
                     />
@@ -226,7 +226,7 @@ export function FormIngrediente({
                     <button
                       key={p.id}
                       type="button"
-                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex justify-between"
+                      className="w-full text-left px-3 py-2 text-sm text-white hover:bg-surface-2 transition-colors flex justify-between"
                       onClick={() => {
                         setSelectedProdutoId(p.id.toString())
                         setProdutoSearch("")
@@ -234,11 +234,11 @@ export function FormIngrediente({
                       }}
                     >
                       <span>{p.nome || p.descricao}</span>
-                      <span className="text-gray-400 text-xs">{formatCurrency(Number(p.valorUnitario) || 0)}/{p.unidade}</span>
+                      <span className="text-muted-foreground/70 text-xs">{formatCurrency(Number(p.valorUnitario) || 0)}/{p.unidade}</span>
                     </button>
                   ))}
                   {produtosFiltrados.length === 0 && (
-                    <div className="px-3 py-2 text-sm text-gray-400 text-center">
+                    <div className="px-3 py-2 text-sm text-muted-foreground/70 text-center">
                       Nenhum produto encontrado
                     </div>
                   )}
@@ -253,21 +253,21 @@ export function FormIngrediente({
               placeholder="Quantidade"
               value={quantidade}
               onChange={(e) => setQuantidade(parseFloat(e.target.value))}
-              className="flex-1 rounded-lg border-gray-200 focus:ring-[#de4838]"
+              className="flex-1 rounded-lg border-border focus:ring-primary"
               disabled={disabled}
             />
             <Button 
               type="button" 
               onClick={handleAddProduto} 
               disabled={disabled || !selectedProdutoId}
-              className="bg-[#de4838] hover:bg-[#c73d2e] rounded-lg"
+              className="bg-primary hover:bg-primary/90 rounded-lg"
             >
               <Plus className="h-4 w-4 mr-1" />
               Adicionar
             </Button>
           </div>
           {produtoSelecionado && (
-            <div className="text-xs text-gray-500 bg-gray-100 rounded-lg p-2">
+            <div className="text-xs text-muted-foreground bg-surface-2 rounded-lg p-2">
               Valor total: {formatCurrency(valorTotalProduto)} | 
               Estoque: {produtoSelecionado.quantidade} {produtoSelecionado.unidade}
             </div>
@@ -276,11 +276,11 @@ export function FormIngrediente({
       </div>
 
       {/* Adicionar Produto Acabado */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-        <div className="bg-gray-100 px-4 py-3 border-b border-gray-100">
+      <div className="rounded-xl border border-border bg-surface overflow-hidden">
+        <div className="bg-surface-2 px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-[#de4838]" />
-            <h4 className="text-sm font-medium text-gray-700">Adicionar Produto Acabado (Ficha Técnica)</h4>
+            <BookOpen className="h-4 w-4 text-primary" />
+            <h4 className="text-sm font-medium text-white">Adicionar Produto Acabado (Ficha Técnica)</h4>
           </div>
         </div>
         <div className="p-4 space-y-3">
@@ -288,28 +288,28 @@ export function FormIngrediente({
             <button
               type="button"
               onClick={() => setFichaOpen(!fichaOpen)}
-              className="w-full flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+              className="w-full flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={disabled}
             >
-              <span className={selectedFichaId ? "text-gray-800" : "text-gray-400"}>
+              <span className={selectedFichaId ? "text-white" : "text-muted-foreground/70"}>
                 {selectedFichaId && fichaSelecionada 
                   ? `${fichaSelecionada.nome} - Custo: ${formatCurrency(fichaSelecionada.custoTotal)}/UN`
                   : "Selecione uma ficha técnica..."}
               </span>
-              <svg className={`h-4 w-4 text-gray-400 transition-transform ${fichaOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className={`h-4 w-4 text-muted-foreground/70 transition-transform ${fichaOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
             
             {fichaOpen && (
-              <div className="absolute z-10 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-lg">
-                <div className="p-2 border-b border-gray-100">
+              <div className="absolute z-10 mt-1 w-full rounded-xl border border-border bg-surface shadow-lg">
+                <div className="p-2 border-b border-border">
                   <div className="relative">
-                    <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
                     <input
                       type="text"
                       placeholder="Pesquisar ficha..."
-                      className="w-full rounded-lg border border-gray-200 pl-8 pr-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838]"
+                      className="w-full rounded-lg border border-border pl-8 pr-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                       value={fichaSearch}
                       onChange={(e) => setFichaSearch(e.target.value)}
                     />
@@ -320,7 +320,7 @@ export function FormIngrediente({
                     <button
                       key={f.id}
                       type="button"
-                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex justify-between"
+                      className="w-full text-left px-3 py-2 text-sm text-white hover:bg-surface-2 transition-colors flex justify-between"
                       onClick={() => {
                         setSelectedFichaId(f.id)
                         setFichaSearch("")
@@ -328,11 +328,11 @@ export function FormIngrediente({
                       }}
                     >
                       <span>{f.nome}</span>
-                      <span className="text-gray-400 text-xs">{formatCurrency(f.custoTotal)}/UN</span>
+                      <span className="text-muted-foreground/70 text-xs">{formatCurrency(f.custoTotal)}/UN</span>
                     </button>
                   ))}
                   {fichasFiltradas.length === 0 && (
-                    <div className="px-3 py-2 text-sm text-gray-400 text-center">
+                    <div className="px-3 py-2 text-sm text-muted-foreground/70 text-center">
                       Nenhuma ficha técnica encontrada
                     </div>
                   )}
@@ -347,21 +347,21 @@ export function FormIngrediente({
               placeholder="Quantidade"
               value={quantidade}
               onChange={(e) => setQuantidade(parseFloat(e.target.value))}
-              className="flex-1 rounded-lg border-gray-200 focus:ring-[#de4838]"
+              className="flex-1 rounded-lg border-border focus:ring-primary"
               disabled={disabled}
             />
             <Button 
               type="button" 
               onClick={handleAddFicha} 
               disabled={disabled || !selectedFichaId}
-              className="bg-[#de4838] hover:bg-[#c73d2e] rounded-lg"
+              className="bg-primary hover:bg-primary/90 rounded-lg"
             >
               <Plus className="h-4 w-4 mr-1" />
               Adicionar
             </Button>
           </div>
           {fichaSelecionada && (
-            <div className="text-xs text-gray-500 bg-gray-100 rounded-lg p-2">
+            <div className="text-xs text-muted-foreground bg-surface-2 rounded-lg p-2">
               Valor total: {formatCurrency(valorTotalFicha)} | 
               Custo unitário: {formatCurrency(fichaSelecionada.custoTotal)}
             </div>
