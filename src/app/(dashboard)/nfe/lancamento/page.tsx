@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Package, AlertCircle, Building2 } from "lucide-react";
+import { Save, AlertCircle, Building2, Package } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,21 +27,34 @@ export default function LancamentoManualPage() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [formData, setFormData] = useState({
     tipoLancamento: "VENDA",
+    descricao: "",
+    valor: "",
     produtoId: "",
     quantidade: 1,
-    valorUnitario: 0,
+    valorUnitario: "",
     clienteFornecedor: "",
     formaPagamento: "DINHEIRO",
     contaDestino: "Dinheiro Físico",
     contaDespesa: "",
-    origemDestino: "", // NOVO CAMPO
+    origemDestino: "",
     data: new Date().toISOString().split("T")[0],
   });
 
   // Usar hook reutilizável para carregar contas
   const { contas, loading: loadingContas } = useContasFinanceiras();
 
+  const isVenda = formData.tipoLancamento === "VENDA";
+
   useEffect(() => {
+    async function carregarProdutos() {
+      try {
+        const response = await fetch("/api/produtos?limit=500");
+        const data = await response.json();
+        if (data.success) setProdutos(data.data);
+      } catch (error) {
+        console.error("Erro ao carregar produtos:", error);
+      }
+    }
     carregarProdutos();
   }, []);
 
@@ -52,35 +65,40 @@ export default function LancamentoManualPage() {
     }
   }, [contas, formData.contaDespesa]);
 
-  async function carregarProdutos() {
-    try {
-      const response = await fetch("/api/produtos?limit=500");
-      const data = await response.json();
-      if (data.success) {
-        setProdutos(data.data);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar produtos:", error);
+  // Aceita apenas números (e uma vírgula/ponto decimal). Nunca letras.
+  function sanitizeNumero(raw: string) {
+    let limpo = raw.replace(/[^\d.,]/g, "").replace(/,/g, ".");
+    const partes = limpo.split(".");
+    if (partes.length > 2) {
+      limpo = `${partes[0]}.${partes.slice(1).join("")}`;
     }
+    const [inteiro, decimal] = limpo.split(".");
+    if (decimal !== undefined) {
+      limpo = `${inteiro}.${decimal.slice(0, 2)}`;
+    }
+    return limpo;
   }
 
   const produtoSelecionado = produtos.find(p => p.id === Number(formData.produtoId));
-  const valorTotal = formData.quantidade * (produtoSelecionado?.preco_venda || formData.valorUnitario);
+  const valorUnitarioNum = parseFloat(formData.valorUnitario) || 0;
+  const valorTotal = isVenda
+    ? parseFloat(formData.valor) || 0
+    : (Number(formData.quantidade) || 0) * valorUnitarioNum;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!formData.produtoId) {
+    if (!isVenda && !formData.produtoId) {
       alert("Selecione um produto");
       return;
     }
 
-    if (!produtoSelecionado) {
-      alert("Produto não encontrado");
+    if (valorTotal <= 0) {
+      alert("Informe um valor maior que zero");
       return;
     }
 
-    if (formData.tipoLancamento === "COMPRA" && !formData.contaDespesa) {
+    if (!isVenda && !formData.contaDespesa) {
       alert("Cadastre e selecione uma Conta Financeira antes de salvar.\n\nAcesse o menu 'Contas Bancárias' e adicione uma conta para este cliente.");
       return;
     }
@@ -88,61 +106,56 @@ export default function LancamentoManualPage() {
     setLoading(true);
 
     try {
+      const descricaoLancamento = isVenda
+        ? formData.descricao.trim() || "Lançamento manual de venda"
+        : `Compra: ${produtoSelecionado?.descricao} - ${formData.quantidade} ${produtoSelecionado?.unidade ?? ""}`.trim();
+
       // Registrar no livro diário
       const response = await fetch("/api/livro-diario", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           data: formData.data,
-          conta:
-            formData.tipoLancamento === "VENDA"
-              ? getContaVenda(formData.formaPagamento)
-              : formData.contaDespesa,
-          descricao: `${
-            formData.tipoLancamento === "VENDA" ? "Venda" : "Compra"
-          }: ${produtoSelecionado.descricao} - ${formData.quantidade} ${
-            produtoSelecionado.unidade
-          }`,
+          conta: isVenda ? getContaVenda(formData.formaPagamento) : formData.contaDespesa,
+          descricao: descricaoLancamento,
           cliente_fornecedor:
-            formData.clienteFornecedor ||
-            (formData.tipoLancamento === "VENDA" ? "Consumidor" : "Fornecedor"),
-          entrada: formData.tipoLancamento === "VENDA" ? valorTotal : 0,
-          saida: formData.tipoLancamento === "COMPRA" ? valorTotal : 0,
+            formData.clienteFornecedor || (isVenda ? "Consumidor" : "Fornecedor"),
+          entrada: isVenda ? valorTotal : 0,
+          saida: isVenda ? 0 : valorTotal,
           tipo: formData.tipoLancamento,
-          origemDestino: formData.origemDestino || null, // NOVO CAMPO
+          origemDestino: formData.origemDestino || null,
           formaPagamento: formData.formaPagamento
         }),
       });
 
       if (!response.ok) throw new Error("Erro ao registrar");
 
-      // Atualizar estoque
-      const novoEstoque =
-        formData.tipoLancamento === "VENDA"
-          ? Math.max(0, produtoSelecionado.quantidade - formData.quantidade)
-          : produtoSelecionado.quantidade + formData.quantidade;
+      // Atualizar estoque (apenas compras entram no estoque)
+      if (!isVenda && produtoSelecionado) {
+        await fetch(`/api/produtos/${produtoSelecionado.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...produtoSelecionado,
+            quantidade: produtoSelecionado.quantidade + Number(formData.quantidade),
+          }),
+        });
+      }
 
-      await fetch(`/api/produtos/${produtoSelecionado.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...produtoSelecionado,
-          quantidade: novoEstoque,
-        }),
-      });
-
-      const mensagem =
-        formData.tipoLancamento === "VENDA"
+      alert(
+        isVenda
           ? `✅ Venda registrada! Entrada: ${formatCurrency(valorTotal)}`
-          : `✅ Compra registrada! Saída: ${formatCurrency(valorTotal)}`;
-
-      alert(mensagem);
+          : `✅ Compra registrada! Saída: ${formatCurrency(valorTotal)}`
+      );
 
       // Resetar formulário
       setFormData({
         ...formData,
+        descricao: "",
+        valor: "",
         produtoId: "",
         quantidade: 1,
+        valorUnitario: "",
         clienteFornecedor: "",
         origemDestino: "",
       });
@@ -171,21 +184,17 @@ export default function LancamentoManualPage() {
       <PageContainer>
         <PageHeader
           title="Lançamento Manual"
-          subtitle="Registre vendas e compras manualmente"
+          subtitle="Registre entradas e saídas manualmente"
           onBack={() => router.back()}
         >
           <Button
             type="submit"
             form="lancamento-form"
-            disabled={loading || !formData.produtoId}
+            disabled={loading || valorTotal <= 0}
             className="bg-primary hover:bg-primary/90 text-white px-6 rounded-full shadow-sm"
           >
             <Save className="mr-2 h-4 w-4" />
-            {loading
-              ? "Processando..."
-              : formData.tipoLancamento === "VENDA"
-              ? "Lançar Venda"
-              : "Lançar Compra"}
+            {loading ? "Processando..." : isVenda ? "Lançar Venda" : "Lançar Compra"}
           </Button>
         </PageHeader>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -265,7 +274,7 @@ export default function LancamentoManualPage() {
                   </div>
                 </div>
 
-                {/* Origem/Destino - NOVO CAMPO */}
+                {/* Origem/Destino */}
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Origem/Destino (Conta Financeira)
@@ -295,97 +304,148 @@ export default function LancamentoManualPage() {
                   </p>
                 </div>
 
-                {/* Produto */}
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Produto
-                  </Label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <select
-                        className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
-                        value={formData.produtoId}
-                        onChange={e => {
-                          const produto = produtos.find(p => p.id === Number(e.target.value));
-                          setFormData({
-                            ...formData,
-                            produtoId: e.target.value,
-                            valorUnitario: produto?.preco_venda || 0,
-                          });
-                        }}
-                      >
-                        <option value="">Selecione um produto</option>
-                        {produtos.map(prod => (
-                          <option key={prod.id} value={prod.id}>
-                            {prod.descricao} - {formatCurrency(prod.preco_venda)}/{prod.unidade} (Estoque: {prod.quantidade})
-                          </option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
-                        <svg
-                          className="fill-current h-4 w-4"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
+                {/* VENDA: Descrição e Valor */}
+                {isVenda && (
+                  <>
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Descrição
+                      </Label>
+                      <Input
+                        placeholder="Ex.: Venda balcão, sangria, despesa avulsa..."
+                        value={formData.descricao}
+                        maxLength={120}
+                        onChange={e => setFormData({ ...formData, descricao: e.target.value })}
+                        className="rounded-lg border-border focus:ring-primary"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Valor (R$)
+                      </Label>
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="0,00"
+                        value={formData.valor}
+                        onChange={e =>
+                          setFormData({ ...formData, valor: sanitizeNumero(e.target.value) })
+                        }
+                        className="rounded-lg border-border focus:ring-primary text-lg font-semibold"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Somente números. O valor total é atualizado enquanto você digita.
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* COMPRA: Produto, Quantidade e Valor Unitário */}
+                {!isVenda && (
+                  <>
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Produto
+                      </Label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <select
+                            className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
+                            value={formData.produtoId}
+                            onChange={e => {
+                              const produto = produtos.find(
+                                p => p.id === Number(e.target.value)
+                              );
+                              setFormData({
+                                ...formData,
+                                produtoId: e.target.value,
+                                valorUnitario: produto ? String(produto.preco_venda) : "",
+                              });
+                            }}
+                          >
+                            <option value="">Selecione um produto</option>
+                            {produtos.map(prod => (
+                              <option key={prod.id} value={prod.id}>
+                                {prod.descricao} - {formatCurrency(prod.preco_venda)}/
+                                {prod.unidade} (Estoque: {prod.quantidade})
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                            <svg
+                              className="fill-current h-4 w-4"
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => router.push("/nfe/produtos/novo")}
+                          className="border-border rounded-lg hover:bg-surface-2"
                         >
-                          <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                        </svg>
+                          <Package className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </div>
+                      {produtoSelecionado && (
+                        <p className="text-xs text-muted-foreground">
+                          Estoque atual: {produtoSelecionado.quantidade}{" "}
+                          {produtoSelecionado.unidade} → após a compra:{" "}
+                          {produtoSelecionado.quantidade + (Number(formData.quantidade) || 0)}{" "}
+                          {produtoSelecionado.unidade}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Quantidade
+                        </Label>
+                        <Input
+                          type="number"
+                          step="1"
+                          min="1"
+                          value={formData.quantidade}
+                          onChange={e =>
+                            setFormData({ ...formData, quantidade: Number(e.target.value) })
+                          }
+                          className="rounded-lg border-border focus:ring-primary"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Valor Unitário (R$)
+                        </Label>
+                        <Input
+                          type="text"
+                          inputMode="decimal"
+                          placeholder="0,00"
+                          value={formData.valorUnitario}
+                          onChange={e =>
+                            setFormData({
+                              ...formData,
+                              valorUnitario: sanitizeNumero(e.target.value),
+                            })
+                          }
+                          className="rounded-lg border-border focus:ring-primary"
+                        />
                       </div>
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => router.push("/nfe/produtos/novo")}
-                      className="border-border rounded-lg hover:bg-surface-2"
-                    >
-                      <Package className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Quantidade e Valor */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Quantidade
-                    </Label>
-                    <Input
-                      type="number"
-                      step="1"
-                      min="1"
-                      value={formData.quantidade}
-                      onChange={e =>
-                        setFormData({ ...formData, quantidade: Number(e.target.value) })
-                      }
-                      className="rounded-lg border-border focus:ring-primary"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Valor Unitário (R$)
-                    </Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={formData.valorUnitario}
-                      onChange={e =>
-                        setFormData({ ...formData, valorUnitario: Number(e.target.value) })
-                      }
-                      className="rounded-lg border-border focus:ring-primary"
-                    />
-                  </div>
-                </div>
+                  </>
+                )}
 
                 {/* Cliente/Fornecedor */}
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    {formData.tipoLancamento === "VENDA" ? "Cliente" : "Fornecedor"}
+                    {isVenda ? "Cliente" : "Fornecedor"}
                   </Label>
                   <Input
-                    placeholder={
-                      formData.tipoLancamento === "VENDA"
-                        ? "Nome do cliente"
-                        : "Nome do fornecedor"
-                    }
+                    placeholder={isVenda ? "Nome do cliente" : "Nome do fornecedor"}
                     value={formData.clienteFornecedor}
                     onChange={e =>
                       setFormData({ ...formData, clienteFornecedor: e.target.value })
@@ -395,7 +455,7 @@ export default function LancamentoManualPage() {
                 </div>
 
                 {/* Conta para COMPRA */}
-                {formData.tipoLancamento === "COMPRA" && (
+                {!isVenda && (
                   <div className="space-y-1">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Conta de Despesa
@@ -435,7 +495,7 @@ export default function LancamentoManualPage() {
                 )}
 
                 {/* Conta para VENDA */}
-                {formData.tipoLancamento === "VENDA" && (
+                {isVenda && (
                   <div className="space-y-1">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Conta de Destino
@@ -470,9 +530,9 @@ export default function LancamentoManualPage() {
                 <Alert variant="default" className="bg-primary/10 border-primary/20 rounded-xl">
                   <AlertCircle className="h-4 w-4 text-primary" />
                   <AlertDescription className="text-sm text-white">
-                    {formData.tipoLancamento === "VENDA"
+                    {isVenda
                       ? "💰 Venda: O valor será registrado como RECEITA (Entrada no caixa)"
-                      : "📦 Compra: O valor será registrado como DESPESA (Saída do caixa)"}
+                      : "📦 Compra: O valor será registrado como DESPESA (Saída do caixa) e o estoque do produto será atualizado"}
                   </AlertDescription>
                 </Alert>
 
@@ -501,32 +561,49 @@ export default function LancamentoManualPage() {
                   <span className="text-sm text-muted-foreground">Tipo:</span>
                   <span
                     className={`text-sm font-medium px-2 py-1 rounded-full ${
-                      formData.tipoLancamento === "VENDA"
-                        ? "bg-success/10 text-success"
-                        : "bg-warning/10 text-warning"
+                      isVenda ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
                     }`}
                   >
-                    {formData.tipoLancamento === "VENDA" ? "Venda (Entrada)" : "Compra (Saída)"}
+                    {isVenda ? "Venda (Entrada)" : "Compra (Saída)"}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Produto:</span>
-                  <span className="font-medium text-white text-right">
-                    {produtoSelecionado?.descricao || "—"}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Quantidade:</span>
-                  <span className="font-medium text-white">
-                    {formData.quantidade} {produtoSelecionado?.unidade || ""}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Valor Unitário:</span>
-                  <span className="font-medium text-white">
-                    {formatCurrency(produtoSelecionado?.preco_venda || formData.valorUnitario)}
-                  </span>
-                </div>
+
+                {isVenda ? (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Descrição:</span>
+                      <span className="font-medium text-white text-right">
+                        {formData.descricao || "—"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Valor:</span>
+                      <span className="font-medium text-white">{formatCurrency(valorTotal)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Produto:</span>
+                      <span className="font-medium text-white text-right">
+                        {produtoSelecionado?.descricao || "—"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Quantidade:</span>
+                      <span className="font-medium text-white">
+                        {formData.quantidade} {produtoSelecionado?.unidade ?? ""}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Valor unitário:</span>
+                      <span className="font-medium text-white">
+                        {formatCurrency(valorUnitarioNum)}
+                      </span>
+                    </div>
+                  </>
+                )}
+
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Forma de Pagto:</span>
                   <span className="font-medium text-white capitalize">
@@ -535,7 +612,7 @@ export default function LancamentoManualPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">
-                    {formData.tipoLancamento === "VENDA" ? "Cliente" : "Fornecedor"}:
+                    {isVenda ? "Cliente" : "Fornecedor"}:
                   </span>
                   <span className="font-medium text-white">
                     {formData.clienteFornecedor || "—"}
@@ -550,7 +627,7 @@ export default function LancamentoManualPage() {
                 <div className="pt-4 mt-2 border-t border-dashed border-border">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-semibold text-white">
-                      Total a {formData.tipoLancamento === "VENDA" ? "receber" : "pagar"}:
+                      Total a {isVenda ? "receber" : "pagar"}:
                     </span>
                     <span className="text-xl font-bold text-primary">
                       {formatCurrency(valorTotal)}
