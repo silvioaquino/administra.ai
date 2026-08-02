@@ -86,7 +86,7 @@ function ResetPasswordForm() {
       <div className="min-h-screen bg-muted flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden p-6 md:p-8">
-            <Alert className="bg-red-50 border-red-200 rounded-xl mb-4">
+            <Alert className="bg-destructive/10 border-destructive/30 rounded-xl mb-4">
               <AlertCircle className="h-4 w-4 text-destructive" />
               <AlertDescription className="text-sm text-destructive">
                 Link inválido ou expirado. Solicite uma nova redefinição de senha.
@@ -151,7 +151,7 @@ function ResetPasswordForm() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 {error && (
-                  <Alert className="bg-red-50 border-red-200 rounded-xl">
+                  <Alert className="bg-destructive/10 border-destructive/30 rounded-xl">
                     <AlertCircle className="h-4 w-4 text-destructive" />
                     <AlertDescription className="text-sm text-destructive">{error}</AlertDescription>
                   </Alert>

@@ -76,7 +76,7 @@ export function IndicadoresCard({
       case 'abaixo':
         return {
           bg: 'bg-warning/5',
-          border: 'border-amber-200',
+          border: 'border-warning/30',
           text: 'text-warning',
           progressBg: 'bg-warning/10',
           progressFill: 'bg-warning/50',
@@ -87,15 +87,15 @@ export function IndicadoresCard({
         }
       case 'acima':
         return {
-          bg: 'bg-rose-50',
-          border: 'border-rose-200',
-          text: 'text-rose-700',
-          progressBg: 'bg-rose-100',
-          progressFill: 'bg-rose-500',
-          iconBg: 'bg-rose-100',
-          iconColor: 'text-rose-600',
+          bg: 'bg-destructive/10',
+          border: 'border-destructive/30',
+          text: 'text-destructive',
+          progressBg: 'bg-destructive/10',
+          progressFill: 'bg-destructive',
+          iconBg: 'bg-destructive/10',
+          iconColor: 'text-destructive',
           statusText: 'Acima da faixa ↑',
-          statusColor: 'text-rose-600'
+          statusColor: 'text-destructive'
         }
     }
   }
@@ -266,11 +266,11 @@ export function IndicadoresCard({
             <span className="text-muted-foreground">Ideal</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-warning/10 border border-amber-200"></div>
+            <div className="w-3 h-3 rounded bg-warning/10 border border-warning/30"></div>
             <span className="text-muted-foreground">Abaixo da faixa</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-rose-100 border border-rose-200"></div>
+            <div className="w-3 h-3 rounded bg-destructive/10 border border-destructive/30"></div>
             <span className="text-muted-foreground">Acima da faixa</span>
           </div>
         </div>

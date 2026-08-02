@@ -370,7 +370,7 @@ export default function DashboardPage() {
   const getAlertBg = (type: string) => {
     switch (type) {
       case "danger": return "bg-destructive/10 border-destructive/30"
-      case "warning": return "bg-warning/5 border-amber-200"
+      case "warning": return "bg-warning/5 border-warning/30"
       case "success": return "bg-success/10 border-success/30"
       default: return "bg-primary/10 border-info/30"
     }
@@ -406,7 +406,7 @@ export default function DashboardPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gray-150 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-2 flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     )
@@ -492,7 +492,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-surface-2 text-slate-300 rounded-full hidden sm:inline-flex">
+            <Badge variant="outline" className="bg-surface-2 text-muted-foreground/70 rounded-full hidden sm:inline-flex">
               <Calendar className="h-3 w-3 mr-1" />
               {new Date().toLocaleDateString("pt-BR")}
             </Badge>
@@ -519,7 +519,7 @@ export default function DashboardPage() {
 
         {/* Trial Alerta */}
         {isInTrial && (
-          <Alert className={`mb-6 rounded-xl ${daysLeft <= 3 ? "bg-warning/5 border-orange-200" : "bg-primary/10 border-info/30"}`}>
+          <Alert className={`mb-6 rounded-xl ${daysLeft <= 3 ? "bg-warning/5 border-warning/30" : "bg-primary/10 border-info/30"}`}>
             <AlertCircle className={`h-4 w-4 ${daysLeft <= 3 ? "text-warning" : "text-primary"}`} />
             <AlertDescription className={`text-sm ${daysLeft <= 3 ? "text-warning" : "text-info"}`}>
               Você está no período de teste gratuito. {daysLeft} dias restantes.
@@ -597,7 +597,7 @@ export default function DashboardPage() {
                   </select>
                 )}
 
-                <div className="rounded-lg bg-surface-2 px-3 py-2 text-sm font-medium text-slate-200 flex-shrink-0">
+                <div className="rounded-lg bg-surface-2 px-3 py-2 text-sm font-medium text-muted-foreground/70 flex-shrink-0">
                   <CalendarRange className="h-4 w-4 inline mr-1" />
                   {periodoTexto}
                 </div>
@@ -655,23 +655,23 @@ export default function DashboardPage() {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-primary/100"></div>
-                    <span className="text-xs font-medium text-slate-200">🎯 Meta Faturamento</span>
+                    <span className="text-xs font-medium text-muted-foreground/70">🎯 Meta Faturamento</span>
                   </div>
-                  <span className="text-xs font-bold text-slate-200">
+                  <span className="text-xs font-bold text-muted-foreground/70">
                     {formatCurrency(metas.faturamento.atual)} / {formatCurrency(metas.faturamento.meta)}
                   </span>
                 </div>
                 
                 <div className="w-full bg-surface-2 rounded-full h-2 overflow-hidden">
                   <div 
-                    className="bg-gradient-to-r from-blue-600 to-blue-500 h-full rounded-full transition-all duration-500"
+                    className="bg-gradient-to-r from-info to-info h-full rounded-full transition-all duration-500"
                     style={{ width: `${Math.min(100, Math.max(0, metas.faturamento.percentual))}%` }}
                   />
                 </div>
                 
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">Progresso</span>
-                  <span className="text-xs font-semibold text-slate-300">
+                  <span className="text-xs font-semibold text-muted-foreground/70">
                     {Math.min(100, Math.max(0, metas.faturamento.percentual)).toFixed(0)}%
                   </span>
                 </div>
@@ -682,9 +682,9 @@ export default function DashboardPage() {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-destructive/100"></div>
-                    <span className="text-xs font-medium text-slate-200">💰 Meta Despesa</span>
+                    <span className="text-xs font-medium text-muted-foreground/70">💰 Meta Despesa</span>
                   </div>
-                  <span className="text-xs font-bold text-slate-200">
+                  <span className="text-xs font-bold text-muted-foreground/70">
                     {formatCurrency(metas.despesa.atual)} / {formatCurrency(metas.despesa.meta)}
                   </span>
                 </div>
@@ -693,7 +693,7 @@ export default function DashboardPage() {
                   <div 
                     className={`h-full rounded-full transition-all duration-500 ${
                       metas.despesa.percentual >= 100 
-                        ? "bg-gradient-to-r from-red-600 to-red-500" 
+                        ? "bg-gradient-to-r from-destructive to-destructive" 
                         : metas.despesa.percentual > 80 
                           ? "bg-gradient-to-r from-info to-info/80" 
                           : "bg-gradient-to-r from-warning to-warning/80"
@@ -708,8 +708,8 @@ export default function DashboardPage() {
                     metas.despesa.percentual >= 100 
                       ? "text-destructive" 
                       : metas.despesa.percentual > 80 
-                        ? "text-slate-300" 
-                        : "text-slate-200"
+                        ? "text-muted-foreground/70" 
+                        : "text-muted-foreground/70"
                   }`}>
                     {Math.min(100, Math.max(0, metas.despesa.percentual)).toFixed(0)}%
                   </span>
@@ -726,9 +726,9 @@ export default function DashboardPage() {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-success/100"></div>
-                    <span className="text-xs font-medium text-slate-200">📈 Meta Lucro</span>
+                    <span className="text-xs font-medium text-muted-foreground/70">📈 Meta Lucro</span>
                   </div>
-                  <span className="text-xs font-bold text-slate-200">
+                  <span className="text-xs font-bold text-muted-foreground/70">
                     {metas.lucro.atual.toFixed(1)}% / {metas.lucro.meta}%
                   </span>
                 </div>
@@ -737,23 +737,23 @@ export default function DashboardPage() {
                   <div 
                     className={`h-full rounded-full transition-all duration-500 ${
                       metas.lucro.percentual >= 100 
-                        ? "bg-gradient-to-r from-emerald-600 to-emerald-500" 
+                        ? "bg-gradient-to-r from-success to-success" 
                         : metas.lucro.percentual >= 70 
                           ? "bg-gradient-to-r from-info to-info/80" 
-                          : "bg-gradient-to-r from-amber-500 to-amber-600"
+                          : "bg-gradient-to-r from-warning to-warning"
                     }`}
                     style={{ width: `${Math.min(100, Math.max(0, metas.lucro.percentual))}%` }}
                   />
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-300">Alcance</span>
+                  <span className="text-xs text-muted-foreground/70">Alcance</span>
                   <span className={`text-xs font-semibold ${
                     metas.lucro.percentual >= 100 
-                      ? "text-slate-300" 
+                      ? "text-muted-foreground/70" 
                       : metas.lucro.percentual >= 70 
-                        ? "text-slate-300" 
-                        : "text-slate-300"
+                        ? "text-muted-foreground/70" 
+                        : "text-muted-foreground/70"
                   }`}>
                     {Math.min(100, Math.max(0, metas.lucro.percentual)).toFixed(0)}%
                   </span>
@@ -785,7 +785,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
               <h3 className="panel-title text-base">Evolução Financeira</h3>
-              <Badge variant="outline" className="bg-surface-2 text-slate-200 rounded-full">
+              <Badge variant="outline" className="bg-surface-2 text-muted-foreground/70 rounded-full">
                 {periodo === "hoje" ? "Por Hora" : periodo === "mes" ? "Por Dia" : periodo === "ano" ? "Por Mês" : "Por Hora"}
               </Badge>
             </div>
@@ -991,24 +991,24 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border">
                   <span className="text-sm text-muted-foreground">Fim do teste:</span>
-                  <span className="font-medium text-slate-200">{trialEndsAt ? new Date(trialEndsAt).toLocaleDateString("pt-BR") : "-"}</span>
+                  <span className="font-medium text-muted-foreground/70">{trialEndsAt ? new Date(trialEndsAt).toLocaleDateString("pt-BR") : "-"}</span>
                 </div>
               </div>
               {/* Coluna Direita */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2 border-b border-border">
                   <span className="text-sm text-muted-foreground">Total de Produtos:</span>
-                  <span className="font-medium text-slate-200">{stats.totalProdutos}</span>
+                  <span className="font-medium text-muted-foreground/70">{stats.totalProdutos}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-border">
                   <span className="text-sm text-muted-foreground">Fichas Técnicas:</span>
-                  <span className="font-medium text-slate-200">{stats.totalFichas}</span>
+                  <span className="font-medium text-muted-foreground/70">{stats.totalFichas}</span>
                 </div>
               </div>
             </div>
             <div className="flex justify-between items-center pt-2">
               <span className="text-sm text-muted-foreground">Versão do sistema:</span>
-              <span className="font-medium text-slate-200">2.0.0</span>
+              <span className="font-medium text-muted-foreground/70">2.0.0</span>
             </div>
           </div>
         </div>
@@ -1021,7 +1021,7 @@ export default function DashboardPage() {
               <Zap className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-200">Dica rápida</p>
+              <p className="text-sm font-medium text-muted-foreground/70">Dica rápida</p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Utilize os filtros de período para analisar seus resultados diários, mensais ou anuais!
               </p>

@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, hojeISO, formatarTipoPagamento } from "@/lib/utils"
+import { toast } from "sonner"
+
 import { PageContainer } from "@/components/layout/PageContainer"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { CameraScanner } from "@/components/camera-scanner"
@@ -34,15 +36,17 @@ export default function CompraNfePage() {
   const [notaProcessada, setNotaProcessada] = useState<any>(null)
   const [produtos, setProdutos] = useState<ProdutoNota[]>([])
   const [showScanner, setShowScanner] = useState(false)
+  const [notaDuplicada, setNotaDuplicada] = useState<any>(null)
 
   // Carregar contas financeiras da API
   const { contas, loading: loadingContas } = useContasFinanceiras()
 
   const [formData, setFormData] = useState({
     contaDespesa: "",
-    dataCompra: new Date().toISOString().split("T")[0],
+    dataCompra: hojeISO(),
     formaPagamento: "À vista"
   })
+
 
   // Definir a primeira conta como padrão quando carregar
   useEffect(() => {
@@ -57,13 +61,50 @@ export default function CompraNfePage() {
     //processarUrl(result)
   }
 
+  async function verificarDuplicidade(nota: any) {
+    try {
+      const params = new URLSearchParams({
+        chaveAcesso: nota?.chave_acesso || "",
+        numero: String(nota?.numero || ""),
+        serie: String(nota?.serie || ""),
+        cnpjEmitente: nota?.cnpj_emitente || "",
+      })
+      const res = await fetch(`/api/nfe/verificar?${params.toString()}`)
+      const json = await res.json()
+      return json?.duplicada ? json.notaExistente : null
+    } catch {
+      return null
+    }
+  }
+
+  async function aplicarNotaProcessada(dados: any) {
+    setNotaProcessada(dados)
+    const produtosComSelecao = (dados.produtos || []).map((p: any) => ({
+      ...p,
+      selecionado: true
+    }))
+    setProdutos(produtosComSelecao)
+    if (dados.data_emissao) {
+      setFormData(prev => ({ ...prev, dataCompra: String(dados.data_emissao).slice(0, 10) }))
+    }
+
+    const duplicada = await verificarDuplicidade(dados)
+    setNotaDuplicada(duplicada)
+    if (duplicada) {
+      toast.error("Nota já lançada", {
+        description: `Nº ${duplicada.numero}/série ${duplicada.serie} — ${duplicada.nomeEmitente}`,
+      })
+    }
+  }
+
   async function processarUrl(scanResult: string) {
     if (!scanResult.includes("nfce.sefaz.pe.gov.br")) {
-      alert("URL inválida. Apenas URLs da SEFAZ-PE são aceitas")
+      toast.error("URL inválida. Apenas URLs da SEFAZ-PE são aceitas")
       return
     }
 
     setProcessando(true)
+    setNotaDuplicada(null)
 
     try {
       const response = await fetch("/api/nfe/processar", {
@@ -75,22 +116,13 @@ export default function CompraNfePage() {
       const data = await response.json()
 
       if (data.success) {
-        setNotaProcessada(data.data)
-        const produtosComSelecao = (data.data.produtos || []).map((p: any) => ({
-          ...p,
-          selecionado: true
-        }))
-        setProdutos(produtosComSelecao)
-        // Preencher data da compra com data de emissão da nota
-        if (data.data.data_emissao) {
-          setFormData(prev => ({ ...prev, dataCompra: data.data.data_emissao }))
-        }
+        await aplicarNotaProcessada(data.data)
       } else {
         throw new Error(data.error || "Erro ao processar nota")
       }
     } catch (error) {
       console.error("Erro:", error)
-      alert(error instanceof Error ? error.message : "Erro ao processar nota")
+      toast.error(error instanceof Error ? error.message : "Erro ao processar nota")
     } finally {
       setProcessando(false)
     }
@@ -98,16 +130,17 @@ export default function CompraNfePage() {
 
   async function processarNota() {
     if (!url) {
-      alert("Informe a URL da NFC-e")
+      toast.error("Informe a URL da NFC-e")
       return
     }
 
     if (!url.includes("nfce.sefaz.pe.gov.br")) {
-      alert("URL inválida. Apenas URLs da SEFAZ-PE são aceitas")
+      toast.error("URL inválida. Apenas URLs da SEFAZ-PE são aceitas")
       return
     }
 
     setProcessando(true)
+    setNotaDuplicada(null)
 
     try {
       const response = await fetch("/api/nfe/processar", {
@@ -119,49 +152,50 @@ export default function CompraNfePage() {
       const data = await response.json()
 
       if (data.success) {
-        setNotaProcessada(data.data)
-        const produtosComSelecao = (data.data.produtos || []).map((p: any) => ({
-          ...p,
-          selecionado: true
-        }))
-        setProdutos(produtosComSelecao)
-        // Preencher data da compra com data de emissão da nota
-        if (data.data.data_emissao) {
-          setFormData(prev => ({ ...prev, dataCompra: data.data.data_emissao }))
-        }
+        await aplicarNotaProcessada(data.data)
       } else {
         throw new Error(data.error || "Erro ao processar nota")
       }
     } catch (error) {
       console.error("Erro:", error)
-      alert(error instanceof Error ? error.message : "Erro ao processar nota")
+      toast.error(error instanceof Error ? error.message : "Erro ao processar nota")
     } finally {
       setProcessando(false)
     }
   }
 
+
   async function salvarCompra() {
     const produtosSelecionados = produtos.filter(p => p.selecionado)
 
     if (produtosSelecionados.length === 0) {
-      alert("Selecione pelo menos um produto")
+      toast.error("Selecione pelo menos um produto")
       return
     }
 
     if (!notaProcessada) {
-      alert("Processe uma nota fiscal primeiro")
+      toast.error("Processe uma nota fiscal primeiro")
       return
     }
 
     if (!formData.contaDespesa) {
-      alert("Cadastre e selecione uma Conta Financeira antes de salvar.\n\nAcesse o menu 'Contas Bancárias' e adicione uma conta para este cliente.")
+      toast.error("Selecione uma Conta Financeira", {
+        description: "Acesse 'Contas Bancárias' e cadastre uma conta antes de salvar.",
+      })
+      return
+    }
+
+    if (notaDuplicada) {
+      toast.error("Lançamento bloqueado: nota já registrada")
       return
     }
 
     setLoading(true)
 
     try {
-      const valorTotal = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
+      const valorTotal = notaProcessada?.valor_total > 0
+        ? notaProcessada.valor_total
+        : (produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0) - (notaProcessada?.desconto || 0))
       const contaSelecionada = contas.find(c => c.id.toString() === formData.contaDespesa);
 
       // 1. Salvar a nota fiscal
@@ -174,16 +208,24 @@ export default function CompraNfePage() {
           contaDespesa: formData.contaDespesa,
           dataCompra: formData.dataCompra,
           valorTotal: valorTotal,
-          formaPagamento: formData.formaPagamento
+          formaPagamento: formData.formaPagamento,
+          desconto: notaProcessada?.desconto || 0,
+          formasPagamento: notaProcessada?.formas_pagamento || []
         })
       })
 
-      if (!notaResponse.ok) {
-        const errorData = await notaResponse.json()
-        throw new Error(errorData.error || "Erro ao salvar nota fiscal")
+      const notaData = await notaResponse.json()
+
+      if (notaResponse.status === 409) {
+        setNotaDuplicada(notaData.notaExistente || true)
+        toast.error(notaData.error || "Nota já lançada")
+        return
       }
 
-      const notaData = await notaResponse.json()
+      if (!notaResponse.ok || !notaData.success) {
+        throw new Error(notaData.error || "Erro ao salvar nota fiscal")
+      }
+
       const notaFiscalId = notaData.data.id
 
       // 2. Registrar no livro diário
@@ -209,20 +251,23 @@ export default function CompraNfePage() {
         throw new Error(errorData.error || "Erro ao registrar no livro diário")
       }
 
-      alert(`✅ Compra registrada com sucesso!\n💰 Total: ${formatCurrency(valorTotal)}\n📦 Produtos: ${produtosSelecionados.length}`)
+      const descontoMsg = descontoNota > 0 ? `\n💸 Desconto: ${formatCurrency(descontoNota)}` : ""
+      toast.success(`✅ Compra registrada com sucesso!\n💰 Total: ${formatCurrency(valorTotal)}\n📦 Produtos: ${produtosSelecionados.length}${descontoMsg}`)
       
       // Resetar formulário
       setUrl("")
       setNotaProcessada(null)
       setProdutos([])
+      setNotaDuplicada(null)
       
     } catch (error) {
       console.error("Erro:", error)
-      alert(error instanceof Error ? error.message : "Erro ao salvar compra")
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar compra")
     } finally {
       setLoading(false)
     }
   }
+
 
   function toggleProduto(index: number) {
     const novosProdutos = [...produtos]
@@ -236,7 +281,14 @@ export default function CompraNfePage() {
   }
 
   const produtosSelecionados = produtos.filter(p => p.selecionado)
-  const valorTotalCompra = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
+  const totalProdutos = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
+  const descontoNota = notaProcessada?.desconto || 0
+  const formasPagamentoNota = notaProcessada?.formas_pagamento || []
+  // Usar o valor_total da nota (vNF - já líquido após descontos) quando disponível
+  // Caso contrário, usar a soma dos produtos com desconto subtraído
+  const valorTotalCompra = notaProcessada?.valor_total > 0
+    ? notaProcessada.valor_total
+    : (totalProdutos - descontoNota)
 
   return (
     <div className="min-h-screen bg-background">
@@ -249,14 +301,27 @@ export default function CompraNfePage() {
           {produtos.length > 0 && (
             <Button
               onClick={salvarCompra}
-              disabled={loading || produtosSelecionados.length === 0}
-              className="bg-primary hover:bg-primary/90 text-white px-6 rounded-full shadow-sm"
+              disabled={loading || produtosSelecionados.length === 0 || !!notaDuplicada}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 rounded-full shadow-sm"
             >
               <Save className="mr-2 h-4 w-4" />
-              {loading ? "Salvando..." : `Registrar Compra (${formatCurrency(valorTotalCompra)})`}
+              {loading ? "Salvando..." : notaDuplicada ? "Nota já lançada" : `Registrar Compra (${formatCurrency(valorTotalCompra)})`}
             </Button>
           )}
         </PageHeader>
+        {notaDuplicada && (
+          <Alert variant="destructive" className="border-destructive/40 bg-destructive/10 rounded-xl">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-sm">
+              Esta nota já foi lançada
+              {notaDuplicada?.numero
+                ? ` (nº ${notaDuplicada.numero}/série ${notaDuplicada.serie} — ${notaDuplicada.nomeEmitente})`
+                : ""}
+              . O lançamento em duplicidade está bloqueado.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* Left Column - URL Processing */}
@@ -266,12 +331,12 @@ export default function CompraNfePage() {
               <div className="bg-surface-2 p-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <Truck className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-white">Processar NFC-e</h3>
+                  <h3 className="font-semibold text-foreground">Processar NFC-e</h3>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Insira a URL da nota fiscal de compra</p>
               </div>
               <div className="p-6 space-y-4">
-                <Alert variant="default" className="bg-warning/5 border-orange-200 rounded-xl">
+                <Alert variant="default" className="bg-warning/5 border-warning/30 rounded-xl">
                   <AlertCircle className="h-4 w-4 text-warning" />
                   <AlertDescription className="text-sm text-warning">
                     Esta nota será registrada como DESPESA (Saída do caixa)
@@ -306,7 +371,7 @@ export default function CompraNfePage() {
 
                 <Button
                   onClick={processarNota}
-                  className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"
                   disabled={processando || !url}
                 >
                   <Search className="mr-2 h-4 w-4" />
@@ -321,13 +386,13 @@ export default function CompraNfePage() {
                 <div className="bg-surface-2 p-4 border-b border-border">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-white">Informações da Compra</h3>
+                    <h3 className="font-semibold text-foreground">Informações da Compra</h3>
                   </div>
                 </div>
                 <div className="p-6 space-y-4">
                   <div className="rounded-lg bg-surface-2 p-4">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Fornecedor</p>
-                    <p className="text-sm font-medium text-white mt-1">{notaProcessada.nome_emitente || "Não informado"}</p>
+                    <p className="text-sm font-medium text-foreground mt-1">{notaProcessada.nome_emitente || "Não informado"}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">CNPJ: {notaProcessada.cnpj_emitente || "Não informado"}</p>
                   </div>
 
@@ -353,7 +418,7 @@ export default function CompraNfePage() {
                             ))
                           )}
                         </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-foreground">
                           <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                         </div>
                       </div>
@@ -384,7 +449,7 @@ export default function CompraNfePage() {
                           <option value="Boleto">Boleto</option>
                           <option value="Cheque">Cheque</option>
                         </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-foreground">
                           <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                         </div>
                       </div>
@@ -401,7 +466,7 @@ export default function CompraNfePage() {
               <div className="bg-surface-2 p-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <Package className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-white">Resumo da Operação</h3>
+                  <h3 className="font-semibold text-foreground">Resumo da Operação</h3>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Pré-visualização da compra</p>
               </div>
@@ -414,27 +479,44 @@ export default function CompraNfePage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Fornecedor:</span>
-                  <span className="font-medium text-white text-right max-w-[200px] truncate">
+                  <span className="font-medium text-foreground text-right max-w-[200px] truncate">
                     {notaProcessada?.nome_emitente || "Aguardando nota..."}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Produtos na nota:</span>
-                  <span className="font-medium text-white">{produtos.length}</span>
+                  <span className="font-medium text-foreground">{produtos.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Produtos selecionados:</span>
-                  <span className="font-medium text-white">{produtosSelecionados.length}</span>
+                  <span className="font-medium text-foreground">{produtosSelecionados.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Conta de despesa:</span>
-                  <span className="font-medium text-white text-right max-w-[200px] truncate">
+                  <span className="font-medium text-foreground text-right max-w-[200px] truncate">
                     {formData.contaDespesa.split(" ").slice(1).join(" ")}
                   </span>
                 </div>
+                {descontoNota > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Desconto:</span>
+                    <span className="font-medium text-green-400">-{formatCurrency(descontoNota)}</span>
+                  </div>
+                )}
+                {formasPagamentoNota.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Formas de pagamento detectadas ({formasPagamentoNota.length})</span>
+                    {formasPagamentoNota.map((fp: any, idx: number) => (
+                      <div key={idx} className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{formatarTipoPagamento(fp.forma)}</span>
+                        <span className="font-medium text-white">{formatCurrency(fp.valor)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="pt-4 mt-2 border-t border-dashed border-border">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-white">Total a pagar:</span>
+                    <span className="text-sm font-semibold text-foreground">Total a pagar:</span>
                     <span className="text-xl font-bold text-primary">{formatCurrency(valorTotalCompra)}</span>
                   </div>
                 </div>
@@ -460,7 +542,7 @@ export default function CompraNfePage() {
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-2">
                     <Package className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-white">Produtos da Nota</h3>
+                    <h3 className="font-semibold text-foreground">Produtos da Nota</h3>
                   </div>
                   <div className="flex items-center gap-4">
                     <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -502,20 +584,20 @@ export default function CompraNfePage() {
                           />
                         </td>
                         <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{produto.codigo || "-"}</td>
-                        <td className="px-4 py-3 text-white">{produto.descricao}</td>
+                        <td className="px-4 py-3 text-foreground">{produto.descricao}</td>
                         <td className="px-4 py-3 text-center">
                           <span className="inline-flex items-center gap-1">
                             {produto.quantidade} <span className="text-xs text-muted-foreground">{produto.unidade}</span>
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(produto.valor_unitario)}</td>
-                        <td className="px-4 py-3 text-right font-medium text-white">{formatCurrency(produto.valor_total)}</td>
+                        <td className="px-4 py-3 text-right font-medium text-foreground">{formatCurrency(produto.valor_total)}</td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot className="bg-surface-2 border-t border-border">
                     <tr>
-                      <td colSpan={5} className="px-4 py-4 text-right font-semibold text-white">
+                      <td colSpan={5} className="px-4 py-4 text-right font-semibold text-foreground">
                         Total da Compra:
                       </td>
                       <td className="px-4 py-4 text-right text-xl font-bold text-primary">

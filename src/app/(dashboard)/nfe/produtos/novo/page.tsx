@@ -129,7 +129,7 @@ export default function NovoProdutoPage() {
           </div>
           <div className="p-6">
             {error && (
-              <Alert variant="destructive" className="mb-6 bg-destructive/5 border-destructive/30 text-red-800">
+              <Alert variant="destructive" className="mb-6 bg-destructive/5 border-destructive/30 text-destructive">
                 <AlertCircle className="h-4 w-4 text-destructive" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>

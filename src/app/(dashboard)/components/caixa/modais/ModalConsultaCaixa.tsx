@@ -87,8 +87,8 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
                     <div>
                       <p className="text-sm"><strong className="text-foreground">Status:</strong>
                         <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${
-                          valores.status === 'FECHADO' ? 'bg-success/10 text-green-800' :
-                          valores.status === 'ABERTO' ? 'bg-yellow-100 text-yellow-800' : 'bg-surface-2 text-white'
+                          valores.status === 'FECHADO' ? 'bg-success/10 text-success' :
+                          valores.status === 'ABERTO' ? 'bg-warning/10 text-warning' : 'bg-surface-2 text-white'
                         }`}>{valores.status}</span>
                       </p>
                       <p className="text-sm mt-2"><strong className="text-foreground">Observação:</strong> <span className="text-muted-foreground">{valores.observacao}</span></p>
@@ -100,7 +100,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
 
               {/* Resumo Financeiro */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="border border-green-200 rounded-lg p-3 text-center bg-green-50">
+                <div className="border border-success/30 rounded-lg p-3 text-center bg-success/10">
                   <h6 className="text-xs text-success font-medium">Valor Abertura</h6>
                   <h4 className="text-lg font-bold text-success">{formatarMoeda(valores.valorAbertura || 0)}</h4>
                 </div>
@@ -108,11 +108,11 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
                   <h6 className="text-xs text-info font-medium">Vendas Dinheiro</h6>
                   <h4 className="text-lg font-bold text-info">{formatarMoeda(valores.vendasDinheiro || 0)}</h4>
                 </div>
-                <div className="border border-cyan-200 rounded-lg p-3 text-center bg-cyan-50">
-                  <h6 className="text-xs text-cyan-700 font-medium">Total Vendas</h6>
-                  <h4 className="text-lg font-bold text-cyan-700">{formatarMoeda(valores.totalVendas || 0)}</h4>
+                <div className="border border-info/30 rounded-lg p-3 text-center bg-info/10">
+                  <h6 className="text-xs text-info font-medium">Total Vendas</h6>
+                  <h4 className="text-lg font-bold text-info">{formatarMoeda(valores.totalVendas || 0)}</h4>
                 </div>
-                <div className="border border-amber-200 rounded-lg p-3 text-center bg-warning/5">
+                <div className="border border-warning/30 rounded-lg p-3 text-center bg-warning/5">
                   <h6 className="text-xs text-warning font-medium">Saldo Final</h6>
                   <h4 className={`text-lg font-bold ${(valores.saldoFinal || 0) < 0 ? 'text-destructive' : 'text-warning'}`}>
                     {formatarMoeda(valores.saldoFinal || 0)}
@@ -122,7 +122,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
 
               {/* Fechamento Oficial */}
               {dadosCaixa.fechamento && (
-                <div className="border border-green-200 rounded-lg mb-6 bg-green-50">
+                <div className="border border-success/30 rounded-lg mb-6 bg-success/10">
                   <div className="bg-success px-4 py-2 rounded-t-lg">
                     <h6 className="font-semibold text-white flex items-center gap-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -213,7 +213,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
                           ))}
                         </tbody>
                         <tfoot>
-                          <tr className="bg-yellow-50">
+                          <tr className="bg-warning/10">
                             <td className="p-2 font-bold">TOTAL DE RETIRADAS:</td>
                             <td colSpan={2} className="p-2 text-destructive font-bold">{formatarMoeda(valores.totalRetiradas || 0)}</td>
                           </tr>
@@ -256,7 +256,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
             </>
           ) : (
             <div className="text-center py-8">
-              <svg className="w-16 h-16 text-yellow-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-16 h-16 text-warning mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <h5 className="text-lg font-semibold text-foreground mb-2">Nenhum dado encontrado</h5>
@@ -270,7 +270,7 @@ export default function ModalConsultaCaixa({ show, onClose, dadosCaixa }: ModalC
 
         {/* Footer */}
         <div className="flex justify-end gap-3 p-4 border-t border-border">
-          <button onClick={onClose} className="px-4 py-2 bg-surface-20 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
+          <button onClick={onClose} className="px-4 py-2 bg-surface-20 hover:bg-muted text-white font-medium rounded-lg transition-colors">
             Fechar
           </button>
           {dadosCaixa && (

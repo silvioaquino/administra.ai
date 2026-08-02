@@ -5,6 +5,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { ProductNormalizationService } from '@/lib/services/product-normalization.service'
 import { ConversionService } from '@/lib/services/conversion.service'
+import { encontrarNotaDuplicada } from '@/lib/nfe/duplicidade'
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { nota, produtos, contaDespesa, dataCompra, valorTotal, formaPagamento } = body
+    const { nota, produtos, contaDespesa, dataCompra, valorTotal, formaPagamento, desconto, formasPagamento } = body
     const userId = session.user.id
     const empresaId = session.user.empresaId
 
@@ -28,18 +30,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verificar se a nota já existe
-    const notaFiscalExistente = await prisma.notaFiscal.findUnique({
-      where: { chaveAcesso: nota.chave_acesso }
+    // Verificar duplicidade: chave de acesso OU número + série + CNPJ do emitente
+    const notaFiscalExistente = await encontrarNotaDuplicada(prisma, {
+      empresaId,
+      chaveAcesso: nota.chave_acesso,
+      numero: nota.numero,
+      serie: nota.serie,
+      cnpjEmitente: nota.cnpj_emitente,
     })
 
     if (notaFiscalExistente) {
-      return NextResponse.json({
-        success: true,
-        data: notaFiscalExistente,
-        message: 'Nota fiscal já existe'
-      })
+      return NextResponse.json(
+        {
+          success: false,
+          duplicada: true,
+          error: `Nota já lançada: nº ${notaFiscalExistente.numero}/série ${notaFiscalExistente.serie} de ${notaFiscalExistente.nomeEmitente}`,
+          notaExistente: {
+            id: notaFiscalExistente.id,
+            numero: notaFiscalExistente.numero,
+            serie: notaFiscalExistente.serie,
+            nomeEmitente: notaFiscalExistente.nomeEmitente,
+            cnpjEmitente: notaFiscalExistente.cnpjEmitente,
+            dataEmissao: notaFiscalExistente.dataEmissao,
+            chaveAcesso: notaFiscalExistente.chaveAcesso,
+          },
+        },
+        { status: 409 }
+      )
     }
+
 
     const [year, month, day] = nota.data_emissao.split('-').map(Number)
     const dataEmissao = new Date(year, month - 1, day)
@@ -80,6 +99,7 @@ export async function POST(request: NextRequest) {
         cnpjEmitente: nota.cnpj_emitente,
         nomeEmitente: nota.nome_emitente,
         valorTotal: valorTotal || nota.valor_total,
+        valorDesconto: desconto || 0,
         produtos: {
           create: produtos.map((p: any, i: number) => {
             const n = produtosNormalizados[i]
@@ -109,12 +129,19 @@ export async function POST(request: NextRequest) {
           })
         },
         pagamentos: {
-          create: [{
-            userId: userId,
-            empresaId: empresaId,
-            formaPagamento: formaPagamento || 'À vista',
-            valor: valorTotal || nota.valor_total
-          }]
+          create: (formasPagamento && formasPagamento.length > 0)
+            ? formasPagamento.map((fp: any) => ({
+                userId: userId,
+                empresaId: empresaId,
+                formaPagamento: fp.forma,
+                valor: fp.valor,
+              }))
+            : [{
+                userId: userId,
+                empresaId: empresaId,
+                formaPagamento: formaPagamento || 'À vista',
+                valor: valorTotal || nota.valor_total,
+              }]
         }
       }
     })

@@ -267,9 +267,9 @@ export function TaxasCartaoConfig({ config, resultados, onUpdate, onSave, saving
                 <p className="text-xs text-muted-foreground">Taxa Crédito Média</p>
                 <p className="text-lg font-bold text-info">{formatPercentage(resultados.creditoMedia)}</p>
               </div>
-              <div className="rounded-lg bg-yellow-50 p-2 text-center">
+              <div className="rounded-lg bg-warning/10 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Taxa Média Geral</p>
-                <p className="text-lg font-bold text-yellow-600">{formatPercentage(resultados.taxaMediaGeral)}</p>
+                <p className="text-lg font-bold text-warning">{formatPercentage(resultados.taxaMediaGeral)}</p>
               </div>
               <div className="rounded-lg bg-surface-2 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Aluguel Total</p>
@@ -279,7 +279,7 @@ export function TaxasCartaoConfig({ config, resultados, onUpdate, onSave, saving
                 <p className="text-xs text-muted-foreground">Aluguel % (base R$30k)</p>
                 <p className="text-lg font-bold text-muted-foreground">{formatPercentage(resultados.percentualAluguel)}</p>
               </div>
-              <div className="rounded-lg bg-green-50 p-2 text-center">
+              <div className="rounded-lg bg-success/10 p-2 text-center">
                 <p className="text-xs text-muted-foreground">🎯 TOTAL DESPESAS VARIÁVEIS</p>
                 <p className="text-lg font-bold text-success">{formatPercentage(resultados.totalDespesasVariaveis)}</p>
               </div>

@@ -153,7 +153,7 @@ export function DespesasVariaveisConfig({
                           size="sm"
                           variant="ghost"
                           onClick={() => removerMaquininha(maquina.id)}
-                          className="h-8 w-8 p-0 text-muted-foreground hover:text-yellow-600 hover:bg-yellow-50"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-warning hover:bg-warning/10"
                           title="Desativar maquininha"
                         >
                           <span className="text-xs">⏸</span>
@@ -332,9 +332,9 @@ export function DespesasVariaveisConfig({
                 <p className="text-xs text-muted-foreground">Taxa Crédito Média</p>
                 <p className="text-lg font-bold text-info">{formatPercentage(resultados.creditoMedia)}</p>
               </div>
-              <div className="rounded-lg bg-yellow-50 p-2 text-center">
+              <div className="rounded-lg bg-warning/10 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Taxa Média Geral</p>
-                <p className="text-lg font-bold text-yellow-600">{formatPercentage(resultados.taxaMediaGeral)}</p>
+                <p className="text-lg font-bold text-warning">{formatPercentage(resultados.taxaMediaGeral)}</p>
               </div>
               <div className="rounded-lg bg-surface-2 p-2 text-center">
                 <p className="text-xs text-muted-foreground">Aluguel Total</p>
@@ -344,7 +344,7 @@ export function DespesasVariaveisConfig({
                 <p className="text-xs text-muted-foreground">Aluguel % (base {formatCurrency(faturamentoBase)})</p>
                 <p className="text-lg font-bold text-muted-foreground">{formatPercentage(resultados.percentualAluguel)}</p>
               </div>
-              <div className="rounded-lg bg-green-50 p-2 text-center">
+              <div className="rounded-lg bg-success/10 p-2 text-center">
                 <p className="text-xs text-muted-foreground">🎯 TOTAL DESPESAS VARIÁVEIS</p>
                 <p className="text-lg font-bold text-success">{formatPercentage(resultados.totalDespesasVariaveis)}</p>
               </div>

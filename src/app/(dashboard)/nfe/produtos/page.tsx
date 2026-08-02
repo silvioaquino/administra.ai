@@ -148,7 +148,7 @@ export default function ProdutosPage() {
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {produtosFiltrados.map((produto) => (
               <div key={produto.id} className="bg-surface rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
-                <div className="bg-gradient-to-r from-[#de4838] to-[#de4838]/80 h-2" />
+                <div className="bg-gradient-to-r from-primary to-primary/80 h-2" />
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div className="w-10 h-10 bg-surface-2 rounded-xl flex items-center justify-center">

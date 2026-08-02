@@ -212,7 +212,7 @@ export function TabelaMetasMensais({ metas, anoAtual, onSalvar, periodosExternos
         <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider w-24">
           Dias Trabalhados
         </th>
-        <th className="px-4 py-3 text-right text-xs font-medium text-gray-505 uppercase tracking-wider">
+        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Meta Total (R$)
         </th>
       </tr>

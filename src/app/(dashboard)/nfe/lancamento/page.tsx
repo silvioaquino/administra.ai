@@ -8,10 +8,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, hojeISO } from "@/lib/utils";
+import { toast } from "sonner";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useContasFinanceiras } from "@/hooks/useContasFinanceiras";
+
+// Rótulos amigáveis das formas de pagamento (usados na descrição automática)
+const LABEL_FORMA_PAGAMENTO: Record<string, string> = {
+  DINHEIRO: "Dinheiro",
+  CARTAO_CREDITO: "Cartão de Crédito",
+  CARTAO_DEBITO: "Cartão de Débito",
+  PIX: "Pix",
+  IFOOD: "iFood",
+};
+
+function descricaoAutomatica(tipo: string, formaPagamento: string) {
+  const forma = LABEL_FORMA_PAGAMENTO[formaPagamento] || formaPagamento;
+  const tipoLabel = tipo === "VENDA" ? "Venda" : "Compra";
+  return `Lançamento Manual de ${tipoLabel} via ${forma}`;
+}
+
 
 interface Produto {
   id: number;
@@ -25,9 +42,10 @@ export default function LancamentoManualPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [descricaoManual, setDescricaoManual] = useState(false);
   const [formData, setFormData] = useState({
     tipoLancamento: "VENDA",
-    descricao: "",
+    descricao: descricaoAutomatica("VENDA", "DINHEIRO"),
     valor: "",
     produtoId: "",
     quantidade: 1,
@@ -37,8 +55,18 @@ export default function LancamentoManualPage() {
     contaDestino: "Dinheiro Físico",
     contaDespesa: "",
     origemDestino: "",
-    data: new Date().toISOString().split("T")[0],
+    data: hojeISO(),
   });
+
+  // Descrição automática pela forma de pagamento (enquanto o usuário não editar manualmente)
+  useEffect(() => {
+    if (descricaoManual) return;
+    setFormData(prev => ({
+      ...prev,
+      descricao: descricaoAutomatica(prev.tipoLancamento, prev.formaPagamento),
+    }));
+  }, [formData.formaPagamento, formData.tipoLancamento, descricaoManual]);
+
 
   // Usar hook reutilizável para carregar contas
   const { contas, loading: loadingContas } = useContasFinanceiras();
@@ -89,17 +117,19 @@ export default function LancamentoManualPage() {
     e.preventDefault();
 
     if (!isVenda && !formData.produtoId) {
-      alert("Selecione um produto");
+      toast.error("Selecione um produto");
       return;
     }
 
     if (valorTotal <= 0) {
-      alert("Informe um valor maior que zero");
+      toast.error("Informe um valor maior que zero");
       return;
     }
 
     if (!isVenda && !formData.contaDespesa) {
-      alert("Cadastre e selecione uma Conta Financeira antes de salvar.\n\nAcesse o menu 'Contas Bancárias' e adicione uma conta para este cliente.");
+      toast.error("Selecione uma Conta Financeira", {
+        description: "Acesse 'Contas Bancárias' e cadastre uma conta antes de salvar.",
+      });
       return;
     }
 
@@ -107,8 +137,9 @@ export default function LancamentoManualPage() {
 
     try {
       const descricaoLancamento = isVenda
-        ? formData.descricao.trim() || "Lançamento manual de venda"
-        : `Compra: ${produtoSelecionado?.descricao} - ${formData.quantidade} ${produtoSelecionado?.unidade ?? ""}`.trim();
+        ? formData.descricao.trim() ||
+          descricaoAutomatica(formData.tipoLancamento, formData.formaPagamento)
+        : `Compra: ${produtoSelecionado?.descricao} - ${formData.quantidade} ${produtoSelecionado?.unidade ?? ""} (${LABEL_FORMA_PAGAMENTO[formData.formaPagamento] || formData.formaPagamento})`.trim();
 
       // Registrar no livro diário
       const response = await fetch("/api/livro-diario", {
@@ -142,16 +173,17 @@ export default function LancamentoManualPage() {
         });
       }
 
-      alert(
+      toast.success(
         isVenda
-          ? `✅ Venda registrada! Entrada: ${formatCurrency(valorTotal)}`
-          : `✅ Compra registrada! Saída: ${formatCurrency(valorTotal)}`
+          ? `Venda registrada — entrada de ${formatCurrency(valorTotal)}`
+          : `Compra registrada — saída de ${formatCurrency(valorTotal)}`
       );
 
       // Resetar formulário
+      setDescricaoManual(false);
       setFormData({
         ...formData,
-        descricao: "",
+        descricao: descricaoAutomatica(formData.tipoLancamento, formData.formaPagamento),
         valor: "",
         produtoId: "",
         quantidade: 1,
@@ -159,9 +191,10 @@ export default function LancamentoManualPage() {
         clienteFornecedor: "",
         origemDestino: "",
       });
+
     } catch (error) {
       console.error("Erro:", error);
-      alert("Erro ao realizar lançamento");
+      toast.error("Erro ao realizar lançamento");
     } finally {
       setLoading(false);
     }
@@ -191,7 +224,7 @@ export default function LancamentoManualPage() {
             type="submit"
             form="lancamento-form"
             disabled={loading || valorTotal <= 0}
-            className="bg-primary hover:bg-primary/90 text-white px-6 rounded-full shadow-sm"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 rounded-full shadow-sm"
           >
             <Save className="mr-2 h-4 w-4" />
             {loading ? "Processando..." : isVenda ? "Lançar Venda" : "Lançar Compra"}
@@ -219,7 +252,7 @@ export default function LancamentoManualPage() {
                         <option value="VENDA">💰 Venda (Entrada - Receita)</option>
                         <option value="COMPRA">📦 Compra (Saída - Despesa)</option>
                       </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-foreground">
                         <svg
                           className="fill-current h-4 w-4"
                           xmlns="http://www.w3.org/2000/svg"
@@ -262,7 +295,7 @@ export default function LancamentoManualPage() {
                       <option value="PIX">📱 PIX</option>
                       <option value="IFOOD">🍔 iFood</option>
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-foreground">
                       <svg
                         className="fill-current h-4 w-4"
                         xmlns="http://www.w3.org/2000/svg"
@@ -294,7 +327,7 @@ export default function LancamentoManualPage() {
                         </option>
                       ))}
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-foreground">
                       <Building2 className="h-4 w-4 text-muted-foreground/70" />
                     </div>
                   </div>
@@ -315,9 +348,16 @@ export default function LancamentoManualPage() {
                         placeholder="Ex.: Venda balcão, sangria, despesa avulsa..."
                         value={formData.descricao}
                         maxLength={120}
-                        onChange={e => setFormData({ ...formData, descricao: e.target.value })}
+                        onChange={e => {
+                          setDescricaoManual(e.target.value.trim().length > 0)
+                          setFormData({ ...formData, descricao: e.target.value })
+                        }}
                         className="rounded-lg border-border focus:ring-primary"
                       />
+                      <p className="text-[11px] text-muted-foreground">
+                        Preenchida automaticamente pela forma de pagamento — você pode editar.
+                      </p>
+
                     </div>
 
                     <div className="space-y-1">
@@ -372,7 +412,7 @@ export default function LancamentoManualPage() {
                               </option>
                             ))}
                           </select>
-                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-foreground">
                             <svg
                               className="fill-current h-4 w-4"
                               xmlns="http://www.w3.org/2000/svg"
@@ -481,7 +521,7 @@ export default function LancamentoManualPage() {
                           ))
                         )}
                       </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-foreground">
                         <svg
                           className="fill-current h-4 w-4"
                           xmlns="http://www.w3.org/2000/svg"
@@ -513,7 +553,7 @@ export default function LancamentoManualPage() {
                         <option value="iFood">🍔 iFood</option>
                         <option value="Infinity Empório">🏪 Infinity Empório</option>
                       </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-foreground">
                         <svg
                           className="fill-current h-4 w-4"
                           xmlns="http://www.w3.org/2000/svg"
@@ -529,7 +569,7 @@ export default function LancamentoManualPage() {
                 {/* Alerta informativo */}
                 <Alert variant="default" className="bg-primary/10 border-primary/20 rounded-xl">
                   <AlertCircle className="h-4 w-4 text-primary" />
-                  <AlertDescription className="text-sm text-white">
+                  <AlertDescription className="text-sm text-foreground">
                     {isVenda
                       ? "💰 Venda: O valor será registrado como RECEITA (Entrada no caixa)"
                       : "📦 Compra: O valor será registrado como DESPESA (Saída do caixa) e o estoque do produto será atualizado"}
@@ -553,7 +593,7 @@ export default function LancamentoManualPage() {
           <div className="lg:sticky lg:top-24 h-fit">
             <Card className="overflow-hidden border-0 shadow-lg rounded-2xl bg-surface">
               <div className="bg-surface-2 p-4 border-b border-border">
-                <h3 className="font-semibold text-white">Pré-visualização do lançamento</h3>
+                <h3 className="font-semibold text-foreground">Pré-visualização do lançamento</h3>
                 <p className="text-xs text-muted-foreground">Confira os detalhes antes de salvar</p>
               </div>
               <CardContent className="p-6 space-y-4">
@@ -572,32 +612,32 @@ export default function LancamentoManualPage() {
                   <>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Descrição:</span>
-                      <span className="font-medium text-white text-right">
+                      <span className="font-medium text-foreground text-right">
                         {formData.descricao || "—"}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Valor:</span>
-                      <span className="font-medium text-white">{formatCurrency(valorTotal)}</span>
+                      <span className="font-medium text-foreground">{formatCurrency(valorTotal)}</span>
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Produto:</span>
-                      <span className="font-medium text-white text-right">
+                      <span className="font-medium text-foreground text-right">
                         {produtoSelecionado?.descricao || "—"}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Quantidade:</span>
-                      <span className="font-medium text-white">
+                      <span className="font-medium text-foreground">
                         {formData.quantidade} {produtoSelecionado?.unidade ?? ""}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Valor unitário:</span>
-                      <span className="font-medium text-white">
+                      <span className="font-medium text-foreground">
                         {formatCurrency(valorUnitarioNum)}
                       </span>
                     </div>
@@ -606,7 +646,7 @@ export default function LancamentoManualPage() {
 
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Forma de Pagto:</span>
-                  <span className="font-medium text-white capitalize">
+                  <span className="font-medium text-foreground capitalize">
                     {formData.formaPagamento.toLowerCase().replace("_", " ")}
                   </span>
                 </div>
@@ -614,19 +654,19 @@ export default function LancamentoManualPage() {
                   <span className="text-muted-foreground">
                     {isVenda ? "Cliente" : "Fornecedor"}:
                   </span>
-                  <span className="font-medium text-white">
+                  <span className="font-medium text-foreground">
                     {formData.clienteFornecedor || "—"}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Origem/Destino:</span>
-                  <span className="font-medium text-white">
+                  <span className="font-medium text-foreground">
                     {formData.origemDestino || "—"}
                   </span>
                 </div>
                 <div className="pt-4 mt-2 border-t border-dashed border-border">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-sm font-semibold text-foreground">
                       Total a {isVenda ? "receber" : "pagar"}:
                     </span>
                     <span className="text-xl font-bold text-primary">

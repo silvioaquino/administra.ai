@@ -96,7 +96,7 @@ export default function TelaInicial({
       <div className="container mx-auto px-6 py-6 max-w-7xl">
         {/* Consultar Caixa */}
         <div className="bg-surface rounded-2xl shadow-sm overflow-hidden max-w-md mx-auto">
-          <div className="bg-gradient-to-r from-blue-500/10 to-transparent p-4 border-b border-border">
+          <div className="bg-gradient-to-r from-info/10 to-transparent p-4 border-b border-border">
             <div className="flex items-center gap-2">
               <Search className="h-5 w-5 text-info" />
               <h3 className="font-semibold text-white">Consultar Caixa</h3>
@@ -144,7 +144,7 @@ export default function TelaInicial({
 
         {/* Status do Sistema 
         <div className="bg-surface rounded-2xl shadow-sm overflow-hidden max-w-md mx-auto mt-4">
-          <div className="bg-gradient-to-r from-emerald-500/10 to-transparent py-2.5 px-4 border-b border-border">
+          <div className="bg-gradient-to-r from-success/10 to-transparent py-2.5 px-4 border-b border-border">
             <div className="flex items-center gap-2">
               <Activity className="h-4 w-4 text-success" />
               <h3 className="font-semibold text-white text-sm">Status do Sistema</h3>
@@ -195,7 +195,7 @@ export default function TelaInicial({
         </div>*/}
 
         {/* Dica rápida */}
-        <div className="bg-gradient-to-r from-[#de4838]/5 to-transparent rounded-xl p-4 border border-primary/10 max-w-md mx-auto mt-4">
+        <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-xl p-4 border border-primary/10 max-w-md mx-auto mt-4">
           <div className="flex items-start gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 flex-shrink-0">
               <Sparkles className="h-4 w-4 text-primary" />

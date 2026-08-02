@@ -22,7 +22,7 @@ export function ConversionTooltip({
         render={
           <button
             type="button"
-            className={`inline-flex items-center text-gray-400 hover:text-gray-600 ${className || ''}`}
+            className={`inline-flex items-center text-muted-foreground hover:text-muted-foreground ${className || ''}`}
             aria-label="Ajuda sobre conversão de unidades"
           />
         }

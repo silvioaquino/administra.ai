@@ -239,7 +239,7 @@ export default function PlanosPage() {
 
         {/* Alertas de Trial/Assinatura */}
         {isInTrial && (
-          <Alert className="mb-6 bg-warning/5 border-orange-200 rounded-xl">
+          <Alert className="mb-6 bg-warning/5 border-warning/30 rounded-xl">
             <Crown className="h-5 w-5 text-warning" />
             <AlertTitle className="text-warning font-semibold">Período de Teste Grátis</AlertTitle>
             <AlertDescription className="text-warning">
@@ -278,7 +278,7 @@ export default function PlanosPage() {
               className={cn(
                 "rounded-lg px-5 py-2 text-sm font-medium transition-all",
                 billingPeriod === "monthly"
-                  ? "bg-surface text-gray-900 shadow-sm"
+                  ? "bg-surface text-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-surface-2"
               )}
             >
@@ -289,7 +289,7 @@ export default function PlanosPage() {
               className={cn(
                 "rounded-lg px-5 py-2 text-sm font-medium transition-all",
                 billingPeriod === "semiannual"
-                  ? "bg-surface text-gray-900 shadow-sm"
+                  ? "bg-surface text-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-surface-2"
               )}
             >
@@ -300,7 +300,7 @@ export default function PlanosPage() {
               className={cn(
                 "rounded-lg px-5 py-2 text-sm font-medium transition-all",
                 billingPeriod === "annual"
-                  ? "bg-surface text-gray-900 shadow-sm"
+                  ? "bg-surface text-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-surface-2"
               )}
             >
@@ -323,7 +323,7 @@ export default function PlanosPage() {
                 key={plan.id}
                 className={cn(
                   "relative w-full max-w-xl bg-surface rounded-2xl shadow-sm overflow-hidden transition-all duration-200 flex flex-col",
-                  isCurrentPlan ? "ring-2 ring-[#de4838] shadow-md" : "hover:shadow-md",
+                  isCurrentPlan ? "ring-2 ring-primary shadow-md" : "hover:shadow-md",
                   plan.popular && !isCurrentPlan && "border-2 border-primary/20"
                 )}
               >
@@ -341,7 +341,7 @@ export default function PlanosPage() {
                 {/* Header com gradiente */}
                 <div className={cn(
                   "p-5 border-b border-border",
-                  plan.popular && !isCurrentPlan ? "bg-gradient-to-r from-[#de4838]/5 to-transparent" : ""
+                  plan.popular && !isCurrentPlan ? "bg-gradient-to-r from-primary/5 to-transparent" : ""
                 )}>
                   <h3 className="text-xl font-bold text-white">{plan.name}</h3>
                   <p className="text-sm text-muted-foreground mt-1 min-h-[40px]">
@@ -483,7 +483,7 @@ export default function PlanosPage() {
                 <div className="mb-4 flex justify-center">
                   <div className="rounded-2xl bg-surface-2 p-4">
                     <div className="flex h-32 w-32 items-center justify-center bg-surface rounded-xl">
-                      <div className="h-28 w-28 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 opacity-20" />
+                      <div className="h-28 w-28 rounded-lg bg-gradient-to-br from-success to-success opacity-20" />
                     </div>
                   </div>
                 </div>

@@ -180,6 +180,7 @@ model NotaFiscal {
   enderecoEmitente String?       @map("endereco_emitente")
   valorTotal       Decimal       @map("valor_total") @db.Decimal(10, 2)
   cpfConsumidor    String?       @map("cpf_consumidor")
+  valorDesconto      Decimal?      @map("valor_desconto") @db.Decimal(10, 2)
   createdAt        DateTime      @default(now()) @map("created_at")
   empresaId        String
   livroDiario      LivroDiario[]

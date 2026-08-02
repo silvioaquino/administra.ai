@@ -173,10 +173,10 @@ export default function MovimentacoesContaPage() {
   const getTipoBadge = (tipo: string) => {
     const colors: Record<string, string> = {
       VENDA: "bg-success/10 text-success border-success/30",
-      COMPRA: "bg-warning/10 text-warning border-orange-200",
+      COMPRA: "bg-warning/10 text-warning border-warning/30",
       DESPESA: "bg-destructive/10 text-destructive border-destructive/30",
       RECEITA: "bg-info/10 text-info border-info/30",
-      TRANSFERENCIA: "bg-primary/10 text-white border-purple-200",
+      TRANSFERENCIA: "bg-primary/10 text-white border-primary/30",
     };
     return colors[tipo] || "bg-surface-2 text-white border-border";
   };
@@ -266,28 +266,28 @@ export default function MovimentacoesContaPage() {
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Cards de Resumo */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white h-full min-h-[92px] sm:min-h-[105px]">
+          <Card className="bg-gradient-to-r from-info to-info text-white h-full min-h-[92px] sm:min-h-[105px]">
             <CardContent className="p-3 sm:p-4">
               <p className="text-[11px] sm:text-sm opacity-90 leading-tight">Saldo Atual</p>
               <p className="text-sm sm:text-xl font-bold mt-1 leading-tight">{formatCurrency(conta.saldoAtual)}</p>
               <p className="text-[10px] sm:text-xs opacity-80 mt-0.5">na conta</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white h-full min-h-[92px] sm:min-h-[105px]">
+          <Card className="bg-gradient-to-r from-success to-success text-white h-full min-h-[92px] sm:min-h-[105px]">
             <CardContent className="p-3 sm:p-4">
               <p className="text-[11px] sm:text-sm opacity-90 leading-tight">Total Entradas</p>
               <p className="text-sm sm:text-xl font-bold mt-1 leading-tight">{formatCurrency(totalEntradas)}</p>
               <p className="text-[10px] sm:text-xs opacity-80 mt-0.5">no período</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-r from-red-600 to-red-700 text-white h-full min-h-[92px] sm:min-h-[105px]">
+          <Card className="bg-gradient-to-r from-destructive to-destructive text-white h-full min-h-[92px] sm:min-h-[105px]">
             <CardContent className="p-3 sm:p-4">
               <p className="text-[11px] sm:text-sm opacity-90 leading-tight">Total Saídas</p>
               <p className="text-sm sm:text-xl font-bold mt-1 leading-tight">{formatCurrency(totalSaidas)}</p>
               <p className="text-[10px] sm:text-xs opacity-80 mt-0.5">no período</p>
             </CardContent>
           </Card>
-          <Card className={`bg-gradient-to-r ${saldoPeriodo >= 0 ? 'from-purple-600 to-purple-700' : 'from-orange-600 to-orange-700'} text-white h-full min-h-[92px] sm:min-h-[105px]`}>
+          <Card className={`bg-gradient-to-r ${saldoPeriodo >= 0 ? 'from-primary to-primary' : 'from-warning to-warning'} text-white h-full min-h-[92px] sm:min-h-[105px]`}>
             <CardContent className="p-3 sm:p-4">
               <p className="text-[11px] sm:text-sm opacity-90 leading-tight">Saldo no Período</p>
               <p className="text-sm sm:text-xl font-bold mt-1 leading-tight">{formatCurrency(saldoPeriodo)}</p>
@@ -444,7 +444,7 @@ export default function MovimentacoesContaPage() {
         {/* Resumo adicional */}
         {movimentacoes.length > 0 && (
           <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-gradient-to-r from-emerald-50 to-emerald-100 border-success/30">
+            <Card className="bg-gradient-to-r from-success to-success border-success/30">
               <CardContent className="p-4">
                 <p className="text-xs text-success font-medium">Média de Entrada</p>
                 <p className="text-lg font-bold text-success">
@@ -452,7 +452,7 @@ export default function MovimentacoesContaPage() {
                 </p>
               </CardContent>
             </Card>
-            <Card className="bg-gradient-to-r from-red-50 to-red-100 border-destructive/30">
+            <Card className="bg-gradient-to-r from-destructive to-destructive border-destructive/30">
               <CardContent className="p-4">
                 <p className="text-xs text-destructive font-medium">Média de Saída</p>
                 <p className="text-lg font-bold text-destructive">
@@ -460,7 +460,7 @@ export default function MovimentacoesContaPage() {
                 </p>
               </CardContent>
             </Card>
-            <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
+            <Card className="bg-gradient-to-r from-primary to-primary border-primary/30">
               <CardContent className="p-4">
                 <p className="text-xs text-white font-medium">Total de Transações</p>
                 <p className="text-lg font-bold text-white">{movimentacoes.length}</p>

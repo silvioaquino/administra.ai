@@ -288,7 +288,7 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
       {/* Highlight do elemento */}
       {(showHighlight && elementFound && elementPosition) && (
         <div
-          className="fixed z-50 rounded-lg ring-4 ring-[#de4838] ring-offset-2 transition-all duration-300 pointer-events-none"
+          className="fixed z-50 rounded-lg ring-4 ring-primary ring-offset-2 transition-all duration-300 pointer-events-none"
           style={{
             top: elementPosition.top - 8,
             left: elementPosition.left - 8,
@@ -303,10 +303,10 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
         <div className="w-full max-w-2xl mx-auto shadow-2xl animate-fade-in pointer-events-auto">
           <Card className="relative">
             {/* Header */}
-            <div className="p-4 border-b bg-gradient-to-r from-white to-gray-50 sticky top-0 bg-surface z-10 rounded-t-xl">
+            <div className="p-4 border-b bg-gradient-to-r from-white to-surface-2 sticky top-0 bg-surface z-10 rounded-t-xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-sm">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 shadow-sm">
                     <Sparkles className="h-4 w-4 text-white" />
                   </div>
                   <h2 className="text-lg font-semibold text-white">Guia de Configuração</h2>
@@ -334,7 +334,7 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
               {/* Ícone e título */}
               <div className="text-center space-y-3">
                 <div className="flex justify-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#de4838]/10 to-[#de4838]/5">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-primary/5">
                     <IconComponent className="h-8 w-8 text-primary" />
                   </div>
                 </div>
@@ -349,8 +349,8 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
 
               {/* Dicas */}
               {step.tips && step.tips.length > 0 && (
-                <div className="bg-info/5 rounded-xl p-4 border border-blue-100">
-                  <p className="text-sm font-medium text-blue-800 mb-2">💡 Dicas importantes:</p>
+                <div className="bg-info/5 rounded-xl p-4 border border-info/30">
+                  <p className="text-sm font-medium text-info mb-2">💡 Dicas importantes:</p>
                   <ul className="space-y-1">
                     {step.tips.map((tip, idx) => (
                       <li key={idx} className="text-xs text-info flex items-start gap-2">
@@ -364,7 +364,7 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
 
               {/* Checklist */}
               {step.checklist && (
-                <div className="bg-success/5 rounded-xl p-4 border border-emerald-100">
+                <div className="bg-success/5 rounded-xl p-4 border border-success/30">
                   <p className="text-sm font-medium text-success mb-2">✓ Checklist:</p>
                   <ul className="space-y-1">
                     {step.checklist.map((item, idx) => (
@@ -379,7 +379,7 @@ export function OnboardingGuide({ onComplete, onSkip }: OnboardingGuideProps) {
 
               {/* Instrução do Highlight */}
               {step.action.fieldSelector && (
-                <div className="bg-warning/5 rounded-xl p-3 border border-amber-100">
+                <div className="bg-warning/5 rounded-xl p-3 border border-warning/30">
                   <p className="text-xs text-warning flex items-center gap-2">
                     <Target className="h-3 w-3" />
                     Ao clicar no botão abaixo, o campo que você precisa editar será destacado em vermelho.

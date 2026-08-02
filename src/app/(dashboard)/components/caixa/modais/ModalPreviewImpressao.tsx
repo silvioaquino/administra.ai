@@ -70,7 +70,7 @@ export default function ModalPreviewImpressao({
         <div className="flex justify-end p-4 border-t border-border">
           <button 
             type="button" 
-            className="px-4 py-2 bg-surface-20 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+            className="px-4 py-2 bg-surface-20 hover:bg-muted text-white font-medium rounded-lg transition-colors"
             onClick={onClose}
           >
             Fechar

@@ -5,13 +5,20 @@ import { prisma } from "@/lib/prisma";
 
 const parseDateStart = (value: string) => {
   const [year, month, day] = value.split("-").map(Number);
-  return new Date(year, month - 1, day);
+  return new Date(Date.UTC(year, month - 1, day));
 };
 
 const parseDateEnd = (value: string) => {
   const [year, month, day] = value.split("-").map(Number);
-  return new Date(year, month - 1, day, 23, 59, 59, 999);
+  return new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
 };
+
+// Converte "YYYY-MM-DD" (ou ISO) em meia-noite UTC — independente do fuso do servidor
+const parseDataLancamento = (value: string) => {
+  const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+};
+
 
 // GET - Listar lançamentos do livro diário
 export async function GET(request: NextRequest) {
@@ -166,9 +173,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Corrigir a data para não usar UTC (que pode voltar o dia)
-    const [year, month, day] = data.split('-').map(Number)
-    const dataLancamento = new Date(year, month - 1, day)
+    // Grava a data como meia-noite UTC (não depende do fuso do servidor)
+    const dataLancamento = parseDataLancamento(data)
+
 
     // Determinar o status do lançamento com base na forma de pagamento
     const FORMAS_PAGAS = ["À vista", "Cartão de Débito", "PIX", "DINHEIRO", "CARTAO_DEBITO", "IFOOD"];
@@ -263,12 +270,12 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Corrigir a data para não usar UTC
+    // Grava a data como meia-noite UTC
     let dataConvertida: Date | undefined
     if (data) {
-      const [year, month, day] = data.split('-').map(Number)
-      dataConvertida = new Date(year, month - 1, day)
+      dataConvertida = parseDataLancamento(data)
     }
+
 
     const lancamentoAtualizado = await prisma.livroDiario.update({
       where: { id: parseInt(id) },

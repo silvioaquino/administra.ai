@@ -27,6 +27,7 @@ interface NotaFiscalApi {
   cnpjEmitente: string;
   nomeEmitente: string;
   valorTotal: unknown;
+  valorDesconto?: unknown,
   produtos: ProdutoNotaApi[];
   pagamentos: PagamentoApi[];
 }
@@ -40,6 +41,7 @@ const formatarNota = (nota: NotaFiscalApi) => ({
   cnpjEmitente: nota.cnpjEmitente,
   nomeEmitente: nota.nomeEmitente,
   valorTotal: Number(nota.valorTotal),
+  valorDesconto: Number(nota.valorDesconto || 0),
   produtos: (nota.produtos || []).map((produto) => ({
     codigo: produto.codigo || "",
     descricao: produto.descricao,

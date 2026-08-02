@@ -1630,7 +1630,7 @@ export default function ConfigLojaPage() {
                   {usuarios.map((usuario) => (
                     <div key={usuario.id} className="border border-border rounded-xl p-4">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#de4838] to-[#c73d2e] flex items-center justify-center text-white font-semibold">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/90 flex items-center justify-center text-white font-semibold">
                           {usuario.nome.charAt(0).toUpperCase()}
                         </div>
                         <div>

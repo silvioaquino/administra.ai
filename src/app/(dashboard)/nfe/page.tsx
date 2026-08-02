@@ -86,37 +86,37 @@ export default function NfePage() {
       title: "Faturamento Hoje",
       value: formatCurrency(totalVendasHoje),
       icon: TrendingUp,
-      gradient: "from-green-500 to-green-600",
+      gradient: "from-success to-success",
       change: "+2.5% vs ontem",
     },
     {
       title: "Compras Hoje",
       value: formatCurrency(totalComprasHoje),
       icon: TrendingDown,
-      gradient: "from-red-500 to-red-600",
+      gradient: "from-destructive to-destructive",
       change: "+1.2% vs ontem",
     },
     {
       title: "Saldo do Dia",
       value: formatCurrency(saldoDia),
       icon: DollarSign,
-      gradient: "from-blue-500 to-blue-600",
+      gradient: "from-info to-info",
       change: `Margem: ${margemDia.toFixed(1)}%`,
     },
     {
       title: "Transações",
       value: lancamentos.length.toString(),
       icon: Receipt,
-      gradient: "from-orange-500 to-orange-600",
+      gradient: "from-warning to-warning",
       change: "Lançamentos realizados",
     },
   ]
 
   const quickActions = [
-    { icon: DollarSign, label: "Lançamento Manual", desc: "Registrar venda ou compra", route: "/nfe/lancamento", color: "from-blue-500 to-blue-600" },
-    { icon: QrCode, label: "NFC-e Compra", desc: "Processar via URL", route: "/nfe/compra", color: "from-purple-500 to-purple-600" },
-    { icon: Upload, label: "NF-e XML", desc: "Upload do arquivo", route: "/nfe/xml", color: "from-emerald-500 to-emerald-600" },
-    { icon: Package, label: "Produtos", desc: "Gerenciar catálogo", route: "/nfe/produtos", color: "from-amber-500 to-amber-600" },
+    { icon: DollarSign, label: "Lançamento Manual", desc: "Registrar venda ou compra", route: "/nfe/lancamento", color: "from-info to-info" },
+    { icon: QrCode, label: "NFC-e Compra", desc: "Processar via URL", route: "/nfe/compra", color: "from-primary to-primary" },
+    { icon: Upload, label: "NF-e XML", desc: "Upload do arquivo", route: "/nfe/xml", color: "from-success to-success" },
+    { icon: Package, label: "Produtos", desc: "Gerenciar catálogo", route: "/nfe/produtos", color: "from-warning to-warning" },
   ]
 
   return (
@@ -226,7 +226,7 @@ export default function NfePage() {
                   </Button>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-border">
                   {lancamentos.map((lanc, index) => (
                     <div key={lanc.id} className="group flex items-center justify-between p-4 hover:bg-surface-2 transition-colors">
                       <div className="flex items-center gap-3">
@@ -332,7 +332,7 @@ export default function NfePage() {
                     }
                   </p>
                 </div>
-                <div className="rounded-lg bg-purple-50 p-4">
+                <div className="rounded-lg bg-primary/10 p-4">
                   <p className="text-xs text-muted-foreground mb-1">Total de transações</p>
                   <p className="text-xl font-bold text-primary/80">
                     {lancamentos.length}
@@ -359,10 +359,10 @@ export default function NfePage() {
               </div>
 
               {margemDia < 10 && margemDia > 0 && (
-                <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+                <div className="rounded-lg border border-warning/30 bg-warning/10 p-4">
                   <div className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-yellow-600" />
-                    <p className="text-sm text-yellow-800">
+                    <AlertCircle className="h-4 w-4 text-warning" />
+                    <p className="text-sm text-warning">
                       Margem do dia está baixa ({margemDia.toFixed(1)}%)
                     </p>
                   </div>

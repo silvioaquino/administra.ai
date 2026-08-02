@@ -1,6 +1,9 @@
 // src/app/(dashboard)/livro-diario/page.tsx
 "use client"
 
+import { toast } from "sonner"
+import { hojeISO } from "@/lib/utils"
+
 import React from "react"
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
@@ -67,6 +70,7 @@ interface NotaFiscal {
   cnpjEmitente: string
   nomeEmitente: string
   valorTotal: number
+  valorDesconto?: number
   produtos: ProdutoNota[]
   pagamentos: Array<{
     formaPagamento: string
@@ -136,9 +140,9 @@ const obterDataHoje = () => {
 }
 
 function obterPrimeiroDiaMes(): string {
-  const data = new Date()
-  data.setDate(1) // Seta para o primeiro dia do mês
-  return data.toISOString().split('T')[0] // Formato YYYY-MM-DD
+  const d = new Date()
+  const mes = String(d.getMonth() + 1).padStart(2, "0")
+  return `${d.getFullYear()}-${mes}-01`
 }
 
 // Dados mocados de exemplo (IDs 9991-10000)
@@ -344,11 +348,11 @@ const getRowStyleForBoleto = (statusBoleto: string | null, dataVencimento: strin
 
   const diffDays = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
 
-  if (vencimento < hoje) return "bg-destructive/10 border-l-4 border-red-500"
-  if (diffDays === 0) return "bg-warning/10 border-l-4 border-amber-500"
-  if (diffDays <= 3) return "bg-warning/5 border-l-4 border-amber-400"
+  if (vencimento < hoje) return "bg-destructive/10 border-l-4 border-destructive"
+  if (diffDays === 0) return "bg-warning/10 border-l-4 border-warning"
+  if (diffDays <= 3) return "bg-warning/5 border-l-4 border-warning"
   if (diffDays <= 5) return "bg-info/5 border-l-4 border-info"
-  return "bg-info/5/60 border-l-4 border-blue-300"
+  return "bg-info/5/60 border-l-4 border-info/30"
 }
 
 // Função para obter o ícone de status do boleto
@@ -444,7 +448,7 @@ export default function LivroDiarioPage() {
   const [editandoId, setEditandoId] = useState<number | null>(null)
   const [tipoLancamento, setTipoLancamento] = useState<"comum" | "boleto" | "folha">("comum")
   const [formData, setFormData] = useState({
-    data: new Date().toISOString().split("T")[0],
+    data: hojeISO(),
     conta: "",
     descricao: "",
     clienteFornecedor: "",
@@ -452,7 +456,7 @@ export default function LivroDiarioPage() {
     entrada: 0,
     saida: 0,
     tipo: "DESPESA",
-    dataVencimento: new Date().toISOString().split("T")[0],
+    dataVencimento: hojeISO(),
     funcionarios: "",
     salariosBase: 0,
     inss: 0,
@@ -470,7 +474,7 @@ export default function LivroDiarioPage() {
   // Modal de pagamento
   const [pagamentoModalOpen, setPagamentoModalOpen] = useState(false)
   const [lancamentoParaPagar, setLancamentoParaPagar] = useState<Lancamento | null>(null)
-  const [dataPagamento, setDataPagamento] = useState(new Date().toISOString().split("T")[0])
+  const [dataPagamento, setDataPagamento] = useState(hojeISO())
 
   // Verificar se é uma nota fiscal
   const isNotaFiscal = (lancamento: Lancamento) => {
@@ -801,13 +805,13 @@ export default function LivroDiarioPage() {
         })
 
         if (response.ok) {
-          alert(editandoId ? "Boleto atualizado!" : "Boleto adicionado!")
+          toast.success(editandoId ? "Boleto atualizado!" : "Boleto adicionado!")
           setModalOpen(false)
           resetForm()
           carregarDados()
         } else {
           const error = await response.json().catch(() => ({}))
-          alert(error.error || "Erro ao salvar boleto")
+          toast.error(error.error || "Erro ao salvar boleto")
         }
       } else {
         const url = editandoId ? `/api/livro-diario?id=${editandoId}` : "/api/livro-diario"
@@ -823,12 +827,14 @@ export default function LivroDiarioPage() {
           conta: tipoLancamento === "folha" ? "4.1.6 Despesas com Pessoal" : formData.conta,
           descricao: descricaoFinal,
           clienteFornecedor: tipoLancamento === "folha" ? "Funcionários" : formData.clienteFornecedor,
+          cliente_fornecedor: tipoLancamento === "folha" ? "Funcionários" : formData.clienteFornecedor,
           entrada: formData.entrada,
           saida: tipoLancamento === "folha" ? formData.totalFolha : formData.saida,
-          tipo: "DESPESA",
+          tipo: tipoLancamento === "folha" ? "DESPESA" : (formData.tipo || "DESPESA"),
           origemDestino: tipoLancamento === "folha" ? null : formData.contaBancaria,
           userId: "current-user-id"
         }
+
 
         const response = await fetch(url, {
           method,
@@ -837,18 +843,18 @@ export default function LivroDiarioPage() {
         })
 
         if (response.ok) {
-          alert(editandoId ? "Lançamento atualizado!" : "Lançamento criado!")
+          toast.success(editandoId ? "Lançamento atualizado!" : "Lançamento criado!")
           setModalOpen(false)
           resetForm()
           carregarDados()
         } else {
           const error = await response.json().catch(() => ({}))
-          alert(error.error || "Erro ao salvar")
+          toast.error(error.error || "Erro ao salvar")
         }
       }
     } catch (error) {
       console.error("Erro:", error)
-      alert("Erro ao salvar")
+      toast.error("Erro ao salvar")
     } finally {
       setSaving(false)
     }
@@ -871,17 +877,17 @@ export default function LivroDiarioPage() {
       })
 
       if (response.ok) {
-        alert(isBoleto ? "Boleto marcado como pago!" : "Lançamento marcado como pago!")
+        toast.success(isBoleto ? "Boleto marcado como pago!" : "Lançamento marcado como pago!")
         setPagamentoModalOpen(false)
         setLancamentoParaPagar(null)
         carregarDados()
       } else {
         const erro = await response.json().catch(() => ({}))
-        alert(erro.error || "Erro ao marcar como pago")
+        toast.error(erro.error || "Erro ao marcar como pago")
       }
     } catch (error) {
       console.error("Erro:", error)
-      alert("Erro ao marcar como pago")
+      toast.error("Erro ao marcar como pago")
     }
   }
 
@@ -892,14 +898,14 @@ export default function LivroDiarioPage() {
     try {
       const response = await fetch(`/api/livro-diario?id=${id}`, { method: "DELETE" })
       if (response.ok) {
-        alert("Lançamento excluído!")
+        toast.success("Lançamento excluído!")
         carregarDados()
       } else {
-        alert("Erro ao excluir")
+        toast.error("Erro ao excluir")
       }
     } catch (error) {
       console.error("Erro:", error)
-      alert("Erro ao excluir lançamento")
+      toast.error("Erro ao excluir lançamento")
     }
   }
 
@@ -920,7 +926,7 @@ export default function LivroDiarioPage() {
         entrada: lancamento.entrada,
         saida: lancamento.saida,
         tipo: lancamento.tipo,
-        dataVencimento: lancamento.dataVencimento?.split("T")[0] || new Date().toISOString().split("T")[0],
+        dataVencimento: lancamento.dataVencimento?.split("T")[0] || hojeISO(),
         funcionarios: "",
         salariosBase: 0,
         inss: 0,
@@ -944,7 +950,7 @@ export default function LivroDiarioPage() {
         entrada: lancamento.entrada,
         saida: lancamento.saida,
         tipo: lancamento.tipo,
-        dataVencimento: new Date().toISOString().split("T")[0],
+        dataVencimento: hojeISO(),
         funcionarios: lancamento.descricao.replace("Folha de Pagamento - ", ""),
         salariosBase: lancamento.saida * 0.6,
         inss: lancamento.saida * 0.2,
@@ -968,7 +974,7 @@ export default function LivroDiarioPage() {
         entrada: lancamento.entrada,
         saida: lancamento.saida,
         tipo: lancamento.tipo,
-        dataVencimento: new Date().toISOString().split("T")[0],
+        dataVencimento: hojeISO(),
         funcionarios: "",
         salariosBase: 0,
         inss: 0,
@@ -989,7 +995,7 @@ export default function LivroDiarioPage() {
     setEditandoId(null)
     setTipoLancamento("comum")
     setFormData({
-      data: new Date().toISOString().split("T")[0],
+      data: hojeISO(),
       conta: "",
       descricao: "",
       clienteFornecedor: "",
@@ -997,7 +1003,7 @@ export default function LivroDiarioPage() {
       entrada: 0,
       saida: 0,
       tipo: "DESPESA",
-      dataVencimento: new Date().toISOString().split("T")[0],
+      dataVencimento: hojeISO(),
       funcionarios: "",
       salariosBase: 0,
       inss: 0,
@@ -1072,7 +1078,7 @@ export default function LivroDiarioPage() {
         <tr className="bg-primary/5">
           <td colSpan={10} className="px-4 py-4">
             <div className="flex justify-center items-center gap-2">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               <span className="text-sm text-muted-foreground">Carregando detalhes da folha...</span>
             </div>
           </td>
@@ -1088,7 +1094,7 @@ export default function LivroDiarioPage() {
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-primary/80" />
-              <span className="font-semibold text-indigo-800">{titulo}</span>
+              <span className="font-semibold text-primary">{titulo}</span>
               <Badge variant="outline" className="ml-2">{(detalhe?.pct ?? 0)}% do salário</Badge>
             </div>
             {detalhe?.itens && detalhe.itens.length > 0 ? (
@@ -1104,7 +1110,7 @@ export default function LivroDiarioPage() {
                   </thead>
                   <tbody>
                     {detalhe.itens.map((item: FolhaItemDetalhe, idx: number) => (
-                      <tr key={idx} className="border-t border-indigo-100">
+                      <tr key={idx} className="border-t border-primary/30">
                         <td className="px-3 py-2 text-white">{item.nome}</td>
                         <td className="px-3 py-2 text-right text-muted-foreground">{formatCurrency(item.salario)}</td>
                         <td className="px-3 py-2 text-right text-white font-medium">{formatCurrency(item.adiantamento)}</td>
@@ -1113,11 +1119,11 @@ export default function LivroDiarioPage() {
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr className="border-t-2 border-indigo-200 font-semibold">
-                      <td className="px-3 py-2 text-indigo-800">Total</td>
+                    <tr className="border-t-2 border-primary/30 font-semibold">
+                      <td className="px-3 py-2 text-primary">Total</td>
                       <td className="px-3 py-2" />
                       <td className="px-3 py-2 text-right text-white">{formatCurrency(detalhe.itens.reduce((s: number, i: FolhaItemDetalhe) => s + i.adiantamento, 0))}</td>
-                      <td className="px-3 py-2 text-right text-indigo-800">{formatCurrency(detalhe.itens.reduce((s: number, i: FolhaItemDetalhe) => s + i.salarioRestante, 0))}</td>
+                      <td className="px-3 py-2 text-right text-primary">{formatCurrency(detalhe.itens.reduce((s: number, i: FolhaItemDetalhe) => s + i.salarioRestante, 0))}</td>
                     </tr>
                   </tfoot>
                 </table>
@@ -1159,7 +1165,7 @@ export default function LivroDiarioPage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-info" />
-                  <span className="font-semibold text-blue-800">Detalhes da Nota Fiscal</span>
+                  <span className="font-semibold text-info">Detalhes da Nota Fiscal</span>
                   <Badge variant="outline" className="ml-2">NFe {nota.numero}</Badge>
                 </div>
                 <div className="grid gap-2 md:grid-cols-4 text-sm">
@@ -1206,10 +1212,18 @@ export default function LivroDiarioPage() {
               <tr className="bg-info/10">
                 <td className="px-4 py-2" />
                 <td className="px-4 py-2" colSpan={4} />
-                <td className="px-4 py-2 text-right font-semibold">Total Produtos:</td>
+                <td className="px-4 py-2 text-right font-semibold">Total da Nota:</td>
                 <td className="px-4 py-2 text-right font-bold text-primary">{formatCurrency(nota.valorTotal)}</td>
                 <td className="px-4 py-2" colSpan={4} />
               </tr>
+              {(nota.valorDesconto || 0) > 0 && (
+                <tr className="bg-info/5">
+                  <td className="px-4 py-2" colSpan={5} />
+                  <td className="px-4 py-2 text-right font-semibold text-green-400">Desconto:</td>
+                  <td className="px-4 py-2 text-right font-bold text-green-400">-{formatCurrency(nota.valorDesconto || 0)}</td>
+                  <td className="px-4 py-2" colSpan={4} />
+                </tr>
+              )}
             </>
           )}
 
@@ -1234,12 +1248,12 @@ export default function LivroDiarioPage() {
     // Se é um boleto, mostrar detalhes do boleto
     if (isBoleto(lancamento)) {
       return (
-        <tr className="bg-purple-50">
+        <tr className="bg-primary/10">
           <td colSpan={10} className="px-4 py-3">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Barcode className="h-4 w-4 text-primary/80" />
-                <span className="font-semibold text-purple-800">Detalhes do Boleto</span>
+                <span className="font-semibold text-primary">Detalhes do Boleto</span>
               </div>
               <div className="grid gap-2 md:grid-cols-3 text-sm">
                 <div>
@@ -1304,35 +1318,35 @@ export default function LivroDiarioPage() {
       title: "Total Entradas",
       value: formatCurrency(resumo.totalEntradas),
       icon: TrendingUp,
-      gradient: "from-emerald-500 to-emerald-600",
+      gradient: "from-success to-success",
       detail: `${resumo.totalLancamentos} lançamentos`
     },
     {
       title: "Total Saídas",
       value: formatCurrency(resumo.totalSaidas),
       icon: TrendingDown,
-      gradient: "from-red-500 to-red-600",
+      gradient: "from-destructive to-destructive",
       detail: "Despesas totais"
     },
     {
       title: "Saldo Atual",
       value: formatCurrency(resumo.saldoAtual),
       icon: DollarSign,
-      gradient: resumo.saldoAtual >= 0 ? "from-blue-500 to-blue-600" : "from-orange-500 to-orange-600",
+      gradient: resumo.saldoAtual >= 0 ? "from-info to-info" : "from-warning to-warning",
       detail: resumo.saldoAtual >= 0 ? "Positivo" : "Negativo"
     },
     {
       title: "Boletos Pendentes",
       value: resumo.totalBoletosPendentes.toString(),
       icon: Barcode,
-      gradient: "from-purple-500 to-purple-600",
+      gradient: "from-primary to-primary",
       detail: formatCurrency(resumo.valorBoletosPendentes)
     },
     {
       title: "Total Folha",
       value: formatCurrency(resumo.totalFolhaPagamento),
       icon: Users,
-      gradient: "from-indigo-500 to-indigo-600",
+      gradient: "from-primary to-primary",
       detail: "Pagamento de funcionários"
     }
   ]
@@ -1358,7 +1372,7 @@ export default function LivroDiarioPage() {
           {/*<Button
                           variant={mostrarExemplos ? "default" : "outline"}
                           onClick={() => setMostrarExemplos(!mostrarExemplos)}
-                          className={mostrarExemplos ? "bg-primary/80 hover:bg-purple-700 rounded-full" : "rounded-full border-border"}
+                          className={mostrarExemplos ? "bg-primary/80 hover:bg-primary rounded-full" : "rounded-full border-border"}
                         >
                           {mostrarExemplos ? "Ocultar Exemplos" : "Mostrar Exemplos"}
                         </Button>*/}
@@ -1704,7 +1718,7 @@ export default function LivroDiarioPage() {
                 type="button"
                 onClick={() => setTipoLancamento("boleto")}
                 className={`flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${tipoLancamento === "boleto"
-                    ? "bg-primary/80 text-white border-purple-600 shadow-sm"
+                    ? "bg-primary/80 text-white border-primary shadow-sm"
                     : "bg-surface border-border text-white hover:bg-surface-2"
                   }`}
               >

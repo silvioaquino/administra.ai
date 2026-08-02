@@ -83,14 +83,14 @@ export function ProdutividadeChart({ ano }: ProdutividadeChartProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-border"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-red-500 p-4">
+      <div className="text-destructive p-4">
         {error}
       </div>
     );
@@ -98,7 +98,7 @@ export function ProdutividadeChart({ ano }: ProdutividadeChartProps) {
 
   if (data.length === 0) {
     return (
-      <div className="text-gray-500 p-4">
+      <div className="text-muted-foreground p-4">
         Nenhum dado disponível para o período selecionado.
       </div>
     );

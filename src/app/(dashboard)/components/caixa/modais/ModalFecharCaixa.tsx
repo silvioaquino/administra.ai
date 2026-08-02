@@ -275,7 +275,7 @@ export default function ModalFecharCaixa({
                   {valorRetiradaFinal && parseFloat(valorRetiradaFinal) > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Retirada Final:</span>
-                      <strong className="text-yellow-600">{formatarMoeda(parseFloat(valorRetiradaFinal))}</strong>
+                      <strong className="text-warning">{formatarMoeda(parseFloat(valorRetiradaFinal))}</strong>
                     </div>
                   )}
                 </div>
@@ -307,7 +307,7 @@ export default function ModalFecharCaixa({
 
           {/* Footer */}
           <div className="flex justify-end gap-3 p-4 border-t border-border">
-            <button onClick={onClose} disabled={loading} className="px-4 py-2 bg-surface-20 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors">
+            <button onClick={onClose} disabled={loading} className="px-4 py-2 bg-surface-20 hover:bg-muted text-white font-medium rounded-lg transition-colors">
               Cancelar
             </button>
             <button onClick={() => setShowPreview(true)} disabled={loading} className="px-4 py-2 border border-primary text-primary hover:bg-primary/10 font-medium rounded-lg transition-colors flex items-center gap-2">
@@ -358,7 +358,7 @@ export default function ModalFecharCaixa({
               </button>
             </div>
             <div className="p-6">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 text-sm text-yellow-800">
+              <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 mb-4 text-sm text-warning">
                 Esta é uma pré-visualização do comprovante que será impresso na impressora térmica.
               </div>
               <div 
@@ -366,12 +366,12 @@ export default function ModalFecharCaixa({
                 style={{ fontFamily: 'Courier New, monospace', fontSize: '12px', lineHeight: '1.2', maxWidth: '80mm' }}
                 dangerouslySetInnerHTML={{ __html: gerarConteudoImpressaoTermica() }}
               />
-              <div className="mt-4 p-3 bg-info/5 rounded-lg text-sm text-blue-800">
+              <div className="mt-4 p-3 bg-info/5 rounded-lg text-sm text-info">
                 <strong>Largura:</strong> 80mm (impressora térmica) | <strong>Fonte:</strong> Courier New
               </div>
             </div>
             <div className="flex justify-end gap-3 p-4 border-t border-border">
-              <button onClick={() => setShowPreview(false)} className="px-4 py-2 bg-surface-20 hover:bg-gray-600 text-white rounded-lg">Fechar</button>
+              <button onClick={() => setShowPreview(false)} className="px-4 py-2 bg-surface-20 hover:bg-muted text-white rounded-lg">Fechar</button>
               <button onClick={async () => { await imprimirComprovanteTermico(); setShowPreview(false); }} className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />

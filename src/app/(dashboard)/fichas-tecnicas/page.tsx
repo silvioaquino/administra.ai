@@ -113,21 +113,21 @@ export default function FichasTecnicasPage() {
       title: "Margem Média",
       value: formatPercentage(stats.margemMedia),
       icon: TrendingUp,
-      gradient: "from-green-600 to-green-500",
+      gradient: "from-success to-success",
       detail: "Lucro médio"
     },
     {
       title: "Custo Médio",
       value: formatCurrency(stats.custoMedio),
       icon: DollarSign,
-      gradient: "from-orange-500 to-orange-600",
+      gradient: "from-warning to-warning",
       detail: "Por ficha"
     },
     {
       title: "Preço Médio",
       value: formatCurrency(stats.precoMedio),
       icon: DollarSign,
-      gradient: "from-blue-500 to-blue-600",
+      gradient: "from-info to-info",
       detail: "Preço de venda"
     }
   ]
@@ -230,7 +230,7 @@ export default function FichasTecnicasPage() {
 
         {/* Alertas de Margem Baixa */}
         {fichas.some(f => f.margem < lucroDesejado) && (
-          <Alert className="mt-4 bg-warning/5 border-amber-200 rounded-xl">
+          <Alert className="mt-4 bg-warning/5 border-warning/30 rounded-xl">
             <AlertCircle className="h-4 w-4 text-warning" />
             <AlertDescription className="text-sm text-warning">
               Algumas fichas técnicas têm margem de lucro abaixo de {formatPercentage(lucroDesejado)} (margem alvo do Planejamento). Revise os custos ou preços de venda.

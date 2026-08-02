@@ -297,7 +297,7 @@ export default function RegisterPage() {
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   {beneficios.map((beneficio, idx) => (
                     <div key={idx} className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-emerald-500" />
+                      <CheckCircle className="h-4 w-4 text-success" />
                       <span className="text-muted-foreground">{beneficio}</span>
                     </div>
                   ))}
@@ -325,9 +325,9 @@ export default function RegisterPage() {
                 )}
 
                 {success && (
-                  <Alert className="bg-emerald-50 border-emerald-200 rounded-xl">
-                    <CheckCircle className="h-4 w-4 text-emerald-600" />
-                    <AlertDescription className="text-emerald-700">{success}</AlertDescription>
+                  <Alert className="bg-success/10 border-success/30 rounded-xl">
+                    <CheckCircle className="h-4 w-4 text-success" />
+                    <AlertDescription className="text-success">{success}</AlertDescription>
                   </Alert>
                 )}
 

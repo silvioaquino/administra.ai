@@ -41,7 +41,7 @@ export function SaldosContasTab({ contas, despesas = [], onChange, onSalvar }: S
           <p className="text-sm text-success">Total Sobra</p>
           <p className="text-2xl font-bold text-success">R$ {totalSobra.toFixed(2)}</p>
         </div>
-        <div className="bg-purple-50 rounded-lg p-4">
+        <div className="bg-primary/10 rounded-lg p-4">
           <p className="text-sm text-primary/80">Despesas do Mês</p>
           <p className="text-2xl font-bold text-white">R$ {totalDespesas.toFixed(2)}</p>
         </div>

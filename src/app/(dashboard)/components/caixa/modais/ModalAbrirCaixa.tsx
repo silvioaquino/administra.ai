@@ -42,10 +42,10 @@ export default function ModalAbrirCaixa({ show, onClose, onAbrirCaixa }: ModalAb
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="w-full max-w-md bg-surface rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#de4838]/5 to-transparent p-5 border-b border-border">
+        <div className="bg-gradient-to-r from-primary/5 to-transparent p-5 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#de4838] to-[#de4838]/80 shadow-sm">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-sm">
                 <Wallet className="h-4 w-4 text-white" />
               </div>
               <h2 className="text-lg font-semibold text-white">Abrir Caixa</h2>
@@ -106,11 +106,11 @@ export default function ModalAbrirCaixa({ show, onClose, onAbrirCaixa }: ModalAb
           </div>
 
           {/* Info adicional */}
-          <div className="bg-info/5 rounded-xl p-3 border border-blue-100">
+          <div className="bg-info/5 rounded-xl p-3 border border-info/30">
             <div className="flex items-start gap-2">
               <AlertCircle className="h-4 w-4 text-info mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-xs font-medium text-blue-800">Informação importante</p>
+                <p className="text-xs font-medium text-info">Informação importante</p>
                 <p className="text-[10px] text-info mt-0.5">
                   O saldo informado será registrado como abertura do caixa e poderá ser consultado posteriormente.
                 </p>
