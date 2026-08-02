@@ -257,7 +257,7 @@ export default function FluxoCaixaPage() {
           const valor = produto.valoresPorMes?.[mesNum] || 0;
           const isMesAtual = idx === mesAtual - 1;
           return (
-            <td key={idx} className={`px-2 py-2 text-[9px] lg:text-[10px] text-center min-w-[60px] sm:min-w-0 ${isMesAtual ? 'bg-red-200 text-white' : ''}`}>
+            <td key={idx} className={`px-2 py-2 text-[9px] lg:text-[10px] text-center min-w-[60px] sm:min-w-0 ${isMesAtual ? 'bg-destructive/20 text-white' : ''}`}>
               {hideValues ? '••••' : formatValor(valor)}
             </td>
           );
@@ -273,7 +273,7 @@ export default function FluxoCaixaPage() {
                 variant="ghost"
                 onClick={() => confirmarNormalizacao(produto)}
                 disabled={salvandoNormalizacao || !valorNormalizacao.trim()}
-                className="h-7 w-7 text-success hover:bg-green-50"
+                className="h-7 w-7 text-success hover:bg-success/10"
               >
                 <Check className="h-4 w-4" />
               </Button>
@@ -548,7 +548,7 @@ export default function FluxoCaixaPage() {
                   <th className="px-4 py-3 text-left text-[11px] font-bold text-white uppercase w-[13%]">DESPESAS</th>
                   <th className="px-2 py-3 text-center text-xs font-bold text-white uppercase w-[8%]">PREVISÃO</th>
                   {meses.map((mes, idx) => (
-                    <th key={idx} className={`px-2 py-3 text-center text-xs font-bold text-white uppercase ${idx === mesAtual - 1 ? 'bg-red-200' : ''}`}>
+                    <th key={idx} className={`px-2 py-3 text-center text-xs font-bold text-white uppercase ${idx === mesAtual - 1 ? 'bg-destructive/20' : ''}`}>
                       {mes.substring(0, 3)}
                     </th>
                   ))}
@@ -578,17 +578,17 @@ export default function FluxoCaixaPage() {
 
                     // Cores baseadas no tipo
                     const rowClass = isTotal
-                      ? 'bg-gray-900 text-white border-b border-border'
+                      ? 'bg-surface text-white border-b border-border'
                       : isCalcRow
-                        ? 'bg-yellow-100 border-b border-border hover:bg-yellow-200'
+                        ? 'bg-warning/10 border-b border-border hover:bg-warning/20'
                         : isSubtotal
                           ? 'bg-info/5 font-semibold border-b border-border hover:bg-info/10'
                           : isHeader
                             ? item.tipo === 'receita'
-                              ? 'border-success/30 border-b border-border hover:bg-emerald-300'
-                              : 'bg-info/20 border-b border-border hover:bg-blue-300'
+                              ? 'border-success/30 border-b border-border hover:bg-success/20'
+                              : 'bg-info/20 border-b border-border hover:bg-info/20'
                             : item.tipo === 'receita'
-                              ? 'bg-green-50/50 border-b border-border hover:bg-surface-2'
+                              ? 'bg-success/50 border-b border-border hover:bg-surface-2'
                               : item.tipo === 'despesa'
                                 ? 'bg-destructive/5/50 border-b border-border hover:bg-surface-2'
                                 : 'border-b border-border hover:bg-surface-2';
@@ -670,7 +670,7 @@ export default function FluxoCaixaPage() {
                           const isMesAtual = idx === mesAtual - 1;
 
                           return (
-                            <td key={idx} className={`px-2 py-2 text-[9px] lg:text-[10px] text-center min-w-[60px] sm:min-w-0 ${isMesAtual ? 'bg-red-200 text-white' : ''} ${isCalcRow ? 'font-semibold' : ''}`}>
+                            <td key={idx} className={`px-2 py-2 text-[9px] lg:text-[10px] text-center min-w-[60px] sm:min-w-0 ${isMesAtual ? 'bg-destructive/20 text-white' : ''} ${isCalcRow ? 'font-semibold' : ''}`}>
                               {hideValues ? (
                                 <span>••••••</span>
                               ) : isTotal ? (
@@ -720,7 +720,7 @@ export default function FluxoCaixaPage() {
                   <th className="px-4 py-3 text-left text-xs font-bold text-white uppercase w-[13%]">PRODUTO / INSUMO</th>
                   <th className="px-2 py-3 text-center text-xs font-bold text-white uppercase w-[6%]">ORIGEM</th>
                   {meses.map((mes, idx) => (
-                    <th key={idx} className={`px-2 py-3 text-center text-xs font-bold text-white uppercase min-w-[60px] sm:min-w-0 ${idx === mesAtual - 1 ? 'bg-red-200' : ''}`}>
+                    <th key={idx} className={`px-2 py-3 text-center text-xs font-bold text-white uppercase min-w-[60px] sm:min-w-0 ${idx === mesAtual - 1 ? 'bg-destructive/20' : ''}`}>
                       {mes.substring(0, 3)}
                     </th>
                   ))}
@@ -749,7 +749,7 @@ export default function FluxoCaixaPage() {
                     {insumosAgrupados.map(renderLinhaInsumo)}
                     {insumosNaoAgrupados.length > 0 && (
                       <tr>
-                        <td colSpan={16} className="bg-warning/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-amber-800">
+                        <td colSpan={16} className="bg-warning/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-warning">
                           Não agrupados ({insumosNaoAgrupados.length})
                         </td>
                       </tr>
@@ -764,7 +764,7 @@ export default function FluxoCaixaPage() {
 
         {/* Legenda */}
         <div className="mt-4 rounded-xl bg-info/5 p-4 border border-info/30">
-          <p className="text-sm font-medium text-blue-800">📊 Como ler o DRE:</p>
+          <p className="text-sm font-medium text-info">📊 Como ler o DRE:</p>
           <div className="mt-2 grid gap-2 text-xs text-info sm:grid-cols-3">
             <div>
               <span className="font-semibold">Previsão:</span>

@@ -507,7 +507,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                               checked={getProvisaoStatus(func.nome, "decimo_terceiro")}
                               onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "decimo_terceiro", checked)}
                               size="xs"
-                              className="data-checked:bg-success/50 data-checked:border-emerald-500 border-border dark:border-gray-600"
+                              className="data-checked:bg-success/50 data-checked:border-success border-border dark:border-border"
                             />
                           </div>
                         </td>
@@ -524,7 +524,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                               checked={getProvisaoStatus(func.nome, "ferias")}
                               onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "ferias", checked)}
                               size="xs"
-                              className="data-checked:bg-success/50 data-checked:border-emerald-500 border-border dark:border-gray-600"
+                              className="data-checked:bg-success/50 data-checked:border-success border-border dark:border-border"
                             />
                           </div>
                         </td>
@@ -541,7 +541,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                               checked={getProvisaoStatus(func.nome, "fgts")}
                               onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "fgts", checked)}
                               size="xs"
-                              className="data-checked:bg-success/50 data-checked:border-emerald-500 border-border dark:border-gray-600"
+                              className="data-checked:bg-success/50 data-checked:border-success border-border dark:border-border"
                             />
                           </div>
                         </td>
@@ -558,7 +558,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                               checked={getProvisaoStatus(func.nome, "inss_patronal")}
                               onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "inss_patronal", checked)}
                               size="xs"
-                              className="data-checked:bg-success/50 data-checked:border-emerald-500 border-border dark:border-gray-600"
+                              className="data-checked:bg-success/50 data-checked:border-success border-border dark:border-border"
                             />
                           </div>
                         </td>
@@ -575,7 +575,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                               checked={getProvisaoStatus(func.nome, "inss")}
                               onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, "inss", checked)}
                               size="xs"
-                              className="data-checked:bg-success/50 data-checked:border-emerald-500 border-border dark:border-gray-600"
+                              className="data-checked:bg-success/50 data-checked:border-success border-border dark:border-border"
                             />
                           </div>
                         </td>
@@ -614,7 +614,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                                       <Switch
                                         checked={isAtivo}
                                         onCheckedChange={(checked) => toggleProvisaoFuncionario(func.nome, key, checked)}
-                                        className="data-checked:bg-success/50 data-checked:border-emerald-500 border-border dark:border-gray-600"
+                                        className="data-checked:bg-success/50 data-checked:border-success border-border dark:border-border"
                                       />
                                     </div>
                                     <p className={`text-lg font-bold ${isAtivo ? 'text-success' : 'text-muted-foreground/70 line-through'}`}>
@@ -660,7 +660,7 @@ export function FolhaSalarialTable({ funcionarios, onEdit, onConfigProvisoes, on
                   <td className="px-4 py-3 text-center text-white">{formatCurrency(totais.totalInss)}</td>
                 )}
               </tr>
-              <tr className="bg-yellow-50">
+              <tr className="bg-warning/10">
                 <td className="px-4 py-3"></td>
                 <td colSpan={6} className="px-4 py-3 font-bold text-white">TOTAL Folha + Encargos Mensal</td>
                 <td className="px-4 py-3 text-right font-bold text-primary text-lg">{formatCurrency(totalMensal)}</td>

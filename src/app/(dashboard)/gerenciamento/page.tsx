@@ -32,28 +32,28 @@ const quickActions = [
     label: "Livro Diário",
     desc: "Movimentações financeiras",
     route: "/livro-diario",
-    color: "from-blue-500 to-blue-600",
+    color: "from-info to-info",
   },
   {
     icon: Banknote,
     label: "Conta Bancária",
     desc: "Contas e transferências",
     route: "/contas-bancarias",
-    color: "from-emerald-500 to-emerald-600",
+    color: "from-success to-success",
   },
   {
     icon: TrendingUp,
     label: "Fluxo de Caixa",
     desc: "Fluxo de Caixa / DRE",
     route: "/fluxo-caixa",
-    color: "from-purple-500 to-purple-600",
+    color: "from-primary to-primary",
   },
   {
     icon: CalendarCheck,
     label: "Fechamento Mensal",
     desc: "Encerramento do período",
     route: "/fechamento-mensal",
-    color: "from-amber-500 to-amber-600",
+    color: "from-warning to-warning",
   },
 ]
 

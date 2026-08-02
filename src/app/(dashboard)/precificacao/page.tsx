@@ -12,21 +12,21 @@ const quickActions = [
     label: "Ficha Técnica",
     desc: "Receitas, custos e margens",
     route: "/fichas-tecnicas",
-    color: "from-blue-500 to-blue-600",
+    color: "from-info to-info",
   },
   {
     icon: Package,
     label: "Produtos/Insumos",
     desc: "Catálogo de insumos e estoque",
     route: "/nfe/produtos",
-    color: "from-amber-500 to-amber-600",
+    color: "from-warning to-warning",
   },
   {
     icon: ShoppingBag,
     label: "Produtos para Vendas",
     desc: "Itens precificados para venda",
     route: "/precificacao/produtos-venda",
-    color: "from-emerald-500 to-emerald-600",
+    color: "from-success to-success",
   },
 ]
 

@@ -343,7 +343,7 @@ export default function TaxasConfigPage() {
                             checked={maq.ativo}
                             onCheckedChange={() => atualizarMaquininha(index, 'ativo', !maq.ativo)}
                             size="xs"
-                            className="data-checked:bg-success/50 data-checked:border-emerald-500 border-border dark:border-gray-600"
+                            className="data-checked:bg-success/50 data-checked:border-success border-border dark:border-border"
                           />
                         </div>
                       </div>

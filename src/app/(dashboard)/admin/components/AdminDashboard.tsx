@@ -110,10 +110,10 @@ export default function AdminDashboard({
 
   const cards = [
     { label: "Total de clientes", value: metrics.totalClientes, icon: Users, cor: "text-info bg-info/50/10" },
-    { label: "Trials ativos", value: metrics.trialsAtivos, icon: Crown, cor: "text-orange-400 bg-warning/50/10" },
-    { label: "Assinaturas ativas", value: metrics.assinaturasAtivas, icon: CheckCircle2, cor: "text-emerald-400 bg-success/50/10" },
+    { label: "Trials ativos", value: metrics.trialsAtivos, icon: Crown, cor: "text-warning bg-warning/50/10" },
+    { label: "Assinaturas ativas", value: metrics.assinaturasAtivas, icon: CheckCircle2, cor: "text-success bg-success/50/10" },
     { label: "MRR estimado", value: formatCurrency(metrics.receitaMRR), icon: TrendingUp, cor: "text-primary bg-primary/10" },
-    { label: "Novos (30 dias)", value: metrics.novosUltimos30Dias, icon: Calendar, cor: "text-purple-400 bg-primary/80/10" },
+    { label: "Novos (30 dias)", value: metrics.novosUltimos30Dias, icon: Calendar, cor: "text-primary bg-primary/80/10" },
   ]
 
   const abrirNovo = () => {
@@ -208,7 +208,7 @@ export default function AdminDashboard({
       {/* Cards de métricas */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {cards.map((c) => (
-          <div key={c.label} className="rounded-xl border border-gray-800 bg-gray-800/60 p-4">
+          <div key={c.label} className="rounded-xl border border-border bg-surface/60 p-4">
             <div className={cn("mb-3 flex h-9 w-9 items-center justify-center rounded-lg", c.cor)}>
               <c.icon className="h-4 w-4" />
             </div>
@@ -219,7 +219,7 @@ export default function AdminDashboard({
       </div>
 
       {/* Abas */}
-      <div className="flex gap-1 border-b border-gray-800">
+      <div className="flex gap-1 border-b border-border">
         {[
           { id: "clientes", label: "Clientes", icon: Users },
           { id: "planos", label: "Planos", icon: CreditCard },
@@ -246,8 +246,8 @@ export default function AdminDashboard({
           className={cn(
             "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm",
             msg.tipo === "ok"
-              ? "border-emerald-500/30 bg-success/50/10 text-emerald-400"
-              : "border-red-500/30 bg-destructive/50/10 text-red-400"
+              ? "border-success/30 bg-success/50/10 text-success"
+              : "border-destructive/30 bg-destructive/50/10 text-destructive"
           )}
         >
           {msg.tipo === "ok" ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
@@ -257,9 +257,9 @@ export default function AdminDashboard({
 
       {/* Clientes */}
       {aba === "clientes" && (
-        <div className="overflow-hidden rounded-xl border border-gray-800">
+        <div className="overflow-hidden rounded-xl border border-border">
           <table className="w-full text-sm">
-            <thead className="bg-gray-800/80 text-left text-[11px] uppercase tracking-wider text-muted-foreground/70">
+            <thead className="bg-surface/80 text-left text-[11px] uppercase tracking-wider text-muted-foreground/70">
               <tr>
                 <th className="px-3 py-2.5">Cliente</th>
                 <th className="px-3 py-2.5">Segmento</th>
@@ -279,12 +279,12 @@ export default function AdminDashboard({
               {clientes.map((c) => {
                 const ativo = c.subscription?.status === "active"
                 const status = ativo
-                  ? { texto: "Assinatura ativa", cor: "border-emerald-500/30 bg-success/50/10 text-emerald-400", icon: CheckCircle2 }
+                  ? { texto: "Assinatura ativa", cor: "border-success/30 bg-success/50/10 text-success", icon: CheckCircle2 }
                   : c.isInTrial
-                  ? { texto: `Trial · ${c.diasTrial}d`, cor: "border-orange-500/30 bg-warning/50/10 text-orange-400", icon: Crown }
-                  : { texto: "Expirado", cor: "border-gray-600/30 bg-gray-700/30 text-muted-foreground/70", icon: AlertTriangle }
+                  ? { texto: `Trial · ${c.diasTrial}d`, cor: "border-warning/30 bg-warning/50/10 text-warning", icon: Crown }
+                  : { texto: "Expirado", cor: "border-border/30 bg-surface/30 text-muted-foreground/70", icon: AlertTriangle }
                 return (
-                  <tr key={c.id} className="border-t border-gray-800 hover:bg-gray-800/40">
+                  <tr key={c.id} className="border-t border-border hover:bg-surface/40">
                     <td className="px-3 py-3">
                       <p className="font-medium text-white">{c.nome}</p>
                       <p className="text-xs text-muted-foreground">{c.email}</p>
@@ -325,7 +325,7 @@ export default function AdminDashboard({
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {planos.map((p) => (
-              <div key={p.id} className="flex flex-col rounded-xl border border-gray-800 bg-gray-800/60 p-4">
+              <div key={p.id} className="flex flex-col rounded-xl border border-border bg-surface/60 p-4">
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="font-semibold text-white">{p.name}</h3>
@@ -338,8 +338,8 @@ export default function AdminDashboard({
                     className={cn(
                       "rounded-full border px-2 py-0.5 text-xs",
                       p.isActive
-                        ? "border-emerald-500/30 bg-success/50/10 text-emerald-400"
-                        : "border-gray-600/30 bg-gray-700/30 text-muted-foreground/70"
+                        ? "border-success/30 bg-success/50/10 text-success"
+                        : "border-border/30 bg-surface/30 text-muted-foreground/70"
                     )}
                   >
                     {p.isActive ? "Ativo" : "Inativo"}
@@ -358,10 +358,10 @@ export default function AdminDashboard({
                   )}
                 </ul>
 
-                <div className="mt-4 flex gap-2 border-t border-gray-700 pt-3">
+                <div className="mt-4 flex gap-2 border-t border-border pt-3">
                   <button
                     onClick={() => abrirEditar(p)}
-                    className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-gray-700 px-2 py-1.5 text-xs text-muted-foreground/70 transition-all hover:bg-gray-700/50"
+                    className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-border px-2 py-1.5 text-xs text-muted-foreground/70 transition-all hover:bg-surface/50"
                   >
                     <Pencil className="h-3.5 w-3.5" /> Editar
                   </button>
@@ -370,8 +370,8 @@ export default function AdminDashboard({
                     className={cn(
                       "flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-all",
                       p.isActive
-                        ? "bg-gray-700/50 text-muted-foreground/70 hover:bg-gray-700"
-                        : "bg-success/20 text-emerald-400 hover:bg-success/30"
+                        ? "bg-surface/50 text-muted-foreground/70 hover:bg-surface"
+                        : "bg-success/20 text-success hover:bg-success/30"
                     )}
                   >
                     {p.isActive ? "Inativar" : "Ativar"}
@@ -380,7 +380,7 @@ export default function AdminDashboard({
               </div>
             ))}
             {planos.length === 0 && (
-              <p className="col-span-full rounded-xl border border-gray-800 bg-gray-800/60 p-6 text-center text-muted-foreground">
+              <p className="col-span-full rounded-xl border border-border bg-surface/60 p-6 text-center text-muted-foreground">
                 Nenhum plano cadastrado.
               </p>
             )}
@@ -391,14 +391,14 @@ export default function AdminDashboard({
       {/* Formulário de plano (overlay) */}
       {formOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-xl border border-gray-700 bg-gray-900 p-5 shadow-xl">
+          <div className="w-full max-w-md rounded-xl border border-border bg-surface p-5 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-base font-semibold text-white">
                 {editId ? "Editar plano" : "Novo plano"}
               </h3>
               <button
                 onClick={() => setFormOpen(false)}
-                className="rounded-lg p-1 text-muted-foreground/70 hover:bg-gray-800 hover:text-white"
+                className="rounded-lg p-1 text-muted-foreground/70 hover:bg-surface hover:text-white"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -410,7 +410,7 @@ export default function AdminDashboard({
                 <input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-primary"
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white outline-none focus:border-primary"
                   placeholder="Ex: PDV Básico"
                 />
               </div>
@@ -422,7 +422,7 @@ export default function AdminDashboard({
                   step="0.01"
                   value={form.price}
                   onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-primary"
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white outline-none focus:border-primary"
                   placeholder="49.90"
                 />
               </div>
@@ -435,7 +435,7 @@ export default function AdminDashboard({
                   value={form.features}
                   onChange={(e) => setForm({ ...form, features: e.target.value })}
                   rows={4}
-                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-primary"
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white outline-none focus:border-primary"
                   placeholder={"Integração iFood\nPedidos ilimitados"}
                 />
               </div>
@@ -445,7 +445,7 @@ export default function AdminDashboard({
                 <input
                   value={form.stripePriceId}
                   onChange={(e) => setForm({ ...form, stripePriceId: e.target.value })}
-                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-white outline-none focus:border-primary"
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white outline-none focus:border-primary"
                   placeholder="price_..."
                 />
               </div>
@@ -455,7 +455,7 @@ export default function AdminDashboard({
                   type="checkbox"
                   checked={form.isActive}
                   onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-                  className="h-4 w-4 accent-[#de4838]"
+                  className="h-4 w-4 accent-primary"
                 />
                 Plano ativo
               </label>
@@ -464,7 +464,7 @@ export default function AdminDashboard({
             <div className="mt-5 flex justify-end gap-2">
               <button
                 onClick={() => setFormOpen(false)}
-                className="rounded-lg border border-gray-700 px-3 py-2 text-sm text-muted-foreground/70 hover:bg-gray-800"
+                className="rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground/70 hover:bg-surface"
               >
                 Cancelar
               </button>

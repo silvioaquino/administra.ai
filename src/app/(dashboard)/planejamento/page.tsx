@@ -476,27 +476,27 @@ export default function PlanejamentoPage() {
       title: "Faturamento Mensal",
       value: loading ? formatCurrency(0) : formatCurrency(indicadores.metaMensalTotal),
       icon: DollarSign,
-      gradient: "from-emerald-500 to-emerald-600",
+      gradient: "from-success to-success",
     },
     {
       title: "Lucro Desejado",
       value: loading ? formatPercentage(0) : formatPercentage(indicadores.lucroDesejado),
       icon: TrendingUp,
-      gradient: "from-green-600 to-green-500",
+      gradient: "from-success to-success",
       detail: "Margem alvo",
     },
     {
       title: "Mark-Up",
       value: loading || indicadores.metaFaltando ? "—" : indicadores.markUp.toFixed(2),
       icon: Calculator,
-      gradient: "from-orange-500 to-orange-600",
+      gradient: "from-warning to-warning",
       detail: "Fator multiplicador",
     },
     {
       title: "CMV Máximo",
       value: loading || indicadores.metaFaltando ? "—" : formatPercentage(indicadores.cmvMaximo),
       icon: Percent,
-      gradient: "from-purple-500 to-purple-600",
+      gradient: "from-primary to-primary",
       detail: "Custo com Produção",
     },
   ]
@@ -531,7 +531,7 @@ export default function PlanejamentoPage() {
           </div>
           <div className="relative">
             <select
-              className="rounded-full border border-border bg-surface px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none pr-8 cursor-pointer hover:border-red-500 transition-colors"
+              className="rounded-full border border-border bg-surface px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none pr-8 cursor-pointer hover:border-destructive transition-colors"
               value={anoAtual}
               onChange={(e) => setAnoAtual(parseInt(e.target.value))}
             >
@@ -546,7 +546,7 @@ export default function PlanejamentoPage() {
           <Button
             variant="outline"
             onClick={sincronizarDadosReais}
-            className="rounded-full border-border hover:bg-surface-2 hover:border-red-500 hover:cursor-pointer transition-all whitespace-nowrap text-xs sm:text-sm"
+            className="rounded-full border-border hover:bg-surface-2 hover:border-destructive hover:cursor-pointer transition-all whitespace-nowrap text-xs sm:text-sm"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Sincronizar
@@ -602,9 +602,9 @@ export default function PlanejamentoPage() {
                 <button
                   key={periodo}
                   onClick={() => setActiveTab(periodo)}
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all w-24 justify-center hover:cursor-pointer hover:border-2 hover:border-red-500 text-[13px] ${
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all w-24 justify-center hover:cursor-pointer hover:border-2 hover:border-destructive text-[13px] ${
                     activeTab === periodo
-                      ? "bg-surface shadow-sm text-white border-2 border-red-500"
+                      ? "bg-surface shadow-sm text-white border-2 border-destructive"
                       : "bg-surface-2 text-muted-foreground hover:bg-surface-2"
                   }`}
                 >
@@ -766,7 +766,7 @@ export default function PlanejamentoPage() {
       {/* Botão Ajuda */}
       <button
         onClick={() => navegarPara("/planejamento/configuracoes?tab=ajuda")}
-        className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-110 hover:bg-primary/90 hover:cursor-pointer hover:border-2 hover:border-red-500"
+        className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-110 hover:bg-primary/90 hover:cursor-pointer hover:border-2 hover:border-destructive"
       >
         <HelpCircle className="h-6 w-6" />
       </button>

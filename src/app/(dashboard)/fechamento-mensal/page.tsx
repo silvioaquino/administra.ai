@@ -438,7 +438,7 @@ export default function FechamentoMensalPage() {
             <Button
               variant="outline"
               onClick={reabrirFechamento}
-              className="rounded-full border-amber-500 text-warning hover:bg-warning/5"
+              className="rounded-full border-warning text-warning hover:bg-warning/5"
             >
               <Unlock className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Reabrir</span>
@@ -516,7 +516,7 @@ export default function FechamentoMensalPage() {
           {sectionsExpanded.summary && (
             <div className="p-4 md:p-5 pt-0 border-t border-border">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl p-4 text-white shadow-lg shadow-emerald-500/20">
+                <div className="bg-gradient-to-br from-success to-success rounded-xl p-4 text-white shadow-lg shadow-success/20">
                   <div className="flex items-center gap-2 mb-1">
                     <TrendingUp className="h-4 w-4 opacity-90" />
                     <p className="text-xs opacity-90">Receita Bruta</p>
@@ -527,7 +527,7 @@ export default function FechamentoMensalPage() {
                   <p className="text-[10px] opacity-80 mt-1">Total de vendas</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-red-500 to-red-700 rounded-xl p-4 text-white shadow-lg shadow-red-500/20">
+                <div className="bg-gradient-to-br from-destructive to-destructive rounded-xl p-4 text-white shadow-lg shadow-destructive/20">
                   <div className="flex items-center gap-2 mb-1">
                     <TrendingDown className="h-4 w-4 opacity-90" />
                     <p className="text-xs opacity-90">CMV</p>
@@ -538,7 +538,7 @@ export default function FechamentoMensalPage() {
                   <p className="text-[10px] opacity-80 mt-1">Custo da Mercadoria</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-4 text-white shadow-lg shadow-blue-500/20">
+                <div className="bg-gradient-to-br from-info to-info rounded-xl p-4 text-white shadow-lg shadow-info/20">
                   <div className="flex items-center gap-2 mb-1">
                     <DollarSign className="h-4 w-4 opacity-90" />
                     <p className="text-xs opacity-90">Despesas OP</p>
@@ -549,7 +549,7 @@ export default function FechamentoMensalPage() {
                   <p className="text-[10px] opacity-80 mt-1">Despesas operacionais</p>
                 </div>
 
-                <div className={`bg-gradient-to-br ${lucroLiquidoDRE >= 0 ? "from-purple-500 to-purple-700" : "from-orange-500 to-orange-700"} rounded-xl p-4 text-white shadow-lg ${lucroLiquidoDRE >= 0 ? "shadow-purple-500/20" : "shadow-orange-500/20"}`}>
+                <div className={`bg-gradient-to-br ${lucroLiquidoDRE >= 0 ? "from-primary to-primary" : "from-warning to-warning"} rounded-xl p-4 text-white shadow-lg ${lucroLiquidoDRE >= 0 ? "shadow-primary/20" : "shadow-warning/20"}`}>
                   <div className="flex items-center gap-2 mb-1">
                     <BarChart3 className="h-4 w-4 opacity-90" />
                     <p className="text-xs opacity-90">Lucro Líquido</p>
@@ -692,7 +692,7 @@ export default function FechamentoMensalPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => marcarPago(d)}
-                                className="rounded-full border-emerald-500 text-success hover:bg-success/5 text-xs"
+                                className="rounded-full border-success text-success hover:bg-success/5 text-xs"
                               >
                                 <CheckCircle className="mr-1 h-3 w-3" />
                                 Pagar
@@ -746,7 +746,7 @@ export default function FechamentoMensalPage() {
                 )}
 
                 {margemLiquida < 10 && margemLiquida > 0 && (
-                  <Alert className="bg-warning/5 border-amber-200/80 rounded-xl">
+                  <Alert className="bg-warning/5 border-warning/80 rounded-xl">
                     <AlertCircle className="h-4 w-4 text-warning" />
                     <AlertDescription className="text-sm text-warning">
                       Sua margem líquida está abaixo de 10%. Considere revisar preços ou reduzir custos operacionais.
@@ -1046,7 +1046,7 @@ export default function FechamentoMensalPage() {
           {isFechado ? (
             <Button
               onClick={reabrirFechamento}
-              className="w-full bg-warning/50 hover:bg-amber-600 text-white rounded-xl shadow-lg shadow-amber-500/30"
+              className="w-full bg-warning/50 hover:bg-warning text-white rounded-xl shadow-lg shadow-warning/30"
             >
               <Unlock className="mr-2 h-4 w-4" />
               Reabrir Mês
@@ -1054,7 +1054,7 @@ export default function FechamentoMensalPage() {
           ) : (
             <Button
               onClick={realizarFechamento}
-              className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-[#de4838]/30"
+              className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/30"
             >
               <Lock className="mr-2 h-4 w-4" />
               Fechar Mês

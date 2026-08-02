@@ -205,14 +205,14 @@ export function DespesasFixasTable({
 
             {/* Linha de Total de Salários (somente leitura) */}
             {totalSalarios !== undefined && totalSalarios > 0 && (
-              <tr className="border-b border-border bg-green-50 hover:bg-green-50 transition-colors">
+              <tr className="border-b border-border bg-success/10 hover:bg-success/10 transition-colors">
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-2 text-green-800 font-medium">
+                  <div className="flex items-center gap-2 text-success font-medium">
                     <span className="text-lg">👥</span>
                     <span>Total Salários</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-right font-mono text-green-800 font-semibold">
+                <td className="px-4 py-3 text-right font-mono text-success font-semibold">
                   {formatCurrency(totalSalarios)}
                 </td>
                 <td className="px-4 py-3 text-right font-mono text-success">
@@ -222,7 +222,7 @@ export function DespesasFixasTable({
                   {metaTotal > 0 ? ((totalSalarios / metaTotal) * 100).toFixed(2) : '0.00'}%
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className="text-xs text-green-500 bg-success/10 px-2 py-1 rounded-full">Automático</span>
+                  <span className="text-xs text-success bg-success/10 px-2 py-1 rounded-full">Automático</span>
                 </td>
               </tr>
             )}
@@ -230,12 +230,12 @@ export function DespesasFixasTable({
             {aluguelTotal > 0 && (
               <tr className="border-b border-border bg-info/5 hover:bg-info/5 transition-colors">
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-2 text-blue-800 font-medium">
+                  <div className="flex items-center gap-2 text-info font-medium">
                     <span className="text-lg">🏪</span>
                     <span>Aluguel Maquininhas</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-right font-mono text-blue-800 font-semibold">
+                <td className="px-4 py-3 text-right font-mono text-info font-semibold">
                   {formatCurrency(aluguelTotal)}
                 </td>
                 <td className="px-4 py-3 text-right font-mono text-info">

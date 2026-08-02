@@ -121,11 +121,11 @@ export function DistribuicaoLucroTab({
     <div className="space-y-4">
       {/* Resultados do Fechamento */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl p-4 text-white shadow-lg shadow-emerald-500/20">
+        <div className="bg-gradient-to-br from-success to-success rounded-xl p-4 text-white shadow-lg shadow-success/20">
           <p className="text-xs opacity-90">Lucro Líquido (DRE)</p>
           <p className="text-lg font-bold mt-1">{formatCurrency(lucroLiquido)}</p>
         </div>
-        <div className="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-xl p-4 text-white shadow-lg shadow-indigo-500/20">
+        <div className="bg-gradient-to-br from-primary to-primary rounded-xl p-4 text-white shadow-lg shadow-primary/20">
           <p className="text-xs opacity-90">Total Distribuído</p>
           <p className="text-lg font-bold mt-1">{formatCurrency(totalValor)}</p>
         </div>

@@ -133,11 +133,11 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+      <div className="bg-surface rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
+        <div className="p-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Camera className="h-5 w-5 text-[#de4838]" />
-            <h3 className="font-semibold text-gray-800">
+            <Camera className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold text-foreground">
               {scanMode === 'qrcode' ? 'Ler QR Code' : 'Ler Código de Barras'}
             </h3>
           </div>
@@ -148,7 +148,7 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
               isProcessingRef.current = false;
               onClose();
             }}
-            className="rounded-full hover:bg-gray-100"
+            className="rounded-full hover:bg-surface-2"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -156,9 +156,9 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
 
         <div className="p-4">
           {error ? (
-            <div className="bg-red-50 rounded-lg p-4 text-center">
-              <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-              <p className="text-sm text-red-600">{error}</p>
+            <div className="bg-destructive/10 rounded-lg p-4 text-center">
+              <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
+              <p className="text-sm text-destructive">{error}</p>
               <Button
                 variant="outline"
                 className="mt-3"
@@ -172,17 +172,17 @@ export function CameraScanner({ onScan, onClose, scanMode = 'qrcode' }: CameraSc
               <div 
                 id="qr-reader" 
                 ref={scannerRef} 
-                className="w-full rounded-lg overflow-hidden bg-gray-900"
+                className="w-full rounded-lg overflow-hidden bg-surface"
                 style={{ minHeight: '250px' }}
               />
-              <div className="mt-4 text-xs text-gray-500 text-center space-y-1">
+              <div className="mt-4 text-xs text-muted-foreground text-center space-y-1">
                 <p>
                   {scanMode === 'qrcode'
                     ? '📱 Posicione o QR Code no centro da tela'
                     : '📱 Posicione o código de barras no centro da tela'
                   }
                 </p>
-                <p className="text-gray-400">
+                <p className="text-muted-foreground">
                   {scanMode === 'qrcode'
                     ? 'Aponte para o QR Code da NFC-e'
                     : 'Aponte para o código de barras da NF-e'

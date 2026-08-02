@@ -6,6 +6,8 @@ import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { AppearanceProvider } from "@/components/providers/AppearanceProvider";
+import { Toaster } from "@/components/ui/sonner";
+
 
 const sora = Sora({
   variable: "--font-sora",
@@ -40,6 +42,8 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <AppearanceProvider>{children}</AppearanceProvider>
+            <Toaster />
+
           </AuthProvider>
         </QueryProvider>
       </body>

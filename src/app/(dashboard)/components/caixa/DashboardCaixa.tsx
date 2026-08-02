@@ -171,12 +171,12 @@ export default function DashboardCaixa({
     const cores: Record<string, string> = {
       DINHEIRO: 'bg-success',
       CARTAO_CREDITO: 'bg-info',
-      CARTAO_DEBITO: 'bg-cyan-600',
+      CARTAO_DEBITO: 'bg-info',
       PIX: 'bg-primary/80',
       VR: 'bg-warning',
-      OUTRO: 'bg-gray-600'
+      OUTRO: 'bg-muted'
     }
-    return cores[tipo] || 'bg-gray-600'
+    return cores[tipo] || 'bg-muted'
   }
 
   const handleRegistrarRetirada = async () => {
@@ -404,7 +404,7 @@ export default function DashboardCaixa({
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl p-3 sm:p-4 text-white shadow-sm h-full min-h-[92px] sm:min-h-[105px]">
+        <div className="bg-gradient-to-r from-warning to-warning rounded-2xl p-3 sm:p-4 text-white shadow-sm h-full min-h-[92px] sm:min-h-[105px]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] sm:text-xs opacity-90 leading-tight">Total de Retiradas</p>
@@ -494,7 +494,7 @@ export default function DashboardCaixa({
               <button 
                 onClick={handleRegistrarRetirada} 
                 disabled={loadingRetirada}
-                className="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full bg-warning hover:bg-warning text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {loadingRetirada ? (
                   <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Registrando...</>
@@ -561,7 +561,7 @@ export default function DashboardCaixa({
                       <div 
                         key={venda.id} 
                         onClick={() => { setVendaSelecionada(venda); setShowDetalhesVenda(true); }}
-                        className="cursor-pointer p-3 border border-amber-200 rounded-lg bg-warning/5 hover:bg-warning/10 transition-colors"
+                        className="cursor-pointer p-3 border border-warning/30 rounded-lg bg-warning/5 hover:bg-warning/10 transition-colors"
                       >
                         <div className="flex justify-between items-start mb-1">
                           <span className="font-bold text-warning">{formatarMoeda(venda.valorTotal)}</span>
@@ -570,7 +570,7 @@ export default function DashboardCaixa({
                         {venda.nomeCliente && <div className="text-sm"><strong>Cliente:</strong> {venda.nomeCliente}</div>}
                         {venda.tipoPedido && <div className="text-sm"><strong>Tipo:</strong> {venda.tipoPedido}</div>}
                         <div className="mt-2">
-                          <span className="text-xs border-warning/30 text-amber-800 px-2 py-1 rounded-full">Aguardando definição</span>
+                          <span className="text-xs border-warning/30 text-warning px-2 py-1 rounded-full">Aguardando definição</span>
                         </div>
                       </div>
                     ))}

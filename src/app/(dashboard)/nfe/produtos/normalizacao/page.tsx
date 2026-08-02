@@ -233,8 +233,8 @@ export default function CorrecaoProdutosPage() {
           <div
             className={`mb-4 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
               feedback.tipo === "success"
-                ? "border-green-300 bg-green-50 text-green-800"
-                : "border-red-300 bg-destructive/5 text-red-800"
+                ? "border-success/30 bg-success/10 text-success"
+                : "border-destructive/30 bg-destructive/5 text-destructive"
             }`}
           >
             {feedback.tipo === "success" ? (

@@ -12,15 +12,37 @@ export function formatCurrency(value: number): string {
   }).format(value)
 }
 
+/**
+ * Data de hoje no fuso local no formato YYYY-MM-DD (sem conversão UTC).
+ */
+export function hojeISO(): string {
+  const d = new Date()
+  const mes = String(d.getMonth() + 1).padStart(2, "0")
+  const dia = String(d.getDate()).padStart(2, "0")
+  return `${d.getFullYear()}-${mes}-${dia}`
+}
+
 export function formatDate(date: Date | string): string {
-  const d = typeof date === "string" ? new Date(date) : date
-  return d.toLocaleDateString("pt-BR")
+  if (typeof date === "string") {
+    // Datas ISO (2026-08-02 ou 2026-08-02T00:00:00.000Z) são formatadas
+    // sem conversão de fuso — o dia exibido é sempre o dia gravado.
+    const match = date.match(/^(\d{4})-(\d{2})-(\d{2})/)
+    if (match) return `${match[3]}/${match[2]}/${match[1]}`
+    const parsed = new Date(date)
+    return isNaN(parsed.getTime()) ? date : parsed.toLocaleDateString("pt-BR")
+  }
+  return date.toLocaleDateString("pt-BR")
 }
 
 export function formatDateTime(date: Date | string): string {
+  if (typeof date === "string") {
+    const match = date.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/)
+    if (match) return `${match[3]}/${match[2]}/${match[1]} ${match[4]}:${match[5]}`
+  }
   const d = typeof date === "string" ? new Date(date) : date
   return d.toLocaleString("pt-BR")
 }
+
 
 export function formatPercentage(value: number): string {
   return `${value.toFixed(2)}%`

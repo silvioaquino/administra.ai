@@ -75,12 +75,12 @@ export default function ModalDetalhesVenda({
 
   const getBadgeClasses = (tipo: string): string => {
     const classes: Record<string, string> = {
-      'PENDENTE': 'bg-yellow-100 text-yellow-800',
-      'DINHEIRO': 'bg-success/10 text-green-800',
-      'CARTAO_CREDITO': 'bg-info/10 text-blue-800',
-      'CARTAO_DEBITO': 'bg-cyan-100 text-cyan-800',
-      'PIX': 'bg-primary/10 text-purple-800',
-      'VR': 'bg-warning/10 text-orange-800',
+      'PENDENTE': 'bg-warning/10 text-warning',
+      'DINHEIRO': 'bg-success/10 text-success',
+      'CARTAO_CREDITO': 'bg-info/10 text-info',
+      'CARTAO_DEBITO': 'bg-info/10 text-info',
+      'PIX': 'bg-primary/10 text-primary',
+      'VR': 'bg-warning/10 text-warning',
       'OUTRO': 'bg-surface-2 text-white'
     }
     return classes[tipo] || 'bg-surface-2 text-white'
@@ -94,7 +94,7 @@ export default function ModalDetalhesVenda({
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             Detalhes da Venda
             {venda.tipoPagamento === 'PENDENTE' && (
-              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 flex items-center gap-1">
+              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-warning/10 text-warning flex items-center gap-1">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -229,7 +229,7 @@ export default function ModalDetalhesVenda({
           )}
 
           {/* Exclusão */}
-          <div className="border border-red-300 rounded-lg bg-destructive/5">
+          <div className="border border-destructive/30 rounded-lg bg-destructive/5">
             <div className="bg-destructive px-4 py-2 rounded-t-lg">
               <h6 className="font-semibold text-white flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -239,7 +239,7 @@ export default function ModalDetalhesVenda({
               </h6>
             </div>
             <div className="p-4">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 text-sm text-yellow-800">
+              <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 mb-4 text-sm text-warning">
                 <strong>Atenção!</strong> Esta ação não pode ser desfeita. 
                 Use apenas para excluir pedidos duplicados ou com erro.
               </div>
@@ -283,7 +283,7 @@ export default function ModalDetalhesVenda({
 
         {/* Footer */}
         <div className="flex justify-end p-4 border-t border-border">
-          <button onClick={onClose} className="px-4 py-2 bg-surface-20 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors flex items-center gap-2">
+          <button onClick={onClose} className="px-4 py-2 bg-surface-20 hover:bg-muted text-white font-medium rounded-lg transition-colors flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>

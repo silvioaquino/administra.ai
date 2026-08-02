@@ -96,7 +96,7 @@ export function ModalNovoProduto({ isOpen, onClose, onSuccess }: ModalNovoProdut
             type="submit"
             form="novo-produto-form"
             disabled={loading}
-            className="flex-1 bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg"
+            className="flex-1 bg-primary hover:bg-primary/90 text-white rounded-lg"
           >
             <Save className="mr-2 h-4 w-4" />
             {loading ? "Salvando..." : "Salvar Produto"}
@@ -107,14 +107,14 @@ export function ModalNovoProduto({ isOpen, onClose, onSuccess }: ModalNovoProdut
       <form id="novo-produto-form" onSubmit={handleSubmit} className="space-y-6">
         {/* Nome do Produto */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
-            Nome do Produto <span className="text-[#de4838]">*</span>
+          <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Nome do Produto <span className="text-primary">*</span>
           </Label>
           <Input
             value={formData.descricao}
             onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
             placeholder="Ex: X-Burger Completo"
-            className="rounded-lg border-gray-300 focus:ring-[#de4838] focus:border-[#de4838]"
+            className="rounded-lg border-border focus:ring-primary focus:border-primary"
             required
             autoFocus
           />
@@ -123,10 +123,10 @@ export function ModalNovoProduto({ isOpen, onClose, onSuccess }: ModalNovoProdut
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Unidade de Medida */}
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Unidade de Medida</Label>
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Unidade de Medida</Label>
             <div className="relative">
               <select
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none"
+                className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
                 value={formData.unidade}
                 onChange={(e) => setFormData({ ...formData, unidade: e.target.value })}
               >
@@ -136,7 +136,7 @@ export function ModalNovoProduto({ isOpen, onClose, onSuccess }: ModalNovoProdut
                 <option value="L">Litro (L)</option>
                 <option value="ML">Mililitro (ML)</option>
               </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-foreground">
                 <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
               </div>
             </div>
@@ -144,16 +144,16 @@ export function ModalNovoProduto({ isOpen, onClose, onSuccess }: ModalNovoProdut
 
           {/* Preço de Venda */}
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Preço de Venda (R$)</Label>
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Preço de Venda (R$)</Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
               <Input
                 type="number"
                 step="0.01"
                 min="0"
                 value={formData.preco_venda}
                 onChange={(e) => setFormData({ ...formData, preco_venda: Number(e.target.value) })}
-                className="pl-8 rounded-lg border-gray-300 focus:ring-[#de4838]"
+                className="pl-8 rounded-lg border-border focus:ring-primary"
                 placeholder="0,00"
               />
             </div>
@@ -163,45 +163,45 @@ export function ModalNovoProduto({ isOpen, onClose, onSuccess }: ModalNovoProdut
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Quantidade Inicial */}
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Quantidade Inicial</Label>
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Quantidade Inicial</Label>
             <Input
               type="number"
               step="0.01"
               min="0"
               value={formData.quantidade}
               onChange={(e) => setFormData({ ...formData, quantidade: Number(e.target.value) })}
-              className="rounded-lg border-gray-300 focus:ring-[#de4838]"
+              className="rounded-lg border-border focus:ring-primary"
               placeholder="0"
             />
           </div>
 
           {/* Fornecedor */}
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Fornecedor</Label>
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Fornecedor</Label>
             <Input
               value={formData.fornecedor}
               onChange={(e) => setFormData({ ...formData, fornecedor: e.target.value })}
               placeholder="Nome do fornecedor"
-              className="rounded-lg border-gray-300 focus:ring-[#de4838]"
+              className="rounded-lg border-border focus:ring-primary"
             />
           </div>
         </div>
 
         {/* Data da Compra */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Data da Compra</Label>
+          <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Data da Compra</Label>
           <Input
             type="date"
             value={formData.data_compra}
             onChange={(e) => setFormData({ ...formData, data_compra: e.target.value })}
-            className="rounded-lg border-gray-300 focus:ring-[#de4838]"
+            className="rounded-lg border-border focus:ring-primary"
           />
         </div>
 
         {/* Divider com informação */}
         <div className="pt-2">
-          <div className="bg-blue-50 rounded-xl p-4">
-            <p className="text-sm text-blue-700">
+          <div className="bg-info/10 rounded-xl p-4">
+            <p className="text-sm text-info">
               💡 Após cadastrar, o produto estará disponível para venda e será registrado no estoque.
             </p>
           </div>

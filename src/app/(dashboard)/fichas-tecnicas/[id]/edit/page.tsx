@@ -560,7 +560,7 @@ export default function EditarFichaTecnicaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-surface-2 to-surface-2 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           <p className="text-sm text-muted-foreground">Carregando ficha técnica...</p>
@@ -570,7 +570,7 @@ export default function EditarFichaTecnicaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-surface-2 to-surface-2">
       {/* Header - mais moderno e com sombra */}
       <div className="sticky top-0 z-20 bg-surface/80 backdrop-blur-md border-b border-border/80 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -606,7 +606,7 @@ export default function EditarFichaTecnicaPage() {
             type="submit" 
             form="ficha-form"
             disabled={saving}
-            className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 shadow-lg shadow-primary/25 transition-all duration-200 hover:shadow-[#de4838]/40"
+            className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 shadow-lg shadow-primary/25 transition-all duration-200 hover:shadow-primary/40"
           >
             <Save className="mr-2 h-4 w-4" />
             {saving ? (
@@ -834,7 +834,7 @@ export default function EditarFichaTecnicaPage() {
                             </div>
                           </div>
                           {pesoBruto > 0 && pesoLiquido > 0 && (
-                            <div className="text-xs text-warning bg-warning/5 border border-amber-200 rounded-lg p-2 flex items-center justify-between">
+                            <div className="text-xs text-warning bg-warning/5 border border-warning/30 rounded-lg p-2 flex items-center justify-between">
                               <span>Fator de correção (perda):</span>
                               <span className="font-semibold">{(pesoBruto / pesoLiquido).toFixed(2)}x</span>
                             </div>
@@ -1089,7 +1089,7 @@ export default function EditarFichaTecnicaPage() {
                                         className="h-8 w-8 p-0 rounded-lg hover:bg-destructive/5 hover:text-destructive transition-colors"
                                         title="Remover"
                                       >
-                                        <Trash2 className="h-4 w-4 text-red-400 hover:text-destructive" />
+                                        <Trash2 className="h-4 w-4 text-destructive hover:text-destructive" />
                                       </Button>
                                     </div>
                                   )}
@@ -1169,7 +1169,7 @@ export default function EditarFichaTecnicaPage() {
                         />
                       </div>
                     </div>
-                    <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 p-4 border border-info/30/50">
+                    <div className="rounded-xl bg-gradient-to-br from-info to-info/50 p-4 border border-info/30/50">
                       <p className="text-sm font-medium text-info mb-1 flex items-center gap-2">
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-info/50 animate-pulse"></span>
                         Preço Sugerido
@@ -1244,7 +1244,7 @@ export default function EditarFichaTecnicaPage() {
                       {despesasFixasPercentual > 8 ? `Fixas ${formatPercentage(despesasFixasPercentual)}` : ''}
                     </div>
                     <div 
-                      className="bg-gradient-to-r from-amber-500 to-amber-600 flex items-center justify-center text-xs text-white font-medium transition-all duration-500"
+                      className="bg-gradient-to-r from-warning to-warning flex items-center justify-center text-xs text-white font-medium transition-all duration-500"
                       style={{ width: `${despesasVariaveisPercentual}%` }}
                     >
                       {despesasVariaveisPercentual > 8 ? `Variáveis ${formatPercentage(despesasVariaveisPercentual)}` : ''}
@@ -1266,7 +1266,7 @@ export default function EditarFichaTecnicaPage() {
 
                 {/* Alertas */}
                 {formData.precoVenda > 0 && margem < 30 && margem > 0 && (
-                  <Alert className="mt-4 bg-warning/5 border-amber-200/80 rounded-xl">
+                  <Alert className="mt-4 bg-warning/5 border-warning/80 rounded-xl">
                     <AlertCircle className="h-4 w-4 text-warning" />
                     <AlertDescription className="text-sm text-warning">
                       Margem de lucro está baixa ({formatPercentage(margem)}). 
@@ -1293,7 +1293,7 @@ export default function EditarFichaTecnicaPage() {
               type="submit" 
               form="ficha-form"
               disabled={saving}
-              className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-[#de4838]/30"
+              className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/30"
             >
               <Save className="mr-2 h-4 w-4" />
               {saving ? "Salvando..." : "Salvar Alterações"}

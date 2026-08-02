@@ -167,7 +167,7 @@ export function ModalEditarProduto({ isOpen, onClose, produtoId, onSuccess }: Mo
             variant="destructive"
             onClick={handleDelete}
             disabled={saving}
-            className="bg-red-500 hover:bg-red-600 text-white rounded-lg"
+            className="bg-destructive hover:bg-destructive text-white rounded-lg"
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Excluir
@@ -185,7 +185,7 @@ export function ModalEditarProduto({ isOpen, onClose, produtoId, onSuccess }: Mo
             type="submit"
             form="editar-produto-form"
             disabled={saving}
-            className="bg-[#de4838] hover:bg-[#c73d2e] text-white rounded-lg"
+            className="bg-primary hover:bg-primary/90 text-white rounded-lg"
           >
             <Save className="mr-2 h-4 w-4" />
             {saving ? "Salvando..." : "Salvar Alterações"}
@@ -195,20 +195,20 @@ export function ModalEditarProduto({ isOpen, onClose, produtoId, onSuccess }: Mo
     >
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#de4838] border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       ) : (
         <form id="editar-produto-form" onSubmit={handleSubmit} className="space-y-6">
           {/* Nome do Produto */}
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
-              Nome do Produto <span className="text-[#de4838]">*</span>
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Nome do Produto <span className="text-primary">*</span>
             </Label>
             <Input
               value={formData.descricao}
               onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
               placeholder="Ex: X-Burger Completo"
-              className="rounded-lg border-gray-300 focus:ring-[#de4838] focus:border-[#de4838]"
+              className="rounded-lg border-border focus:ring-primary focus:border-primary"
               required
               autoFocus
             />
@@ -217,21 +217,21 @@ export function ModalEditarProduto({ isOpen, onClose, produtoId, onSuccess }: Mo
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Código do Produto */}
             <div className="space-y-1">
-              <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Código do Produto</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Código do Produto</Label>
               <Input
                 value={formData.codigo || ""}
                 onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
                 placeholder="Código de barras ou SKU"
-                className="rounded-lg border-gray-300 focus:ring-[#de4838]"
+                className="rounded-lg border-border focus:ring-primary"
               />
             </div>
 
             {/* Unidade de Medida */}
             <div className="space-y-1">
-              <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Unidade de Medida</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Unidade de Medida</Label>
               <div className="relative">
                 <select
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#de4838] focus:border-transparent appearance-none"
+                  className="w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
                   value={formData.unidade}
                   onChange={(e) => setFormData({ ...formData, unidade: e.target.value })}
                 >
@@ -244,7 +244,7 @@ export function ModalEditarProduto({ isOpen, onClose, produtoId, onSuccess }: Mo
                   <option value="CX">Caixa (CX)</option>
                   <option value="PT">Pacote (PT)</option>
                 </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-foreground">
                   <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                 </div>
               </div>
@@ -254,32 +254,32 @@ export function ModalEditarProduto({ isOpen, onClose, produtoId, onSuccess }: Mo
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Preço de Venda */}
             <div className="space-y-1">
-              <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Preço de Venda (R$)</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Preço de Venda (R$)</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
                 <Input
                   type="number"
                   step="0.01"
                   min="0"
                   value={formData.preco_venda}
                   onChange={(e) => setFormData({ ...formData, preco_venda: Number(e.target.value) })}
-                  className="pl-8 rounded-lg border-gray-300 focus:ring-[#de4838]"
+                  className="pl-8 rounded-lg border-border focus:ring-primary"
                 />
               </div>
             </div>
 
             {/* Custo Unitário */}
             <div className="space-y-1">
-              <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Custo Unitário (R$)</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Custo Unitário (R$)</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
                 <Input
                   type="number"
                   step="0.01"
                   min="0"
                   value={formData.valor_unitario}
                   onChange={(e) => setFormData({ ...formData, valor_unitario: Number(e.target.value) })}
-                  className="pl-8 rounded-lg border-gray-300 focus:ring-[#de4838]"
+                  className="pl-8 rounded-lg border-border focus:ring-primary"
                 />
               </div>
             </div>
@@ -288,20 +288,20 @@ export function ModalEditarProduto({ isOpen, onClose, produtoId, onSuccess }: Mo
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Quantidade em Estoque */}
             <div className="space-y-1">
-              <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Quantidade em Estoque</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Quantidade em Estoque</Label>
               <Input
                 type="number"
                 step="0.01"
                 min="0"
                 value={formData.quantidade}
                 onChange={(e) => setFormData({ ...formData, quantidade: Number(e.target.value) })}
-                className="rounded-lg border-gray-300 focus:ring-[#de4838]"
+                className="rounded-lg border-border focus:ring-primary"
               />
             </div>
 
             {/* Peso Unitário (g) */}
             <div className="space-y-1">
-              <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Pesoo Unitário (g)</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pesoo Unitário (g)</Label>
               <Input
                 type="number"
                 step="0.001"
@@ -309,51 +309,51 @@ export function ModalEditarProduto({ isOpen, onClose, produtoId, onSuccess }: Mo
                 value={formData.pesoUnitario}
                 onChange={(e) => setFormData({ ...formData, pesoUnitario: Number(e.target.value) })}
                 placeholder="Ex: 400 para 400g"
-                className="rounded-lg border-gray-300 focus:ring-[#de4838]"
+                className="rounded-lg border-border focus:ring-primary"
               />
             </div>
           </div>
 
           {/* Valor Total em Estoque (calculado) */}
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Valor Total em Estoque</Label>
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Valor Total em Estoque</Label>
             <Input
               type="text"
               value={formatCurrency(valorTotalEstoque)}
               disabled
-              className="rounded-lg bg-gray-100 border-gray-200 text-gray-600 md:max-w-[16rem]"
+              className="rounded-lg bg-surface-2 border-border text-muted-foreground md:max-w-[16rem]"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Fornecedor */}
             <div className="space-y-1">
-              <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Fornecedor</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Fornecedor</Label>
               <Input
                 value={formData.fornecedor || ""}
                 onChange={(e) => setFormData({ ...formData, fornecedor: e.target.value })}
                 placeholder="Nome do fornecedor"
-                className="rounded-lg border-gray-300 focus:ring-[#de4838]"
+                className="rounded-lg border-border focus:ring-primary"
               />
             </div>
 
             {/* Data da Última Compra */}
             <div className="space-y-1">
-              <Label className="text-xs font-medium text-gray-600 uppercase tracking-wider">Data da Última Compra</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Data da Última Compra</Label>
               <Input
                 type="date"
                 value={formData.data_compra?.split("T")[0] || ""}
                 onChange={(e) => setFormData({ ...formData, data_compra: e.target.value })}
-                className="rounded-lg border-gray-300 focus:ring-[#de4838]"
+                className="rounded-lg border-border focus:ring-primary"
               />
             </div>
           </div>
 
           {/* Alert informativo */}
           <div className="pt-2">
-            <Alert variant="default" className="bg-blue-50 border-blue-200 rounded-xl">
-              <AlertCircle className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-sm text-blue-700">
+            <Alert variant="default" className="bg-info/10 border-info/30 rounded-xl">
+              <AlertCircle className="h-4 w-4 text-info" />
+              <AlertDescription className="text-sm text-info">
                 As alterações serão aplicadas imediatamente no estoque e nos registros de venda.
               </AlertDescription>
             </Alert>

@@ -61,35 +61,35 @@ export function ResultadosTaxas({
       title: "Taxa Débito Média",
       value: `${taxaDebitoMedia.toFixed(2)}%`,
       icon: TrendingDown,
-      gradient: "from-blue-500 to-blue-600",
+      gradient: "from-info to-info",
       detail: "Média das maquininhas ativas"
     },
     {
       title: "Taxa Crédito Média",
       value: `${taxaCreditoMedia.toFixed(2)}%`,
       icon: TrendingUp,
-      gradient: "from-purple-500 to-purple-600",
+      gradient: "from-primary to-primary",
       detail: "Média das maquininhas ativas"
     },
     {
       title: "Taxa Média Geral",
       value: `${taxaMediaGeral.toFixed(2)}%`,
       icon: Calculator,
-      gradient: "from-orange-500 to-orange-600",
+      gradient: "from-warning to-warning",
       detail: "Ponderada por distribuição de vendas"
     },
     {
       title: "Total Aluguel",
       value: formatCurrency(aluguelTotal),
       icon: DollarSign,
-      gradient: "from-amber-500 to-amber-600",
+      gradient: "from-warning to-warning",
       detail: "Maquininhas ativas"
     },
     {
       title: "Provisões Salarial",
       value: formatCurrency(folhaSalarialTotalMensal || 0),
       icon: Users,
-      gradient: "from-indigo-500 to-indigo-600",
+      gradient: "from-primary to-primary",
       detail: "Total mensal"
     },
     {
@@ -98,7 +98,7 @@ export function ResultadosTaxas({
         ? formatPercentage(percentualFolhaSalarial)
         : '0%',
       icon: PieChart,
-      gradient: "from-emerald-500 to-emerald-600",
+      gradient: "from-success to-success",
       detail: "Percentual sobre faturamento"
     }
   ]
@@ -171,7 +171,7 @@ export function ResultadosTaxas({
         </div>
 
         {/* Informações adicionais */}
-        <div className="mt-4 p-3 bg-info/5 rounded-xl border border-blue-100">
+        <div className="mt-4 p-3 bg-info/5 rounded-xl border border-info/30">
           <p className="text-xs text-info">
             <strong>ℹ️ Detalhamento:</strong> Taxa Média Geral = (Débito {distribuicaoVendas.debito}% × {taxaDebitoMedia.toFixed(2)}%) + 
             (Crédito {distribuicaoVendas.credito}% × {taxaCreditoMedia.toFixed(2)}%) + 

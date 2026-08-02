@@ -318,7 +318,7 @@ export default function PlanejamentoFinanceiroPage() {
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <div className="relative">
             <select
-              className="rounded-full border border-border bg-surface px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none pr-8 cursor-pointer hover:border-red-500 transition-colors"
+              className="rounded-full border border-border bg-surface px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary appearance-none pr-8 cursor-pointer hover:border-destructive transition-colors"
               value={anoAtual}
               onChange={(e) => setAnoAtual(parseInt(e.target.value))}
             >
@@ -340,14 +340,14 @@ export default function PlanejamentoFinanceiroPage() {
           <Button
             variant="outline"
             onClick={sincronizarDados}
-            className="rounded-full border-border hover:border-green-500 hover:cursor-pointer transition-all whitespace-nowrap text-xs sm:text-sm"
+            className="rounded-full border-border hover:border-success hover:cursor-pointer transition-all whitespace-nowrap text-xs sm:text-sm"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Sincronizar
           </Button>
           <Button
             onClick={salvarTudo}
-            className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 py-2 hover:cursor-pointer hover:border-red-500 hover:border-2 transition-all whitespace-nowrap text-xs sm:text-sm"
+            className="bg-primary hover:bg-primary/90 text-white rounded-full px-4 py-2 hover:cursor-pointer hover:border-destructive hover:border-2 transition-all whitespace-nowrap text-xs sm:text-sm"
           >
             <Save className="mr-2 h-4 w-4" />
             Salvar Tudo
@@ -368,7 +368,7 @@ export default function PlanejamentoFinanceiroPage() {
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden bg-gradient-to-r from-green-600 to-green-500 text-white hover:cursor-pointer hover:scale-105 transition-transform duration-200">
+          <Card className="relative overflow-hidden bg-gradient-to-r from-success to-success text-white hover:cursor-pointer hover:scale-105 transition-transform duration-200">
             <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium opacity-90 leading-tight">Impacto Variáveis</p>
@@ -441,7 +441,7 @@ export default function PlanejamentoFinanceiroPage() {
       {/* Botão Ajuda */}
       <button
         onClick={() => router.push('/planejamento/configuracoes?tab=ajuda')}
-        className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-110 hover:bg-primary/90 hover:cursor-pointer hover:border-2 hover:border-red-500"
+        className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-110 hover:bg-primary/90 hover:cursor-pointer hover:border-2 hover:border-destructive"
       >
         <HelpCircle className="h-6 w-6" />
       </button>

@@ -35,7 +35,7 @@ export function FichaCard({ ficha, margemMinima, onEdit, onRefresh }: FichaCardP
   // Limite de "Atenção" sincronizado com a margem de lucro desejada no Planejamento.
   // margem < margemMinima => Atenção (vermelho); entre margemMinima e 50 => Boa; >= 50 => Excelente.
   const getMargemClass = () => {
-    if (ficha.margem >= 50) return { bg: "bg-lime-400", text: "Excelente" }
+    if (ficha.margem >= 50) return { bg: "bg-success", text: "Excelente" }
     if (ficha.margem >= margemMinima) return { bg: "bg-success/50", text: "Boa" }
     return { bg: "bg-destructive/50", text: "Atenção" }
   }
@@ -71,14 +71,14 @@ export function FichaCard({ ficha, margemMinima, onEdit, onRefresh }: FichaCardP
       </div>
 
       {/* Topo com gradiente */}
-      <div className="bg-gradient-to-r from-[#de4838]/10 to-transparent h-1" />
+      <div className="bg-gradient-to-r from-primary/10 to-transparent h-1" />
 
       <div className="p-5">
         {/* Header */}
         <div className="mb-4 pr-24">
           <h3 className="font-semibold text-white text-lg leading-tight">{ficha.nome}</h3>
           <div className="flex items-center gap-2 mt-1">
-            <Badge variant="outline" className="bg-amber-300 text-muted-foreground border-0 text-xs">
+            <Badge variant="outline" className="bg-warning/20 text-muted-foreground border-0 text-xs">
               {ficha.categoria}
             </Badge>
             <Badge variant="outline" className="bg-surface-2 text-muted-foreground border-0 text-xs">
@@ -132,7 +132,7 @@ export function FichaCard({ ficha, margemMinima, onEdit, onRefresh }: FichaCardP
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex-1 rounded-lg border-border hover:border-red-500 hover:bg-destructive/5 text-muted-foreground hover:text-destructive"
+            className="flex-1 rounded-lg border-border hover:border-destructive hover:bg-destructive/5 text-muted-foreground hover:text-destructive"
             onClick={handleDelete} 
             disabled={deleting}
           >

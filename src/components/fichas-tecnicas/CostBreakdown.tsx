@@ -98,7 +98,7 @@ export function CostBreakdown({ items, totalCost, costPerPortion, rendimento }: 
           <Card>
             <CardContent className="pt-6">
               <div className="text-sm text-muted-foreground">Margem</div>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-success">
                 -%
               </div>
               <div className="text-xs text-muted-foreground">

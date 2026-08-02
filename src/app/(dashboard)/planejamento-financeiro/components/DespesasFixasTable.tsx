@@ -148,12 +148,12 @@ export function DespesasFixasTable({ dados, metaTotal, onSalvar, ano, mes, maqui
             {aluguelTotal > 0 && (
               <tr className="border-b border-border bg-info/5 hover:bg-info/5 transition-colors">
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-2 text-blue-800 font-medium">
+                  <div className="flex items-center gap-2 text-info font-medium">
                     <span className="text-lg">🏪</span>
                     <span>Aluguel Maquininhas</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-right font-mono text-blue-800 font-semibold">
+                <td className="px-4 py-3 text-right font-mono text-info font-semibold">
                   {formatCurrency(aluguelTotal)}
                 </td>
                 <td className="px-4 py-3 text-right font-mono text-info">

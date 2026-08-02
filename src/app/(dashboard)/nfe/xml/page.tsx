@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, hojeISO, formatarTipoPagamento } from "@/lib/utils"
+import { toast } from "sonner"
+
 import { PageContainer } from "@/components/layout/PageContainer"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { CameraScanner } from "@/components/camera-scanner"
@@ -36,15 +38,17 @@ export default function NfeXmlPage() {
   const [produtos, setProdutos] = useState<ProdutoNota[]>([])
   const [dragActive, setDragActive] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
+  const [notaDuplicada, setNotaDuplicada] = useState<any>(null)
 
   // Carregar contas financeiras da API
   const { contas, loading: loadingContas } = useContasFinanceiras()
 
   const [formData, setFormData] = useState({
     contaDespesa: "",
-    dataCompra: new Date().toISOString().split("T")[0],
+    dataCompra: hojeISO(),
     formaPagamento: "À vista"
   })
+
 
   // Definir a primeira conta como padrão quando carregar
   useEffect(() => {
@@ -63,13 +67,30 @@ export default function NfeXmlPage() {
     }
   }
 
+  async function verificarDuplicidade(nota: any) {
+    try {
+      const params = new URLSearchParams({
+        chaveAcesso: nota?.chave_acesso || "",
+        numero: String(nota?.numero || ""),
+        serie: String(nota?.serie || ""),
+        cnpjEmitente: nota?.cnpj_emitente || "",
+      })
+      const res = await fetch(`/api/nfe/verificar?${params.toString()}`)
+      const json = await res.json()
+      return json?.duplicada ? json.notaExistente : null
+    } catch {
+      return null
+    }
+  }
+
   async function processarXml() {
     if (!xmlFile) {
-      alert("Selecione um arquivo XML")
+      toast.error("Selecione um arquivo XML")
       return
     }
 
     setLoading(true)
+    setNotaDuplicada(null)
 
     try {
       const xmlContent = await xmlFile.text()
@@ -91,14 +112,22 @@ export default function NfeXmlPage() {
         setProdutos(produtosComSelecao)
         // Preencher data da compra com data de emissão da nota
         if (data.data.data_emissao) {
-          setFormData(prev => ({ ...prev, dataCompra: data.data.data_emissao }))
+          setFormData(prev => ({ ...prev, dataCompra: String(data.data.data_emissao).slice(0, 10) }))
+        }
+
+        const duplicada = await verificarDuplicidade(data.data)
+        if (duplicada) {
+          setNotaDuplicada(duplicada)
+          toast.error("Nota já lançada", {
+            description: `Nº ${duplicada.numero}/série ${duplicada.serie} — ${duplicada.nomeEmitente}`,
+          })
         }
       } else {
         throw new Error(data.error || "Erro ao processar XML")
       }
     } catch (error) {
       console.error("Erro:", error)
-      alert(error instanceof Error ? error.message : "Erro ao processar XML")
+      toast.error(error instanceof Error ? error.message : "Erro ao processar XML")
     } finally {
       setLoading(false)
     }
@@ -108,21 +137,57 @@ export default function NfeXmlPage() {
     const produtosSelecionados = produtos.filter(p => p.selecionado)
 
     if (produtosSelecionados.length === 0) {
-      alert("Selecione pelo menos um produto")
+      toast.error("Selecione pelo menos um produto")
       return
     }
 
     if (!formData.contaDespesa) {
-      alert("Cadastre e selecione uma Conta Financeira antes de salvar.\n\nAcesse o menu 'Contas Bancárias' e adicione uma conta para este cliente.")
+      toast.error("Selecione uma Conta Financeira", {
+        description: "Acesse 'Contas Bancárias' e cadastre uma conta antes de salvar.",
+      })
+      return
+    }
+
+    if (notaDuplicada) {
+      toast.error("Lançamento bloqueado: nota já registrada")
       return
     }
 
     setSalvando(true)
 
     try {
-      const valorTotal = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
+      const valorTotal = notaProcessada?.valor_total > 0
+        ? notaProcessada.valor_total
+        : (produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0) - (notaProcessada?.desconto || 0))
       const contaSelecionada = contas.find(c => c.id.toString() === formData.contaDespesa);
 
+      // 1) Salvar a nota fiscal + produtos (a API bloqueia duplicidade com 409)
+      const resNota = await fetch("/api/nfe/salvar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nota: notaProcessada,
+          produtos: produtosSelecionados,
+          contaDespesa: formData.contaDespesa,
+          dataCompra: formData.dataCompra,
+          valorTotal,
+          formaPagamento: formData.formaPagamento,
+        })
+      })
+
+      const dataNota = await resNota.json()
+
+      if (resNota.status === 409) {
+        setNotaDuplicada(dataNota.notaExistente || true)
+        toast.error(dataNota.error || "Nota já lançada")
+        return
+      }
+
+      if (!resNota.ok || !dataNota.success) {
+        throw new Error(dataNota.error || "Erro ao salvar nota fiscal")
+      }
+
+      // 2) Registrar no livro diário
       const response = await fetch("/api/livro-diario", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -135,35 +200,36 @@ export default function NfeXmlPage() {
           saida: valorTotal,
           tipo: "COMPRA",
           origemDestino: contaSelecionada?.nome || null,
+          notaFiscalId: dataNota.data?.id || null,
+          formaPagamento: formData.formaPagamento,
           origemXml: true
         })
       })
 
       if (!response.ok) throw new Error("Erro ao registrar no livro diário")
 
-      // OBS: Produtos já são salvos automaticamente na API /api/nfe/processar
-      // Não precisamos chamar /api/produtos/batch novamente para evitar duplicatas
-      // Os produtos estão associados à nota fiscal com notaFiscalId
-
-      alert(`✅ Compra registrada com sucesso!\n💰 Total: ${formatCurrency(valorTotal)}\n📦 Produtos: ${produtosSelecionados.length}`)
+      const descontoMsg = descontoNota > 0 ? `\n💸 Desconto: ${formatCurrency(descontoNota)}` : ""
+      toast.success(`✅ Compra registrada com sucesso!\n💰 Total: ${formatCurrency(valorTotal)}\n📦 Produtos: ${produtosSelecionados.length}${descontoMsg}`)
 
       // Resetar formulário
       setXmlFile(null)
       setNotaProcessada(null)
       setProdutos([])
+      setNotaDuplicada(null)
       setFormData({
         contaDespesa: "", // Deixar vazio para o useEffect definir a primeira conta
-        dataCompra: new Date().toISOString().split("T")[0],
+        dataCompra: hojeISO(),
         formaPagamento: "À vista"
       })
 
     } catch (error) {
       console.error("Erro:", error)
-      alert("Erro ao salvar compra")
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar compra")
     } finally {
       setSalvando(false)
     }
   }
+
 
   function handleDragOver(e: React.DragEvent) {
     e.preventDefault()
@@ -207,7 +273,14 @@ export default function NfeXmlPage() {
   }
 
   const produtosSelecionados = produtos.filter(p => p.selecionado)
-  const valorTotalCompra = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
+  const totalProdutos = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
+  const descontoNota = notaProcessada?.desconto || 0
+  const formasPagamentoNota = notaProcessada?.formas_pagamento || []
+  // Usar o valor_total da nota (vNF - já líquido após descontos) quando disponível
+  // Caso contrário, usar a soma dos produtos com desconto subtraído
+  const valorTotalCompra = notaProcessada?.valor_total > 0
+    ? notaProcessada.valor_total
+    : (totalProdutos - descontoNota)
 
   return (
     <div className="min-h-screen bg-background">
@@ -221,14 +294,27 @@ export default function NfeXmlPage() {
         {produtos.length > 0 && (
           <Button 
             onClick={salvarCompra}
-            disabled={salvando || produtosSelecionados.length === 0}
-            className="bg-primary hover:bg-primary/90 text-white px-6 rounded-full shadow-sm"
+            disabled={salvando || produtosSelecionados.length === 0 || !!notaDuplicada}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 rounded-full shadow-sm"
           >
             <Save className="mr-2 h-4 w-4" />
-            {salvando ? "Salvando..." : `Salvar Compra (${formatCurrency(valorTotalCompra)})`}
+            {salvando ? "Salvando..." : notaDuplicada ? "Nota já lançada" : `Salvar Compra (${formatCurrency(valorTotalCompra)})`}
             </Button>
           )}
         </PageHeader>
+        {notaDuplicada && (
+          <Alert variant="destructive" className="border-destructive/40 bg-destructive/10 rounded-xl">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-sm">
+              Esta nota já foi lançada
+              {notaDuplicada?.numero
+                ? ` (nº ${notaDuplicada.numero}/série ${notaDuplicada.serie} — ${notaDuplicada.nomeEmitente})`
+                : ""}
+              . O lançamento em duplicidade está bloqueado.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* Left Column - Upload Area */}
@@ -238,12 +324,12 @@ export default function NfeXmlPage() {
               <div className="bg-surface-2 p-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <Upload className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-white">Upload do Arquivo XML</h3>
+                  <h3 className="font-semibold text-foreground">Upload do Arquivo XML</h3>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Selecione o arquivo XML da NF-e de compra</p>
               </div>
               <div className="p-6 space-y-4">
-                <Alert variant="default" className="bg-warning/5 border-orange-200 rounded-xl">
+                <Alert variant="default" className="bg-warning/5 border-warning/30 rounded-xl">
                   <AlertCircle className="h-4 w-4 text-warning" />
                   <AlertDescription className="text-sm text-warning">
                     Esta nota será registrada como DESPESA (Saída do caixa)
@@ -272,8 +358,8 @@ export default function NfeXmlPage() {
                   {/* Drag and Drop Area */}
                   <div
                     className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer
-                      ${dragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-gray-400'}
-                      ${xmlFile ? 'bg-green-50 border-green-300' : ''}
+                      ${dragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/50'}
+                      ${xmlFile ? 'bg-success/10 border-success/40' : ''}
                     `}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
@@ -294,7 +380,7 @@ export default function NfeXmlPage() {
 
                     {xmlFile ? (
                       <div className="flex flex-col items-center gap-2">
-                        <CheckCircle className="h-12 w-12 text-green-500" />
+                        <CheckCircle className="h-12 w-12 text-success" />
                         <p className="text-sm font-medium text-success">Arquivo selecionado!</p>
                         <p className="text-xs text-muted-foreground break-all">{xmlFile.name}</p>
                         <Button
@@ -332,7 +418,7 @@ export default function NfeXmlPage() {
 
                 <Button
                   onClick={processarXml}
-                  className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"
                   disabled={loading || !xmlFile}
                 >
                   {loading ? (
@@ -356,13 +442,13 @@ export default function NfeXmlPage() {
                 <div className="bg-surface-2 p-4 border-b border-border">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-white">Informações da Compra</h3>
+                    <h3 className="font-semibold text-foreground">Informações da Compra</h3>
                   </div>
                 </div>
                 <div className="p-6 space-y-4">
                   <div className="rounded-lg bg-surface-2 p-4">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Fornecedor</p>
-                    <p className="text-sm font-medium text-white mt-1">{notaProcessada.nome_emitente || "Não informado"}</p>
+                    <p className="text-sm font-medium text-foreground mt-1">{notaProcessada.nome_emitente || "Não informado"}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">CNPJ: {notaProcessada.cnpj_emitente || "Não informado"}</p>
                   </div>
 
@@ -388,7 +474,7 @@ export default function NfeXmlPage() {
                             ))
                           )}
                         </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-foreground">
                           <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                         </div>
                       </div>
@@ -414,7 +500,7 @@ export default function NfeXmlPage() {
               <div className="bg-surface-2 p-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <Package className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-white">Resumo da Operação</h3>
+                  <h3 className="font-semibold text-foreground">Resumo da Operação</h3>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Pré-visualização da compra</p>
               </div>
@@ -427,27 +513,44 @@ export default function NfeXmlPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Fornecedor:</span>
-                  <span className="font-medium text-white text-right max-w-[200px] truncate">
+                  <span className="font-medium text-foreground text-right max-w-[200px] truncate">
                     {notaProcessada?.nome_emitente || "Aguardando nota..."}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Produtos na nota:</span>
-                  <span className="font-medium text-white">{produtos.length}</span>
+                  <span className="font-medium text-foreground">{produtos.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Produtos selecionados:</span>
-                  <span className="font-medium text-white">{produtosSelecionados.length}</span>
+                  <span className="font-medium text-foreground">{produtosSelecionados.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Conta de despesa:</span>
-                  <span className="font-medium text-white text-right max-w-[200px] truncate">
+                  <span className="font-medium text-foreground text-right max-w-[200px] truncate">
                     {formData.contaDespesa.split(" ").slice(1).join(" ")}
                   </span>
                 </div>
+                {descontoNota > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Desconto:</span>
+                    <span className="font-medium text-green-400">-{formatCurrency(descontoNota)}</span>
+                  </div>
+                )}
+                {formasPagamentoNota.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Formas de pagamento detectadas ({formasPagamentoNota.length})</span>
+                    {formasPagamentoNota.map((fp: any, idx: number) => (
+                      <div key={idx} className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{formatarTipoPagamento(fp.forma)}</span>
+                        <span className="font-medium text-white">{formatCurrency(fp.valor)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="pt-4 mt-2 border-t border-dashed border-border">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-white">Total a pagar:</span>
+                    <span className="text-sm font-semibold text-foreground">Total a pagar:</span>
                     <span className="text-xl font-bold text-primary">{formatCurrency(valorTotalCompra)}</span>
                   </div>
                 </div>
@@ -464,7 +567,7 @@ export default function NfeXmlPage() {
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-2">
                     <Package className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-white">Produtos da Nota</h3>
+                    <h3 className="font-semibold text-foreground">Produtos da Nota</h3>
                   </div>
                   <div className="flex items-center gap-4">
                     <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -508,7 +611,7 @@ export default function NfeXmlPage() {
                           />
                         </td>
                         <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{produto.codigo || "-"}</td>
-                        <td className="px-4 py-3 text-white">{produto.descricao}</td>
+                        <td className="px-4 py-3 text-foreground">{produto.descricao}</td>
                         <td className="px-4 py-3 text-center font-mono text-xs text-muted-foreground">{produto.ncm || "-"}</td>
                         <td className="px-4 py-3 text-center">
                           <span className="inline-flex items-center gap-1">
@@ -516,13 +619,13 @@ export default function NfeXmlPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(produto.valor_unitario)}</td>
-                        <td className="px-4 py-3 text-right font-medium text-white">{formatCurrency(produto.valor_total)}</td>
+                        <td className="px-4 py-3 text-right font-medium text-foreground">{formatCurrency(produto.valor_total)}</td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot className="bg-surface-2 border-t border-border">
                     <tr>
-                      <td colSpan={6} className="px-4 py-4 text-right font-semibold text-white">
+                      <td colSpan={6} className="px-4 py-4 text-right font-semibold text-foreground">
                         Total da Compra:
                       </td>
                       <td className="px-4 py-4 text-right text-xl font-bold text-primary">

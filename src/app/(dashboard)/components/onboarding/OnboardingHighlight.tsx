@@ -121,7 +121,7 @@ export function OnboardingHighlight({ steps, onComplete, onSkip }: OnboardingHig
       {/* Highlight do elemento */}
       {elementPosition && (
         <div
-          className="fixed z-50 rounded-lg ring-4 ring-[#de4838] ring-offset-2 transition-all duration-300"
+          className="fixed z-50 rounded-lg ring-4 ring-primary ring-offset-2 transition-all duration-300"
           style={{
             top: elementPosition.top - 8,
             left: elementPosition.left - 8,
@@ -141,7 +141,7 @@ export function OnboardingHighlight({ steps, onComplete, onSkip }: OnboardingHig
         }}
       >
         {/* Header */}
-        <div className="p-4 border-b bg-gradient-to-r from-[#de4838]/5 to-transparent">
+        <div className="p-4 border-b bg-gradient-to-r from-primary/5 to-transparent">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-primary" />
@@ -171,7 +171,7 @@ export function OnboardingHighlight({ steps, onComplete, onSkip }: OnboardingHig
           
           {step.tips && step.tips.length > 0 && (
             <div className="bg-info/5 rounded-lg p-2 mb-3">
-              <p className="text-xs font-medium text-blue-800 mb-1">💡 Dica:</p>
+              <p className="text-xs font-medium text-info mb-1">💡 Dica:</p>
               <p className="text-xs text-info">{step.tips[0]}</p>
             </div>
           )}
