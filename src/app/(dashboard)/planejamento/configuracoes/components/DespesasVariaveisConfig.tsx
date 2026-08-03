@@ -72,6 +72,7 @@ export function DespesasVariaveisConfig({
       nome: `Nova Maquininha ${config.maquininhas.length + 1}`,
       taxaDebito: 0,
       taxaCredito: 0,
+      taxaPix: 0,
       aluguel: 0,
       ativo: true
     }

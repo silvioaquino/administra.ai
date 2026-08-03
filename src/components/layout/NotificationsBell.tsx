@@ -2,24 +2,25 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useQuery } from "@tanstack/react-query"
 import { Bell, AlertTriangle, AlertCircle, Info, CheckCircle2 } from "lucide-react"
-import { apiFetch } from "@/lib/api-client"
+import { useAlertas } from "@/hooks/useAlertas"
+import type { CategoriaAlerta } from "@/lib/alertas/tipos"
 import { cn } from "@/lib/utils"
-
-type Alerta = {
-  id: string
-  severidade: "CRITICO" | "ATENCAO" | "INFO"
-  titulo: string
-  descricao: string
-  href: string
-}
 
 const SEVERITY = {
   CRITICO: { icon: AlertCircle, className: "text-destructive", label: "Crítico" },
   ATENCAO: { icon: AlertTriangle, className: "text-warning", label: "Atenção" },
   INFO: { icon: Info, className: "text-primary", label: "Info" },
+  SUCCESS: { icon: CheckCircle2, className: "text-success", label: "Tudo certo" },
 } as const
+
+const CATEGORIA_LABEL: Record<CategoriaAlerta, string> = {
+  financeiro: "Financeiro",
+  fiscal: "Fiscal",
+  estoque: "Estoque",
+  operacional: "Operacional",
+  produto: "Produtos",
+}
 
 const DISMISSED_KEY = "alertas_dispensados"
 
@@ -46,15 +47,11 @@ export function NotificationsBell() {
     return () => document.removeEventListener("mousedown", handler)
   }, [])
 
-  const { data: alertas = [] } = useQuery({
-    queryKey: ["alertas"],
-    queryFn: () => apiFetch<{ data: Alerta[] }>("/api/alertas").then((res) => res.data),
-    staleTime: 60_000,
-    refetchInterval: 5 * 60_000,
-  })
+  const { data: alertas = [] } = useAlertas()
 
-  const visiveis = alertas.filter((a) => !dismissed.includes(a.id))
-  const criticos = visiveis.filter((a) => a.severidade === "CRITICO").length
+  // O sino mostra apenas alertas acionáveis (sem os de confirmação positiva).
+  const visiveis = alertas.filter(a => !dismissed.includes(a.id) && a.severidade !== "SUCCESS")
+  const criticos = visiveis.filter(a => a.severidade === "CRITICO").length
 
   const dispensar = (id: string) => {
     const next = [...dismissed, id]
@@ -117,10 +114,13 @@ export function NotificationsBell() {
                       <button
                         onClick={() => {
                           setOpen(false)
-                          router.push(alerta.href)
+                          if (alerta.href) router.push(alerta.href)
                         }}
                         className="block w-full text-left"
                       >
+                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                          {CATEGORIA_LABEL[alerta.categoria]}
+                        </span>
                         <p className="truncate text-sm font-medium text-white">{alerta.titulo}</p>
                         <p className="text-xs text-muted-foreground">{alerta.descricao}</p>
                       </button>

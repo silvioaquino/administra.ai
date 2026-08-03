@@ -27,6 +27,7 @@ import {
   ResponsiveContainer
 } from "recharts"
 import { IndicadoresCard } from "./components/IndicadoresCard"
+import { useAlertas } from "@/hooks/useAlertas"
 import { ProdutividadeChart } from "@/components/produtividade-chart"
 import { DrilldownModal, type DrilldownFilter } from "./components/DrilldownModal"
 import { exportDashboardExcel, exportDashboardPdf } from "@/lib/export/dashboard-export"
@@ -49,11 +50,6 @@ interface UltimoLancamento {
   saida: number
 }
 
-interface FichaTecnica {
-  id: string
-  nome: string
-  margem: number
-}
 
 interface IndicadoresFinanceiros {
   despesasFixas: Array<{ nome: string; valor: number }>
@@ -122,7 +118,7 @@ export default function DashboardPage() {
     lucro: { atual: 0, meta: 15, percentual: 0 }
   })
   const [ultimosLancamentos, setUltimosLancamentos] = useState<UltimoLancamento[]>([])
-  const [alertas, setAlertas] = useState<Array<{ type: string; message: string }>>([])
+  const { data: alertas = [] } = useAlertas()
   const [indicadores, setIndicadores] = useState<IndicadoresFinanceiros>({
     despesasFixas: [],
     despesasVariaveisPct: 0,
@@ -172,7 +168,6 @@ export default function DashboardPage() {
       setMetas(data.metas)
       setUltimosLancamentos(data.ultimosLancamentos)
       setPeriodoTexto(data.periodoTexto)
-      setAlertas(criarAlertasFinanceiros(data.stats.saldo, data.stats.margem))
     } catch (error) {
       console.error("Erro ao carregar dashboard:", error)
       setStats(prev => ({
@@ -189,26 +184,11 @@ export default function DashboardPage() {
         lucro: { atual: 0, meta: 15, percentual: 0 }
       })
       setUltimosLancamentos([])
-      setAlertas([{ type: "danger", message: "Não foi possível carregar os dados do dashboard" }])
     } finally {
       setChartLoading(false)
     }
   }
 
-  async function carregarFichasTecnicas() {
-    try {
-      const response = await fetch("/api/fichas-tecnicas?limit=100&skip=0")
-      const data = await response.json()
-
-      if (data.success) {
-        const fichas = data.data as FichaTecnica[]
-        const margemBaixa = fichas.filter((f: FichaTecnica) => f.margem < 30)
-        setAlertas(prev => mesclarAlertaFichasMargemBaixa(prev, margemBaixa))
-      }
-    } catch (error) {
-      console.error("Erro ao carregar fichas técnicas:", error)
-    }
-  }
 
   async function carregarProdutos() {
     try {
@@ -246,39 +226,11 @@ export default function DashboardPage() {
     }
   }
 
-  function criarAlertasFinanceiros(saldo: number, margem: number) {
-    if (saldo < 0) {
-      return [{ type: "danger", message: `Situação crítica! Despesas superam receitas em ${formatCurrency(Math.abs(saldo))}` }]
-    }
-
-    if (margem < 10) {
-      return [{ type: "warning", message: `Margem de lucro está baixa (${margem.toFixed(1)}%). Reveja seus custos!` }]
-    }
-
-    if (margem >= 15) {
-      return [{ type: "success", message: `Margem de lucro excelente! (${margem.toFixed(1)}%)` }]
-    }
-
-    return [{ type: "info", message: "Tudo dentro do esperado! Continue assim!" }]
-  }
-
-  function mesclarAlertaFichasMargemBaixa(alertasAtuais: Array<{ type: string; message: string }>, fichas: FichaTecnica[]) {
-    if (fichas.length === 0) return alertasAtuais
-
-    const alertasSemFicha = alertasAtuais.filter(a => !a.message.includes("ficha(s) técnica(s) com margem abaixo de 30%"))
-    const nomesFichas = fichas.map(f => f.nome).join(", ")
-    const alertaMessage = fichas.length === 1
-      ? `⚠️ Ficha técnica "${fichas[0].nome}" tem margem de lucro abaixo de 30% (${fichas[0].margem.toFixed(1)}%). Revise os custos ou preço de venda.`
-      : `⚠️ ${fichas.length} ficha(s) técnica(s) com margem abaixo de 30%: ${nomesFichas}. Revise os custos ou preços de venda.`
-
-    return [...alertasSemFicha, { type: "warning", message: alertaMessage }]
-  }
-
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       carregarDadosDashboard()
-      carregarFichasTecnicas()
       carregarProdutos()
+
       carregarIndicadoresFinanceiros()
     }, 0)
 
@@ -358,32 +310,33 @@ export default function DashboardPage() {
     return <ArrowDownCircle className="h-4 w-4 text-destructive" />
   }
 
-  const getAlertIcon = (type: string) => {
-    switch (type) {
-      case "danger": return <AlertTriangle className="h-4 w-4 text-destructive" />
-      case "warning": return <AlertCircle className="h-4 w-4 text-warning" />
-      case "success": return <CheckCircle className="h-4 w-4 text-success" />
+  const getAlertIcon = (severidade: string) => {
+    switch (severidade) {
+      case "CRITICO": return <AlertTriangle className="h-4 w-4 text-destructive" />
+      case "ATENCAO": return <AlertCircle className="h-4 w-4 text-warning" />
+      case "SUCCESS": return <CheckCircle className="h-4 w-4 text-success" />
       default: return <Info className="h-4 w-4 text-primary" />
     }
   }
 
-  const getAlertBg = (type: string) => {
-    switch (type) {
-      case "danger": return "bg-destructive/10 border-destructive/30"
-      case "warning": return "bg-warning/5 border-warning/30"
-      case "success": return "bg-success/10 border-success/30"
+  const getAlertBg = (severidade: string) => {
+    switch (severidade) {
+      case "CRITICO": return "bg-destructive/10 border-destructive/30"
+      case "ATENCAO": return "bg-warning/5 border-warning/30"
+      case "SUCCESS": return "bg-success/10 border-success/30"
       default: return "bg-primary/10 border-info/30"
     }
   }
 
-  const getAlertText = (type: string) => {
-    switch (type) {
-      case "danger": return "text-destructive"
-      case "warning": return "text-warning"
-      case "success": return "text-success"
+  const getAlertText = (severidade: string) => {
+    switch (severidade) {
+      case "CRITICO": return "text-destructive"
+      case "ATENCAO": return "text-warning"
+      case "SUCCESS": return "text-success"
       default: return "text-info"
     }
   }
+
 
   const getXAxisInterval = () => {
     if (periodo === "ano") return 0
@@ -771,6 +724,7 @@ export default function DashboardPage() {
         {/* Indicadores Financeiros */}
         <div className="mb-6">
           <IndicadoresCard
+            alertas={alertas}
             despesasFixas={indicadores.despesasFixas}
             despesasVariaveisPct={indicadores.despesasVariaveisPct}
             metaMensalTotal={indicadores.metaMensalTotal}
@@ -953,14 +907,23 @@ export default function DashboardPage() {
             <CardContent className="p-5">
               <div className="space-y-3">
                 {alertas.length > 0 ? (
-                  alertas.map((alerta, idx) => (
-                    <div key={idx} className={`rounded-xl p-3 ${getAlertBg(alerta.type)} border`}>
+                  alertas.map((alerta) => (
+                    <button
+                      key={alerta.id}
+                      type="button"
+                      onClick={() => alerta.href && router.push(alerta.href)}
+                      className={`w-full rounded-xl p-3 text-left border transition-colors ${getAlertBg(alerta.severidade)} ${alerta.href ? "hover:brightness-110" : "cursor-default"}`}
+                    >
                       <div className="flex items-start gap-2">
-                        {getAlertIcon(alerta.type)}
-                        <p className={`text-sm ${getAlertText(alerta.type)}`}>{alerta.message}</p>
+                        {getAlertIcon(alerta.severidade)}
+                        <div className="min-w-0">
+                          <p className={`text-sm font-medium ${getAlertText(alerta.severidade)}`}>{alerta.titulo}</p>
+                          <p className="text-xs text-muted-foreground">{alerta.descricao}</p>
+                        </div>
                       </div>
-                    </div>
+                    </button>
                   ))
+
                 ) : (
                   <div className="text-center text-muted-foreground py-8">
                     <CheckCircle className="h-8 w-8 mx-auto mb-2 text-success" />

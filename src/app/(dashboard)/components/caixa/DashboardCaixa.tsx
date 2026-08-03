@@ -9,10 +9,25 @@ import {
   ChevronRight, X, Eye, Trash2, Save, AlertTriangle,
   Clock, Search
 } from 'lucide-react'
+import { toast } from 'sonner'
 import ModalFecharCaixa from './modais/ModalFecharCaixa'
 import ModalDetalhesVenda from './modais/ModalDetalhesVenda'
 import ModalDetalhesRetirada from './modais/ModalDetalhesRetirada'
 import ModalPreviewImpressao from './modais/ModalPreviewImpressao'
+
+interface MaquininhaOpcao {
+  id: string
+  nome: string
+  ativo: boolean
+  contaCreditoId: number | null
+  contaDebitoId: number | null
+  contaPixId: number | null
+  contaCredito?: { id: number; nome: string } | null
+  contaDebito?: { id: number; nome: string } | null
+  contaPix?: { id: number; nome: string } | null
+}
+
+const TIPOS_COM_MAQUININHA = ['CARTAO_CREDITO', 'CARTAO_DEBITO', 'PIX', 'VR']
 
 interface DashboardCaixaProps {
   caixaAtual: CaixaAbertura
@@ -44,6 +59,8 @@ export default function DashboardCaixa({
     VR: [],
     OUTRO: []
   })
+  const [maquininhas, setMaquininhas] = useState<MaquininhaOpcao[]>([])
+  const [salvandoMaquininha, setSalvandoMaquininha] = useState<string | null>(null)
   const [valorRetirada, setValorRetirada] = useState('')
   const [obsRetirada, setObsRetirada] = useState('')
   const [loading, setLoading] = useState(false)
@@ -70,6 +87,64 @@ export default function DashboardCaixa({
       carregarDadosCaixa()
     }
   }, [caixaAtual])
+
+  useEffect(() => {
+    const carregarMaquininhas = async () => {
+      try {
+        const res = await fetch('/api/maquininhas')
+        const data = await res.json()
+        if (data.success) {
+          setMaquininhas((data.data || []).filter((m: MaquininhaOpcao) => m.ativo))
+        }
+      } catch (error) {
+        console.error('Erro ao carregar maquininhas:', error)
+      }
+    }
+    carregarMaquininhas()
+  }, [])
+
+  const contaDaMaquininha = (maquininha: MaquininhaOpcao | undefined, tipo: string) => {
+    if (!maquininha) return null
+    if (tipo === 'CARTAO_CREDITO') return maquininha.contaCredito || null
+    if (tipo === 'CARTAO_DEBITO') return maquininha.contaDebito || null
+    if (tipo === 'PIX') return maquininha.contaPix || null
+    if (tipo === 'VR') return maquininha.contaCredito || maquininha.contaDebito || null
+    return null
+  }
+
+  const handleSelecionarMaquininha = async (vendaId: string, maquininhaId: string) => {
+    setSalvandoMaquininha(vendaId)
+    try {
+      const res = await fetch(`/api/vendas/${vendaId}/maquininha`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maquininha_id: maquininhaId || null })
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        toast.error(data.error || 'Erro ao vincular maquininha')
+        return
+      }
+
+      setVendasLocal(prev => prev.map(v =>
+        v.id === vendaId
+          ? { ...v, maquininhaId: maquininhaId || null, contaFinanceiraId: data.conta?.id ?? null }
+          : v
+      ))
+
+      toast.success(
+        data.conta
+          ? `Venda registrada na conta ${data.conta.nome}`
+          : 'Vínculo da maquininha removido'
+      )
+      onAtualizarDados()
+    } catch (error) {
+      console.error('Erro ao vincular maquininha:', error)
+      toast.error('Erro ao vincular maquininha')
+    } finally {
+      setSalvandoMaquininha(null)
+    }
+  }
 
   useEffect(() => {
     if (!loading) {
@@ -697,7 +772,7 @@ export default function DashboardCaixa({
                         <div className="grid grid-cols-2 gap-2">
                           <div 
                             ref={(el) => { listaSistemaRefs.current[tipo] = el }} 
-                            className="border border-border rounded-lg overflow-y-auto max-h-32"
+                            className="border border-border rounded-lg"
                           >
                             {vendasTipo.map(venda => (
                               <div 
@@ -714,6 +789,32 @@ export default function DashboardCaixa({
                                 {venda.dadosPedido?.cliente?.nome && (
                                   <div className="text-xs text-muted-foreground truncate">{venda.dadosPedido.cliente.nome}</div>
                                 )}
+                                {TIPOS_COM_MAQUININHA.includes(tipo) && (
+                                  <div onClick={(e) => e.stopPropagation()} className="mt-1">
+                                    <select
+                                      value={venda.maquininhaId || ''}
+                                      disabled={salvandoMaquininha === venda.id || maquininhas.length === 0}
+                                      onChange={(e) => handleSelecionarMaquininha(venda.id, e.target.value)}
+                                      className="w-full text-xs border border-border rounded px-1 py-0.5 bg-surface disabled:opacity-50"
+                                    >
+                                      <option value="">
+                                        {maquininhas.length === 0 ? 'Nenhuma maquininha cadastrada' : 'Maquininha...'}
+                                      </option>
+                                      {maquininhas.map(m => (
+                                        <option key={m.id} value={m.id}>{m.nome}</option>
+                                      ))}
+                                    </select>
+                                    {(() => {
+                                      const conta = contaDaMaquininha(
+                                        maquininhas.find(m => m.id === venda.maquininhaId),
+                                        tipo
+                                      )
+                                      return conta ? (
+                                        <div className="text-[10px] text-success truncate mt-0.5">→ {conta.nome}</div>
+                                      ) : null
+                                    })()}
+                                  </div>
+                                )}
                               </div>
                             ))}
                             {vendasTipo.length === 0 && (
@@ -722,7 +823,7 @@ export default function DashboardCaixa({
                           </div>
                           <div 
                             ref={(el) => { listaManualRefs.current[tipo] = el }} 
-                            className="border border-border rounded-lg overflow-y-auto max-h-32"
+                            className="border border-border rounded-lg"
                           >
                             {vendasManuaisTipo.map(venda => (
                               <div key={venda.id} className="p-1.5 border-b border-border text-sm flex justify-between items-center">

@@ -16,8 +16,17 @@ interface Maquininha {
   nome: string
   taxaDebito: number
   taxaCredito: number
+  taxaPix: number
   aluguel: number
   ativo: boolean
+  contaCreditoId?: number | null
+  contaDebitoId?: number | null
+  contaPixId?: number | null
+}
+
+interface ContaFinanceira {
+  id: number
+  nome: string
 }
 
 interface DistribuicaoVendas {
@@ -39,6 +48,7 @@ export default function TaxasConfigPage() {
   const [mesAtual, setMesAtual] = useState(new Date().getMonth() + 1)
 
   const [maquininhas, setMaquininhas] = useState<Maquininha[]>([])
+  const [contas, setContas] = useState<ContaFinanceira[]>([])
   const [distribuicaoVendas, setDistribuicaoVendas] = useState<DistribuicaoVendas>({ debito: 0, credito: 0, voucher: 0 })
   const [outrasTaxas, setOutrasTaxas] = useState<OutrasTaxas>({ voucher: 0, simplesNacional: 0, manutencao: 0 })
   const [faturamentoTotal, setFaturamentoTotal] = useState(0)
@@ -73,7 +83,6 @@ export default function TaxasConfigPage() {
       const res = await fetch(`/api/planejamento-financeiro/despesas-variaveis?ano=${anoAtual}&mes=${mesAtual}`)
       const data = await res.json()
       if (data.success && data.dados) {
-        setMaquininhas(data.dados.config?.maquininhas || [])
         setDistribuicaoVendas(data.dados.config?.distribuicaoVendas || { debito: 0, credito: 0, voucher: 0 })
         setOutrasTaxas({
           voucher: data.dados.config?.taxaVoucher || 0,
@@ -81,6 +90,45 @@ export default function TaxasConfigPage() {
           manutencao: data.dados.config?.manutencao || 0
         })
         setFaturamentoTotal(data.dados.faturamentoBase || 0)
+      }
+
+      const [maqRes, contasRes] = await Promise.all([
+        fetch('/api/maquininhas'),
+        fetch('/api/contas-financeiras')
+      ])
+      const maqData = await maqRes.json()
+      const contasData = await contasRes.json()
+
+      if (contasData.success) {
+        setContas((contasData.data || []).map((c: any) => ({ id: c.id, nome: c.nome })))
+      }
+
+      if (maqData.success && Array.isArray(maqData.data) && maqData.data.length > 0) {
+        setMaquininhas(maqData.data.map((m: any) => ({
+          id: m.id,
+          nome: m.nome,
+          taxaDebito: Number(m.taxaDebito) || 0,
+          taxaCredito: Number(m.taxaCredito) || 0,
+          taxaPix: Number(m.taxaPix) || 0,
+          aluguel: Number(m.aluguel) || 0,
+          ativo: m.ativo,
+          contaCreditoId: m.contaCreditoId ?? null,
+          contaDebitoId: m.contaDebitoId ?? null,
+          contaPixId: m.contaPixId ?? null
+        })))
+      } else {
+        // Migração: aproveita as maquininhas salvas na configuração antiga
+        setMaquininhas((data?.dados?.config?.maquininhas || []).map((m: any) => ({
+          nome: m.nome,
+          taxaDebito: Number(m.taxaDebito) || 0,
+          taxaCredito: Number(m.taxaCredito) || 0,
+          taxaPix: Number(m.taxaPix) || 0,
+          aluguel: Number(m.aluguel) || 0,
+          ativo: m.ativo !== false,
+          contaCreditoId: null,
+          contaDebitoId: null,
+          contaPixId: null
+        })))
       }
 
       const folhaRes = await fetch(`/api/planejamento/folha-salarial?ano=${anoAtual}`)
@@ -109,6 +157,19 @@ export default function TaxasConfigPage() {
   const salvarDados = async () => {
     setSalvando(true)
     try {
+      const maqResponse = await fetch('/api/maquininhas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maquininhas })
+      })
+      const maqData = await maqResponse.json()
+      if (!maqResponse.ok || !maqData.success) {
+        toast.error(maqData.error || 'Erro ao salvar maquininhas')
+        setSalvando(false)
+        return
+      }
+      setMaquininhas(maqData.data)
+
       const response = await fetch('/api/planejamento-financeiro/despesas-variaveis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -118,7 +179,7 @@ export default function TaxasConfigPage() {
           percentualTotal: 0,
           faturamentoBase: faturamentoTotal,
           config: {
-            maquininhas,
+            maquininhas: maqData.data,
             distribuicaoVendas,
             taxaVoucher: outrasTaxas.voucher,
             simplesNacional: outrasTaxas.simplesNacional,
@@ -147,8 +208,12 @@ export default function TaxasConfigPage() {
       nome: `Maquininha ${maquininhas.length + 1}`,
       taxaDebito: 0,
       taxaCredito: 0,
+      taxaPix: 0,
       aluguel: 0,
-      ativo: true
+      ativo: true,
+      contaCreditoId: null,
+      contaDebitoId: null,
+      contaPixId: null
     }])
   }
 
@@ -337,6 +402,16 @@ export default function TaxasConfigPage() {
                             step="0.01"
                           />
                         </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Taxa Pix (%)</Label>
+                          <Input
+                            type="number"
+                            value={maq.taxaPix || ''}
+                            onChange={e => atualizarMaquininha(index, 'taxaPix', parseFloat(e.target.value) || 0)}
+                            className="text-right font-mono rounded-lg border-border focus:ring-primary"
+                            step="0.01"
+                          />
+                        </div>
                         <div className="flex items-center justify-between border border-border rounded-lg px-4 py-2">
                           <span className="text-sm text-muted-foreground">Ativo</span>
                           <Switch
@@ -346,6 +421,38 @@ export default function TaxasConfigPage() {
                             className="data-checked:bg-success/50 data-checked:border-success border-border dark:border-border"
                           />
                         </div>
+                      </div>
+
+                      <div className="mt-4 border-t border-border pt-4">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                          Conta que recebe o valor das vendas
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {([
+                            { campo: 'contaCreditoId' as const, label: 'Crédito' },
+                            { campo: 'contaDebitoId' as const, label: 'Débito' },
+                            { campo: 'contaPixId' as const, label: 'Pix' }
+                          ]).map(({ campo, label }) => (
+                            <div key={campo} className="space-y-1">
+                              <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
+                              <select
+                                value={maq[campo] ?? ''}
+                                onChange={e => atualizarMaquininha(index, campo, e.target.value ? parseInt(e.target.value) : null)}
+                                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                              >
+                                <option value="">Selecione a conta</option>
+                                {contas.map(c => (
+                                  <option key={c.id} value={c.id}>{c.nome}</option>
+                                ))}
+                              </select>
+                            </div>
+                          ))}
+                        </div>
+                        {contas.length === 0 && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Nenhuma conta financeira cadastrada. Cadastre em Gerenciamento &gt; Contas Bancárias.
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

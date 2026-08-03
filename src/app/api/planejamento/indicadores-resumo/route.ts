@@ -2,28 +2,18 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
-import { calcularIndicadores } from "@/lib/planejamento/calcularIndicadores"
-import { garantirFolhaAno } from "@/lib/folha"
+import { obterIndicadoresResumo } from "@/lib/planejamento/indicadoresResumo"
 
-interface DespesasVariaveisDados {
-  maquininhas?: Array<{ id?: string; nome?: string; taxaDebito: number; taxaCredito: number; aluguel: number; ativo: boolean }>
-  distribuicaoVendas?: { debito: number; credito: number; voucher: number }
-  taxaVoucher?: number
-  simplesNacional?: number
-  manutencao?: number
-}
-
-interface ConfigMaquininhas {
-  maquininhas: Array<{ taxaDebito: number; taxaCredito: number; aluguel: number; ativo: boolean }>
-  distribuicaoVendas: { debito: number; credito: number; voucher: number }
-  outrasTaxas: { voucher: number; simplesNacional: number; manutencao: number }
-}
-
+/**
+ * Resumo dos indicadores financeiros.
+ * A regra de cálculo vive em `@/lib/planejamento/indicadoresResumo` e é
+ * compartilhada com o motor de alertas (`/api/alertas`), garantindo que o
+ * que o usuário vê nos cards seja exatamente o que gera alertas.
+ */
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions)
 
-  if (!session || !session.user) {
+  if (!session?.user) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
   }
 
@@ -33,182 +23,13 @@ export async function GET(request: Request) {
   const ano = parseInt(searchParams.get("ano") || new Date().getFullYear().toString())
 
   try {
-    // 1. Buscar meta do mês atual (usando tabela NOVA)
-    const mesAtual = new Date().getMonth() + 1
-    const metaAtual = await prisma.planejamentoFaturamentoNovo.findFirst({
-      where: {
-        empresaId,
-        userId,
-        ano,
-        mes: mesAtual
-      }
-    })
-
-    // Usar metaTotal diretamente se disponível.
-    // Sem "default silencioso": se o mês atual não tem meta, sinaliza metaFaltando (item 3).
-    const metaDefinida = !!metaAtual && (Number(metaAtual.metaTotal) || 0) > 0
-    const metaMensalTotal = metaDefinida ? Number(metaAtual!.metaTotal) : 0
-
-    // Ler lucroDesejado persistido (ano-escopo) — elimina o magic number 15
-    const lucroConfig = await prisma.planejamentoConfig.findFirst({
-      where: {
-        userId,
-        tipo: "lucro_desejado",
-        anoReferencia: ano
-      }
-    })
-    const lucroDesejado = (lucroConfig?.dados as { lucroDesejado?: number } | null)?.lucroDesejado ?? 15
-
-    // 2. Buscar despesas fixas (DA NOVA TABELA primeiro, depois fallback para tabela antiga)
-    const despesasFixasNova = await prisma.planejamentoDespesaFixaNovo.findMany({
-      where: {
-        userId,
-        empresaId,
-        ano
-      },
-      orderBy: { nome: "asc" }
-    })
-
-    let despesasFixas: Array<{ nome: string; valor: number }> = []
-
-    // Se encontrou na nova tabela, usar ela
-    if (despesasFixasNova.length > 0) {
-      despesasFixas = despesasFixasNova.map(d => ({
-        nome: d.nome,
-        valor: Number(d.valor)
-      }))
-    } else {
-      // Fallback: buscar da tabela principal DespesaFixa
-      const despesasFixasDb = await prisma.despesaFixa.findMany({
-        where: {
-          userId,
-          empresaId
-        },
-        orderBy: { nome: "asc" }
-      })
-
-      // Se não encontrou na tabela principal, buscar do planejamentoConfig
-      if (despesasFixasDb.length > 0) {
-        despesasFixas = despesasFixasDb.map(d => ({
-          nome: d.nome,
-          valor: Number(d.valor)
-        }))
-      } else {
-        const configFixas = await prisma.planejamentoConfig.findFirst({
-          where: {
-            empresaId,
-            userId,
-            tipo: "despesas_fixas",
-            anoReferencia: ano
-          }
-        })
-        despesasFixas = (configFixas?.dados as Array<{ nome: string; valor: number }>) || []
-      }
-    }
-
-    // 3. Folha salarial (total de salários + encargos) — fonte enriquecida dos indicadores.
-    // Garante que o mês atual esteja salvo (snapshot) e lê o registro do mês corrente.
-    await garantirFolhaAno(empresaId, userId, ano)
-    const folha =
-      (await prisma.planejamentoFolhaSalarial.findUnique({
-        where: {
-          empresaId_userId_anoReferencia_mes: {
-            empresaId,
-            userId,
-            anoReferencia: ano,
-            mes: mesAtual,
-          },
-        },
-      })) ||
-      (await prisma.planejamentoFolhaSalarial.findFirst({
-        where: { empresaId, userId, anoReferencia: ano },
-        orderBy: { mes: "asc" },
-      }))
-    const totalSalarios = Number(folha?.totalSalarios) || 0
-    const encargosFolha =
-      (Number(folha?.totalDecimo) || 0) +
-      (Number(folha?.totalFerias) || 0) +
-      (Number(folha?.totalFgts) || 0) +
-      (Number(folha?.totalInss) || 0) +
-      (Number(folha?.totalInssPatronal) || 0)
-
-    // 4. Buscar configuração de despesas variáveis DIRETAMENTE do banco
-    // (autônomo — sem fetch interno a outra API)
-    const dvConfig = await prisma.planejamentoConfig.findFirst({
-      where: {
-        userId,
-        tipo: "despesas_variaveis",
-        anoReferencia: ano
-      }
-    })
-    // Configuração padrão (mantém fallback caso não haja config salva)
-    const dvDados = (dvConfig?.dados as DespesasVariaveisDados) || {}
-    const configMaquininhas: ConfigMaquininhas = dvConfig?.dados
-      ? {
-          maquininhas: dvDados.maquininhas || [],
-          distribuicaoVendas: dvDados.distribuicaoVendas || { debito: 40, credito: 50, voucher: 10 },
-          outrasTaxas: {
-            voucher: dvDados.taxaVoucher ?? 7.0,
-            simplesNacional: dvDados.simplesNacional ?? 0,
-            manutencao: dvDados.manutencao ?? 0
-          }
-        }
-      : {
-          maquininhas: [
-            { id: "1", nome: "InfinitePay", taxaDebito: 1.37, taxaCredito: 3.15, aluguel: 0, ativo: true },
-            { id: "2", nome: "Stone", taxaDebito: 2.34, taxaCredito: 6.44, aluguel: 79.80, ativo: true },
-            { id: "3", nome: "Caixa", taxaDebito: 4.48, taxaCredito: 5.78, aluguel: 0, ativo: true },
-          ],
-          distribuicaoVendas: { debito: 40, credito: 50, voucher: 10 },
-          outrasTaxas: {
-            voucher: 7.0,
-            simplesNacional: 8.0,
-            manutencao: 1.0
-          }
-        }
-
-    // 5. Cálculo enriquecido (mesma fonte das telas) -------------------------
-    // % Fixas inclui aluguel das máquinas + salários sobre a meta mensal total.
-    // faturamentoBase vem da MESMA fonte viva que o client (tabela nova
-    // planejamentoFaturamentoNovo), eliminando a divergência com a tabela
-    // legada despesasVariaveisResultado (valor congelado / default 52000).
-    const faturamentoBase = metaDefinida
-      ? Number(metaAtual!.metaTotal) ||
-        Number(metaAtual!.metaDiaria ?? 0) * Number(metaAtual!.diasTrabalhados ?? 26)
-      : 0
-
-    const resultado = calcularIndicadores({
-      metaMensalTotal,
-      lucroDesejado,
-      despesasFixas,
-      totalSalarios,
-      encargosFolha,
-      maquininhas: configMaquininhas.maquininhas,
-      distribuicaoVendas: configMaquininhas.distribuicaoVendas,
-      outrasTaxas: configMaquininhas.outrasTaxas,
-      faturamentoBase,
-    })
-
-    return NextResponse.json({
-      success: true,
-      metaFaltando: resultado.metaFaltando,
-      despesasFixas: resultado.despesasFixas,
-      despesasVariaveisPct: resultado.despesasVariaveisPct,
-      despesasVariaveisBase: resultado.despesasVariaveisBase,
-      totalDespesasVariaveis: resultado.totalDespesasVariaveis,
-      metaMensalTotal: resultado.metaMensalTotal,
-      cmv: resultado.cmv,
-      pctFixas: resultado.pctFixas,
-      markUp: resultado.markUp,
-      lucroDesejado: resultado.lucroDesejado,
-      folhaEncargosPercentual: resultado.folhaEncargosPercentual
-    })
-
+    const resultado = await obterIndicadoresResumo(empresaId, userId, ano)
+    return NextResponse.json({ success: true, ...resultado })
   } catch (error) {
     console.error("Erro ao buscar indicadores:", error)
-    return NextResponse.json({
-      success: false,
-      error: "Erro ao buscar dados dos indicadores"
-    }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: "Erro ao buscar dados dos indicadores" },
+      { status: 500 }
+    )
   }
 }

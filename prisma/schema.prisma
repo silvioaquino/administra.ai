@@ -33,6 +33,7 @@ model User {
   despesasVariaveisResultados     DespesasVariaveisResultado[]
   dreResultados                   DreResultado[]
   empresas                        Empresa[]
+  maquininhas                     Maquininha[]
   fechamentoMensal                FechamentoMensal[]
   fichasItens                     FichaItem[]
   fichasTecnicas                  FichaTecnica[]
@@ -54,7 +55,7 @@ model User {
   produtosVenda                   ProdutoVenda[]
   produtos                        Produto[]
   provisoesFuncionarios           ProvisaoFuncionario[]
-  folhaPagamentoConfig           FolhaPagamentoConfig[]
+  folhaPagamentoConfig            FolhaPagamentoConfig[]
   retiradas                       Retirada[]
   subscription                    Subscription?
   taxasCartaoConfig               TaxasCartaoConfig?
@@ -117,13 +118,14 @@ model Empresa {
   despesasVariaveisResultados     DespesasVariaveisResultado[]
   dreResultados                   DreResultado[]
   user                            User                              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  folhaPagamentoConfig           FolhaPagamentoConfig[]
+  folhaPagamentoConfig            FolhaPagamentoConfig[]
   fechamentoMensal                FechamentoMensal[]
   fichasItens                     FichaItem[]
   fichasTecnicas                  FichaTecnica[]
   fluxoCaixaDiario                FluxoCaixaDiario[]
   funcionarios                    Funcionario[]
   livroDiario                     LivroDiario[]
+  maquininhas                     Maquininha[]
   metasFluxoCaixa                 MetaFluxoCaixa[]
   notasFiscais                    NotaFiscal[]
   pagamentos                      Pagamento[]
@@ -148,19 +150,23 @@ model Empresa {
 }
 
 model ContaFinanceira {
-  id            Int           @id @default(autoincrement())
-  empresaId     String        @map("empresa_id")
-  userId        String        @map("user_id")
-  nome          String
-  tipo          String
-  saldoInicial  Decimal       @default(0) @map("saldo_inicial") @db.Decimal(10, 2)
-  instituicao   String?
-  isDefault     Boolean       @default(false) @map("is_default")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
-  empresa       Empresa       @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  despesasFixas DespesaFixa[]
+  id                 Int           @id @default(autoincrement())
+  empresaId          String        @map("empresa_id")
+  userId             String        @map("user_id")
+  nome               String
+  tipo               String
+  saldoInicial       Decimal       @default(0) @map("saldo_inicial") @db.Decimal(10, 2)
+  instituicao        String?
+  isDefault          Boolean       @default(false) @map("is_default")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+  empresa            Empresa       @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  despesasFixas      DespesaFixa[]
+  maquininhasCredito Maquininha[]  @relation("MaquininhaContaCredito")
+  maquininhasDebito  Maquininha[]  @relation("MaquininhaContaDebito")
+  maquininhasPix     Maquininha[]  @relation("MaquininhaContaPix")
+  vendas             Venda[]
 
   @@unique([nome, empresaId])
   @@index([empresaId])
@@ -180,7 +186,7 @@ model NotaFiscal {
   enderecoEmitente String?       @map("endereco_emitente")
   valorTotal       Decimal       @map("valor_total") @db.Decimal(10, 2)
   cpfConsumidor    String?       @map("cpf_consumidor")
-  valorDesconto      Decimal?      @map("valor_desconto") @db.Decimal(10, 2)
+  valorDesconto    Decimal?      @map("valor_desconto") @db.Decimal(10, 2)
   createdAt        DateTime      @default(now()) @map("created_at")
   empresaId        String
   livroDiario      LivroDiario[]
@@ -196,36 +202,36 @@ model NotaFiscal {
 }
 
 model Produto {
-  id             Int         @id @default(autoincrement())
-  userId         String
-  notaFiscalId   Int?        @map("nota_fiscal_id")
-  chaveAcesso    String?     @map("chave_acesso")
-  codigo         String?
-  descricao      String
-  unidade        String?     @default("UN")
-  quantidade     Decimal?    @db.Decimal(10, 3)
-  valorUnitario  Decimal?    @map("valor_unitario") @db.Decimal(10, 2)
-  valorTotal     Decimal?    @map("valor_total") @db.Decimal(10, 2)
-  fornecedor     String?
-  dataCompra     DateTime?   @map("data_compra")
-  precoVenda     Decimal?    @default(0) @map("preco_venda") @db.Decimal(10, 2)
-  pesoUnitario   Decimal?    @map("peso_unitario") @db.Decimal(10, 3)
-  densidade      Decimal?    @default(1) @db.Decimal(5, 3)
-  createdAt      DateTime    @default(now()) @map("created_at")
-  empresaId      String
-  formaPagamento String?     @map("forma_pagamento")
-  codigoBarras      String?   @map("codigo_barras")
-  nomeNormalizado  String?   @map("nome_normalizado")
-  marca            String?
-  categoriaSugestao String?   @map("categoria_sugestao")
-  unidadeMedida    String?   @map("unidade_medida")
-  fonteDados       String    @default("NORMALIZACAO_LOCAL") @map("fonte_dados")
-  precisaRevisao   Boolean   @default(false) @map("precisa_revisao")
-  normalizadoEm    DateTime? @map("normalizado_em")
-  itensFicha     FichaItem[]
-  empresa        Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  notaFiscal     NotaFiscal? @relation(fields: [notaFiscalId], references: [id])
-  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                Int         @id @default(autoincrement())
+  userId            String
+  notaFiscalId      Int?        @map("nota_fiscal_id")
+  chaveAcesso       String?     @map("chave_acesso")
+  codigo            String?
+  descricao         String
+  unidade           String?     @default("UN")
+  quantidade        Decimal?    @db.Decimal(10, 3)
+  valorUnitario     Decimal?    @map("valor_unitario") @db.Decimal(10, 2)
+  valorTotal        Decimal?    @map("valor_total") @db.Decimal(10, 2)
+  fornecedor        String?
+  dataCompra        DateTime?   @map("data_compra")
+  precoVenda        Decimal?    @default(0) @map("preco_venda") @db.Decimal(10, 2)
+  pesoUnitario      Decimal?    @map("peso_unitario") @db.Decimal(10, 3)
+  densidade         Decimal?    @default(1) @db.Decimal(5, 3)
+  createdAt         DateTime    @default(now()) @map("created_at")
+  empresaId         String
+  formaPagamento    String?     @map("forma_pagamento")
+  codigoBarras      String?     @map("codigo_barras")
+  nomeNormalizado   String?     @map("nome_normalizado")
+  marca             String?
+  categoriaSugestao String?     @map("categoria_sugestao")
+  unidadeMedida     String?     @map("unidade_medida")
+  fonteDados        String      @default("NORMALIZACAO_LOCAL") @map("fonte_dados")
+  precisaRevisao    Boolean     @default(false) @map("precisa_revisao")
+  normalizadoEm     DateTime?   @map("normalizado_em")
+  itensFicha        FichaItem[]
+  empresa           Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  notaFiscal        NotaFiscal? @relation(fields: [notaFiscalId], references: [id])
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, descricao])
   @@index([empresaId])
@@ -270,7 +276,9 @@ model LivroDiario {
   origemDestino     String?     @map("origem_destino")
   status            String      @default("PENDENTE")
   dataPagamento     DateTime?   @map("data_pagamento")
+  vendaId           String?     @map("venda_id")
   boletos           Boleto[]
+  venda             Venda?      @relation(fields: [vendaId], references: [id], onDelete: SetNull)
   empresa           Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   notaFiscal        NotaFiscal? @relation(fields: [notaFiscalId], references: [id])
   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -281,6 +289,7 @@ model LivroDiario {
   @@index([userId, origemDestino])
   @@index([userId, status])
   @@index([empresaId])
+  @@index([vendaId])
   @@map("livro_diario")
 }
 
@@ -370,24 +379,24 @@ model FichaTecnica {
 }
 
 model FichaItem {
-  id               String       @id @default(cuid())
-  fichaId          String       @map("ficha_id")
-  produtoId        Int          @map("produto_id")
-  quantidade       Float
-  unidade          String?      @default("UN")
-  valorUnitario    Decimal?     @map("valor_unitario") @db.Decimal(10, 2)
-  custo            Decimal?     @db.Decimal(10, 2)
-  isProdutoAcabado Boolean      @default(false) @map("is_produto_acabado")
-  gramasEquivalentes Float?      @map("gramas_equivalentes")
-  pesoBruto        Decimal?     @map("peso_bruto") @db.Decimal(10, 3)
-  pesoLiquido      Decimal?     @map("peso_liquido") @db.Decimal(10, 3)
-  fatorCorrecao    Decimal      @default(1) @map("fator_correcao") @db.Decimal(6, 3)
-  empresaId        String
-  userId           String
-  empresa          Empresa      @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  ficha            FichaTecnica @relation(fields: [fichaId], references: [id], onDelete: Cascade)
-  produto          Produto      @relation(fields: [produtoId], references: [id])
-  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String       @id @default(cuid())
+  fichaId            String       @map("ficha_id")
+  produtoId          Int          @map("produto_id")
+  quantidade         Float
+  unidade            String?      @default("UN")
+  valorUnitario      Decimal?     @map("valor_unitario") @db.Decimal(10, 2)
+  custo              Decimal?     @db.Decimal(10, 2)
+  isProdutoAcabado   Boolean      @default(false) @map("is_produto_acabado")
+  gramasEquivalentes Float?       @map("gramas_equivalentes")
+  pesoBruto          Decimal?     @map("peso_bruto") @db.Decimal(10, 3)
+  pesoLiquido        Decimal?     @map("peso_liquido") @db.Decimal(10, 3)
+  fatorCorrecao      Decimal      @default(1) @map("fator_correcao") @db.Decimal(6, 3)
+  empresaId          String
+  userId             String
+  empresa            Empresa      @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  ficha              FichaTecnica @relation(fields: [fichaId], references: [id], onDelete: Cascade)
+  produto            Produto      @relation(fields: [produtoId], references: [id])
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([fichaId])
   @@index([produtoId])
@@ -418,18 +427,18 @@ model DespesaFixa {
 }
 
 model DistribuicaoLucro {
-  id                Int      @id @default(autoincrement())
-  empresaId         String   @map("empresa_id")
-  userId            String   @map("user_id")
-  fechamentoMensalId Int?    @map("fechamento_mensal_id")
-  ano               Int
-  mes               Int
-  nome              String
-  percentual        Decimal  @db.Decimal(5, 2)
-  valor             Decimal  @db.Decimal(10, 2)
-  contaId           Int?     @map("conta_id")
-  pago              Boolean  @default(false)
-  createdAt         DateTime @default(now()) @map("created_at")
+  id                 Int      @id @default(autoincrement())
+  empresaId          String   @map("empresa_id")
+  userId             String   @map("user_id")
+  fechamentoMensalId Int?     @map("fechamento_mensal_id")
+  ano                Int
+  mes                Int
+  nome               String
+  percentual         Decimal  @db.Decimal(5, 2)
+  valor              Decimal  @db.Decimal(10, 2)
+  contaId            Int?     @map("conta_id")
+  pago               Boolean  @default(false)
+  createdAt          DateTime @default(now()) @map("created_at")
 
   @@index([empresaId, ano, mes])
   @@map("distribuicoes_lucro")
@@ -471,26 +480,54 @@ model Funcionario {
 }
 
 model FolhaPagamentoConfig {
-  id                      Int      @id @default(autoincrement())
-  empresaId               String   @map("empresa_id")
-  userId                  String   @map("user_id")
-  ano                     Int
-  mes                     Int
+  id                     Int      @id @default(autoincrement())
+  empresaId              String   @map("empresa_id")
+  userId                 String   @map("user_id")
+  ano                    Int
+  mes                    Int
   diaAdiantamento        Int      @default(15) @map("dia_adiantamento")
-  percentualAdiantamento Decimal  @default(40) @db.Decimal(5, 2) @map("percentual_adiantamento")
-  diaSalario              Int      @default(5)  @map("dia_salario")
-  totalSalarios           Decimal  @default(0)  @db.Decimal(10, 2) @map("total_salarios")
-  valorAdiantamento      Decimal  @default(0)  @db.Decimal(10, 2) @map("valor_adiantamento")
-  valorSalario            Decimal  @default(0)  @db.Decimal(10, 2) @map("valor_salario")
+  percentualAdiantamento Decimal  @default(40) @map("percentual_adiantamento") @db.Decimal(5, 2)
+  diaSalario             Int      @default(5) @map("dia_salario")
+  totalSalarios          Decimal  @default(0) @map("total_salarios") @db.Decimal(10, 2)
+  valorAdiantamento      Decimal  @default(0) @map("valor_adiantamento") @db.Decimal(10, 2)
+  valorSalario           Decimal  @default(0) @map("valor_salario") @db.Decimal(10, 2)
   funcionariosSnapshot   Json?    @map("funcionarios_snapshot")
-  createdAt               DateTime @default(now()) @map("created_at")
-  updatedAt               DateTime @updatedAt @map("updated_at")
-  empresa                 Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+  empresa                Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([empresaId, userId, ano, mes])
   @@index([empresaId, ano, mes])
   @@map("folha_pagamento_config")
+}
+
+model Maquininha {
+  id             String           @id @default(uuid())
+  empresaId      String           @map("empresa_id")
+  userId         String           @map("user_id")
+  nome           String
+  taxaDebito     Float            @default(0) @map("taxa_debito")
+  taxaCredito    Float            @default(0) @map("taxa_credito")
+  taxaPix        Float            @default(0) @map("taxa_pix")
+  aluguel        Float            @default(0)
+  ativo          Boolean          @default(true)
+  ordem          Int              @default(0)
+  contaCreditoId Int?             @map("conta_credito_id")
+  contaDebitoId  Int?             @map("conta_debito_id")
+  contaPixId     Int?             @map("conta_pix_id")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  empresa        Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contaCredito   ContaFinanceira? @relation("MaquininhaContaCredito", fields: [contaCreditoId], references: [id])
+  contaDebito    ContaFinanceira? @relation("MaquininhaContaDebito", fields: [contaDebitoId], references: [id])
+  contaPix       ContaFinanceira? @relation("MaquininhaContaPix", fields: [contaPixId], references: [id])
+  vendas         Venda[]
+
+  @@unique([empresaId, nome])
+  @@index([empresaId])
+  @@map("maquininhas")
 }
 
 model TaxasCartaoConfig {
@@ -650,26 +687,31 @@ model CaixaAbertura {
 }
 
 model Venda {
-  id              String         @id @default(uuid())
-  empresaId       String         @map("empresa_id")
-  userId          String         @map("user_id")
-  dataVenda       DateTime       @default(now())
-  dadosPedido     Json
-  tipoPagamento   String         @default("PENDENTE")
-  valorTotal      Float
-  manual          Boolean        @default(false)
-  caixaAberturaId String
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  nomeCliente     String?
-  telefoneCliente String?
-  tipoPedido      String?
-  endereco        String?
-  numeroPedido    String?        @unique
-  produtos        ProdutoVenda[]
-  caixaAbertura   CaixaAbertura  @relation(fields: [caixaAberturaId], references: [id])
-  empresa         Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String           @id @default(uuid())
+  empresaId         String           @map("empresa_id")
+  userId            String           @map("user_id")
+  dataVenda         DateTime         @default(now())
+  dadosPedido       Json
+  tipoPagamento     String           @default("PENDENTE")
+  valorTotal        Float
+  manual            Boolean          @default(false)
+  caixaAberturaId   String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  nomeCliente       String?
+  telefoneCliente   String?
+  tipoPedido        String?
+  endereco          String?
+  numeroPedido      String?          @unique
+  maquininhaId      String?          @map("maquininha_id")
+  contaFinanceiraId Int?             @map("conta_financeira_id")
+  maquininha        Maquininha?      @relation(fields: [maquininhaId], references: [id])
+  contaFinanceira   ContaFinanceira? @relation(fields: [contaFinanceiraId], references: [id])
+  lancamentos       LivroDiario[]
+  produtos          ProdutoVenda[]
+  caixaAbertura     CaixaAbertura    @relation(fields: [caixaAberturaId], references: [id])
+  empresa           Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([dataVenda])
   @@index([caixaAberturaId])
@@ -678,6 +720,8 @@ model Venda {
   @@index([tipoPedido])
   @@index([numeroPedido])
   @@index([empresaId])
+  @@index([maquininhaId])
+  @@index([contaFinanceiraId])
   @@map("vendas")
 }
 
@@ -928,23 +972,23 @@ model PlanejamentoAcompanhamentoNovo {
 }
 
 model PlanejamentoFolhaSalarial {
-  id                    Int      @id @default(autoincrement())
-  empresaId             String   @map("empresa_id")
-  userId                String   @map("user_id")
-  anoReferencia         Int      @map("ano_referencia")
-  mes                   Int      @default(1) @map("mes")
-  totalSalarios         Decimal  @default(0) @map("total_salarios") @db.Decimal(10, 2)
-  totalDecimo           Decimal  @default(0) @map("total_decimo") @db.Decimal(10, 2)
-  totalFerias           Decimal  @default(0) @map("total_ferias") @db.Decimal(10, 2)
-  totalFgts             Decimal  @default(0) @map("total_fgts") @db.Decimal(10, 2)
-  totalInss             Decimal  @default(0) @map("total_inss") @db.Decimal(10, 2)
-  totalInssPatronal     Decimal  @default(0) @map("total_inss_patronal") @db.Decimal(10, 2)
-  totalMensal           Decimal  @default(0) @map("total_mensal") @db.Decimal(10, 2)
-  folhaEncargosPercentual Float  @default(0) @map("folha_encargos_percentual")
-  createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
-  empresa               Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                      Int      @id @default(autoincrement())
+  empresaId               String   @map("empresa_id")
+  userId                  String   @map("user_id")
+  anoReferencia           Int      @map("ano_referencia")
+  mes                     Int      @default(1) @map("mes")
+  totalSalarios           Decimal  @default(0) @map("total_salarios") @db.Decimal(10, 2)
+  totalDecimo             Decimal  @default(0) @map("total_decimo") @db.Decimal(10, 2)
+  totalFerias             Decimal  @default(0) @map("total_ferias") @db.Decimal(10, 2)
+  totalFgts               Decimal  @default(0) @map("total_fgts") @db.Decimal(10, 2)
+  totalInss               Decimal  @default(0) @map("total_inss") @db.Decimal(10, 2)
+  totalInssPatronal       Decimal  @default(0) @map("total_inss_patronal") @db.Decimal(10, 2)
+  totalMensal             Decimal  @default(0) @map("total_mensal") @db.Decimal(10, 2)
+  folhaEncargosPercentual Float    @default(0) @map("folha_encargos_percentual")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+  empresa                 Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([empresaId, userId, anoReferencia, mes])
   @@index([userId, anoReferencia, mes])
