@@ -1,7 +1,8 @@
 // src/app/(dashboard)/dashboard/components/IndicadoresCard.tsx
 "use client"
 
-import { Home, TrendingDown, Factory, Activity } from "lucide-react"
+import { Home, TrendingDown, Factory, Activity, AlertTriangle } from "lucide-react"
+import type { Alerta } from "@/lib/alertas/tipos"
 
 interface IndicadoresCardProps {
   despesasFixas: Array<{ nome: string; valor: number }>
@@ -9,6 +10,8 @@ interface IndicadoresCardProps {
   metaMensalTotal: number
   cmv: number
   pctFixas?: number
+  /** Alertas unificados; os que possuem `indicador` marcam o card correspondente. */
+  alertas?: Alerta[]
 }
 
 export function IndicadoresCard({
@@ -16,10 +19,16 @@ export function IndicadoresCard({
   despesasVariaveisPct,
   metaMensalTotal,
   cmv,
-  pctFixas: pctFixasProp
+  pctFixas: pctFixasProp,
+  alertas = []
 }: IndicadoresCardProps) {
   const totalFixas = despesasFixas.reduce((s, d) => s + d.valor, 0)
   const pctFixas = pctFixasProp ?? (metaMensalTotal > 0 ? (totalFixas / metaMensalTotal) * 100 : 0)
+
+  const alertaPorIndicador = new Map(
+    alertas.filter(a => a.indicador).map(a => [a.indicador as string, a])
+  )
+
 
   const getStatusType = (valor: number, min: number, max: number): 'ideal' | 'abaixo' | 'acima' => {
     if (valor >= min && valor <= max) return 'ideal'
@@ -70,6 +79,7 @@ export function IndicadoresCard({
 
   const indicadores = [
     {
+      chave: "fixas",
       nome: "Despesas Fixas",
       icone: Home,
       valor: pctFixas,
@@ -80,6 +90,7 @@ export function IndicadoresCard({
       getStatus: (v: number) => getStatusType(v, 20, 35),
     },
     {
+      chave: "variaveis",
       nome: "Despesas Variáveis",
       icone: TrendingDown,
       valor: despesasVariaveisPct,
@@ -90,6 +101,7 @@ export function IndicadoresCard({
       getStatus: (v: number) => getStatusType(v, 5, 20),
     },
     {
+      chave: "cmv",
       nome: "CMV",
       icone: Factory,
       valor: cmv,
@@ -100,6 +112,7 @@ export function IndicadoresCard({
       getStatus: (v: number) => getStatusType(v, 30, 40),
     }
   ]
+
 
   const indicadoresIdeais = indicadores.filter(i => i.getStatus(i.valor ?? 0) === 'ideal').length
 
@@ -127,6 +140,7 @@ export function IndicadoresCard({
             const status = ind.getStatus(valor)
             const colors = getStatusColor(status)
             const Icon = ind.icone
+            const alerta = alertaPorIndicador.get(ind.chave)
             const percentual = Math.min(100, Math.max(0, ((valor - ind.min) / (ind.max - ind.min)) * 100))
             const displayValue = ind.valor == null ? "—" : ind.valor.toFixed(1)
 
@@ -134,7 +148,7 @@ export function IndicadoresCard({
               <div
                 key={ind.nome}
                 className={`rounded-lg border ${colors.border} ${colors.bg} p-2 shadow-sm hover:shadow-md transition-all cursor-help min-h-[112px]`}
-                title={ind.tooltip}
+                title={alerta ? `${alerta.titulo} — ${alerta.descricao}` : ind.tooltip}
               >
                 <div className="mb-2 flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
@@ -143,6 +157,12 @@ export function IndicadoresCard({
                     </div>
                     <h6 className="font-semibold text-white text-[10px] sm:text-xs leading-tight">{ind.nome}</h6>
                   </div>
+                  {alerta && (
+                    <AlertTriangle
+                      className={`h-3 w-3 shrink-0 ${alerta.severidade === "CRITICO" ? "text-destructive" : alerta.severidade === "ATENCAO" ? "text-warning" : "text-primary"}`}
+                      aria-label={alerta.titulo}
+                    />
+                  )}
                 </div>
                 <div className="my-2 text-center">
                   <span className={`text-xl sm:text-2xl font-bold ${colors.text}`}>{displayValue}</span>

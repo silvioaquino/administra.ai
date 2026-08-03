@@ -72,11 +72,18 @@ export async function PUT(
       tipoPagamentoNovo: tipo_pagamento
     })
 
+    // Se a forma de pagamento mudou, o vínculo com a maquininha deixa de valer
+    const mudouTipo = vendaExistente.tipoPagamento !== tipo_pagamento
+    if (mudouTipo && vendaExistente.maquininhaId) {
+      await prisma.livroDiario.deleteMany({ where: { vendaId: id } })
+    }
+
     // Atualizar a venda no banco de dados
     const vendaAtualizada = await prisma.venda.update({
       where: { id },
       data: {
         tipoPagamento: tipo_pagamento,
+        ...(mudouTipo ? { maquininhaId: null, contaFinanceiraId: null } : {}),
         updatedAt: new Date()
       }
     })
@@ -185,6 +192,9 @@ export async function DELETE(
       valorTotal: vendaExistente.valorTotal,
       produtosCount: vendaExistente.produtos?.length || 0
     })
+
+    // Remover lançamentos financeiros gerados por esta venda
+    await prisma.livroDiario.deleteMany({ where: { vendaId: id } })
 
     // Excluir a venda
     await prisma.venda.delete({

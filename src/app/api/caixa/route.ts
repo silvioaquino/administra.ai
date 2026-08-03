@@ -31,6 +31,7 @@ export async function GET() {
       caixaAtual: caixaAberto
     })
   } catch (error) {
+    console.error('Erro ao verificar estado do caixa:', error)
     return NextResponse.json(
       { error: 'Erro ao verificar estado do caixa' },
       { status: 500 }
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: caixa })
   } catch (error) {
+    console.error('Erro ao abrir caixa:', error)
     return NextResponse.json(
       { error: 'Erro ao abrir caixa' },
       { status: 500 }

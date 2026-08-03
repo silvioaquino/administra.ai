@@ -26,6 +26,8 @@ export interface Venda {
   tipoPedido?: string
   endereco?: string
   numeroPedido?: string
+  maquininhaId?: string | null
+  contaFinanceiraId?: number | null
   produtos?: ProdutoVenda[]
   createdAt?: Date
   updatedAt?: Date
