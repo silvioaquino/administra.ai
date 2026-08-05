@@ -10,12 +10,14 @@ import {
   hashName,
 } from '@/lib/cache/produto-cache.service'
 import { OpenFoodFactsService } from '@/lib/services/open-food-facts.service'
-import { normalizarLocalmente, parseQuantidadeOFF } from '@/lib/services/local-normalizer'
+import { normalizarLocalmente, parseQuantidadeOFF, limparTexto } from '@/lib/services/local-normalizer'
 import { normalizationMetrics } from '@/lib/monitoring/normalization-metrics'
-import type { OpenFoodFactsProduct, ProdutoNormalizado, ProductInput } from '@/types/produto-normalizacao'
+import { prisma } from '@/lib/prisma'
+import type { OpenFoodFactsProduct, ProdutoNormalizado, ProductInput, FonteDados } from '@/types/produto-normalizacao'
 
 export interface NormalizarOptions {
   bypassCache?: boolean
+  empresaId?: string
 }
 
 export class ProductNormalizationService {
@@ -32,6 +34,18 @@ export class ProductNormalizationService {
   static async normalizarProduto(input: ProductInput, options?: NormalizarOptions): Promise<ProdutoNormalizado> {
     const descricao = input.descricao?.trim() || ''
     const gtin = this.validarGtin(input.codigoBarras)
+
+    // 0. Lookup no banco de dados (antes de chamar qualquer API)
+    //    Se o produto já foi normalizado anteriormente, reutiliza sem API.
+    if (options?.empresaId) {
+      const dbResult = await this.consultarNormalizacaoExistente(options.empresaId, input)
+      if (dbResult) {
+        if (dbResult.codigoBarras) setProductCache(dbResult.codigoBarras, dbResult)
+        setNormalizationCache(hashName(descricao), dbResult)
+        normalizationMetrics.recordFonte(dbResult.fonteDados, dbResult.precisaRevisao)
+        return dbResult
+      }
+    }
 
     // 1. Cache do resultado normalizado (OFF hit anterior)
     if (gtin && !options?.bypassCache) {
@@ -111,6 +125,77 @@ export class ProductNormalizationService {
       fonteDados: 'OPEN_FOOD_FACTS',
       precisaRevisao: false,
       normalizadoEm: new Date(),
+    }
+  }
+
+  // ===== Lookup no banco de dados (cache-persistence layer) =====
+
+  /**
+   * Consulta produtos já normalizados no banco.
+   * Busca primeiro pelo GTIN (barcode), depois pelo nome normalizado (limpo).
+   * Retorna null se não encontrar normalização prévia — sem chamar nenhuma API.
+   */
+  static async consultarNormalizacaoExistente(
+    empresaId: string,
+    input: ProductInput,
+  ): Promise<ProdutoNormalizado | null> {
+    const gtin = this.validarGtin(input.codigoBarras)
+
+    // 1. Buscar pelo GTIN (barcode) — usa índice [empresaId, codigoBarras]
+    if (gtin) {
+      const produto = await prisma.produto.findFirst({
+        where: {
+          empresaId,
+          codigoBarras: gtin,
+          nomeNormalizado: { not: null },
+        },
+        orderBy: { createdAt: 'desc' },
+      })
+      if (produto) {
+        return this.mapProdutoParaNormalizado(produto)
+      }
+    }
+
+    // 2. Buscar pelo nome normalizado (limpo = sem unidades/stopwords)
+    const nomeLimpo = limparTexto(input.descricao)
+    if (nomeLimpo) {
+      const produto = await prisma.produto.findFirst({
+        where: {
+          empresaId,
+          nomeNormalizado: { equals: nomeLimpo, mode: 'insensitive' as const },
+        },
+        orderBy: { createdAt: 'desc' },
+      })
+      if (produto) {
+        return this.mapProdutoParaNormalizado(produto)
+      }
+    }
+
+    return null
+  }
+
+  /** Converte um registro Prisma.Produto normalizado em ProdutoNormalizado. */
+  private static mapProdutoParaNormalizado(produto: {
+    nomeNormalizado: string | null
+    marca: string | null
+    categoriaSugestao: string | null
+    unidadeMedida: string | null
+    codigoBarras: string | null
+    fonteDados: string
+    precisaRevisao: boolean
+    normalizadoEm: Date | null
+  }): ProdutoNormalizado {
+    return {
+      nomeOriginal: produto.nomeNormalizado ?? '',
+      nomeNormalizado: produto.nomeNormalizado ?? '',
+      codigoBarras: produto.codigoBarras,
+      marca: produto.marca,
+      categoria: produto.categoriaSugestao,
+      unidade: produto.unidadeMedida,
+      quantidade: null,
+      fonteDados: produto.fonteDados as FonteDados,
+      precisaRevisao: produto.precisaRevisao,
+      normalizadoEm: produto.normalizadoEm ?? new Date(),
     }
   }
 

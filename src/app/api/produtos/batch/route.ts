@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { ProductNormalizationService } from "@/lib/services/product-normalization.service"
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -13,6 +14,7 @@ export async function POST(request: NextRequest) {
   try {
     const produtos = await request.json()
 
+    const empresaId = session.user.empresaId || ""
     const created = []
     for (const prod of produtos) {
       // Corrigir data para não usar UTC
@@ -22,10 +24,35 @@ export async function POST(request: NextRequest) {
         dataCompraDate = new Date(year, month - 1, day)
       }
 
+      // Normalizar produto (DB lookup -> cache -> API OFF -> fallback local)
+      let normalizado
+      try {
+        normalizado = await ProductNormalizationService.normalizarProduto(
+          {
+            descricao: prod.descricao,
+            codigoBarras: prod.codigo_barras || prod.codigoBarras || null,
+            unidade: prod.unidade || "UN",
+          },
+          { empresaId },
+        )
+      } catch (normError) {
+        console.warn("Normalização falhou; usando dados brutos:", normError)
+        normalizado = {
+          nomeNormalizado: prod.descricao,
+          codigoBarras: prod.codigo_barras || prod.codigoBarras || null,
+          marca: null,
+          categoria: null,
+          unidade: prod.unidade || "UN",
+          fonteDados: "NORMALIZACAO_LOCAL" as const,
+          precisaRevisao: true,
+          normalizadoEm: new Date(),
+        }
+      }
+
       const produto = await prisma.produto.create({
         data: {
           userId: session.user.id,
-          empresaId: session.user.empresaId || "",
+          empresaId: empresaId,
           descricao: prod.descricao,
           unidade: prod.unidade || "UN",
           precoVenda: prod.preco_venda || prod.precoVenda || 0,
@@ -35,9 +62,24 @@ export async function POST(request: NextRequest) {
           codigo: prod.codigo || null,
           valorUnitario: prod.valor_unitario || prod.valorUnitario || 0,
           valorTotal: prod.valor_total || prod.valorTotal || 0,
+          codigoBarras: normalizado.codigoBarras || prod.codigo_barras || prod.codigoBarras || null,
+          nomeNormalizado: normalizado.nomeNormalizado,
+          marca: normalizado.marca,
+          categoriaSugestao: normalizado.categoria,
+          unidadeMedida: normalizado.unidade,
+          fonteDados: normalizado.fonteDados,
+          precisaRevisao: normalizado.precisaRevisao,
+          normalizadoEm: normalizado.normalizadoEm,
         }
       })
-      created.push({ id: produto.id, descricao: produto.descricao, categoria: 'INSUMOS' })
+      created.push({
+        id: produto.id,
+        descricao: produto.descricao,
+        nomeNormalizado: produto.nomeNormalizado,
+        codigo_barras: produto.codigoBarras,
+        categoria: produto.categoriaSugestao || 'INSUMOS',
+        fonte_dados: produto.fonteDados,
+      })
     }
 
     return NextResponse.json({

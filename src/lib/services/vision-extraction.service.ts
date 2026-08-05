@@ -1,7 +1,6 @@
 // src/lib/services/vision-extraction.service.ts
 
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai'
-import { ProductNormalizationService } from './product-normalization.service'
 import { ImageOptimizationService } from './image-optimization.service'
 
 export interface NFeData {
@@ -32,17 +31,19 @@ export interface NFeData {
 export class VisionExtractionService {
   private model: GenerativeModel
   private optimizationEnabled: boolean
+  private maxRetries: number
 
-  constructor(options?: { optimizationEnabled?: boolean }) {
+  constructor(options?: { optimizationEnabled?: boolean, maxRetries?: number }) {
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
-      throw new Error('GEMINI_API_KEY não configurada')
+      throw new Error('GEMINI_API_KEY não configurada. Configure no .env.local')
     }
     const genAI = new GoogleGenerativeAI(apiKey)
-    this.model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash'
+    this.model = genAI.getGenerativeModel({
+      model: 'gemini-3-flash-preview'
     })
     this.optimizationEnabled = options?.optimizationEnabled !== false
+    this.maxRetries = options?.maxRetries || 2
   }
 
   private buildPrompt(): string {
@@ -91,66 +92,88 @@ export class VisionExtractionService {
 - VALIDE os dados: CNPJ tem 14 dígitos, chave tem 44 dígitos
 - Se não encontrar um campo, coloque null
 
+**Para imagens de baixa qualidade:**
+- Tente identificar mesmo textos parcialmente visíveis
+- Use o contexto para preencher informações faltantes
+- Se o QR Code estiver visível, extraia a chave de acesso
+
 **IMPORTANTE:** Retorne APENAS o JSON válido, sem markdown, sem texto explicativo.`
   }
 
   async extractFromImage(imageBase64: string): Promise<NFeData> {
-    try {
-      // 1. Otimizar imagem (redimensionar e comprimir)
-      let optimizedImage = imageBase64
-      let originalSize = Buffer.from(imageBase64.split(',')[1] || imageBase64, 'base64').length
-
-      if (this.optimizationEnabled) {
-        console.log('🖼️ Otimizando imagem para redução de custos...')
+    let lastError: Error | null = null
+    
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Tentativa ${attempt + 1}/${this.maxRetries + 1} de extração`)
         
-        try {
-          // Redimensionar para 768x768 mantendo proporção
-          optimizedImage = await ImageOptimizationService.optimizeImage(imageBase64, 768)
-          
-          // Calcular economia
-          const optimizedSize = Buffer.from(optimizedImage.split(',')[1] || optimizedImage, 'base64').length
-          const savings = ImageOptimizationService.calculateSavings(originalSize, optimizedImage)
-          
-          console.log(`📊 Economia: ${savings.savingsPercent.toFixed(1)}% (${savings.savingsMB.toFixed(2)} MB economizados)`)
-          console.log(`📏 Tamanho original: ${savings.originalSizeMB.toFixed(2)} MB → ${savings.optimizedSizeMB.toFixed(2)} MB`)
-          
-        } catch (optimizationError) {
-          console.warn('⚠️ Falha na otimização, usando imagem original:', optimizationError)
-          optimizedImage = imageBase64
-        }
-      }
-
-      // 2. Enviar para o Gemini
-      const prompt = this.buildPrompt()
-      
-      const result = await this.model.generateContent([
-        prompt,
-        {
-          inlineData: {
-            data: optimizedImage.replace(/^data:image\/\w+;base64,/, ''),
-            mimeType: this.getMimeType(optimizedImage)
+        // 1. Otimizar imagem
+        let optimizedImage = imageBase64
+        if (this.optimizationEnabled) {
+          try {
+            optimizedImage = await ImageOptimizationService.optimizeImage(imageBase64, 768)
+            console.log('✅ Imagem otimizada com sucesso')
+          } catch (optimizationError) {
+            console.warn('⚠️ Falha na otimização, usando imagem original:', optimizationError)
           }
         }
-      ])
 
-      const responseText = result.response.text()
-      
-      // 3. Extrair JSON da resposta
-      let jsonString = responseText
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        jsonString = jsonMatch[0]
+        // 2. Enviar para o Gemini
+        const prompt = this.buildPrompt()
+        
+        const result = await this.model.generateContent([
+          prompt,
+          {
+            inlineData: {
+              data: optimizedImage.replace(/^data:image\/\w+;base64,/, ''),
+              mimeType: this.getMimeType(optimizedImage)
+            }
+          }
+        ])
+
+        const responseText = result.response.text()
+        console.log('📝 Resposta do Gemini recebida, tamanho:', responseText.length)
+        
+        // 3. Extrair JSON da resposta
+        let jsonString = responseText
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+        if (jsonMatch) {
+          jsonString = jsonMatch[0]
+        }
+
+        // 4. Parse do JSON
+        const data = JSON.parse(jsonString)
+        
+        // 5. Validar dados
+        const validatedData = this.validateAndNormalize(data)
+        
+        // 6. Verificar se tem produtos
+        if (!validatedData.produtos || validatedData.produtos.length === 0) {
+          throw new Error('Nenhum produto encontrado na nota fiscal')
+        }
+
+        console.log(`✅ Extração bem-sucedida: ${validatedData.produtos.length} produtos encontrados`)
+        return validatedData
+        
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error))
+        console.error(`❌ Erro na tentativa ${attempt + 1}:`, lastError.message)
+        
+        // Se não for a última tentativa, espera antes de tentar novamente
+        if (attempt < this.maxRetries) {
+          const waitTime = (attempt + 1) * 1000
+          console.log(`⏳ Aguardando ${waitTime}ms antes de tentar novamente...`)
+          await new Promise(resolve => setTimeout(resolve, waitTime))
+        }
       }
-
-      const data = JSON.parse(jsonString)
-      
-      // 4. Validar e normalizar os dados
-      return this.validateAndNormalize(data)
-      
-    } catch (error) {
-      console.error('Erro na extração por visão:', error)
-      throw new Error('Falha ao extrair dados da imagem. Verifique se a foto está nítida.')
     }
+
+    // Se chegou aqui, todas as tentativas falharam
+    throw new Error(
+      `Não foi possível extrair os dados da imagem após ${this.maxRetries + 1} tentativas. ` +
+      `Último erro: ${lastError?.message || 'Erro desconhecido'}. ` +
+      `Verifique se a foto está nítida e mostra claramente a nota fiscal.`
+    )
   }
 
   private getMimeType(base64: string): string {
