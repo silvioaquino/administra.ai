@@ -4,12 +4,25 @@ vi.mock('@/lib/services/open-food-facts.service', () => ({
   OpenFoodFactsService: { buscarProduto: vi.fn() },
 }))
 
+vi.mock('@/lib/prisma', () => ({
+  prisma: {
+    produto: {
+      findFirst: vi.fn(),
+    },
+  },
+}))
+
 import { ProductNormalizationService } from '@/lib/services/product-normalization.service'
 import { memoryCache, getProductCache } from '@/lib/cache/produto-cache.service'
 import { OpenFoodFactsService } from '@/lib/services/open-food-facts.service'
+import { prisma } from '@/lib/prisma'
 
 function offMock() {
   return OpenFoodFactsService.buscarProduto as unknown as ReturnType<typeof vi.fn>
+}
+
+function prismaMock() {
+  return (prisma.produto.findFirst as unknown) as ReturnType<typeof vi.fn>
 }
 
 describe('ProductNormalizationService', () => {
@@ -85,4 +98,134 @@ describe('ProductNormalizationService', () => {
     expect(maxInFlight).toBeLessThanOrEqual(5)
     expect(results.every((r) => r.fonteDados === 'OPEN_FOOD_FACTS')).toBe(true)
   }, 15000)
+
+  // ===== Testes do lookup no banco de dados =====
+
+  describe('consultarNormalizacaoExistente', () => {
+    it('encontra produto pelo GTIN e retorna normalização sem chamar API', async () => {
+      prismaMock().mockResolvedValue({
+        nomeNormalizado: 'Leite Integral',
+        marca: 'MarcaX',
+        categoriaSugestao: 'Laticínios',
+        unidadeMedida: 'L',
+        codigoBarras: '7891234567890',
+        fonteDados: 'OPEN_FOOD_FACTS',
+        precisaRevisao: false,
+        normalizadoEm: new Date('2025-01-01'),
+      })
+
+      const r = await ProductNormalizationService.consultarNormalizacaoExistente(
+        'emp-123',
+        { descricao: 'Leite', codigoBarras: '7891234567890' },
+      )
+
+      expect(prismaMock()).toHaveBeenCalledWith({
+        where: {
+          empresaId: 'emp-123',
+          codigoBarras: '7891234567890',
+          nomeNormalizado: { not: null },
+        },
+        orderBy: { createdAt: 'desc' },
+      })
+      expect(offMock()).not.toHaveBeenCalled()
+      expect(r).not.toBeNull()
+      expect(r!.nomeNormalizado).toBe('Leite Integral')
+      expect(r!.fonteDados).toBe('OPEN_FOOD_FACTS')
+      expect(r!.precisaRevisao).toBe(false)
+      expect(r!.codigoBarras).toBe('7891234567890')
+    })
+
+    it('encontra produto pelo nome normalizado quando não tem GTIN', async () => {
+      prismaMock().mockResolvedValue({
+        nomeNormalizado: 'Arroz',
+        marca: null,
+        categoriaSugestao: 'Mercearia',
+        unidadeMedida: 'KG',
+        codigoBarras: null,
+        fonteDados: 'NORMALIZACAO_LOCAL',
+        precisaRevisao: true,
+        normalizadoEm: new Date('2025-01-01'),
+      })
+
+      const r = await ProductNormalizationService.consultarNormalizacaoExistente(
+        'emp-123',
+        { descricao: 'ARROZ 1KG' },
+      )
+
+      expect(r).not.toBeNull()
+      expect(r!.nomeNormalizado).toBe('Arroz')
+      expect(r!.fonteDados).toBe('NORMALIZACAO_LOCAL')
+    })
+
+    it('retorna null quando não encontra produto no DB', async () => {
+      prismaMock().mockResolvedValue(null)
+
+      const r = await ProductNormalizationService.consultarNormalizacaoExistente(
+        'emp-123',
+        { descricao: 'Produto Inexistente', codigoBarras: '7891234567890' },
+      )
+
+      expect(r).toBeNull()
+    })
+
+    it('retorna null quando GTIN é inválido', async () => {
+      const r = await ProductNormalizationService.consultarNormalizacaoExistente(
+        'emp-123',
+        { descricao: 'Produto', codigoBarras: 'SEM GTIN' },
+      )
+      expect(r).toBeNull()
+      expect(prismaMock()).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('normalizarProduto com empresaId (cache-first DB)', () => {
+    it('não chama a API quando o produto está no DB', async () => {
+      prismaMock().mockResolvedValue({
+        nomeNormalizado: 'Leite Integral',
+        marca: 'MarcaX',
+        categoriaSugestao: 'Laticínios',
+        unidadeMedida: 'L',
+        codigoBarras: '7891234567890',
+        fonteDados: 'OPEN_FOOD_FACTS',
+        precisaRevisao: false,
+        normalizadoEm: new Date('2025-01-01'),
+      })
+
+      const r = await ProductNormalizationService.normalizarProduto(
+        { descricao: 'Leite', codigoBarras: '7891234567890' },
+        { empresaId: 'emp-123' },
+      )
+
+      expect(offMock()).not.toHaveBeenCalled()
+      expect(r.fonteDados).toBe('OPEN_FOOD_FACTS')
+      expect(r.nomeNormalizado).toBe('Leite Integral')
+      // Verifica que populou o cache em memória
+      expect(getProductCache('7891234567890')).toBeDefined()
+    })
+
+    it('continua para a API quando o DB não tem o produto', async () => {
+      prismaMock().mockResolvedValue(null)
+      offMock().mockResolvedValue({ product_name: 'Leite Integral', brands: 'MarcaX' })
+
+      const r = await ProductNormalizationService.normalizarProduto(
+        { descricao: 'Leite', codigoBarras: '7891234567890' },
+        { empresaId: 'emp-123' },
+      )
+
+      expect(prismaMock()).toHaveBeenCalled()
+      expect(offMock()).toHaveBeenCalled()
+      expect(r.fonteDados).toBe('OPEN_FOOD_FACTS')
+    })
+
+    it('pula o DB lookup quando empresaId não é fornecido', async () => {
+      offMock().mockResolvedValue({ product_name: 'Leite' })
+
+      const r = await ProductNormalizationService.normalizarProduto(
+        { descricao: 'Leite', codigoBarras: '7891234567890' },
+      )
+
+      expect(prismaMock()).not.toHaveBeenCalled()
+      expect(r.fonteDados).toBe('OPEN_FOOD_FACTS')
+    })
+  })
 })

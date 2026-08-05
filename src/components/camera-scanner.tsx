@@ -1,8 +1,9 @@
 // components/camera-scanner.tsx
+
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { X, Camera, AlertCircle, Upload, Loader2, CheckCircle } from 'lucide-react';
+import { X, Camera, AlertCircle, Upload, Loader2, Image as ImageIcon, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { toast } from 'sonner';
@@ -11,7 +12,7 @@ interface CameraScannerProps {
   onScan: (result: string) => void;
   onClose: () => void;
   scanMode?: 'qrcode' | 'barcode' | 'image';
-  onImageProcess?: (data: any) => void; // Callback específico para imagem processada
+  onImageProcess?: (data: any) => void;
 }
 
 export function CameraScanner({ 
@@ -26,6 +27,8 @@ export function CameraScanner({
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [processingImage, setProcessingImage] = useState(false);
+  const [processingProgress, setProcessingProgress] = useState(0);
+  const [processingStage, setProcessingStage] = useState<string>('');
   const isProcessingRef = useRef(false);
   const isMountedRef = useRef(true);
 
@@ -44,9 +47,18 @@ export function CameraScanner({
   // Função para processar imagem com Gemini
   const processImageWithGemini = async (imageBase64: string) => {
     setProcessingImage(true);
+    setProcessingProgress(0);
+    setProcessingStage('Preparando imagem...');
     setError(null);
 
     try {
+      // Simular progresso
+      setProcessingProgress(10);
+      setProcessingStage('Otimizando imagem para processamento...');
+      
+      // Pequeno delay para mostrar o progresso
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       // Converter base64 para File
       const response = await fetch(imageBase64);
       const blob = await response.blob();
@@ -55,29 +67,66 @@ export function CameraScanner({
       const formData = new FormData();
       formData.append('imagem', file);
 
+      setProcessingProgress(30);
+      setProcessingStage('Enviando para análise...');
+      
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       const res = await fetch('/api/nfe/processar-imagem', {
         method: 'POST',
         body: formData
       });
 
+      setProcessingProgress(60);
+      setProcessingStage('Extraindo dados da nota fiscal...');
+      
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       const data = await res.json();
 
       if (data.success) {
-        // Se tiver callback específico, usa ele
+        setProcessingProgress(100);
+        setProcessingStage('✅ Nota fiscal processada com sucesso!');
+        
+        // Pequeno delay para mostrar o sucesso
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         if (onImageProcess) {
           onImageProcess(data.data);
         } else {
-          // Senão, passa como string JSON
           onScan(JSON.stringify(data.data));
         }
+        
         toast.success('Nota fiscal processada com sucesso!');
         onClose();
       } else {
-        setError(data.error || 'Erro ao processar imagem');
+        // Mostrar erro específico
+        let errorMsg = data.error || 'Erro ao processar imagem';
+        
+        if (errorMsg.toLowerCase().includes('nítida') || errorMsg.toLowerCase().includes('nitida')) {
+          errorMsg = '📸 A foto não está nítida o suficiente. Tire uma nova foto com melhor iluminação e foco.';
+        } else if (errorMsg.toLowerCase().includes('produtos') || errorMsg.toLowerCase().includes('itens')) {
+          errorMsg = '📋 Não foi possível identificar os produtos. Certifique-se de que a lista de produtos está visível na foto.';
+        } else if (errorMsg.toLowerCase().includes('emitente')) {
+          errorMsg = '🏢 Não foi possível identificar o emitente. Certifique-se de que o nome do estabelecimento está visível.';
+        } else if (errorMsg.toLowerCase().includes('api key') || errorMsg.toLowerCase().includes('api_key')) {
+          errorMsg = '🔑 Erro de configuração. Contate o administrador do sistema.';
+        } else if (errorMsg.toLowerCase().includes('quota') || errorMsg.toLowerCase().includes('limit')) {
+          errorMsg = '⏳ Limite de uso do serviço atingido. Tente novamente em alguns minutos.';
+        }
+        
+        setError(errorMsg);
+        toast.error('Falha ao processar', { description: errorMsg });
+        setProcessingProgress(0);
+        setProcessingStage('');
       }
     } catch (error) {
-      console.error('Erro:', error);
-      setError('Erro ao processar a imagem. Tente novamente.');
+      console.error('Erro ao processar imagem:', error);
+      const errorMsg = 'Erro ao processar a imagem. Tente novamente com uma foto mais nítida e bem iluminada.';
+      setError(errorMsg);
+      toast.error('Falha ao processar', { description: errorMsg });
+      setProcessingProgress(0);
+      setProcessingStage('');
     } finally {
       setProcessingImage(false);
     }
@@ -101,6 +150,12 @@ export function CameraScanner({
       return;
     }
 
+    // Validar tamanho mínimo (muito pequena = baixa qualidade)
+    if (file.size < 50 * 1024) {
+      toast.error('Imagem muito pequena. Tire uma foto com melhor qualidade.');
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
@@ -109,6 +164,13 @@ export function CameraScanner({
       processImageWithGemini(result);
     };
     reader.readAsDataURL(file);
+  };
+
+  // Função para abrir a câmera do dispositivo
+  const handleTakePhoto = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   // Inicializar scanner para QR Code/Barcode
@@ -173,7 +235,8 @@ export function CameraScanner({
         };
 
         const onScanError = (errorMessage: string) => {
-          // Silencioso
+          // Silencioso - erros de leitura são normais
+          // console.debug('Scan error:', errorMessage);
         };
 
         console.log('🚀 Iniciando scanner...');
@@ -207,7 +270,8 @@ export function CameraScanner({
   if (scanMode === 'image') {
     return (
       <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-        <div className="bg-surface rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
+        <div className="bg-surface rounded-2xl max-w-md w-full max-h-[90vh] overflow-hidden shadow-2xl">
+          {/* Header */}
           <div className="p-4 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Camera className="h-5 w-5 text-primary" />
@@ -228,48 +292,99 @@ export function CameraScanner({
             </Button>
           </div>
 
-          <div className="p-4 space-y-4">
+          {/* Body */}
+          <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+            {/* Dicas para melhor foto */}
+            {!preview && !processingImage && !error && (
+              <div className="bg-info/5 rounded-lg p-4 border border-info/20 space-y-2">
+                <div className="flex items-start gap-2">
+                  <Info className="h-4 w-4 text-info mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-info">💡 Dicas para melhor resultado:</p>
+                    <ul className="text-xs text-muted-foreground space-y-1 mt-1.5">
+                      <li>• 📸 Tire a foto com boa iluminação</li>
+                      <li>• 📋 Garanta que toda a nota fiscal está visível</li>
+                      <li>• 🔍 Evite reflexos e sombras sobre o documento</li>
+                      <li>• 📱 Mantenha a câmera estável e paralela ao documento</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Erro */}
             {error && (
               <div className="bg-destructive/10 rounded-lg p-4 text-center">
                 <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
-                <p className="text-sm text-destructive">{error}</p>
+                <p className="text-sm text-destructive font-medium">{error}</p>
                 <Button
                   variant="outline"
                   className="mt-3"
-                  onClick={() => setError(null)}
+                  onClick={() => {
+                    setError(null);
+                    setPreview(null);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  }}
                 >
                   Tentar novamente
                 </Button>
               </div>
             )}
 
-            {processingImage ? (
-              <div className="flex flex-col items-center justify-center py-8">
-                <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
-                <p className="text-sm text-muted-foreground">Processando nota fiscal...</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">Isso pode levar alguns segundos</p>
+            {/* Processando */}
+            {processingImage && (
+              <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                <Loader2 className="h-12 w-12 text-primary animate-spin" />
+                <div className="text-center">
+                  <p className="text-sm font-medium text-foreground">{processingStage || 'Processando...'}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {processingProgress < 100 ? 'Aguarde, isso pode levar alguns segundos...' : 'Finalizando...'}
+                  </p>
+                </div>
+                <div className="w-full max-w-xs bg-surface-2 rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="bg-primary rounded-full h-2 transition-all duration-500 ease-out"
+                    style={{ width: `${processingProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground/70">
+                  {processingProgress < 30 && '📸 Analisando a imagem...'}
+                  {processingProgress >= 30 && processingProgress < 60 && '🔍 Extraindo informações...'}
+                  {processingProgress >= 60 && processingProgress < 100 && '📋 Processando dados...'}
+                  {processingProgress >= 100 && '✅ Concluído!'}
+                </p>
               </div>
-            ) : preview ? (
+            )}
+
+            {/* Preview da imagem */}
+            {preview && !processingImage && !error && (
               <div className="space-y-4">
-                <img 
-                  src={preview} 
-                  alt="Preview da nota fiscal" 
-                  className="max-h-96 mx-auto rounded-lg object-contain"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setPreview(null);
-                      if (fileInputRef.current) fileInputRef.current.value = '';
-                    }}
-                    className="flex-1"
-                  >
-                    Nova foto
-                  </Button>
+                <div className="relative">
+                  <img 
+                    src={preview} 
+                    alt="Preview da nota fiscal" 
+                    className="max-h-80 mx-auto rounded-lg object-contain border border-border"
+                  />
+                  {!processingImage && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setPreview(null);
+                        setError(null);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
-            ) : (
+            )}
+
+            {/* Upload Area */}
+            {!preview && !processingImage && !error && (
               <>
                 <div className="text-center text-sm text-muted-foreground">
                   <p>Tire uma foto clara e bem iluminada da nota fiscal</p>
@@ -301,19 +416,22 @@ export function CameraScanner({
                 </div>
 
                 <Button
-                  variant="outline"
-                  onClick={() => {
-                    // Tentar usar a câmera diretamente (se suportado)
-                    if (fileInputRef.current) {
-                      fileInputRef.current.click();
-                    }
-                  }}
-                  className="w-full"
+                  onClick={handleTakePhoto}
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"
                 >
                   <Camera className="mr-2 h-4 w-4" />
                   Tirar foto agora
                 </Button>
               </>
+            )}
+
+            {/* Footer com instruções */}
+            {!error && !processingImage && (
+              <div className="pt-2 border-t border-border">
+                <p className="text-[10px] text-muted-foreground text-center">
+                  A imagem será processada pelo Gemini AI para extrair os dados da nota fiscal
+                </p>
+              </div>
             )}
           </div>
         </div>
@@ -379,6 +497,11 @@ export function CameraScanner({
                     : 'Aponte para o código de barras da NF-e'
                   }
                 </p>
+                <div className="mt-2 pt-2 border-t border-border">
+                  <p className="text-[10px] text-muted-foreground/70">
+                    💡 Se o QR Code estiver ilegível, use a opção "Tirar Foto" na página anterior
+                  </p>
+                </div>
               </div>
             </>
           )}

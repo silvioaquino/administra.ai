@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { ProductNormalizationService } from "@/lib/services/product-normalization.service"
 
 // GET - Listar produtos
 export async function GET(request: NextRequest) {
@@ -109,10 +110,36 @@ export async function POST(request: NextRequest) {
       dataCompraDate = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
     }
 
+    // Normalizar produto (DB lookup -> cache -> API OFF -> fallback local)
+    const empresaId = session.user.empresaId || ""
+    let normalizado
+    try {
+      normalizado = await ProductNormalizationService.normalizarProduto(
+        {
+          descricao: body.descricao.trim(),
+          codigoBarras: body.codigoBarras || null,
+          unidade: body.unidade || "UN",
+        },
+        { empresaId },
+      )
+    } catch (normError) {
+      console.warn("Normalização falhou; usando dados brutos:", normError)
+      normalizado = {
+        nomeNormalizado: body.descricao.trim(),
+        codigoBarras: body.codigoBarras || null,
+        marca: null,
+        categoria: null,
+        unidade: body.unidade || "UN",
+        fonteDados: "NORMALIZACAO_LOCAL" as const,
+        precisaRevisao: true,
+        normalizadoEm: new Date(),
+      }
+    }
+
     // Preparar dados para o Prisma
     const produtoData = {
       userId: session.user.id,
-      empresaId: session.user.empresaId || "",
+      empresaId: empresaId,
       descricao: body.descricao.trim(),
       unidade: body.unidade || "UN",
       precoVenda: precoVenda,
@@ -122,6 +149,14 @@ export async function POST(request: NextRequest) {
       codigo: body.codigo?.trim() || null,
       valorUnitario: valorUnitario,
       valorTotal: valorTotal,
+      codigoBarras: normalizado.codigoBarras || body.codigoBarras || null,
+      nomeNormalizado: normalizado.nomeNormalizado,
+      marca: normalizado.marca,
+      categoriaSugestao: normalizado.categoria,
+      unidadeMedida: normalizado.unidade,
+      fonteDados: normalizado.fonteDados,
+      precisaRevisao: normalizado.precisaRevisao,
+      normalizadoEm: normalizado.normalizadoEm,
     }
 
     console.log("Dados para salvar:", produtoData)
@@ -143,9 +178,12 @@ export async function POST(request: NextRequest) {
       fornecedor: produto.fornecedor,
       data_compra: produto.dataCompra ? produto.dataCompra.toISOString().split("T")[0] : null,
       codigo: produto.codigo,
+      codigo_barras: produto.codigoBarras,
       valor_unitario: produto.valorUnitario ? Number(produto.valorUnitario) : 0,
       valor_total: produto.valorTotal ? Number(produto.valorTotal) : 0,
-      categoria: 'INSUMOS',
+      categoria: produto.categoriaSugestao || 'INSUMOS',
+      fonte_dados: produto.fonteDados,
+      precisa_revisao: produto.precisaRevisao,
     }
 
     console.log("Produto criado:", produtoResponse)

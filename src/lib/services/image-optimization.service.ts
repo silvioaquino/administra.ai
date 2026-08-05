@@ -1,95 +1,49 @@
 // src/lib/services/image-optimization.service.ts
 
+import sharp from 'sharp'
+
 export class ImageOptimizationService {
   private static readonly TARGET_SIZE = 768
   private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
   /**
-   * Redimensiona e otimiza uma imagem para processamento
-   * @param imageBase64 - Imagem em base64
-   * @param targetSize - Tamanho alvo (padrão: 768px)
-   * @returns Imagem otimizada em base64
+   * Redimensiona e otimiza uma imagem para processamento.
+   * Usa sharp (server-side) para redimensionar mantendo proporção e comprimir.
+   * @param imageBase64 - Imagem em data URI base64 (ex: "data:image/jpeg;base64,...")
+   * @param targetSize - Tamanho alvo da dimensão maior (padrão: 768px)
+   * @returns Imagem otimizada em data URI base64 (sempre JPEG)
    */
   static async optimizeImage(
     imageBase64: string,
-    targetSize: number = this.TARGET_SIZE
+    targetSize: number = this.TARGET_SIZE,
   ): Promise<string> {
-    return new Promise((resolve, reject) => {
-      try {
-        const img = new Image()
-        img.onload = () => {
-          try {
-            // Calcular proporção
-            let width = img.width
-            let height = img.height
-
-            // Redimensionar mantendo proporção
-            if (width > height) {
-              if (width > targetSize) {
-                height = Math.round((height * targetSize) / width)
-                width = targetSize
-              }
-            } else {
-              if (height > targetSize) {
-                width = Math.round((width * targetSize) / height)
-                height = targetSize
-              }
-            }
-
-            // Criar canvas para redimensionamento
-            const canvas = document.createElement('canvas')
-            canvas.width = width
-            canvas.height = height
-            const ctx = canvas.getContext('2d')
-
-            if (!ctx) {
-              reject(new Error('Não foi possível criar contexto do canvas'))
-              return
-            }
-
-            // Configurar qualidade
-            ctx.imageSmoothingEnabled = true
-            ctx.imageSmoothingQuality = 'high'
-
-            // Desenhar imagem redimensionada
-            ctx.drawImage(img, 0, 0, width, height)
-
-            // Converter para base64 com compressão
-            const quality = this.getOptimalQuality(width, height)
-            const optimizedBase64 = canvas.toDataURL('image/jpeg', quality)
-
-            resolve(optimizedBase64)
-          } catch (error) {
-            reject(error)
-          }
-        }
-
-        img.onerror = () => {
-          reject(new Error('Erro ao carregar imagem para redimensionamento'))
-        }
-
-        img.src = imageBase64
-      } catch (error) {
-        reject(error)
-      }
-    })
-  }
-
-  /**
-   * Determina a qualidade ideal baseada no tamanho da imagem
-   */
-  private static getOptimalQuality(width: number, height: number): number {
-    const pixels = width * height
-    
-    if (pixels < 100000) { // < 300x300
-      return 0.95 // Alta qualidade para imagens pequenas
-    } else if (pixels < 300000) { // < 500x500
-      return 0.92
-    } else if (pixels < 500000) { // < 700x700
-      return 0.88
-    } else { // >= 700x700
-      return 0.82 // Boa compressão para imagens grandes
+    // Parse data URI: "data:image/jpeg;base64,/9j/..."
+    const match = imageBase64.match(/^data:(image\/\w+);base64,(.+)$/)
+    if (!match) {
+      throw new Error(
+        'Formato de imagem base64 inválido. Esperado: data:image/<type>;base64,<data>',
+      )
     }
+
+    const [, , base64Data] = match
+    const imageBuffer = Buffer.from(base64Data, 'base64')
+
+    const result = await sharp(imageBuffer)
+      .rotate() // corrige orientação baseado em EXIF
+      .flatten({ background: { r: 255, g: 255, b: 255 } }) // remove alpha (PNG transparente → JPEG)
+      .resize(targetSize, targetSize, {
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .jpeg({
+        quality: 82,
+        progressive: true,
+        mozjpeg: true,
+      })
+      .toBuffer()
+
+    const optimizedBase64 = result.toString('base64')
+    return `data:image/jpeg;base64,${optimizedBase64}`
   }
 
   /**
@@ -104,7 +58,7 @@ export class ImageOptimizationService {
     const originalMB = originalSize / (1024 * 1024)
     const optimizedBytes = this.getBase64Size(optimizedBase64)
     const optimizedMB = optimizedBytes / (1024 * 1024)
-    
+
     const savingsMB = originalMB - optimizedMB
     const savingsPercent = originalMB > 0 ? (savingsMB / originalMB) * 100 : 0
 
@@ -112,7 +66,7 @@ export class ImageOptimizationService {
       originalSizeMB: originalMB,
       optimizedSizeMB: optimizedMB,
       savingsPercent,
-      savingsMB
+      savingsMB,
     }
   }
 
@@ -128,50 +82,25 @@ export class ImageOptimizationService {
   }
 
   /**
-   * Versão server-side (Node.js) usando sharp ou canvas
-   * Útil para processamento no servidor
+   * Versão server-side (Node.js) usando sharp com Buffer de entrada/saída.
+   * Útil para processamento no servidor quando já se tem um Buffer.
    */
   static async optimizeImageServerSide(
     imageBuffer: Buffer,
-    targetSize: number = this.TARGET_SIZE
+    targetSize: number = this.TARGET_SIZE,
   ): Promise<Buffer> {
-    try {
-      // Verificar se sharp está disponível
-      const sharp = await this.loadSharpModule()
-      
-      if (sharp) {
-        // Usar sharp para processamento mais rápido
-        return await sharp(imageBuffer)
-          .resize(targetSize, targetSize, {
-            fit: 'inside',
-            withoutEnlargement: true
-          })
-          .jpeg({
-            quality: 82,
-            progressive: true
-          })
-          .toBuffer()
-      }
-      
-      // Fallback: usar canvas com JSDOM ou retornar original
-      console.warn('Sharp não disponível, usando imagem original')
-      return imageBuffer
-      
-    } catch (error) {
-      console.error('Erro no redimensionamento server-side:', error)
-      return imageBuffer
-    }
-  }
-
-  /**
-   * Tenta carregar o módulo sharp dinamicamente
-   */
-  private static async loadSharpModule(): Promise<any> {
-    try {
-      const sharp = await import('sharp')
-      return sharp.default || sharp
-    } catch {
-      return null
-    }
+    return sharp(imageBuffer)
+      .rotate()
+      .flatten({ background: { r: 255, g: 255, b: 255 } })
+      .resize(targetSize, targetSize, {
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .jpeg({
+        quality: 82,
+        progressive: true,
+        mozjpeg: true,
+      })
+      .toBuffer()
   }
 }

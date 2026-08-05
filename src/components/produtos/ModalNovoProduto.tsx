@@ -20,6 +20,7 @@ export function ModalNovoProduto({ isOpen, onClose, onSuccess }: ModalNovoProdut
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     descricao: "",
+    codigo_barras: "",
     unidade: "UN",
     preco_venda: 0,
     quantidade: 0,
@@ -43,6 +44,7 @@ export function ModalNovoProduto({ isOpen, onClose, onSuccess }: ModalNovoProdut
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify([{
           descricao: formData.descricao,
+          codigo_barras: formData.codigo_barras || undefined,
           unidade: formData.unidade,
           preco_venda: formData.preco_venda,
           quantidade: formData.quantidade,
@@ -59,6 +61,7 @@ export function ModalNovoProduto({ isOpen, onClose, onSuccess }: ModalNovoProdut
         onClose()
         setFormData({
           descricao: "",
+          codigo_barras: "",
           unidade: "UN",
           preco_venda: 0,
           quantidade: 0,
@@ -118,6 +121,22 @@ export function ModalNovoProduto({ isOpen, onClose, onSuccess }: ModalNovoProdut
             required
             autoFocus
           />
+        </div>
+
+        {/* Código de Barras (EAN/GTIN) */}
+        <div className="space-y-1">
+          <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Código de Barras <span className="text-muted-foreground/50">(opcional)</span>
+          </Label>
+          <Input
+            value={formData.codigo_barras}
+            onChange={(e) => setFormData({ ...formData, codigo_barras: e.target.value })}
+            placeholder="Ex: 7891234567890"
+            className="rounded-lg border-border focus:ring-primary focus:border-primary"
+          />
+          <p className="text-xs text-muted-foreground/60">
+            Se informado, o produto será buscado no banco antes de chamar a API de normalização.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

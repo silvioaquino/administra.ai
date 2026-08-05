@@ -16,6 +16,7 @@ export default function NovoProdutoPage() {
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     descricao: "",
+    codigoBarras: "",
     unidade: "UN",
     precoVenda: 0,
     quantidade: 0,
@@ -43,6 +44,7 @@ export default function NovoProdutoPage() {
       // Formatar dados - usar snake_case para o Prisma
       const produtoData = {
         descricao: formData.descricao.trim(),
+        codigoBarras: formData.codigoBarras || undefined,
         unidade: formData.unidade,
         precoVenda: Number(formData.precoVenda),
         quantidade: Number(formData.quantidade),
@@ -147,6 +149,22 @@ export default function NovoProdutoPage() {
                   className="rounded-lg border-border"
                   required
                 />
+              </div>
+
+              {/* Código de Barras (EAN/GTIN) */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Código de Barras <span className="text-muted-foreground/50">(opcional)</span>
+                </Label>
+                <Input
+                  value={formData.codigoBarras}
+                  onChange={(e) => setFormData({ ...formData, codigoBarras: e.target.value })}
+                  placeholder="Ex: 7891234567890"
+                  className="rounded-lg border-border"
+                />
+                <p className="text-xs text-muted-foreground/60">
+                  Se informado, o sistema verifica se o produto já foi normalizado anteriormente antes de chamar a API.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
