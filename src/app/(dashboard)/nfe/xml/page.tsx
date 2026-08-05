@@ -1,9 +1,10 @@
 // src/app/(dashboard)/nfe/xml/page.tsx
+
 "use client"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Upload, FileText, Save, AlertCircle, Package, CheckCircle, XCircle, Building2, Camera } from "lucide-react"
+import { ArrowLeft, Upload, FileText, Save, AlertCircle, Package, CheckCircle, XCircle, Building2, Camera, Image as ImageIcon } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,6 +39,8 @@ export default function NfeXmlPage() {
   const [produtos, setProdutos] = useState<ProdutoNota[]>([])
   const [dragActive, setDragActive] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
+  const [showCamera, setShowCamera] = useState(false)
+  const [scanMode, setScanMode] = useState<'qrcode' | 'barcode' | 'image'>('qrcode')
   const [notaDuplicada, setNotaDuplicada] = useState<any>(null)
 
   // Carregar contas financeiras da API
@@ -49,7 +52,6 @@ export default function NfeXmlPage() {
     formaPagamento: "À vista"
   })
 
-
   // Definir a primeira conta como padrão quando carregar
   useEffect(() => {
     if (contas.length > 0 && !formData.contaDespesa) {
@@ -57,14 +59,29 @@ export default function NfeXmlPage() {
     }
   }, [contas, formData.contaDespesa])
 
+  // Função para processar resultado do scanner
   function handleScanResult(result: string) {
-    // Para XML, o scanner pode ser usado para escanear URLs de NF-e
     setShowScanner(false)
-    // O resultado do scan pode ser usado para processar uma URL
-    // ou pode ser um XML já em formato de texto
-    if (result.includes("nfce.sefaz.pe.gov.br")) {
+    if (result.startsWith('{')) {
+      try {
+        const dados = JSON.parse(result)
+        processarDados(dados)
+        toast.success('Nota fiscal processada com sucesso!')
+      } catch (error) {
+        console.error('Erro ao processar JSON:', error)
+        toast.error('Erro ao processar os dados da nota')
+      }
+    } else {
+      // É uma URL
       setUrl(result)
     }
+  }
+
+  // Função para processar imagem diretamente
+  function handleImageProcess(data: any) {
+    processarDados(data)
+    setShowCamera(false)
+    toast.success('Nota fiscal processada com sucesso!')
   }
 
   async function verificarDuplicidade(nota: any) {
@@ -80,6 +97,26 @@ export default function NfeXmlPage() {
       return json?.duplicada ? json.notaExistente : null
     } catch {
       return null
+    }
+  }
+
+  async function processarDados(dados: any) {
+    setNotaProcessada(dados)
+    const produtosComSelecao = (dados.produtos || []).map((p: any) => ({
+      ...p,
+      selecionado: true
+    }))
+    setProdutos(produtosComSelecao)
+    if (dados.data_emissao) {
+      setFormData(prev => ({ ...prev, dataCompra: String(dados.data_emissao).slice(0, 10) }))
+    }
+
+    const duplicada = await verificarDuplicidade(dados)
+    if (duplicada) {
+      setNotaDuplicada(duplicada)
+      toast.error("Nota já lançada", {
+        description: `Nº ${duplicada.numero}/série ${duplicada.serie} — ${duplicada.nomeEmitente}`,
+      })
     }
   }
 
@@ -104,24 +141,7 @@ export default function NfeXmlPage() {
       const data = await response.json()
 
       if (data.success) {
-        setNotaProcessada(data.data)
-        const produtosComSelecao = (data.data.produtos || []).map((p: any) => ({
-          ...p,
-          selecionado: true
-        }))
-        setProdutos(produtosComSelecao)
-        // Preencher data da compra com data de emissão da nota
-        if (data.data.data_emissao) {
-          setFormData(prev => ({ ...prev, dataCompra: String(data.data.data_emissao).slice(0, 10) }))
-        }
-
-        const duplicada = await verificarDuplicidade(data.data)
-        if (duplicada) {
-          setNotaDuplicada(duplicada)
-          toast.error("Nota já lançada", {
-            description: `Nº ${duplicada.numero}/série ${duplicada.serie} — ${duplicada.nomeEmitente}`,
-          })
-        }
+        await processarDados(data.data)
       } else {
         throw new Error(data.error || "Erro ao processar XML")
       }
@@ -161,7 +181,7 @@ export default function NfeXmlPage() {
         : (produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0) - (notaProcessada?.desconto || 0))
       const contaSelecionada = contas.find(c => c.id.toString() === formData.contaDespesa);
 
-      // 1) Salvar a nota fiscal + produtos (a API bloqueia duplicidade com 409)
+      // 1) Salvar a nota fiscal + produtos
       const resNota = await fetch("/api/nfe/salvar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -172,6 +192,8 @@ export default function NfeXmlPage() {
           dataCompra: formData.dataCompra,
           valorTotal,
           formaPagamento: formData.formaPagamento,
+          desconto: notaProcessada?.desconto || 0,
+          formasPagamento: notaProcessada?.formas_pagamento || []
         })
       })
 
@@ -217,7 +239,7 @@ export default function NfeXmlPage() {
       setProdutos([])
       setNotaDuplicada(null)
       setFormData({
-        contaDespesa: "", // Deixar vazio para o useEffect definir a primeira conta
+        contaDespesa: "",
         dataCompra: hojeISO(),
         formaPagamento: "À vista"
       })
@@ -229,7 +251,6 @@ export default function NfeXmlPage() {
       setSalvando(false)
     }
   }
-
 
   function handleDragOver(e: React.DragEvent) {
     e.preventDefault()
@@ -248,16 +269,7 @@ export default function NfeXmlPage() {
     if (file && (file.name.endsWith('.xml') || file.name.endsWith('.XML'))) {
       setXmlFile(file)
     } else {
-      alert("Por favor, selecione um arquivo XML válido")
-    }
-  }
-
-  function formatDate(dateString: string) {
-    if (!dateString) return "-"
-    try {
-      return new Date(dateString).toLocaleDateString("pt-BR")
-    } catch {
-      return dateString
+      toast.error("Por favor, selecione um arquivo XML válido")
     }
   }
 
@@ -276,32 +288,30 @@ export default function NfeXmlPage() {
   const totalProdutos = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
   const descontoNota = notaProcessada?.desconto || 0
   const formasPagamentoNota = notaProcessada?.formas_pagamento || []
-  // Usar o valor_total da nota (vNF - já líquido após descontos) quando disponível
-  // Caso contrário, usar a soma dos produtos com desconto subtraído
   const valorTotalCompra = notaProcessada?.valor_total > 0
     ? notaProcessada.valor_total
     : (totalProdutos - descontoNota)
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <PageContainer>
         <PageHeader
           title="Processar NF-e XML"
           onBack={() => router.back()}
           subtitle="Faça upload do arquivo XML da nota fiscal de compra"
         >
-        {produtos.length > 0 && (
-          <Button 
-            onClick={salvarCompra}
-            disabled={salvando || produtosSelecionados.length === 0 || !!notaDuplicada}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 rounded-full shadow-sm"
-          >
-            <Save className="mr-2 h-4 w-4" />
-            {salvando ? "Salvando..." : notaDuplicada ? "Nota já lançada" : `Salvar Compra (${formatCurrency(valorTotalCompra)})`}
+          {produtos.length > 0 && (
+            <Button 
+              onClick={salvarCompra}
+              disabled={salvando || produtosSelecionados.length === 0 || !!notaDuplicada}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 rounded-full shadow-sm"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {salvando ? "Salvando..." : notaDuplicada ? "Nota já lançada" : `Salvar Compra (${formatCurrency(valorTotalCompra)})`}
             </Button>
           )}
         </PageHeader>
+
         {notaDuplicada && (
           <Alert variant="destructive" className="border-destructive/40 bg-destructive/10 rounded-xl">
             <AlertCircle className="h-4 w-4" />
@@ -339,21 +349,35 @@ export default function NfeXmlPage() {
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Arquivo XML da NF-e</Label>
 
-                  {/* Opção de scanear Codigo de Barras da NF-e  
-                  <div className="mt-1 mb-3">
+                  {/* Botões para foto e scanner */}
+                  <div className="flex gap-2 mt-1 mb-3">
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setShowScanner(true)}
-                      className="w-full border-dashed border-border hover:border-primary hover:text-primary"
+                      size="sm"
+                      onClick={() => {
+                        setScanMode('image')
+                        setShowCamera(true)
+                      }}
+                      className="flex-1 border-dashed border-border hover:border-primary hover:text-primary"
+                    >
+                      <ImageIcon className="mr-2 h-4 w-4" />
+                      Tirar Foto
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setScanMode('barcode')
+                        setShowScanner(true)
+                      }}
+                      className="flex-1 border-dashed border-border hover:border-primary hover:text-primary"
                     >
                       <Camera className="mr-2 h-4 w-4" />
-                      Escanear Código de Barras da NF-e
+                      Escanear Código
                     </Button>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Ou selecione o arquivo XML abaixo
-                    </p>
-                  </div>*/}
+                  </div>
 
                   {/* Drag and Drop Area */}
                   <div
@@ -412,7 +436,7 @@ export default function NfeXmlPage() {
                   </div>
 
                   <p className="text-xs text-muted-foreground mt-2">
-                    Selecione o arquivo XML da NF-e de compra (formato .xml)
+                    Selecione o arquivo XML da NF-e de compra, tire uma foto ou escaneie o código
                   </p>
                 </div>
 
@@ -461,7 +485,7 @@ export default function NfeXmlPage() {
                           value={formData.contaDespesa}
                           onChange={(e) => setFormData({ ...formData, contaDespesa: e.target.value })}
                           disabled={loadingContas || contas.length === 0}
-                         >
+                        >
                           {loadingContas ? (
                             <option value="">Carregando contas...</option>
                           ) : contas.length === 0 ? (
@@ -559,6 +583,24 @@ export default function NfeXmlPage() {
           </div>
         </div>
 
+        {/* Camera Scanner Modals */}
+        {showScanner && (
+          <CameraScanner
+            onScan={handleScanResult}
+            onClose={() => setShowScanner(false)}
+            scanMode={scanMode}
+          />
+        )}
+
+        {showCamera && (
+          <CameraScanner
+            onScan={handleScanResult}
+            onImageProcess={handleImageProcess}
+            onClose={() => setShowCamera(false)}
+            scanMode="image"
+          />
+        )}
+
         {/* Lista de Produtos - Full width with checkboxes */}
         {produtos.length > 0 && (
           <div className="mt-8">
@@ -639,15 +681,6 @@ export default function NfeXmlPage() {
           </div>
         )}
       </PageContainer>
-
-      {/* Camera Scanner Modal */}
-      {showScanner && (
-        <CameraScanner
-          onScan={handleScanResult}
-          onClose={() => setShowScanner(false)}
-          scanMode="barcode"
-        />
-      )}
     </div>
   )
 }

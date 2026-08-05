@@ -1,9 +1,10 @@
 // src/app/(dashboard)/nfe/compra/page.tsx
+
 "use client"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Truck, Search, Save, AlertCircle, Package, Building2, Calendar, DollarSign, CheckCircle, Camera } from "lucide-react"
+import { ArrowLeft, Truck, Search, Save, AlertCircle, Package, Building2, Calendar, DollarSign, CheckCircle, Camera, Image as ImageIcon } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -36,6 +37,8 @@ export default function CompraNfePage() {
   const [notaProcessada, setNotaProcessada] = useState<any>(null)
   const [produtos, setProdutos] = useState<ProdutoNota[]>([])
   const [showScanner, setShowScanner] = useState(false)
+  const [showCamera, setShowCamera] = useState(false)
+  const [scanMode, setScanMode] = useState<'qrcode' | 'barcode' | 'image'>('qrcode')
   const [notaDuplicada, setNotaDuplicada] = useState<any>(null)
 
   // Carregar contas financeiras da API
@@ -47,7 +50,6 @@ export default function CompraNfePage() {
     formaPagamento: "À vista"
   })
 
-
   // Definir a primeira conta como padrão quando carregar
   useEffect(() => {
     if (contas.length > 0 && !formData.contaDespesa) {
@@ -55,10 +57,31 @@ export default function CompraNfePage() {
     }
   }, [contas, formData.contaDespesa])
 
+  // Função para processar resultado do scanner (QR Code/Barcode)
   function handleScanResult(result: string) {
-    setUrl(result)
     setShowScanner(false)
-    //processarUrl(result)
+    // Se for um JSON (vindo da imagem), processa diretamente
+    if (result.startsWith('{')) {
+      try {
+        const dados = JSON.parse(result)
+        aplicarNotaProcessada(dados)
+        toast.success('Nota fiscal processada com sucesso!')
+      } catch (error) {
+        console.error('Erro ao processar JSON:', error)
+        toast.error('Erro ao processar os dados da nota')
+      }
+    } else {
+      // É uma URL do QR Code
+      setUrl(result)
+      processarUrl(result)
+    }
+  }
+
+  // Função para processar imagem diretamente
+  function handleImageProcess(data: any) {
+    aplicarNotaProcessada(data)
+    setShowCamera(false)
+    toast.success('Nota fiscal processada com sucesso!')
   }
 
   async function verificarDuplicidade(nota: any) {
@@ -164,7 +187,6 @@ export default function CompraNfePage() {
     }
   }
 
-
   async function salvarCompra() {
     const produtosSelecionados = produtos.filter(p => p.selecionado)
 
@@ -268,7 +290,6 @@ export default function CompraNfePage() {
     }
   }
 
-
   function toggleProduto(index: number) {
     const novosProdutos = [...produtos]
     novosProdutos[index].selecionado = !novosProdutos[index].selecionado
@@ -284,8 +305,6 @@ export default function CompraNfePage() {
   const totalProdutos = produtosSelecionados.reduce((sum, p) => sum + p.valor_total, 0)
   const descontoNota = notaProcessada?.desconto || 0
   const formasPagamentoNota = notaProcessada?.formas_pagamento || []
-  // Usar o valor_total da nota (vNF - já líquido após descontos) quando disponível
-  // Caso contrário, usar a soma dos produtos com desconto subtraído
   const valorTotalCompra = notaProcessada?.valor_total > 0
     ? notaProcessada.valor_total
     : (totalProdutos - descontoNota)
@@ -309,6 +328,7 @@ export default function CompraNfePage() {
             </Button>
           )}
         </PageHeader>
+
         {notaDuplicada && (
           <Alert variant="destructive" className="border-destructive/40 bg-destructive/10 rounded-xl">
             <AlertCircle className="h-4 w-4" />
@@ -353,19 +373,37 @@ export default function CompraNfePage() {
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setShowScanner(true)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-primary"
-                      title="Escanear QR Code"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setScanMode('qrcode')
+                          setShowScanner(true)
+                        }}
+                        className="h-8 w-8 text-muted-foreground hover:text-primary"
+                        title="Escanear QR Code"
+                      >
+                        <Camera className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setScanMode('image')
+                          setShowCamera(true)
+                        }}
+                        className="h-8 w-8 text-muted-foreground hover:text-primary"
+                        title="Tirar foto da nota fiscal"
+                      >
+                        <ImageIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Insira a URL da NFC-e de COMPRA da SEFAZ-PE ou escaneie o QR Code
+                    Insira a URL da NFC-e de COMPRA da SEFAZ-PE, escaneie o QR Code ou tire uma foto da nota fiscal
                   </p>
                 </div>
 
@@ -525,12 +563,21 @@ export default function CompraNfePage() {
           </div>
         </div>
 
-        {/* Camera Scanner Modal */}
+        {/* Camera Scanner Modals */}
         {showScanner && (
           <CameraScanner
             onScan={handleScanResult}
             onClose={() => setShowScanner(false)}
-            scanMode="qrcode"
+            scanMode={scanMode}
+          />
+        )}
+
+        {showCamera && (
+          <CameraScanner
+            onScan={handleScanResult}
+            onImageProcess={handleImageProcess}
+            onClose={() => setShowCamera(false)}
+            scanMode="image"
           />
         )}
 
