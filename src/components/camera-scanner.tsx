@@ -192,21 +192,15 @@ export function CameraScanner({
         await stopScanner();
         html5QrCodeRef.current = null;
 
-        const html5QrCode = new Html5Qrcode('qr-reader');
-        html5QrCodeRef.current = html5QrCode;
-
+        // Determinar formatos suportados antes de criar o scanner
+        let formats: any = undefined;
         let configs: any = {
-          fps: 15,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
+          qrbox: { width: 350, height: 350 },
         };
 
-        let formats: any = undefined;
         if (scanMode === 'barcode') {
           configs = {
-            fps: 15,
-            qrbox: { width: 320, height: 100 },
-            aspectRatio: 1.0,
+            qrbox: { width: 400, height: 120 },
           };
           formats = [
             Html5QrcodeSupportedFormats.CODE_128,
@@ -220,6 +214,13 @@ export function CameraScanner({
             Html5QrcodeSupportedFormats.UPC_E,
           ];
         }
+
+        const html5QrCode = new Html5Qrcode('qr-reader', {
+          useBarCodeDetectorIfSupported: true,
+          formatsToSupport: formats || [Html5QrcodeSupportedFormats.QR_CODE],
+          verbose: false,
+        });
+        html5QrCodeRef.current = html5QrCode;
 
         const onScanSuccess = (decodedText: string) => {
           console.log('📸 QR Code detectado:', decodedText);
@@ -243,7 +244,14 @@ export function CameraScanner({
         
         await html5QrCode.start(
           { facingMode: "environment" },
-          formats ? { fps: 15, qrbox: configs.qrbox } : configs,
+          {
+            fps: 30,
+            qrbox: configs.qrbox,
+            disableFlip: true,
+            videoConstraints: {
+              width: { ideal: 1280 },
+            },
+          },
           onScanSuccess,
           onScanError
         );
