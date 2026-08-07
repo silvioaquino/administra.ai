@@ -249,6 +249,7 @@ export function CameraScanner({
             qrbox: configs.qrbox,
             disableFlip: true,
             videoConstraints: {
+              facingMode: "environment",
               width: { ideal: 1280 },
             },
           },
