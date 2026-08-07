@@ -131,6 +131,39 @@ function extrairDadosDoXML(xml: string) {
     }
   }
 
+  // Mapear códigos de pagamento (tPag) para nomes
+  const formaPagamentoMap: Record<string, string> = {
+    '01': 'Dinheiro',
+    '02': 'Cheque',
+    '03': 'Cartão de Crédito',
+    '04': 'Cartão de Débito',
+    '05': 'Crédito de Conta',
+    '08': 'Boleto',
+    '09': 'Título de Crédito',
+    '10': 'Financiamento',
+    '11': 'PIX',
+    '12': 'Compensação Tesouraria',
+    '13': 'Conta Corrente',
+    '14': 'Conta Poupança',
+    '15': 'Conta Corrente Conjunto',
+    '16': 'Conta Poupança Conjunto',
+    '99': 'Outros',
+  }
+
+  const formasPagamento: Array<{ forma: string; valor: number }> = []
+  const detPagRegex = /<detPag[^>]*>([\s\S]*?)<\/detPag>/gi
+  let detPagMatch: RegExpExecArray | null
+
+  while ((detPagMatch = detPagRegex.exec(xml)) !== null) {
+    const detPagContent = detPagMatch[1]
+    const tPag = extractTag(detPagContent, 'tPag')
+    const vPag = extractNumber(detPagContent, 'vPag')
+    if (tPag) {
+      const forma = formaPagamentoMap[tPag] || 'Outros'
+      formasPagamento.push({ forma, valor: vPag })
+    }
+  }
+
   return {
     nome_emitente: nomeEmitente,
     cnpj_emitente: cnpjEmitente,
@@ -140,5 +173,6 @@ function extrairDadosDoXML(xml: string) {
     data_emissao: dataEmissao,
     valor_total: valorTotal,
     produtos,
+    formas_pagamento: formasPagamento,
   }
 }
