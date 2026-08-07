@@ -110,6 +110,10 @@ export default function NfeXmlPage() {
     if (dados.data_emissao) {
       setFormData(prev => ({ ...prev, dataCompra: String(dados.data_emissao).slice(0, 10) }))
     }
+    if (dados.formas_pagamento && dados.formas_pagamento.length > 0) {
+      const forma = dados.formas_pagamento[0].forma
+      setFormData(prev => ({ ...prev, formaPagamento: forma === 'Dinheiro' ? 'À vista' : forma }))
+    }
 
     const duplicada = await verificarDuplicidade(dados)
     if (duplicada) {
