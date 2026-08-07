@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Info, AlertTriangle } from 'lucide-react'
+import { Info, AlertTriangle, Edit } from 'lucide-react'
 
 const UNITS: UnitType[] = ['G', 'KG', 'MG', 'L', 'ML', 'UN']
 
@@ -34,6 +34,7 @@ interface UnitQuantityInputProps {
   }
   disabled?: boolean
   showConversion?: boolean
+  onEditProduct?: () => void
 }
 
 export function UnitQuantityInput({
@@ -41,7 +42,8 @@ export function UnitQuantityInput({
   onChange,
   product,
   disabled = false,
-  showConversion = true
+  showConversion = true,
+  onEditProduct
 }: UnitQuantityInputProps) {
   const [quantity, setQuantity] = useState(value.quantity || 0)
   const [unit, setUnit] = useState<UnitType>(value.unit || 'UN')
@@ -145,19 +147,33 @@ export function UnitQuantityInput({
       )}
 
       {alert && (
-        <Alert variant="warning" className="py-2">
+        <Alert
+          variant="warning"
+          className="py-2 cursor-pointer hover:bg-warning/10 transition-colors"
+          onClick={onEditProduct}
+        >
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="text-sm">
-            {alert}
+          <AlertDescription className="text-sm flex items-center justify-between">
+            <span>{alert}</span>
+            {onEditProduct && (
+              <Edit className="h-4 w-4 text-primary shrink-0 ml-2" />
+            )}
           </AlertDescription>
         </Alert>
       )}
 
       {isUnitInvalid && (
-        <Alert variant="destructive" className="py-2">
+        <Alert
+          variant="destructive"
+          className="py-2 cursor-pointer hover:bg-destructive/10 transition-colors"
+          onClick={onEditProduct}
+        >
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="text-sm">
-            Produto em UN precisa ter peso unitário definido
+          <AlertDescription className="text-sm flex items-center justify-between">
+            <span>Produto em UN precisa ter peso unitário definido</span>
+            {onEditProduct && (
+              <Edit className="h-4 w-4 text-primary shrink-0 ml-2" />
+            )}
           </AlertDescription>
         </Alert>
       )}

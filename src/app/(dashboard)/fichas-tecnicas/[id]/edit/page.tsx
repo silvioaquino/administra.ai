@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { ArrowLeft, Save, Plus, Trash2, Calculator, Package, BookOpen, AlertCircle, ChevronDown, X, Pencil, Check } from "lucide-react"
+import { ArrowLeft, Save, Plus, Trash2, Calculator, Package, BookOpen, AlertCircle, ChevronDown, X, Pencil, Check, Edit, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,6 +14,7 @@ import { UnitQuantityInput } from "@/components/fichas-tecnicas/UnitQuantityInpu
 import { CostBreakdown } from "@/components/fichas-tecnicas/CostBreakdown"
 import { ConversionService } from "@/lib/services/conversion.service"
 import { UnitType } from "@/types/ficha-tecnica"
+import { ModalEditarProduto } from "@/components/produtos/ModalEditarProduto"
 
 interface Produto {
   id: number
@@ -88,6 +89,16 @@ export default function EditarFichaTecnicaPage() {
   const [markup, setMarkup] = useState(0)
   const [metaFaltando, setMetaFaltando] = useState(false)
   const [fatorOscilacao, setFatorOscilacao] = useState(0)
+
+  // Estado para erro de ingrediente que pode ser resolvido editando o produto
+  const [ingredientError, setIngredientError] = useState<{
+    message: string
+    produtoId?: number
+  } | null>(null)
+
+  // Estados para edição de produto via modal (preserva estado da ficha)
+  const [editarProdutoOpen, setEditarProdutoOpen] = useState(false)
+  const [produtoSelecionadoId, setProdutoSelecionadoId] = useState<number | null>(null)
 
   const [categorias, setCategorias] = useState<string[]>(["Almoço", "Janta"])
   const [showNovaCategoria, setShowNovaCategoria] = useState(false)
@@ -253,7 +264,16 @@ export default function EditarFichaTecnicaPage() {
       )
       custo = result.cost
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Erro ao calcular custo do ingrediente")
+      const msg = error instanceof Error ? error.message : "Erro ao calcular custo do ingrediente"
+      // Se o erro for sobre peso unitário, mostra mensagem clicável para editar o produto
+      if (msg.includes("precisa ter peso unitário definido")) {
+        setIngredientError({
+          message: msg,
+          produtoId: produto.id,
+        })
+      } else {
+        alert(msg)
+      }
       return
     }
 
@@ -458,6 +478,12 @@ export default function EditarFichaTecnicaPage() {
 
   const produtoSelecionado = produtos.find(p => p.id === parseInt(selectedProdutoId))
   const fichaSelecionada = fichas.find(f => f.id === selectedFichaId)
+
+  // Abre o modal de edição do produto (sem sair da tela de ficha)
+  const handleEditProduct = (produtoId: number) => {
+    setProdutoSelecionadoId(produtoId)
+    setEditarProdutoOpen(true)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -775,6 +801,7 @@ export default function EditarFichaTecnicaPage() {
                           value={selectedProdutoId}
                           onChange={(e) => {
                             setSelectedProdutoId(e.target.value)
+                            setIngredientError(null)
                             const p = produtos.find(prod => prod.id === parseInt(e.target.value))
                             setUnidadeReceita((p?.unidade as UnitType) || 'UN')
                           }}
@@ -802,6 +829,7 @@ export default function EditarFichaTecnicaPage() {
                               pesoUnitario: produtoSelecionado.pesoUnitario,
                               densidade: produtoSelecionado.densidade,
                             }}
+                            onEditProduct={() => handleEditProduct(produtoSelecionado.id)}
                           />
                           <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
@@ -863,6 +891,26 @@ export default function EditarFichaTecnicaPage() {
                         <Plus className="h-4 w-4 mr-1" />
                         Adicionar Produto
                       </Button>
+                      {ingredientError && (
+                        <Alert
+                          variant="destructive"
+                          className="cursor-pointer hover:bg-destructive/10 transition-colors"
+                          onClick={() => {
+                            if (ingredientError.produtoId) {
+                              handleEditProduct(ingredientError.produtoId)
+                            }
+                            setIngredientError(null)
+                          }}
+                        >
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription className="text-sm flex items-center justify-between">
+                            <span>{ingredientError.message}</span>
+                            {ingredientError.produtoId && (
+                              <Edit className="h-4 w-4 text-primary shrink-0 ml-2" />
+                            )}
+                          </AlertDescription>
+                        </Alert>
+                      )}
                     </div>
                   </div>
 
@@ -1289,8 +1337,8 @@ export default function EditarFichaTecnicaPage() {
 
           {/* Botão de ação flutuante para mobile */}
           <div className="fixed bottom-0 left-0 right-0 p-4 bg-surface/95 backdrop-blur-md border-t border-border md:hidden z-10">
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               form="ficha-form"
               disabled={saving}
               className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/30"
@@ -1301,6 +1349,14 @@ export default function EditarFichaTecnicaPage() {
           </div>
         </form>
       </div>
+
+      {/* Modal de edição de produto (preserva estado da ficha) */}
+      <ModalEditarProduto
+        isOpen={editarProdutoOpen}
+        onClose={() => { setEditarProdutoOpen(false); setProdutoSelecionadoId(null) }}
+        produtoId={produtoSelecionadoId}
+        onSuccess={carregarProdutos}
+      />
     </div>
   )
 }

@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Save, Plus, Trash2, Calculator, Package, BookOpen, AlertCircle, ChevronDown, X } from "lucide-react"
+import { ArrowLeft, Save, Plus, Trash2, Calculator, Package, BookOpen, AlertCircle, ChevronDown, X, Edit, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,6 +14,7 @@ import { UnitQuantityInput } from "@/components/fichas-tecnicas/UnitQuantityInpu
 import { CostBreakdown } from "@/components/fichas-tecnicas/CostBreakdown"
 import { ConversionService } from "@/lib/services/conversion.service"
 import { UnitType } from "@/types/ficha-tecnica"
+import { ModalEditarProduto } from "@/components/produtos/ModalEditarProduto"
 
 interface Produto {
   id: number
@@ -78,6 +79,16 @@ export default function NovaFichaTecnicaPage() {
   const [markup, setMarkup] = useState(0)
   const [metaFaltando, setMetaFaltando] = useState(false)
   const [fatorOscilacao, setFatorOscilacao] = useState(0)
+
+  // Estado para erro de ingrediente que pode ser resolvido editando o produto
+  const [ingredientError, setIngredientError] = useState<{
+    message: string
+    produtoId?: number
+  } | null>(null)
+
+  // Estados para edição de produto via modal (sem sair da tela de ficha)
+  const [editarProdutoOpen, setEditarProdutoOpen] = useState(false)
+  const [produtoSelecionadoId, setProdutoSelecionadoId] = useState<number | null>(null)
 
   const [categorias, setCategorias] = useState<string[]>(["Almoço", "Janta"])
   const [showNovaCategoria, setShowNovaCategoria] = useState(false)
@@ -197,7 +208,16 @@ export default function NovaFichaTecnicaPage() {
       )
       custo = result.cost
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Erro ao calcular custo do ingrediente")
+      const msg = error instanceof Error ? error.message : "Erro ao calcular custo do ingrediente"
+      // Se o erro for sobre peso unitário, mostra mensagem clicável para editar o produto
+      if (msg.includes("precisa ter peso unitário definido")) {
+        setIngredientError({
+          message: msg,
+          produtoId: produto.id,
+        })
+      } else {
+        alert(msg)
+      }
       return
     }
 
@@ -388,6 +408,12 @@ export default function NovaFichaTecnicaPage() {
 
   const produtoSelecionado = produtos.find(p => p.id === parseInt(selectedProdutoId))
   const fichaSelecionada = fichas.find(f => f.id === selectedFichaId)
+
+  // Abre o modal de edição do produto (sem sair da tela de ficha)
+  const handleEditProduct = (produtoId: number) => {
+    setProdutoSelecionadoId(produtoId)
+    setEditarProdutoOpen(true)
+  }
 
   // Função para alternar expansão de seção
   const toggleSection = (section: keyof typeof sectionsExpanded) => {
@@ -641,6 +667,7 @@ export default function NovaFichaTecnicaPage() {
                           value={selectedProdutoId}
                           onChange={(e) => {
                             setSelectedProdutoId(e.target.value)
+                            setIngredientError(null)
                             const p = produtos.find(prod => prod.id === parseInt(e.target.value))
                             setUnidadeReceita(((p?.unidade || 'UN') as string).toUpperCase() as UnitType)
                           }}
@@ -668,6 +695,7 @@ export default function NovaFichaTecnicaPage() {
                               pesoUnitario: produtoSelecionado.pesoUnitario,
                               densidade: produtoSelecionado.densidade,
                             }}
+                            onEditProduct={() => handleEditProduct(produtoSelecionado.id)}
                           />
                           <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
@@ -729,6 +757,26 @@ export default function NovaFichaTecnicaPage() {
                         <Plus className="h-4 w-4 mr-1" />
                         Adicionar Produto
                       </Button>
+                      {ingredientError && (
+                        <Alert
+                          variant="destructive"
+                          className="cursor-pointer hover:bg-destructive/10 transition-colors"
+                          onClick={() => {
+                            if (ingredientError.produtoId) {
+                              handleEditProduct(ingredientError.produtoId)
+                            }
+                            setIngredientError(null)
+                          }}
+                        >
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription className="text-sm flex items-center justify-between">
+                            <span>{ingredientError.message}</span>
+                            {ingredientError.produtoId && (
+                              <Edit className="h-4 w-4 text-primary shrink-0 ml-2" />
+                            )}
+                          </AlertDescription>
+                        </Alert>
+                      )}
                     </div>
                   </div>
 
@@ -921,36 +969,44 @@ export default function NovaFichaTecnicaPage() {
                         Preço de Venda Praticado <span className="text-primary">*</span>
                       </Label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 font-medium">R$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 font-medium">R$ </span>
                         <Input
                           type="number"
                           step="0.01"
                           min="0"
-                          value={formData.precoVenda}
-                          onChange={(e) => setFormData({ ...formData, precoVenda: parseFloat(e.target.value) || 0 })}
-                          className="pl-8 rounded-xl border-border focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                          value={formData.precoVenda || ""}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            // Se estiver vazio ou for apenas "0", limpa; caso contrário converte para número
+                            if (val === "" || val === "0") {
+                              setFormData({ ...formData, precoVenda: 0 })
+                            } else {
+                              setFormData({ ...formData, precoVenda: parseFloat(val) || 0 })
+                            }
+                          }}
+                          className="pl-9 rounded-xl border-border focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                           required
                         />
                       </div>
                     </div>
                     <div className="rounded-xl bg-gradient-to-br from-info to-info/50 p-4 border border-info/30/50">
-                      <p className="text-sm font-medium text-info mb-1 flex items-center gap-2">
+                      <p className="text-sm font-medium text-black mb-1 flex items-center gap-2">
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-info/50 animate-pulse"></span>
                         Preço Sugerido
                       </p>
                       {metaFaltando ? (
-                        <p className="text-sm text-info mt-1">
+                        <p className="text-sm text-black mt-1">
                           Defina a meta do mês atual no Planejamento para calcular o mark-up sugerido.
                         </p>
                       ) : markup > 0 ? (
                         <>
-                          <p className="text-2xl font-bold text-info">{formatCurrency(precoSugerido)}</p>
-                          <p className="text-xs text-info/80 mt-1">
+                          <p className="text-2xl font-bold text-black">{formatCurrency(precoSugerido)}</p>
+                          <p className="text-xs text-black/80 mt-1">
                             Custo × Mark-up de {markup.toFixed(2)}x (da página Planejamento)
                           </p>
                         </>
                       ) : (
-                        <p className="text-sm text-info mt-1">
+                        <p className="text-sm text-black mt-1">
                           Carregando mark-up do Planejamento...
                         </p>
                       )}
@@ -1065,6 +1121,17 @@ export default function NovaFichaTecnicaPage() {
           </div>
         </form>
       </div>
+
+        {/* Modal de edição de produto (preserva estado da ficha) */}
+        <ModalEditarProduto
+          isOpen={editarProdutoOpen}
+          onClose={() => {
+            setEditarProdutoOpen(false)
+            setProdutoSelecionadoId(null)
+          }}
+          produtoId={produtoSelecionadoId}
+          onSuccess={carregarProdutos}
+        />
     </div>
   )
 }
