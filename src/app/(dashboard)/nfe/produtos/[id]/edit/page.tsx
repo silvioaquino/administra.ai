@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter, useParams } from "next/navigation"
+import { useRouter, useParams, useSearchParams } from "next/navigation"
 import { ArrowLeft, Save, Trash2, Package, DollarSign, Box, Truck, Calendar, AlertCircle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -27,7 +27,11 @@ interface Produto {
 export default function EditarProdutoPage() {
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const produtoId = params.id as string
+
+  // Se veio de uma ficha técnica, retorna para a mesma após salvar
+  const returnTo = searchParams.get("returnTo") || "/nfe/produtos"
   
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -99,7 +103,7 @@ export default function EditarProdutoPage() {
 
       if (response.ok) {
         alert("Produto atualizado com sucesso!")
-        router.push("/nfe/produtos")
+        router.push(returnTo)
       } else {
         throw new Error("Erro ao atualizar")
       }
@@ -123,7 +127,7 @@ export default function EditarProdutoPage() {
 
       if (response.ok) {
         alert("Produto excluído com sucesso!")
-        router.push("/nfe/produtos")
+        router.push(returnTo)
       } else {
         throw new Error("Erro ao excluir")
       }
